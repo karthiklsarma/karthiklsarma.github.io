@@ -264,10 +264,15 @@ a:after {
 }
 
 .desc t {
-	color: #34495e;
-	font-weight: 700;
+	/*color: #34495e;*/
+	color:brown;
+	font-weight: 900;
 }
 
+.desc c{
+	color: DarkBlue;
+	font-weight: 900;
+}
 .desc imp {
 	padding: 6px;
 	color: white;
@@ -275,7 +280,8 @@ a:after {
 }
 
 .desc more {
-	color: #95a5a6;
+	/*color: #95a5a6;*/
+	color: black;
 }
 
 
