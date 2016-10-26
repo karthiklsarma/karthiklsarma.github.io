@@ -1,0 +1,43 @@
+﻿
+{
+	"experience":[
+		{
+			"type":"Work",
+			"institution":"NeST Software",
+			"title":"Software Engineer",
+			"from":"2013-10-11",
+			"to":"2014-11-11",
+			"description":" Contributed software engineering expertise in the development of PIMS (Patient Information Management System) through all phases of software lifecycle, from requirements definition through successful deployment.\n Provided user requirements analysis, design and programming support for enhancement of PIMS application.\n Assisted many senior developers in creating quick fixes to bugs for the software workflow process.\n Developed troubleshooting skills through log analysis and built hands-on experience in implementing design patterns.\nProgramming Language - C++",
+			"default_item":false
+		},
+		{
+			"type":"Work",
+			"institution":"Alcatel",
+			"title":"Application, Demo and Development Intern",
+			"from":"2016-05-23",
+			"to":"2016-08-16",
+			"description":" Developed REST’ful services in Go lang for an application in the IoT domain.\n Managed distributed cluster and helped production release via Docker image.\n Developed skills in Linux virtualization using QEMU, KVM, libvirt.\n Used Amazon Web Services (AWS) / Elastic Cloud Compute (EC2).\n Proficient in application production and deployment using Apache Mesosphere, Apache Marathon and Docker machine.",
+			"default_item":false
+		}
+	],
+	"study":[
+		{
+			"type":"Study",
+			"institution":"University of Kerala",
+			"title":"Bachelor of Technology",
+			"from":"2009-05-07",
+			"to":"2013-08-21",
+			"description":"Major: Computer Science and Engineering",
+			"default_item":false
+		},
+		{
+			"type":"Study",
+			"institution":"Arizona State University",
+			"title":"Master of Computer Science",
+			"from":"2015-01-12",
+			"to":"2016-12-12",
+			"description":"Major: Computer Science\nCourses:\nDistributed Database Systems, Foundations of Algorithms, Software Analysis and Design,\nSemantic Web Mining, Software Security, Data Visualization,\nTechnologies for online learning communities, Applied Cryptography, Distributed Software Development,\nData Mining",
+			"default_item":false
+		}
+	]
+}
