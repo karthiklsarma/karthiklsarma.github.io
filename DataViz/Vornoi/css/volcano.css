@@ -1,0 +1,42 @@
+.axis {
+    font: 11px sans-serif;
+}
+
+.legend {
+    font: 12px sans-serif;
+}
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.scatter circle {
+    fill:none;
+    stroke: lightgray;
+    stroke-width: 2px;
+}
+
+.scatter circle.significant {
+    fill: #336699;
+    stroke: #336699;
+}
+
+.voronoi polygon {
+    fill: steelblue;
+    stroke: darkblue;
+    fill-opacity: 0.2;
+    stroke-opacity: 0.5;
+}
+
+.voronoi polygon.invisible {
+    fill: none;
+    stroke: none;
+    pointer-events: all;
+}
+
+.scatter circle.hover {
+    fill: red;
+    stroke: red;
+}

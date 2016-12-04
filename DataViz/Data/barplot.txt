@@ -1,0 +1,11 @@
+data-visualization=8
+barplot=4
+ggplot2=2
+regression=2
+distributions=2
+histogram=1
+bayesian=1
+conditional-probability=1
+simulation=1
+poisson=1
+prediction=1

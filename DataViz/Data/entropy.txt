@@ -1,0 +1,10 @@
+entropy=10
+time-series=5
+data-visualization=3
+sparse=2
+clustering=2
+sequence-analysis=1
+logistic=1
+package=1
+regression=1
+factor-analysis=1

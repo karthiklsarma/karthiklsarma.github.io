@@ -1,0 +1,1238 @@
+"V1","V2","V3","V4"
+"0.342997170285018","0.335672543318676","  6224","<p>I used the <code>lmer</code> function in the <code>lme4</code> package in order to assess the effects of 2 categorical fixed effects (1Âº Animal Group: rodents and ants; 2Âº Microhabitat: bare soil and under cover) on seed predation (a count dependent variable). I have 2 Sites, with 10 trees per site and 4 seed stations per tree. Site and Tree are my (philosophically) random factors, but given that I have only two level for Site, it must be treated as a fixed factor. I have questions about how to interpret the results:  </p>
+
+<ol>
+<li>I made a model selection criterion based on QAICc, but the best model (lower QAICc) does not result in any significant fixed effect and other models with higher QAIC (e.g. the Full Model) did find significant fixed factors. Does this make sense?  </li>
+<li>Given a fixed factor that is important to the model, how do I distinguish which level of fixed factor is influencing the response variable?  </li>
+</ol>
+
+<p>Finally, correlation between the fixed factors implies an incorrect estimation of the model?  </p>
+
+<pre><code>FullModel=lmer(SeedPredation ~ AnimalGroup*Microhabitat*Site + (1|Site:Tree) + 
+                                   (1|obs), data=datos,  family=""poisson"") 
+
+QAICc(FM)104.9896
+
+    enterGeneralized linear mixed model fit by the Laplace approximation 
+Formula: SP ~ AG * MH * Site + (1 | Site:Tree) + (1 | obs) 
+   Data: datos 
+   AIC   BIC logLik deviance
+ 101.8 125.6  -40.9     81.8
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ obs       (Intercept) 0.20536  0.45317 
+ Site:Tree (Intercept) 1.19762  1.09436 
+Number of obs: 80, groups: obs, 80; Site:Tree, 20
+
+Fixed effects:
+                 Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)       0.01161    0.47608   0.024   0.9805  
+AGR             -18.97679 3130.76500  -0.006   0.9952  
+MHUC             -1.60704    0.63626  -2.526   0.0115 *
+Site2            -0.91424    0.74506  -1.227   0.2198  
+AGR:MHUC         19.92369 3130.76508   0.006   0.9949  
+AGR:Site2         1.02241 4431.84919   0.000   0.9998  
+MHUC:Site2        1.80029    0.86235   2.088   0.0368 *
+AGR:MHUC:Site2   -3.49042 4431.84933  -0.001   0.9994  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+
+Correlation of Fixed Effects:
+            (Intr) AGR    MHUC   Site2  AGR:MHUC AGR:S2 MHUC:S
+AGR          0.000                                            
+MHUC        -0.281  0.000                                     
+Site2       -0.639  0.000  0.180                              
+AGR:MHUC     0.000 -1.000  0.000  0.000                       
+AGR:Site2    0.000 -0.706  0.000  0.000  0.706                
+MHUC:Site2   0.208  0.000 -0.738 -0.419  0.000    0.000       
+AGR:MHUC:S2  0.000  0.706  0.000  0.000 -0.706   -1.000  0.000 code here
+
+BestModel=lmer(SP ~ AG * MH + (1|Site:Tree) + (1|obs), data=datos,  
+               family = ""poisson"") 
+
+QAICc(M) 101.4419
+
+Generalized linear mixed model fit by the Laplace approximation 
+Formula: SP ~ AG + AG:MH + (1 | Site:Tree) + (1 | obs) 
+   Data: datos 
+   AIC   BIC logLik deviance
+ 100.3 114.6 -44.15     88.3
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ obs       (Intercept) 0.76027  0.87194 
+ Site:Tree (Intercept) 1.14358  1.06938 
+Number of obs: 80, groups: obs, 80; Site:Tree, 20
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)   -0.5153     0.4061  -1.269    0.205
+AGR          -18.7146  2603.4397  -0.007    0.994
+AGA:MHUC      -0.7301     0.5045  -1.447    0.148
+AGR:MHUC      17.7221  2603.4397   0.007    0.995
+</code></pre>
+"
+"0.3638034375545","0.356034497458156"," 11754","<p>I would like to estimate a multi level model in Stata or R (using lmer) where the first level coefficients are the same for all observations, but the coefficients within observation are correlated. </p>
+
+<p>An example would look something like this:</p>
+
+<p>$$Y_i = \beta_1 x_{1i} + \beta_2 x_{2i} + \beta_3 x_{3i} + ... + \varepsilon_{0i}$$
+$$\beta_1=\gamma_1 z_1 + \gamma_2 z_2 + \varepsilon_{1}$$
+$$\beta_2=\gamma_1 z_1 + \gamma_3 z_3 + \varepsilon_{2}$$
+$$\beta_3=\gamma_2 z_2 + \gamma_3 z_3 + \varepsilon_{3}$$
+and so on, with equations for each beta.  </p>
+
+<p>Clearly, I'd make a distributional assumption for the $\varepsilon$'s... like $\varepsilon \sim N(0,\sigma^2)$</p>
+
+<p>The x variables vary by observation, but the z variables do not vary between observations.  Thus, the parameters $\gamma$ and $\beta$ are also the same for all observations.  </p>
+
+<p>This differs from most hierarchical models I have seen in that parameters are related within an observation, rather than depending on observation-level characteristics.</p>
+
+<p>As a specific application, consider a model where the dependent variable $Y$ is a student's test scores. The x variables are measures of performance in previous classes, and the $z$ variables are characteristics of those classes.  Students have taken the same set of classes, but there are few students in each class, so I'd like to pool estimation of the coefficients $\beta$.  Because the classes have similar characteristics, there may be far fewer $\gamma$ parameters than $\beta$ parameters, and pooling estimates to those lower level class characteristics may yield more precise estimates of $\beta$ than estimation without the 2nd level model.  </p>
+
+<p>At the same time, I'd like estimates of the $\beta$ parameters, so substituting in and estimating y as a function of $\gamma$ and x only gets me half way there.</p>
+
+<p>What is the best way to estimate this type of model? I typically program in R, Stata and Python.</p>
+"
+"0.438357003759605","0.428995989125127"," 22363","<p>I asked this question on Stack Exchange, but I think it might be too specialized.  Hopefully someone in the mixed model group can help me out.</p>
+
+<p>I want to be able to bootstrap the variance differences between two data sets obtained at different times while taking out the error in a random effect.</p>
+
+<p>I have 2 sets of experimental data, where the data was measured at 2 time points (initial and final). I also have a set of simulation data. I want to compare the variance of the simulated date with the variance difference between the experimental data (final - initial). The idea is to get confidence intervals from the bootstrap to compare the experimental data with the simulation.</p>
+
+<p>I am having trouble making the statistic for the bootstrap function in the <code>boot</code> package for R. So far I have.</p>
+
+<pre><code>varcomp &lt;- function ( formula, data, indices ) {
+    d &lt;- data[indices,] #sample for boot
+    fit &lt;- lmer(formula, data=d) #linear model
+    res.var = (attr (VarCorr(fit), ""sc"")^2) # variance estimation
+    return(res.var)
+    }
+</code></pre>
+
+<p>But this function only returns the variance of a single data set. I want to be able to input 2 sets of data and have it return the difference between the two data sets' variance.</p>
+
+<p>When I try something like:</p>
+
+<pre><code>varcomp &lt;- function ( formula, data1, data2, indices ) {
+d1 &lt;- data1[indices,] #sample for boot
+d2 &lt;- data2[indices,] #sample for boot
+fit1 &lt;- lmer(formula, data=d1) #linear model
+fit2 &lt;- lmer(formula, data=d2) #linear model
+a = (attr (VarCorr(fit1), ""sc"")^2) #output variance estimation
+b = (attr (VarCorr(fit2), ""sc"")^2) #output variance estimation
+drv = a - b #difference between the variance estimations
+return(drv)
+}
+</code></pre>
+
+<p>I would then put it into boot such as:</p>
+
+<pre><code>ip1.boot &lt;- boot ( data = ip1, statistic=varcomp, R=100, formula=CNPC~(1|Cell.line:DNA.extract)+Cell.line)
+</code></pre>
+
+<p>I can't do it this way because the boot function only allows for one data set to be inputted.</p>
+
+<p><strong>Does anyone know how to create the correct statistic function for this?</strong></p>
+
+<p>An example of the data can also be downloaded here (2 csv files zipped 1.22KB.)</p>
+
+<p>My data looks something like the following:</p>
+
+<p>Initial</p>
+
+<pre><code>       Cell.line    Time DNA.extract   Gene      CNPC
+1          9 initial           1 atubP1 1778.4589
+2          9 initial           1 atubP1 2108.0552
+3          9 initial           1 atubP1 2118.6725
+4          9 initial           2 atubP1 2018.6593
+5          9 initial           2 atubP1 1935.9008
+6          9 initial           2 atubP1 1749.9158
+7          9 initial           3 atubP1 1524.7475
+8          9 initial           3 atubP1 1532.9781
+9          9 initial           3 atubP1 1693.3098
+10        17 initial           1 atubP1 1076.4720
+11        17 initial           1 atubP1 1101.3315
+12        17 initial           1 atubP1 1185.3606
+13        17 initial           2 atubP1 1131.1118
+14        17 initial           2 atubP1  892.7087
+15        17 initial           2 atubP1 1028.5465
+16        17 initial           3 atubP1  887.9972
+17        17 initial           3 atubP1  732.9646
+18        17 initial           3 atubP1  680.6724
+</code></pre>
+
+<p>Final</p>
+
+<pre><code>   Cell.line  Time DNA.extract   Gene      CNPC
+1          9 final           1 atubP1 1262.2378
+2          9 final           1 atubP1 1261.9858
+3          9 final           1 atubP1 1390.6873
+4          9 final           2 atubP1 1539.7180
+5          9 final           2 atubP1 1510.5405
+6          9 final           2 atubP1 1443.1767
+7          9 final           3 atubP1 1456.2050
+8          9 final           3 atubP1 1578.6396
+9          9 final           3 atubP1 1656.1822
+10        17 final           1 atubP1 1462.5179
+11        17 final           1 atubP1 1580.9956
+12        17 final           1 atubP1 1255.9020
+13        17 final           2 atubP1  886.7579
+14        17 final           2 atubP1  581.8116
+15        17 final           2 atubP1  722.0526
+16        17 final           3 atubP1 4168.7895
+17        17 final           3 atubP1 3266.2105
+18        17 final           3 atubP1 4219.5645
+</code></pre>
+"
+"0.54232614454664","0.530744892434275"," 31118","<p>I performed an experiment where I raised different families coming from two different source populations, where each family was split up into a different treatments. After the experiment I measured several traits on each individual. 
+To test for an effect of either treatment or source as well as their interaction, I used a linear mixed effect model with family as random factor, i.e.</p>
+
+<pre><code>lme(fixed=Trait~Treatment*Source,random=~1|Family,method=""ML"")
+</code></pre>
+
+<p>so far so good,
+Now I have to calculate the relative variance components, i.e. the percentage of variation that is explained by either treatment or source as well as the interaction.</p>
+
+<p>Without a random effect, I could easily use the sums of squares (SS) to calculate the variance explained by each factor. But for a mixed model (with ML estimation), there are no SS, hence I thought I could use Treatment and Source as random effects too to estimate the variance, i.e.</p>
+
+<pre><code>lme(fixed=Trait~1,random=~(Treatment*Source)|Family, method=""REML"")
+</code></pre>
+
+<p>However, in some cases, lme does not converge, hence I used lmer from the lme4 package:</p>
+
+<pre><code>lmer(Trait~1+(Treatment*Source|Family),data=DATA)
+</code></pre>
+
+<p>Where I extract the variances from the model using the summary function:</p>
+
+<pre><code>model&lt;-lmer(Trait~1+(Treatment*Source|Family),data=regrexpdat)
+results&lt;-model@REmat
+variances&lt;-results[,3]
+</code></pre>
+
+<p>I get the same values as with the VarCorr function. I use then these values to calculate the actual percentage of variation taking the sum as the total variation.</p>
+
+<p>Where I am struggling is with the interpretation of the results from the initial lme model (with treatment and source as fixed effects) and the random model to estimate the variance components (with treatment and source as random effect). I find in most cases that the percentage of variance explained by each factor does not correspond to the significance of the fixed effect.</p>
+
+<p>For example for the trait HD,
+The initial lme suggests a tendency for the interaction as well as a significance for Treatment. Using a backward procedure, I find that Treatment has a close to significant tendency. However, estimating variance components, I find that Source has the highest variance, making up to 26.7% of the total variance.</p>
+
+<p>The lme:</p>
+
+<pre><code>anova(lme(fixed=HD~as.factor(Treatment)*as.factor(Source),random=~1|as.factor(Family),method=""ML"",data=test),type=""m"")
+                                      numDF denDF  F-value p-value
+(Intercept)                                1   426 0.044523  0.8330
+as.factor(Treatment)                       1   426 5.935189  0.0153
+as.factor(Source)                          1    11 0.042662  0.8401
+as.factor(Treatment):as.factor(Source)     1   426 3.754112  0.0533
+</code></pre>
+
+<p>And the lmer:</p>
+
+<pre><code>summary(lmer(HD~1+(as.factor(Treatment)*as.factor(Source)|Family),data=regrexpdat))
+Linear mixed model fit by REML 
+Formula: HD ~ 1 + (as.factor(Treatment) * as.factor(Source) | Family) 
+   Data: regrexpdat 
+    AIC    BIC logLik deviance REMLdev
+ -103.5 -54.43  63.75   -132.5  -127.5
+Random effects:
+ Groups   Name                                      Variance  Std.Dev. Corr                 
+ Family   (Intercept)                               0.0113276 0.106431                      
+          as.factor(Treatment)                      0.0063710 0.079819  0.405               
+          as.factor(Source)                         0.0235294 0.153393 -0.134 -0.157        
+          as.factor(Treatment)L:as.factor(Source)   0.0076353 0.087380 -0.578 -0.589 -0.585 
+ Residual                                           0.0394610 0.198648                      
+Number of obs: 441, groups: Family, 13
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept) -0.02740    0.03237  -0.846
+</code></pre>
+
+<p>Hence my question is, is it correct what I am doing? Or should I use another way to estimate the amount of variance explained by each factor (i.e. Treatment, Source and their interaction). For example, would the effect sizes be a more appropriate way to go?</p>
+
+<p>Thanks!</p>
+
+<p>Kay Lucek</p>
+"
+"0.171498585142509","0.167836271659338"," 38195","<p>Is there such a package that provides for zero-inflated negative binomial mixed-effects model estimation in R?</p>
+
+<p>By that I mean:</p>
+
+<ul>
+<li><p>Zero-inflation where you can specify the binomial model for zero inflation, like in function zeroinfl in package pscl: <pre>zeroinfl(y~X|Z, dist = ""negbin"")</pre>
+where Z is the formula for the zero inflation model;</p></li>
+<li><p>Negative binomial distribution for the count part of the model;</p></li>
+<li><p>Random effects specified similar to function lmer of package lme4.</p></li>
+</ul>
+
+<p>I understand glmmADMB can do all that, except the formula for zero inflation cannot be specified (it is just an intercept, i.e. Z is just 1). But are there any other packages that can do it all?</p>
+
+<p>I will be very thankful for your help!</p>
+"
+"0.365636212063565","0.393610946830482"," 46322","<blockquote>
+  <p><strong>Possible Duplicate:</strong><br>
+  <a href=""http://stats.stackexchange.com/questions/28936/how-to-compute-significant-interaction-estimates-when-main-effect-is-not-signifi"">How to compute significant interaction estimates when main effect is not significant?</a>  </p>
+</blockquote>
+
+
+
+<p>I am an applied linguist and I am modelling responses to a vocabulary test taken by second language learners of English; the aim is to test theoretical hypotheses regarding the relationship between the nature of the word and the likelihood of the learnersâ€™ knowing that word. The models I am using to explore the role of explanatory variables are the random item Item Response Theory model LLTM+e (see de Boeck et al. 2011; de Boeck 2008). These are created using the lmer function in the LME4 package in R and treat item and person responses as random. The estimates shown below are effectively like those from a binary logistic regression model, indicating the log-odds of a correct response on a word, given certain properties. Covariates relate to both item and person characteristics. </p>
+
+<p>The nature of my concern is actually a basic regression issue. I have found a significant interaction between ability grouping of the test taker (GRP; with two levels High and Low) and the length of the word in letters (LEN_L). As far as I can see the estimate of the fixed effects for the first model shows that (a) the lower level learners have an overall lower probability of giving a correct answer (b) that LEN_L does not provide a significant explanation across the pattern of responses for the whole test-taker population, and (c) a significant interaction between GRP and LEN_L indicates that the lower ability learners are less likely to give a correct answer for a longer word. This is in keeping with theory. </p>
+
+<p>However, when I model the data without including the main effect for LEN_L, I am not seeing a significant effect for either high or low groups as shown in Model 2. LEN_L does not show as significant if modelled without interaction with grp low (not shown). I feel that I am missing something obvious, but I cannot quite grasp what is happening. And my references have run dry on this particular issue and I am thinking myself around in circles about it.</p>
+
+<p>(NB: in my full model I have many other significant covariates, but this pattern holds true.) 
+My query basically regards whether I should use Model 1, including the non-significant main effect, or whether my findings from Model 2 indicate that the finding is a little unstable. Any advice would be much appreciated! (I can post more details if necessary.)
+Karen</p>
+
+<p>Model 1 Fixed effects:</p>
+
+<pre><code>              Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    0.25244    0.83194   0.303  0.76156    
+grp low       -2.09126    0.26406  -7.920 2.38e-15 ***
+LEN_L          0.02093    0.13062   0.160  0.87272    
+grp low:LEN_L -0.09185    0.03146  -2.919  0.00351 **
+</code></pre>
+
+<p>Model 2 Fixed effects:</p>
+
+<pre><code>               Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)     0.25243    0.83194   0.303    0.762    
+grp low        -2.09126    0.26406  -7.920 2.38e-15 ***
+grp high:LEN_L  0.02093    0.13062   0.160    0.873    
+grp low:LEN_L  -0.07092    0.13202  -0.537    0.591  
+</code></pre>
+
+<blockquote>
+  <p>De Boeck, P., Bakker, M., Zwitser, R., Nivard, M., Hofman, A.,
+  Tuerlinckx, F. and Partchev, I. (2011) <a href=""http://www.jstatsoft.org/v39/i12/"" rel=""nofollow"">The Estimation of Item
+  Response Models with the 'lmer' Function from the lme4 Package in
+  R</a>. Journal of Statistical Software (39:12) pp 1-28</p>
+</blockquote>
+"
+"0.3638034375545","0.356034497458156"," 48254","<p>Please consider this data:</p>
+
+<pre><code>dt.m &lt;- structure(list(id = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12), occasion = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L), .Label = c(""g1"", ""g2""), class = ""factor""),     g = c(12, 8, 22, 10, 10, 6, 8, 4, 14, 6, 2, 22, 12, 7, 24, 14, 8, 4, 5, 6, 14, 5, 5, 16)), .Names = c(""id"", ""occasion"", ""g""), row.names = c(NA, -24L), class = ""data.frame"")
+</code></pre>
+
+<p>We fit a simple variance components model. In R we have:</p>
+
+<pre><code>require(lme4)
+fit.vc &lt;- lmer( g ~ (1|id), data=dt.m )
+</code></pre>
+
+<p>Then we produce a caterpillar plot:</p>
+
+<pre><code>rr1 &lt;- ranef(fit.vc, postVar = TRUE)
+dotplot(rr1, scales = list(x = list(relation = 'free')))[[""id""]]
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/fyV1H.jpg"" alt=""Caterpillar plot from R""></p>
+
+<p>Now we fit the same model in Stata. First write to Stata format from R:</p>
+
+<pre><code>require(foreign)
+write.dta(dt.m, ""dt.m.dta"")
+</code></pre>
+
+<p>In Stata</p>
+
+<pre><code>use ""dt.m.dta""
+xtmixed g || id:, reml variance
+</code></pre>
+
+<p>The output agrees with the R output (neither shown), and we attempt to produce the same caterpillar plot:</p>
+
+<pre><code>predict u_plus_e, residuals
+predict u, reffects
+gen e = u_plus_e â€“ u
+predict u_se, reses
+
+egen tag = tag(id)
+sort u
+gen u_rank = sum(tag)
+
+serrbar u u_se u_rank if tag==1, scale(1.96) yline(0)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/hQKEP.jpg"" alt=""enter image description here""></p>
+
+<p>Clearty Stata is using a different standard error to R. In fact Stata is using 2.13 whereas R is using 1.32.</p>
+
+<p>From what I can tell, the 1.32 in R is coming from</p>
+
+<pre><code>&gt; sqrt(attr(ranef(fit.vc, postVar = TRUE)[[1]], ""postVar"")[1, , ])
+ [1] 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977 1.319977
+</code></pre>
+
+<p>though I can't say I really understand what this is doing. Can someone explain ?</p>
+
+<p>And I have no idea where the 2.13 from Stata is coming from, except that, if I change the estimation method to maximum likelihood:</p>
+
+<pre><code>xtmixed g || id:, ml variance
+</code></pre>
+
+<p>....then it seems to use 1.32 as the standard error and produce the same results as R....</p>
+
+<p><img src=""http://i.stack.imgur.com/apbDd.jpg"" alt=""enter image description here""></p>
+
+<p>.... but then the estimate for the random effect variance no longer agrees with R (35.04 vs 31.97).</p>
+
+<p>So it seems to have something to do with ML vs REML: If I run REML in both systems, the model output agrees but the standard errors used in the caterpillar plots don't agree, whereas if I run REML in R and ML in Stata, the caterpillar plots agree, but the model estimates do not.</p>
+
+<p>Can anyone explain what is going on ?</p>
+"
+"0.420084025208403","0.411113225896519"," 62070","<p>Let's say you have a response variable and an independent variable. Your data is measured across several levels of a categorical independent variable. One approach in analysing these data would be to use linear regression to estimate a slope at each level of the categorical independent variable. This is the approach I've used here, using <code>sleepstudy</code> dataset from the <code>R</code> <code>lme4</code> package (I've stored the betas from each model in <code>lmBetas</code>):</p>
+
+<pre><code>library(lme4); library(plyr); library(ggplot2)
+lmBetas &lt;- daply(sleepstudy, .(Subject), function(x) coef(lm(Reaction ~ Days, data=x))[""Days""])
+</code></pre>
+
+<p>Another approach in analysing these data would be to use a mixed effects model to estimate slopes for each level of the categorical independent variable, which in this case is <code>Subject</code>. This is the approach I've taken here (I've stored the betas from the model in <code>lmerBetas</code>):</p>
+
+<pre><code>lmerBetas &lt;- coef(lmer(Reaction ~ Days + (Days | Subject), data=sleepstudy))$Subject[,""Days""]
+</code></pre>
+
+<p>I have learned that a single mixed effects model, as implemented through the <code>lmer</code> function in R, is more accurate at estimating slopes than a multiple linear regression model applied to multilevel data. This can be demonstrated with this plot of betas from the above models. </p>
+
+<pre><code>betas &lt;- data.frame(method.betas = c(lmerBetas, lmBetas))
+betas$method &lt;- c(rep(""lmer"", 18), rep(""lm"", 18))
+
+ggplot(betas, aes(method.betas)) + 
+  geom_histogram() +
+  facet_grid(method ~ .)
+</code></pre>
+
+<p>The top histogram shows betas estimated using linear regression, and the bottom histogram shows betas estimated using mixed effects. You can see betas estimated using linear regression are more widely spread than those estimated through the mixed effects model.</p>
+
+<p><img src=""http://i.stack.imgur.com/YtB22.jpg"" alt=""enter image description here""></p>
+
+<p>So finally, my questions:</p>
+
+<ol>
+<li><p>Is a mixed effects model's higher accuracy in betas estimation connected with the fact that it models intercepts and slopes for each level of the categorical independent variable under a joint probability distribution?</p></li>
+<li><p>Generally speaking, why is a mixed effects model more accurate in its betas estimation?</p></li>
+</ol>
+"
+"0.275009549108463","0.31399291281138"," 77313","<p>I'd like to match the outputs of lmer (really glmer) with a toy binomial example. I've read the vignettes and believe I understand what's going on.</p>
+
+<p>But apparently I do not. After getting stuck, I fixed the ""truth"" in terms of the random effects and went after estimation of the fixed effects alone. I'm including this code below. To see that it's legit, you can comment out <code>+ Z %*% b.k</code> and it will match the results of a regular glm. I'm hoping to borrow some brainpower to figure out why I'm not able to match lmer's output when the random effects are included.</p>
+
+<pre><code># Setup - hard coding simple data set 
+df &lt;- data.frame(x1 = rep(c(1:5), 3), subject = sort(rep(c(1:3), 5)))
+df$subject &lt;- factor(df$subject)
+
+# True coefficient values  
+beta &lt;- matrix(c(-3.3, 1), ncol = 1) # Intercept and slope, respectively 
+u &lt;- matrix(c(-.5, .6, .9), ncol = 1) # random effects for the 3 subjects 
+
+# Design matrices Z (random effects) and X (fixed effects)
+Z &lt;- model.matrix(~ 0 + factor(subject), data = df)
+X &lt;- model.matrix(~ 1 + x1, data = df)
+
+# Response  
+df$y &lt;- c(1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1)
+    y &lt;- df$y
+
+### Goal: match estimates from the following lmer output! 
+library(lme4)
+my.lmer &lt;- lmer( y ~ x1 + (1 | subject), data = df, family = binomial)
+summary(my.lmer)
+ranef(my.lmer)
+
+### Matching effort STARTS HERE 
+
+beta.k &lt;- matrix(c(-3, 1.5), ncol = 1) # Initial values (close to truth)
+b.k &lt;- matrix(c(1.82478, -1.53618, -.5139356), ncol = 1) # lmer's random effects
+
+# Iterative Gauss-Newton algorithm
+for (iter in 1:6) {
+  lin.pred &lt;- as.numeric(X %*% beta.k +  Z %*% b.k)
+  mu.k &lt;- plogis(lin.pred)
+  variances &lt;- mu.k * (1 - mu.k)
+  W.k &lt;- diag(1/variances)
+
+  y.star &lt;- W.k^(.5) %*% (y - mu.k)
+  X.star &lt;- W.k^(.5) %*% (variances * X)
+  delta.k &lt;- solve(t(X.star) %*% X.star) %*% t(X.star) %*% y.star
+
+  # Gauss-Newton Update 
+  beta.k &lt;- beta.k + delta.k
+  cat(iter, ""Fixed Effects: "", beta.k, ""\n"")
+}
+</code></pre>
+"
+"0.365636212063565","0.393610946830482","114350","<p>Thanks to Rijmen et al.(2003), we can fit GRM to the data with <code>lme4::glmer</code>.</p>
+
+<p>I think Rasch model is straightforward, with <code>data.frame</code> with columns like this</p>
+
+<pre><code> response  person  item
+ 0         1      1
+ 0         1      2
+ 1         1      3
+ ...
+ 1         2      1
+ 0         2      2
+</code></pre>
+
+<p>we can fit Rasch model like this</p>
+
+<pre><code> glmer(response ~ -1 + item + (1|person), data=   , family=""binomial"")
+</code></pre>
+
+<p>But how about GRM? The data would be like this</p>
+
+<pre><code> response  person  item
+ 2         1      1
+ 4         1      2
+ 3         1      3
+ ...
+ 1         2      1
+ 4         2      2
+ ...
+</code></pre>
+
+<p>For a Likert scale (1 to 5). I thought converting the data like this</p>
+
+<pre><code> response  person item  category
+ 1          1    1       2
+ 0          1    1       3
+ 1          1    2       4
+ 0          1    2       5
+</code></pre>
+
+<p>Because for <code>person1</code>, <code>item1</code>, the response is 2, which means that for response 2, it's yes and for response 3, it's no.</p>
+
+<p>The model would be</p>
+
+<pre><code> response ~ item:category + (1|person)
+</code></pre>
+
+<p>But I am not quite sure this is the right way to do...</p>
+
+<p><em>Note</em>: person, item, category variables are all factors</p>
+
+<p>According to <a href=""http://www.jstatsoft.org/v39/i12/paper"" rel=""nofollow"">De Boeck et al. (2011)</a>, GRM cannot be fitted with <code>lmer</code>
+which is rather in contrast to Rijmen et al(2003).</p>
+
+<p>=== ADDED</p>
+
+<p>Now I think I am pretty sure it will work, at least for GRM with no slope parameter.</p>
+
+<p>Data should be coded like this.</p>
+
+<pre><code>response  person item  category
+ 0          1    1       1
+ 1          1    1       2
+ 1          1    1       3
+ 1          1    1       4
+ 1          1    1       5  (which is always true so should be omitted.)
+</code></pre>
+
+<p>for 1-5 category(ordinal) answer.</p>
+
+<p>Main benefit of using GLMM for IRT model is you can put other covariates
+(person, item, person-item) into the model.</p>
+
+<p>And for GRM, you can set the difference between the ordinal response is the same,
+which can't be handled by ordinary GRM function, for example, ltm::grm.
+(Oh, I see ordinal::clmm can handle this, but I doubt it can be useful for a model like this)</p>
+
+<pre><code>  response ~ item + (1 + category|person)
+</code></pre>
+
+<p>or this</p>
+
+<pre><code>  response ~ item + (-1 + category|item) + (1|person)
+</code></pre>
+
+<p>in this case, category is integer and would be better if coded as -2, -1, 0, 1, 2.</p>
+
+<p><strong>References</strong></p>
+
+<p>Rijmen, F., Tuerlinckx, F., De Boeck, P., &amp; Kuppens, P. (2003). A nonlinear mixed model framework for item response theory. Psychological methods, 8(2), 185.</p>
+
+<p>De Boeck, P., Bakker, M., Zwitser, R., Nivard, M., Hofman, A., Tuerlinckx, F., &amp; Partchev, I. (2011). The estimation of item response models with the lmer function from the lme4 package in R. Journal of Statistical Software, 39(12), 1-28.</p>
+
+<p>====</p>
+
+<p>Here's my source.</p>
+
+<pre><code>library(ltm)
+#Science[c(1,3,4,7)]
+Sci.df &lt;- Science[c(1,3,4,7)] # Comfort, Work, Future, Benefit
+Sci.df$id = 1:nrow(Sci.df)
+
+Sci.long &lt;- reshape(Sci.df, varying=colnames(Sci.df[-5]), 
+                v.names=""Response"", timevar=""item"", idvar=c(""id""), direction=""long"")
+Sci.long$id &lt;- as.factor(Sci.long$id)
+Sci.long$item &lt;- as.factor(Sci.long$item)
+
+library(ordinal)
+Sci.long.clmm &lt;- clmm(Response ~ (1|id)+item, data=Sci.long, threshold=""flexible"",     nAGQ=-21)
+summary(Sci.long.clmm)
+
+Positive1=as.integer(Sci.long$Response)&lt;=1
+    Positive2=as.integer(Sci.long$Response)&lt;=2
+Positive3=as.integer(Sci.long$Response)&lt;=3
+
+Sci.long.sep1=Sci.long
+Sci.long.sep1$Response=1; Sci.long.sep1$Positive=Positive1
+
+Sci.long.sep2=Sci.long
+Sci.long.sep2$Response=2; Sci.long.sep2$Positive=Positive2
+
+Sci.long.sep3=Sci.long
+Sci.long.sep3$Response=3; Sci.long.sep3$Positive=Positive3
+
+Sci.long.sep = rbind(Sci.long.sep1, Sci.long.sep2, Sci.long.sep3)
+
+Sci.long.sep$Response=as.factor(Sci.long.sep$Response)
+
+Sci.long.sep.glmm &lt;- glmer(Positive ~ -1 + Response + item + (1|id), data=Sci.long.sep, family=binomial,
+                       nAGQ=21, control=glmerControl(optimizer=""optimx"",
+                       optCtrl=list(method=""nlminb""), check.conv.grad= .makeCC(""warning"", tol = 1e-4, relTol = NULL) ))
+summary(Sci.long.sep.glmm)
+</code></pre>
+
+<p>I tried my best to make it same for clmm and glmer... but the log likelihood is different.</p>
+
+<p>logLik = -1730.6 for glmer
+logLik = -1633.5 for clmm</p>
+
+<p>and the parameters r not the same but similar.</p>
+
+<p>Does anyone know why the log likehoods are different?</p>
+"
+"0.27116307227332","0.265372446217138","122749","<p>I have an unbalanced panel data and would like to know which method is better for estimation if I want to capture the heterogeneity of the sample using the plm package or lme4. The sample have year variable, firms id variable, bhoth are using for the index in plm model, also there are location variables that I can use in the lmer function as random intercept.</p>
+
+<p>Then I have the next question:</p>
+
+<p>If I use panel data techniques (plm). To decide between fixed or random effects I run a
+Hausman test where the null hypothesis is that the preferred model is random effects vs. fixed effects (Green, 2008). The Hausman test in R indicates that the random effect is inconsistent.</p>
+
+<p>If I use random intercept models like lmer::lme4 and make a LRT, then I see that there are a groups effect and the random effect is significant.</p>
+
+<p>I have doubts about which is the correct approach. </p>
+
+<p>Thanks for any help and sorry for the format mistakes.</p>
+"
+"0.420084025208403","0.411113225896519","132677","<p>I am running a glmm with a binomial response variable and a categorical predictor. The random effect is given by the nested design used for the data collection. The data looks like this: </p>
+
+<pre><code>m.gen1$treatment
+ [1] sucrose      control      protein      control      no_injection .....
+Levels: no_injection control sucrose protein
+m.gen1$emergence 
+ [1]  1  0  0  1  0  1  1  1  1  1  1  0  0....
+&gt; m.gen1$nest
+ [1] 1  1  1  2  2  3  3  3  3  4  4  4  .....
+Levels: 1 2 3 4 5 6 8 10 11 13 15 16 17 18 20 22 24
+</code></pre>
+
+<p>The first model I run looks like this </p>
+
+<p><code>m.glmm.em.&lt;-glmer(emergence~treatment + (1|nest),family=binomial,data=m.gen1)</code></p>
+
+<p>I get two warnings that look like this:</p>
+
+<pre><code>Warning messages:
+1: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 0.0240654 (tol = 0.001, component 4)
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+</code></pre>
+
+<p>The model summary shows that one of the treatments has a unusually large standard error, which you can see here:</p>
+
+<pre><code>Fixed effects:
+                 Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)         2.565      1.038   2.472   0.0134 *
+treatmentcontrol   -1.718      1.246  -1.378   0.1681  
+treatmentsucrose   16.863   2048.000   0.008   0.9934  
+treatmentprotein   -1.718      1.246  -1.378   0.1681 
+</code></pre>
+
+<p>I tried the different optimizers from glmer control and functions from other packages, and I get a similar output. I have run the model using glm ignoring the random effect, and the problem persist. While exploring the data I realized that the treatment with a high Std. error has only successes in the response variable. Just to check whether that could be causing the problem I added a fake data point with a ""failure"" for that treatment and the model runs smoothly, and gives reasonable standard error. You can see that here:</p>
+
+<pre><code>Fixed effects:
+                 Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)        3.4090     1.6712   2.040   0.0414 *
+treatmentcontrol  -1.8405     1.4290  -1.288   0.1978  
+treatmentsucrose  -0.2582     1.6263  -0.159   0.8738  
+treatmentprotein  -2.6530     1.5904  -1.668   0.0953 .
+</code></pre>
+
+<p>I was wondering if my intuition is right about the lack of failures for that treatment preventing a good estimation, and how can I work around this issue.</p>
+
+<p>Thanks in advance!</p>
+"
+"NaN","NaN","141582","<p>I tested whether different version-styles of a loading screen (hourglass vs. progress bar) in different progression patterns (linear, accelerate, decelerate, irregular, binary) affect time estimations within subjects.</p>
+
+<p>By analyzing the data with a binomial linear mixed effects model I have found significant results for the interaction effect of ""versionStyle x DisplayDuration x progressionPattern"" I would like to run a post hoc analysis to test across which condition and Display duration the time estimation was significantly affected by the version Style""</p>
+
+<p>This is the code I used for my analysis:</p>
+
+<pre><code>(data1 &lt;- glmer(Long ~ DisplayDur * Pattern * Proggression+ (1 + DisplayDur + Pattern+ Progression| Subjects), dat=anadat,family=""binomial"",control=glmerControl(optimizer=""bobyqa"")))
+</code></pre>
+
+<p>Is there some command that I can use in R to do this?</p>
+"
+"0.210042012604201","0.205556612948259","172027","<p>We are dealing with house price estimation model in R. We think using mixed linear model with lme4 package and nlme package. (which package is better to use?)
+We have explanotary variables which are commercial density in environment of house, social density in environment of house, quality of inside of house, size, technical equipment (elevator etc.), house type(duplex, house complex etc.),age of house, sunniness (north, south etc.), transportation, floor, prestige(lux brand apartments), garage. We try to do our model like this in R</p>
+
+<pre><code>lmer(price~quality+sunny+size+garage+technic+age+floor+(1|prestige)+(1|house.type)+(1|social)+(1|commercial)+(1|transportation),data=house)
+</code></pre>
+
+<p>1)We are not sure about which factors are fixed which factors are random, can you help about this? 
+2)social,commercial and transportation are continuous variables can we use them as a random? 
+3)Should we normalize Price and size?</p>
+"
+"0.383482494423685","0.375293312520401","178152","<p>I want to fit diurnal cortisol profiles using linear mixed models, as was done by previous researchers (e.g. <a href=""http://www.sciencedirect.com/science/article/pii/S0306453005000491"" rel=""nofollow"" title=""Estimating between- and within-individual variation in cortisol levels using multilevel models"">Estimating between- and within-individual variation in cortisol levels using multilevel models</a>). </p>
+
+<p>I have 4 samples of each individual for 1 to 3 days and the exact time of taking. I am especially interested in the individual intercepts and slopes of these profiles (i.e. the effect of time), which I NEED for other analyses, as intercept and slope are indicators of different aspects of stress regulation, theoretically.
+Because cortisol is not normally distributed most researches use the natural logarithm before estimation. But when I look at the actual distribution, it looks like a poisson distribution (after rounding up). However, after fitting the model I checked for overdispersion, and unfortunately it is there. Thus, a negative binomial distribution might be more adequate.</p>
+
+<p>So for sake of comparison I utilized all three models using the lme4 package.</p>
+
+<p>For the log model i used</p>
+
+<pre><code>lmer(log(cortisol) ~ time + (time|id) + (1|day/id), data=data)
+</code></pre>
+
+<p>This model gives me an unconditional RÂ² of 0.48 and a conditional RÂ² of 0.57. Unfortunately, the random effects are perfectly negative correlated, which is probably due to the low variance of random effects. From a statistical perspective a random intercept random slope model seems not appropriate. 
+I also tried setting the random effects being independent of each other by using (zeit||id) instead, but this just gives me no variation for the random intercept.</p>
+
+<p>For the second model i used</p>
+
+<pre><code> glmer(round(cortisol, digits=0) ~ time + (time|id) + (1|day/id), data=data, family = poisson(link=log), control=glmerControl(optimizer=""bobyqa"")
+</code></pre>
+
+<p>This model gives me a better unconditional RÂ² of 0.56 and a much better conditional RÂ² of 0.94. Also, the correlation between random effects is -.44, which is what I would expect, and would also would like it to be around. However, I have the big problem of overdispersion (or do I???), which can be accounted for by defining an individual-level random effect as is suggested <a href=""http://r.789695.n4.nabble.com/Mixed-effects-model-for-overdispersed-count-data-td3010455.html"" rel=""nofollow"">here</a>. But this will result in the model been similar to first model; almost no variance of random effects and extreme correlation.</p>
+
+<p>And lastly for the negative binomial model is used</p>
+
+<pre><code>glmer.nb(round(cortisol, digits=0) ~ time + (time|id) + (1|day/id), data=data, control=glmerControl(optimizer=""bobyqa"")
+</code></pre>
+
+<p>This model gives me the worst unconditional RÂ² of 0.44 and a conditional RÂ² of 0.48. Also, the variance of the random intercept is zero, therefore correlation between random effects is not to be calculated.</p>
+
+<p>So my questions are</p>
+
+<ol>
+<li><p>How wrong are the predictions in the second model (poisson distribution) under the consideration of overdispersion? How bad is overdispersion? [for me it is the best model in terms of variance of random effects, expected correlation of random effects and model fit]</p></li>
+<li><p>How could I force random effects to have a considerable variance in the first model (and not being totally correlated)?</p></li>
+</ol>
+
+<p>Thank you for your help, and please let me know if I can provide additional information. </p>
+"
+"0.402199833269922","0.393610946830482","181665","<p>My question relates to calculating the uncertainty associated with the estimation of slopes in a varying intercept, varying slope hierarchical model.</p>
+
+<p>I would like to calculate the effect of a treatment in different districts. If I ran a simple linear regression in which there was no pooling at district level, my model would look something like:</p>
+
+<pre><code>    fm1 &lt;- lm(response ~ treatment*district)
+</code></pre>
+
+<p>I could then find the effect of treatment in district j by summing the coefficient for treatment with that of the interaction term treatment:districtj, and the standard error for that estimate could be found with:</p>
+
+<pre><code>    sqrt(vcov(fm1)[2,2] + vcov(fm1)[4,4] + 2*vcov(fm1)[2,4])
+</code></pre>
+
+<p>I get stuck when moving to a multilevel model with random slopes along the lines of:</p>
+
+<pre><code>    fm2 &lt;- lmer(response ~ treatment + (1 + treatment | district))
+</code></pre>
+
+<p>I can again find the effect of treatment in district j easily by summing the coefficient for treatment with the random slope estimate for district j. I would like to account for the uncertainty of both coefficients and I'm not sure how to do that. I can use the arm package to extract the standard errors associated with the slope estimates for each district and I know the standard error of the treatment estimate but I don't know how to estimate their correlation.  </p>
+
+<p>It seems like this should be an easy question to answer but I haven't been able to find it. Hoping someone can point me in the right direction.</p>
+"
+"0.242535625036333","0.237356331638771","199746","<p>The longitudinal dataset has n=275 and 8 measurement points. There are 3 groups (3 different drugs) with roughly n=80 each. </p>
+
+<p>The complications are:</p>
+
+<p>(1) Substantial dropout: only n=136 have all observations. Dropout is not missing at random, of course: severity predicts dropout, so do a few other variables in the dataset. </p>
+
+<p>(2) I have 17 dependent variables (DVs) of interest. Dimension reduction (e.g., PCA) is not possible because the covariance of variables changes dramatically over time (there are 4-5 dimensions/components at baseline and 1-2 dimensions/components at study exit)</p>
+
+<p>(3) The 17 DVs are all ordered-categorical, and have different ranges (from 0 to 2 to 0 to 4). </p>
+
+<p>My research question is whether the 3 drugs (groups) have differential impact on the trajectory of the 17 DVs. The best possibility seems to be to fit 17 longitudinal mixed models or 17 generalized estimation equations to the data, and correct for multiple testing somehow; there is probably too little power to fit multivariate models with even 2 DVs (let alone 17). </p>
+
+<p>The package <code>lme4</code> using the <code>lmer()</code> function cannot handle ordinal data, and I cannot model skewed ordinal variables with 3 categories as gaussian. </p>
+
+<p>The package <code>ordinal</code> using the <code>clmm2()</code> function deletes missing values listwise, deleting too many observations. </p>
+
+<p>So I seem to be trapped between a rock and a hard place and don't know how to fit the model even in the univariate case. </p>
+"
+"0.438357003759605","0.428995989125127","200109","<p>I am running a multilevel model with several interactions and a binary treatment. To summarize the model I would like to compute the first differences between treatment (1) and control group (0) using simulations (to get a good approximation to the confidence intervals). </p>
+
+<p>Using the distinction pointed out by King et al. 2000 (Making the most of statistical analysis: improving interpretation and presentation) between predicted values (they contained both fundamental and estimation uncertainty), and expected value (averages over the fundamental variability leaving only the estimation uncertainty caused by not having an infinite number of observations. Thus, the predicted values have a larger variability than the expected values. Moreover, a first difference is the difference between two expected rather than predicted values. </p>
+
+<p>I am trying to get first differences using <code>R</code> and <code>lme4</code>. </p>
+
+<p>Here an example to predict and get expected values: </p>
+
+<pre><code># create data
+set.seed (1)
+J &lt;- 15
+n &lt;- J*(J+1)/2
+group &lt;- rep (1:J, 1:J)
+mu.a &lt;- 5
+sigma.a &lt;- 2
+a &lt;- rnorm (J, mu.a, sigma.a)
+b &lt;- -3
+x &lt;- rnorm (n, 2, 1)
+sigma.y &lt;- 6
+y &lt;- rnorm (n, a[group] + b*x, sigma.y)
+u &lt;- runif (J, 0, 3)
+dat &lt;- cbind (y, x, group)
+
+# run model
+model &lt;- lmer(y ~ x + (1|group), data = dat)
+</code></pre>
+
+<p>I am trying to get the expected values (and confidence intervals) when x = 2. I would like to take into account the uncertainty of the random effect, but I am not sure if that is possible or appropriate, and if sampling groups is the best way to deal with the estimation of random effects.</p>
+
+<p>First, I use the <code>simulate</code> function (I don't exactly the difference betwen <code>simulate</code>and  <code>bootmer</code>): </p>
+
+<pre><code># simulate
+pred1  &lt;- function(model, groups = 1:15, nsim = 1000) {
+
+g &lt;- sample(groups, nsim, replace = TRUE) # sampling groups to deal with random effects, I am not sure this is the right thing.
+
+pv &lt;-  simulate(mer, newdata = data.frame(x  = rep(2, nsim), group = g),  
+                      nsim = nsim, use.u = FALSE)
+ev &lt;- apply(pv, 1, mean)
+
+return(list(pv, ev))
+}
+
+
+s1 &lt;- pred1(mer, nsim = 1000)
+
+# prediction
+quantile(unlist(s1[[1]]), c(0.5, 0.025, 0.975))
+       50%       2.5%      97.5% 
+ -1.335765 -15.180028  12.547462 
+
+# expected values
+quantile(s1[[2]], c(0.5, 0.025, 0.975))
+       50%       2.5%      97.5% 
+-1.3377041 -1.7398980 -0.9137497 
+</code></pre>
+
+<p>The difference between methods are big.</p>
+
+<p>Using the <code>bootmer</code> function: </p>
+
+<pre><code>pred2 &lt;- function(model, nsim = 1000) {
+
+  g &lt;- sample(1:15, nsim, replace = TRUE) # again, I am not sure this is the best way to do it
+
+  mySumm &lt;- function(.) {
+    predict(., newdata = data.frame(x = rep(2, nsim), group = g), re.form = NULL)
+  }
+
+  pv &lt;-  lme4::bootMer(mer, mySumm, nsim = nsim, use.u = FALSE)$t
+  ev &lt;- apply(pv, 2, mean)
+  return(list(pv, ev))
+}
+
+s2 &lt;- pred2(mer, nsim = 1000)
+
+# prediction
+quantile(unlist(s2[[1]]), c(0.5, 0.025, 0.975))
+      50%      2.5%     97.5% 
+-1.353249 -6.967289  4.396240 
+
+# expected values
+quantile(s2[[2]], c(0.5, 0.025, 0.975))
+      50%      2.5%     97.5% 
+-1.309230 -1.483738 -1.227172 
+</code></pre>
+
+<p>The histogram of expected values looks weird when using <code>bootmer</code>: I am getting the same values several times...</p>
+
+<p>Any suggestions, comments, ideas?</p>
+"
+"0.210042012604201","0.205556612948259","206870","<p>By converting and by trying to interpret the parameters of a logistic regression ran in R, I just find them to be overestimated. Therefore I tried to compute them myself but I can not obtain the same values reported by the regression.</p>
+
+<p>I used this web-page for computations:
+<a href=""http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm"" rel=""nofollow"">http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm</a></p>
+
+<p>Let say we only focus on the LagC parameter:</p>
+
+<p><strong>Logistic Regression</strong></p>
+
+<pre><code>&gt; model &lt;- glmer(RepT2 ~ DistractorC1 + DistractorC2 + LagC + DistractorC1:LagC + DistractorC2:LagC + (LagC | Subject) + (1 | Item),
+                data = DF,
+                family = binomial(link = ""logit""),
+                control = glmerControl(optimizer = ""bobyqa""))
+&gt; summary(model)
+
+  Fixed effects:
+                    Estimate Std. Error z value Pr(&gt;|z|)    
+  (Intercept)       -0.81039    0.22040  -3.677 0.000236 ***
+  DistractorC1       0.33129    0.06393   5.182  2.2e-07 ***
+  DistractorC2       0.03436    0.10011   0.343 0.731467    
+  LagC               2.09567    0.12725  16.469  &lt; 2e-16 ***
+  DistractorC1:LagC -0.21654    0.12770  -1.696 0.089932 .  
+  DistractorC2:LagC -0.84018    0.20055  -4.189  2.8e-05 ***
+</code></pre>
+
+<p>Odds of the parameters:</p>
+
+<pre><code>&gt; show(Odds &lt;- exp(summary(model)$coefficients[,""Estimate""])
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.4446833         1.3927594         1.0349529         8.1308503         0.8052993         0.4316343 
+</code></pre>
+
+<p>Probabilities of the parameters:</p>
+
+<pre><code>&gt; show(P &lt;- Odds / (1 + Odds))
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.3078068         0.5820725         0.5085881         0.8904812         0.4460752         0.3014976 
+</code></pre>
+
+<p><strong>My Estimations</strong></p>
+
+<pre><code>&gt; Means &lt;- DF %&gt;%
+    group_by(Subject, Lag) %&gt;%
+    filter(RepT1 == 1) %&gt;%
+    summarise(repok = sum(RepT2) / (n())) %&gt;%
+    group_by(Lag) %&gt;%
+    summarise(Means = mean(repok))
+
+&gt; show(Means)
+
+     Lag     Means
+  (fctr)     (dbl)
+1   Lag3 0.1972174
+2   Lag8 0.5475624
+</code></pre>
+
+<p>Odds of the parameter:</p>
+
+<pre><code>&gt; OddsLag3 &lt;- 0.1972174 / (1-0.1972174)
+&gt; OddsLag8 &lt;- 0.5475624 / (1-0.5475624)
+&gt; OddsLagC &lt;- OddsLag8 / OddsLag3
+&gt; show(OddsLagC)
+
+[1] 4.926377
+</code></pre>
+
+<p>Probabilities of the parameter:</p>
+
+<pre><code>&gt; show(OddsLag / (1 + OddsLag))
+
+[1] 0.8312628
+</code></pre>
+
+<p>We can see that it is close, but not accurate. Does anyone have an explanation?
+Note that I compute a mean for each subject and then only a mean for each condition. I also did estimate the parameters without taking into account the subjects, but still, the mismatch was here.</p>
+
+<p><a href=""http://i.stack.imgur.com/YRdPf.png"" rel=""nofollow"">Graphical representation</a></p>
+"
+"0.297044262893002","0.290700949866906","208170","<p>I would like to estimate a 3-level random intercept model. I use Stata for the estimation, where it is done by using the <code>xtmixed</code> command. In this model, company performance is observed over several years and companies are nested within industries. Hence, the repeated measurements of company performance is <code>level 1</code>, the companies are <code>level 2</code>, and the industries are <code>level 3</code>. The estimation in Stata is done via <code>xtmixed dep_var ind_var1 ind_var2 || industry: || company:</code>; in R it will be something like <code>model &lt;- lmer(dep_var ~ 1 + ind_var1 + ind_var2 + (1 | industry/company), df)</code>.</p>
+
+<p>In my sample, companies change industries over years - not often, but still with a certain frequency (if an industry change is a dummy, its mean is 0.18). </p>
+
+<p>My question is whether it is okay to proceed with estimating a simple 3-level random intercept model in the case of dynamic higher-order categories or this industry changes should be somehow introduced into a model? Are the estimates of variance components from the simple 3-level random intercept model reliable to conduct the variance components analysis?</p>
+"
+"0.420084025208403","0.411113225896519","223439","<p>I am running an analysis on a national sample of 20,000, representative at the province level (34 provinces)</p>
+
+<p>After checking for linearity and normality of my dependent variable I have run a preliminary OLS in order to see how the covariates perform in explaining the variation of the variable of interest. 
+I have selected the relevant independent variables following accreditee literature in my field of analysis, explored the covariance matrix in order to avoid problems of multicollinearity etc..</p>
+
+<p>The result from the OLS is good in term of significance level of the coefficients, the sign and the magnitute of the latter fullfil my expectations and match the results find by other analysis.
+However, the value of <code>R^2</code> is quite low: only <code>0.09</code> . Thus, knowing that some variation could be explained by the differences between provinces I have first estimate the OLS adding first provincial dummies and after distric dummies (398 districts).</p>
+
+<p>The <code>R^2</code> improved much, reaching respectively the <code>36%</code> and <code>41%</code>.
+However, what I would like to see are the underling cause of the regional differences: why do they perform differently? </p>
+
+<p>Among the variables I have some take a unique value according to each observation's province. I cannot use them in the OLS while using the province dummies because there would be perfect collinearity.</p>
+
+<p>In my view using a mixed linear model would help.</p>
+
+<p>I have run a random intercept null.model in which only the dependent variable is regressed against an intercept. For the estimation I have used the command <code>lmer</code> from the <code>{lme4}</code>package in <code>R</code>.</p>
+
+<p>The InterCorrelation Coeffient equals <code>0.30</code>, suggesting that the 30% of the variation happens between groups, the values of the group-mean reliance are quite high too (not less than <code>0.9</code>)- I repeat myself: the sample is province representative.</p>
+
+<p>I finally run a set of random mixed intercept model with 2 levels:</p>
+
+<p>where: <code>i</code> indicates the household and <code>j</code> indicates the province.</p>
+
+<ol>
+<li><code>Y_i = beta0j + beta1 X_i + e_ij</code> </li>
+<li><code>Y_i = beta0j + beta1 X_i + beta2 Z_j + e_ij</code></li>
+<li><code>Y_i = beta0j + beta1 X_i + beta2 W_j + e_ij</code></li>
+</ol>
+
+<p>The <strong>first question</strong> is: am I allowed to include a variable which varies only at the provincial level (as Z and W do) given that their coefficient is not computed by taking in cosideration the groups?
+As far as I have understood it would be a mistake to use those variables in the random part of the model in order to get random coefficients.</p>
+
+<p>The <strong>second question</strong>: given that by running the command <code>anova()</code>, also in <code>lme4</code>, model 1 is statistically different from model 2, and model 2 is  statistically not different from model 3, can I say that Z and W have the same power in explaing the variation in Y despite the fact that Z's coefficient is significant and W's is not significant?</p>
+
+<p>Think as if Z and W were proxies for the same dimension. They are in fact statistically and conceptually high correlated.</p>
+
+<p>Sorry but I cannot give more details on the actual problem I am woking on.</p>
+
+<p>Thanks in advance. </p>
+"
+"0.502793317823715","0.492056280281487","225241","<p>Consider a mixed model as follows.</p>
+
+<pre><code>library(lme4)
+# Load data
+data &lt;- structure(list(blk = c(1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3L),
+                       gent = c(1, 2, 3, 4, 7, 11, 12, 1, 2, 3, 4, 5, 9, 1, 2, 3, 4, 8, 6, 10L),
+                       yld = c(83, 77, 78, 78, 70, 75, 74, 79, 81, 81, 91, 79, 78, 92, 79, 87, 81, 96, 89, 82L),
+                       syld = c(250, 240, 268, 287, 226, 395, 450, 260, 220, 237, 227, 281, 311, 258, 224, 238, 278, 347, 300, 289L)),
+                  .Names = c(""blk"", ""gent"", ""yld"", ""syld""), class = ""data.frame"", row.names = c(NA, -20L))
+data$blk &lt;- as.factor(data$blk)
+data$gent &lt;- as.factor(data$gent)
+</code></pre>
+
+<p>The data is unbalanced.</p>
+
+<pre><code># Mixed effect model
+frmla &lt;- ""syld ~ 1 + gent + (1|blk)""
+library(lme4)
+model &lt;- lmer(formula(frmla), data = data)
+
+model
+Linear mixed model fit by REML ['merModLmerTest']
+Formula: syld ~ 1 + gent + (1 | blk)
+   Data: data
+REML criterion at convergence: 73.9572
+Random effects:
+ Groups   Name        Std.Dev.
+ blk      (Intercept)  9.385  
+ Residual             16.919  
+Number of obs: 20, groups:  blk, 3
+Fixed Effects:
+(Intercept)        gent2        gent3        gent4        gent5        gent6        gent7        gent8        gent9  
+    256.000      -28.000       -8.333        8.000       32.127       43.678      -36.805       90.678       62.127  
+     gent10       gent11       gent12  
+     32.678      132.195      187.195  
+</code></pre>
+
+<p>Primarily I want to compare the <code>gent</code> levels by LS means.</p>
+
+<pre><code>library(""lmerTest"")
+lsmeans(model)
+Least Squares Means table:
+         gent Estimate Standard Error   DF t-value Lower CI Upper CI p-value    
+gent  1   1.0    256.0           11.2  6.9    22.9      229      283  &lt;2e-16 ***
+gent  2   5.0    228.0           11.2  6.9    20.4      201      255  &lt;2e-16 ***
+gent  3   6.0    247.7           11.2  6.9    22.2      221      274  &lt;2e-16 ***
+gent  4   7.0    264.0           11.2  6.9    23.6      237      291  &lt;2e-16 ***
+gent  5   8.0    288.1           18.5  8.0    15.6      245      331  &lt;2e-16 ***
+gent  6   9.0    299.7           18.5  8.0    16.2      257      342  &lt;2e-16 ***
+gent  7  10.0    219.2           18.5  8.0    11.8      177      262  &lt;2e-16 ***
+gent  8  11.0    346.7           18.5  8.0    18.8      304      389  &lt;2e-16 ***
+gent  9  12.0    318.1           18.5  8.0    17.2      275      361  &lt;2e-16 ***
+gent  10  2.0    288.7           18.5  8.0    15.6      246      331  &lt;2e-16 ***
+gent  11  3.0    388.2           18.5  8.0    21.0      346      431  &lt;2e-16 ***
+gent  12  4.0    443.2           18.5  8.0    24.0      401      486  &lt;2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>In addition I am interested in variance partitioning.</p>
+
+<p>The variance component due to random effect and residual can be estimated as follows.</p>
+
+<pre><code>VCrandom &lt;- VarCorr(model)
+print(VCrandom, comp = ""Variance"")
+ Groups   Name        Variance
+ blk      (Intercept)  88.083 
+ Residual             286.250
+</code></pre>
+
+<p>How to partition the total variance into components due to each of the factors <code>gent</code> and <code>blk</code> along with the residual ? Something similar to the output given by <code>PROC MIXED</code> of <code>SAS</code>, where MSE is computed even when estimation is by ML or REML instead of least squares.</p>
+
+<p>Should I treat the fixed effect as random just for the purpouse of getting variance component ?</p>
+
+<pre><code>frmla2 &lt;- ""syld ~ 1 + (1|gent) + (1|blk)""
+model2 &lt;- lmer(formula(frmla2), data = data)
+model2
+
+VCrandom2 &lt;- VarCorr(model2)
+print(VCrandom2, comp = ""Variance"")
+ Groups   Name        Variance
+ gent     (Intercept) 4152.08 
+ blk      (Intercept)  116.11 
+ Residual              274.92 
+</code></pre>
+
+<p>If there is no random effect, variance components can be estimated using the least squares approach (ANOVA, Sum of squares, MSE).</p>
+
+<p>The package <code>mixlm</code> has provision for variance partitioning using SS in case of mixed models.</p>
+
+<pre><code>library(mixlm)
+
+mixlm &lt;- lm(syld ~ 1 + r(gent) + r(blk), data)
+
+Anova(mixlm, type=""III"")
+
+Analysis of variance (unrestricted model)
+Response: syld
+          Mean Sq   Sum Sq Df F value Pr(&gt;F)
+gent      5360.49 58965.36 11   18.73 0.0009
+blk        638.58  1277.17  2    2.23 0.1886
+Residuals  286.25  1717.50  6       -      -
+
+            Err.term(s) Err.df VC(SS)
+1 gent              (3)      6 3044.5
+2 blk               (3)      6   52.8
+3 Residuals           -      -  286.3
+(VC = variance component)
+
+               Expected mean squares
+gent      (3) + 1.66666666666667 (1)
+blk       (3) + 6.66666666666667 (2)
+Residuals (3)                       
+
+WARNING: Unbalanced data may lead to poor estimates
+</code></pre>
+
+<p>The estimates are different</p>
+
+<pre><code># Total variance
+var(data$syld)
+
+|source   |  model1|  model2|  mixlm|
+|:--------|-------:|-------:|------:|
+|gent     |      NA| 4152.08| 3044.5|
+|blk      |  88.083|  116.11|   52.8|
+|Residual | 286.250|  274.92|  286.3|
+</code></pre>
+
+<p>Can fixed effect variance be extracted using <code>predict</code> function as suggested here <a href=""https://sites.google.com/site/alexandrecourtiol/what-did-i-learn-today/inrhowtoextractthedifferentcomponentsofvarianceinalinearmixedmodel"" rel=""nofollow"">In R: How to extract the different components of variance in a linear mixed model!</a> ?</p>
+
+<pre><code>var(predict(model))
+</code></pre>
+
+<p>Which is the most appropriate method compatible with <code>(RE)ML</code> estimates in lme4 ?</p>
+"
+"0.454754296943124","0.474712663277541","235168","<p>I'm studying Design and Analysis of Experiments, 8th Edition. Douglas C. Montgomery is the author. I'm trying to replicate the first example he gives in Chapter 13, Experiments with Random Factors.</p>
+
+<p>In this example, there are measurements in a critical dimension on a part. 20 parts are randomly selected and measured by 3 operators, also selected at random. I want to fit two models to this data. The first one I call full model and it is given by</p>
+
+<p>$$y_{ijk} = \mu + \tau_i + \beta_j + (\tau\beta)_{ij} + \varepsilon_{ijk}$$</p>
+
+<p>The other model I call reduced model ant it is given by</p>
+
+<p>$$y_{ijk} = \mu + \tau_i + \beta_j + \varepsilon_{ijk}$$</p>
+
+<p>Both $\tau_i, i=1, \cdots, 20$ and $\beta_j, j=1, 2, 3$ are random effects. The code I'm using to analyze my problem is below:</p>
+
+<pre><code>gauge &lt;- structure(list(part = c(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 
+11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 20L, 1L, 2L, 3L, 
+4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 
+18L, 19L, 20L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 
+12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 20L, 1L, 2L, 3L, 4L, 
+5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 
+19L, 20L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 
+13L, 14L, 15L, 16L, 17L, 18L, 19L, 20L, 1L, 2L, 3L, 4L, 5L, 6L, 
+7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 
+20L), operator = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L), replication = c(1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L), measurement = c(21L, 24L, 20L, 27L, 
+19L, 23L, 22L, 19L, 24L, 25L, 21L, 18L, 23L, 24L, 29L, 26L, 20L, 
+19L, 25L, 19L, 20L, 23L, 21L, 27L, 18L, 21L, 21L, 17L, 23L, 23L, 
+20L, 19L, 25L, 24L, 30L, 26L, 20L, 21L, 26L, 19L, 20L, 24L, 19L, 
+28L, 19L, 24L, 22L, 18L, 25L, 26L, 20L, 17L, 25L, 23L, 30L, 25L, 
+19L, 19L, 25L, 18L, 20L, 24L, 21L, 26L, 18L, 21L, 24L, 20L, 23L, 
+25L, 20L, 19L, 25L, 25L, 28L, 26L, 20L, 19L, 24L, 17L, 19L, 23L, 
+20L, 27L, 18L, 23L, 22L, 19L, 24L, 24L, 21L, 18L, 25L, 24L, 31L, 
+25L, 20L, 21L, 25L, 19L, 21L, 24L, 22L, 28L, 21L, 22L, 20L, 18L, 
+24L, 25L, 20L, 19L, 25L, 25L, 30L, 27L, 20L, 23L, 25L, 17L)), .Names = c(""part"", 
+""operator"", ""replication"", ""measurement""), class = ""data.frame"", row.names = c(NA, 
+-120L))
+
+###############
+# full model
+fit.full &lt;- lmer(measurement ~ (1|part) + (1|operator) + (1|part:operator), data=montgomery)
+summary(fit.full)
+Linear mixed model fit by REML ['lmerMod']
+Formula: measurement ~ (1 | part) + (1 | operator) + (1 | part:operator)
+   Data: montgomery
+
+REML criterion at convergence: 409.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.0313 -0.6595  0.1270  0.5374  2.7345 
+
+Random effects:
+ Groups        Name        Variance Std.Dev.
+ part:operator (Intercept)  0.00000 0.0000  
+ part          (Intercept) 10.25127 3.2018  
+ operator      (Intercept)  0.01063 0.1031  
+ Residual                   0.88316 0.9398  
+Number of obs: 120, groups:  part:operator, 60; part, 20; operator, 3
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  22.3917     0.7235   30.95
+
+###############
+# reduced model
+fit.reduced &lt;- lmer(measurement ~ (1|part) + (1|operator), data=montgomery)
+summary(fit.reduced)
+Linear mixed model fit by REML ['lmerMod']
+Formula: measurement ~ (1 | part) + (1 | operator)
+   Data: montgomery
+
+REML criterion at convergence: 409.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.0313 -0.6595  0.1270  0.5374  2.7345 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ part     (Intercept) 10.25127 3.2018  
+ operator (Intercept)  0.01063 0.1031  
+ Residual              0.88316 0.9398  
+Number of obs: 120, groups:  part, 20; operator, 3
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  22.3917     0.7235   30.95    
+</code></pre>
+
+<p>However, I'm getting different estimates from the ones in the book. Montgomery used Minitab to fit its model and here are his results for the full model:</p>
+
+<p><a href=""http://i.stack.imgur.com/1aeGL.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/1aeGL.png"" alt=""Anova Table for the Full Model""></a></p>
+
+<p>They are different from mine. Notice how his <code>part*operator</code> has a negative estimation, while mine is zero. However, his estimates for the reduced model are the same as mine:</p>
+
+<p><a href=""http://i.stack.imgur.com/SaGVu.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/SaGVu.png"" alt=""Anova Table for the Reduced Model""></a></p>
+
+<p>So, my question about his problem are:</p>
+
+<ol>
+<li><p>Why our estimates differ for the full model? I understand that I can't have a negative variance like the one he got, but why does Minitab doesn't set it to zero? </p></li>
+<li><p>Using R, where (or how) can I get an ANOVA table like the one Minitab presents? I couldn't test my hypothesis in this problem because I can't find the p-values associated with the parameters I'm testing.</p></li>
+</ol>
+"

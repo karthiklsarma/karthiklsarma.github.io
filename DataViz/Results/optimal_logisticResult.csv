@@ -1,0 +1,432 @@
+"V1","V2","V3","V4"
+"0.491303684440518","0.475190963311491"," 49497","<p>I have a dataset I'm working on that has some co-variate shift between the training set and the test set.  I'm trying to build a predictive model to predict an outcome, using the training set.  So far my best model is a random forest.</p>
+
+<p>How can I deal with the shifted distributions in the training vs. test set?  I've come across 2 possible solutions that I've been able to implement myself:</p>
+
+<ol>
+<li>Remove the shifted variables.  This is sub-optimal, but helps prevent my model from over fitting the training set.</li>
+<li>Use a logistic regression to predict whether a given observation is from the test set (after balancing the classes), predict ""test set probabilities"" for the training set, and then boostrap sample the training set, using the probabilities for sampling.  Then fit the final model on the new training set.</li>
+</ol>
+
+<p>Both 1 and 2 are pretty easy to implement, but neither one satisfies me, as #1 omits variables that might be relevant, and #2 uses a logistic regression, when my final model is tree-based.  Furthermore, #2 takes a few paragraphs of custom code, and I worry that my implementation may not be correct.</p>
+
+<p>What are the standard methods for dealing with covariate shift?  Are there any packages in R (or another language) that implement these methods?</p>
+
+<p>/edit: It seems like ""kernel mean matching"" is another approach I could take.  I've found lots of academic papers on the subject, but no one seems to have published any code.  I'm going to try to implement this on my own, and will post the code as an answer to this question when I do.</p>
+"
+"0.24913643956122","0.321287731561","115647","<p>I have the following problem: I have a set of English words which I want to translate to Dutch. Of each words I mined a set of possible translations. For example, for the word ""Eighteen"" I obtained only one possible Dutch translation: ""Achttien"", which is correct. However, for other words I obtained multiple translations. For the word ""Good""  I have the translations ""Goed"", ""Braaf"" and ""Eerlijk"", which are technically correct translations but by far the best and most commonly used translation is only the word ""Goed"".</p>
+
+<p>For a training set of English words I manually defined the optimal (correct) translation. Using this set I want to train some model to optimally pick for each English word the optimal Dutch word using some predictors. For example, I assume words that are more frequently used are probably better translations than others, and I assume that words that are noted first in a list of translations are probably better translations than others (e.g., in a dictionary, the first translation is usually the best).</p>
+
+<p>So, my data looks something like this:</p>
+
+<pre><code>English     Dutch       Frequency   Order   Correct
+---------------------------------------------------
+Eighteen    Achttien    800         1       TRUE
+Good        Goed        900         1       TRUE
+Good        Braaf       500         2       FALSE
+Good        Eerlijk     600         3       FALSE
+old         bejaard     300         1       FALSE
+old         oud         900         2       TRUE
+</code></pre>
+
+<p>I want to predict the classification in the column <code>Correct</code>. At first I thought a logistic regression could do this, but that does not take into account that each row is not independent. e.g., for each unique value of the column <code>English</code> only one is correct and all others are false. Thus, some other classification method is required.</p>
+
+<p>I was hoping you could point me in the right direction as to what method (or even better, an <code>R</code> package) would be suitable to tackle this problem. I guess this problem occurs more often in Machine Learning but I have no experience in that field.</p>
+"
+"0.719194952228076","0.695608343640252","127479","<p>I'm using a mixed effects model with logistic link function (using lme4 version 1.1-7 in R).  However, I noticed that the estimates of significance for fixed effects change depending on the order of the rows in the dataset.  </p>
+
+<p>That is, if I run a model on a dataset, I get certain estimate for my fixed effect and it has a certain p-value.  I run the model again, and I get the same estimate and p-value.  Now, I shuffle the order of rows (the data is not mixed, just the rows are in a different order).  Running the model a third time, the p-value is very different.</p>
+
+<p>For the data I have, the estimated p-value for the fixed effect can be between p=0.001 and p=0.08.  Obviously, these are crucial differences given conventional significance levels. </p>
+
+<p>I understand that the estimates are just estimated, and there will be differences between values for a number of reasons.  However, the magnitude of the differences for my data seem large to me, and I wouldn't expect the order of my dataframe to have this effect (we discovered this problem by chance when a colleague ran the same model but got different results.  It turned out they had ordered their data frame.).  </p>
+
+<p>Here is the output of my script:
+(X and Y are binary variables which are contrast-coded and centred, Group and SubGroup are categorical variables)</p>
+
+<pre><code>&gt; # Fit model
+&gt; m1 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; # Shuffle order of rows
+&gt; d = d[sample(1:nrow(d)),]
+&gt; # Fit model again
+&gt; m2 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; summary(m1)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5421        
+              Y1          0.1847   0.4298   -0.79
+ Group        (Intercept) 0.2829   0.5319        
+              Y1          0.4640   0.6812   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1325  -8.214   &lt;2e-16 ***
+Y1            0.3772     0.2123   1.777   0.0756 .  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.112 
+&gt;
+&gt; # -----------------
+&gt; summary(m2)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5422        
+              Y1          0.1846   0.4296   -0.79
+ Group        (Intercept) 0.2829   0.5318        
+              Y1          0.4641   0.6813   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1166  -9.334  &lt; 2e-16 ***
+Y1            0.3773     0.1130   3.339 0.000841 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.074 
+</code></pre>
+
+<p>I'm afraid that I can't attach the data due to privacy reasons. </p>
+
+<p>Both models converge.  The difference appears to be in the standard errors, while the differences in coefficient estimates are smaller.  The model fit (AIC etc.) are the same, so maybe there are multiple optimal convergences, and the order of the data pushes the optimiser into different ones.  However, I get slightly different estimates every time I shuffle the data frame (not just two or three unique estimates).  In one case (not shown above), the model did not converge simply because of a shuffling of the rows.</p>
+
+<p>I suspect that the problem lies with the structure of my particular data.  It's reasonably large (nearly 200,000 cases), and has nested random effects.  I have tried centering the data, using contrast coding and feeding starting values to lmer based on a previous fit.  This seems to help somewhat, but I still get reasonably large differences in p-values.  I also tried using different ways of calculating p-values, but I got the same problem.</p>
+
+<p>Below, I've tried to replicate this problem with synthesised data.  The differences here aren't as big as with my real data, but it gives an idea of the problem.</p>
+
+<pre><code>library(lme4)
+set.seed(999)
+
+# make a somewhat complex data frame
+x = c(rnorm(10000),rnorm(10000,0.1))
+x = sample(x)
+y = jitter(x,amount=10)
+a = rep(1:20,length.out=length(x))
+y[a==1] = jitter(y[a==1],amount=3)
+y[a==2] = jitter(x[a==2],amount=1)
+y[a&gt;3 &amp; a&lt;6] = rnorm(sum(a&gt;3 &amp; a&lt;6))
+# convert to binary variables
+y = y &gt;0
+x = x &gt;0
+# make a data frame
+d = data.frame(x1=x,y1=y,a1=a)
+
+# run model 
+m1 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# shuffle order of rows
+d = d[sample(nrow(d)),]
+
+# run model again
+m2 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# show output
+summary(m1)
+summary(m2)
+</code></pre>
+
+<p>One solution to this is to run the model multiple times with different row orders, and report the range of p-values.  However, this seems inelegant and potentially quite confusing.</p>
+
+<p>The problem does not affect model comparison estimates (using anova), since these are based on differences in model fit.  The fixed effect coefficient estimates are also reasonably robust.  Therefore, I could just report the effect size, confidence intervals and the p-value from a model comparison with a null model, rather than the p-values from within the main model.</p>
+
+<p>Anyway, has anyone else had this problem?  Any advice on how to proceed?</p>
+"
+"0.321633760451338","0.311085508419128","129298","<p>I would like to get the optimal cutoff of an ROC curve relating to a logistic regression.
+I am using the roc from the R package pROC. I am assuming same cost of false negative and false positive using youden's J statistics max(sensitivity+specificity).
+I have variable status (binary) and primary variable test (continuous).</p>
+
+<p>roc(status, test, print.thres=T, print.auc=T, plot=T)
+Gives me a cutoff of 27.150</p>
+
+<p>I searched on this forum for suggestions and they doesn't seem to give me the right cutoff</p>
+
+<p>I used logistic regression, and I get the parameter value 14.25199 and -0.59877.
+Using the parameter values:</p>
+
+<p>roc(status, 14.25199-0.59877*test, print.thres=T, print.auc=T, plot=T)</p>
+
+<p>Gives me a cutoff of -2.005</p>
+
+<p>And another suggestion, is to use the probability instead.</p>
+
+<p>prob=predict(glm(status~test, family=binomial),type=c(""response""))</p>
+
+<p>roc(status, prob, print.thres=T, print.auc=T, plot=T)</p>
+
+<p>Gives me a cutoff of 0.119</p>
+
+<p>As you can see none of the method work. Both method gives the correct AUC but not the cutoff/threshold. The correct method should give me cutoff of 27.150.
+What is the correct x form to input to get the correct optimal cutoff/threshold from the command roc(status, x,â€¦.)</p>
+"
+"0.185695338177052","0.179605302026775","147923","<p>I have a data set with continuous variable and a binary target variable (0 and 1). </p>
+
+<p>I need to discretize the continuous variables (for logistic regression) with respect to the target variable and with the constrained that the frequency of observation in each interval should be balanced. I tried machine learning algorithms like Chi Merge, decision trees. Chi merge gave me intervals with very unbalanced numbers in each interval (an interval with 3 observations and another one with 1000). The decision trees were hard to interpret.</p>
+
+<p>I came to the conclusion that an optimal discretization should maximise the $\chi^2$ statistic between the discretized variable and the target variable and should have intervals containing roughly the same amount of observations. </p>
+
+<p>Is there an algorithm for solving this?</p>
+
+<p>This how it could look like in R (def is the target variable and x the variable to be discretized). I calculated Tschuprow's $T$ to evaluate the ""correlation"" between the transformed and the target variable because $\chi^2$ statistics tends to increase with the number of intervals. I'm not certain if this is the right way.</p>
+
+<p>Is there another way of evaluating if my discretization is optimal other than Tschuprow's $T$ (increases when number of classes decreases)? </p>
+
+<pre><code>chitest &lt;- function(x){
+  interv &lt;- cut(x, c(0, 1.6,1.9, 2.3, 2.9, max(x)), include.lowest = TRUE)
+  X2 &lt;- chisq.test(df.train$def,as.numeric(interv))$statistic
+  #Tschuprow
+  Tschup &lt;- sqrt((X2)/(nrow(df.train)*sqrt((6-1)*(2-1))))
+  print(list(Chi2=X2,freq=table(interv),def=sum.def,Tschuprow=Tschup))
+}
+</code></pre>
+"
+"0.4152273992687","0.401609664451249","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.33218191941496","0.401609664451249","166779","<p>Iâ€™ve seen some papers that present the idea of training classifiers such as logistic regression that are really meant to optimize a custom cost model (such as by maximizing profit given expect revenues for predictions depending on whether they are false positives, true negatives, true positives, or true negatives) not by optimizing the typical log-loss function and then looking for the optimal decision cut-off threshold, but by using different loss functions that weight differently the costs of each classification type or of each misclassification type (although I've seen that different authors propose different functions), and these seem to provide better results when evaluating them based on the customly-defined cost function.</p>
+
+<p>I was wondering if there are any implementations of such methods in R. Particularly, I'd like to try fitting a logistic regression treating the cost of misclassifying as false positive to be a multiple of the cost of misclassifying as false negative. I found a package that does just this for decision trees (although in that case it's based on the class proportions on the leaves rather than something like log-loss) and I see that there are some options for observation-specific weights in logistic regression, but not for error type weights.</p>
+"
+"0.262612865719445","0.254000254000381","172867","<p>I am trying to create a decision tree using the <code>rpart</code> package in R.
+To arrive at the optimal depth for the tree, I am using the <code>plotcp</code> function in the package (which provides the cross validated error rate for various complexity parameter thresholds). </p>
+
+<p>Ideally, you would expect the error to be very high for high values of cp,  which will then gradually decrease before increasing again or flattening out (bias-variance trade-off)</p>
+
+<p>However, the plot that I am getting is almost a straight line and as such implies that my optimal tree should have zero nodes. That should not be possible, as I do have a few strong/moderately strong predictors in my data set (and this relationship gets picked up when I try other models like logistic/conditional inference trees (<code>party</code> package) and the resulting models are reasonably accurate). </p>
+
+<p>I am pasting the cp plot that I got below. Any thoughts on what the issue could be?</p>
+
+<p><a href=""http://i.stack.imgur.com/twpRZ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/twpRZ.png"" alt=""enter image description here""></a></p>
+"
+"0.4152273992687","0.401609664451249","186845","<p>I created some data using the following code:</p>
+
+<pre><code>set.seed(1221)
+x &lt;- runif(500)
+y &lt;- runif(500,0,2)
+z &lt;- rep(0,500)
+z[-0.8*x + y - 0.75 &gt; 0] &lt;- 1
+plot(x,y,col=as.factor(z))
+</code></pre>
+
+<p>This produces the following plot</p>
+
+<p><a href=""http://i.stack.imgur.com/ycWdr.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ycWdr.png"" alt=""enter image description here""></a></p>
+
+<p>The data is linearly separable. Then, I applied the glm function to create a logistic regression model.</p>
+
+<pre><code>df &lt;- data.frame(class = z, x = x, y = y)
+model &lt;- glm(z ~ x + y, family = binomial, data = df)
+</code></pre>
+
+<p>This produces the following output:</p>
+
+<pre><code>summary(model)
+Call:
+glm(formula = z ~ x + y, family = binomial, data = df)
+
+Deviance Residuals: 
+       Min          1Q      Median          3Q         Max  
+-8.127e-04  -2.000e-08  -2.000e-08   2.000e-08   7.699e-04  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    -1062      52666   -0.02    0.984
+x              -1163      57197   -0.02    0.984
+y               1433      70408    0.02    0.984
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 6.8274e+02  on 499  degrees of freedom
+Residual deviance: 1.3345e-06  on 497  degrees of freedom
+AIC: 6
+
+Number of Fisher Scoring iterations: 25
+</code></pre>
+
+<p>The result surprised me, first because the parameter estimates are huge, and second because I was expecting such estimates to be close to the original decision boundary function, i.e. <code>-0.8x + y - 0.75 = 0</code>.</p>
+
+<p>I then used the <a href=""http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html"" rel=""nofollow"">glmnet</a> package to see if I could solve this issue. This package creates a penalised logistic regression model in order to deal with the large values in the parameter estimates. The code I used is the following:</p>
+
+<pre><code>library(glmnet)
+cvfit &lt;- cv.glmnet(as.matrix(df[,-1]), as.factor(df$class), family =   ""binomial"", type.measure = ""class"")
+plot(cvfit)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/vH4AV.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vH4AV.png"" alt=""enter image description here""></a></p>
+
+<p>And the coefficients for the optimal penalty strength are:</p>
+
+<pre><code>coef(cvfit, s = ""lambda.min"")
+3 x 1 sparse Matrix of class ""dgCMatrix""
+                    1
+(Intercept) -84.01446
+x           -91.40983
+y           113.18736
+</code></pre>
+
+<p>Such coefficients are smaller than the ones obtained with the <code>glm</code> function. Still they are not the same as the decision boundary function. </p>
+
+<p>Does anybody know why this is happening? Any help is greatly appreciated.</p>
+"
+"0.185695338177052","0.179605302026775","187679","<p>I'd like to test two classifiers at the same time, that is logistic regression and classification trees. To find a classification threshold, which for example maximises F1-score, I split my data set into train, validation and test set. Because this is all pretty new to me, I wrote my own loop to understand the procedure behind it. I was wondering, how would you find manually (without just using cross-validation from the caret package) the optimal cp-value? Is the optimal cp the average of all the cp picked for each fold? But if so, what do I need the validation set for? In logistic regression, this is more clear to me since I need it to find the threshold which maximises my F1 score. I appreciate your help!</p>
+"
+"0.454858826147342","0.43994134506406","187963","<p>I have a fundamental question about cross-validation in logistic regression. I would really appreciate some help since something is still unclear to me. My situation is the following: I split my data set into training, validation and test set. When using for example rpart for classification trees on a training set, it automatically splits it into k-folds (basically creating a validation set) and suggests an optimal complexity parameter. I can then run the suggested tree on my test set. However, if I run a logistic regression. Let's say I run a stepwise regression model (although I know stepwise regression model have to be used with caution). How can I use cross-validation to improve my model? Since, by using different folds, I will get models with different numbers of features. How can I choose one to eventually run it on my test set? Thank you very much in advance!</p>
+"
+"NaN","NaN","217417","<p>I have a logistic regression model. I'm looking for a non-graphical way to find the optimal cut-off where sensitivity is above a threshold(say 0.95) and maximizes sensitivity+specificity. I don't have a fitted model. Only two vectors of observations and predicted probabilities.</p>
+"
+"0.4152273992687","0.401609664451249","233178","<p>I have a database with 1200 observations and 14 variables and I'am trying to do a classification tree for my dependent nominal variable who hase 4 modality</p>
+
+<pre><code>    &gt; table(testarbre2$Q99)
+
+  Autres       Nahdha Ne pas voter Nidaa Tounes 
+     248          351          303          298 
+</code></pre>
+
+<p>at firt i tried to do a multinom logistic regression but i got the mojority of my predictor variables non significant. it seems that Even with 1200 people I was trying to fit a model for which I don't have sufficient data. 
+so i tried to do a classification tree using the package rpart from R 
+but the problem is that the error is so high about 65% and more, and the missclassification is about 70% 
+this is the code R that i used </p>
+
+<pre><code>   #preparation of the data
+   set.seed(26)
+   train=sample(1:nrow(testarbre2),nrow(testarbre2)*7/10)
+   test=-train
+   training_data=testarbre2[train,]
+   testing_data=testarbre2[test,]
+   testing_vote=vote[test]
+
+   #fitting the model
+   library(rpart)
+   library(rpart.plot)
+   Tree &lt;- rpart(Q99~.,data=training_data)
+   rpart.plot(Tree)
+   printcp(Tree)
+   plotcp(Tree)
+
+    #Construction of the complete tree
+  Tree &lt;-rpart(Q99~.,data=training_data,control=rpart.control(minsplit=50,cp=0))
+
+     #Prune the tree
+    treeOptimal &lt;- prune(Tree,cp=Tree$cptable[which.min(Tree$cptable[,4]),1])
+    rpart.plot(treeOptimal)
+
+   #Prediction
+   a=predict(ptitanicOptimal,testing_data2,type = ""class"")
+   mc=table(a,testing_vote2)
+</code></pre>
+
+<p>I don't know if i missed a step or i used a wrong approach in the construction of my classification tree or the database is causing the problem</p>
+
+<p>Please someone help me to understand what's wrong with my model</p>
+"

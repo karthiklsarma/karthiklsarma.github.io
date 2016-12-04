@@ -1,0 +1,1025 @@
+"V1","V2","V3","V4"
+"0.240192230707631","0.225493808400849"," 10697","<p>I'm studying R package dlm. So far it seems very powerful and flexible package, with nice programming interfaces and good documentation.</p>
+
+<p>I've been able to successfully use dlmMLE and dlmModARMA to estimate the parameters of AR(1) process:</p>
+
+<pre><code>u &lt;- arima.sim(list(ar = 0.3), 100)
+fit &lt;- dlmMLE(u, parm = c(0.5, sd(u)),
+              build = function(x)
+                dlmModARMA(ar = x[1], sigma2 = x[2]^2))
+fit$par
+</code></pre>
+
+<p>Now I'm trying to use similar code to estimate the parameters of simple linear regression model:</p>
+
+<pre><code>r &lt;- rnorm(100)
+u &lt;- -1*r + 0.5*rnorm(100)
+fit &lt;- dlmMLE(u, parm = c(0, 1),
+              build = function(x)
+                dlmModReg(x[1]*r, FALSE, dV = x[2]^2))
+fit$par
+</code></pre>
+
+<p>I expect fit$par to be close to c(-1, 0.5), but I keep getting something like</p>
+
+<pre><code>[1] -0.0002118851  0.4884367070
+</code></pre>
+
+<p>The coefficient -1 is not estimated correctly. However, the strange thing is that the variance of the noise is returned correctly.</p>
+
+<p>I understand that max-likelihood estimation might fail given bad initial values, but I observed that the likelihood function returned by dlmLL is very flat in the first coordinate.</p>
+
+<p>So I wonder: can such model be estimated at all using dlm? I believe the model is ""non-singular"", however I'm not sure how the likelihood function is calculated inside the dlm.</p>
+
+<p>Any hint greatly appreciated.</p>
+"
+"0.196116135138184","0.184114923579665"," 20725","<p>I have a model that looks like </p>
+
+<pre><code>lm(y ~ lag(x, -1) + lag(z, -1))
+</code></pre>
+
+<p>So basically, this is a time series regression with exogenous variables, and I want to carry out a rolling analysis of sample forecasts, meaning that:
+I first used a subsample (e.g., 1990-1995) for estimation, then I performed a one step ahead forecast, then I added one observation and made another one step ahead forecast, and so on.</p>
+
+<p>I have tried to work with <code>rollapply</code>, defining the model as <code>arima(0,0,0)</code> with <code>xreg=lags</code> of the other variables, but that doesn't work. </p>
+
+<p>Your help would be much appreciated!</p>
+"
+"0.138675049056307","0.130188910980824"," 26183","<p>I would like to convert an ARIMA model developed in R using the <code>forecast</code> library to Java code. Note that I need to implement only the forecasting part. The fitting can be done in R itself. I am going to look at the <code>predict</code> function and translate it to Java code. I was just wondering if anyone else had been in a similar situation before and managed to successfully use a Java library for the same. </p>
+
+<p>Along similar lines, and perhaps this is a more general question without a concrete answer; What is the best way to deal with situations where in model building can be done in Matlab/R but the prediction/forecasting needs to be done in Java/C++? Increasingly, I have been encountering such a situation over and over again. I guess you have to bite the bullet and write the code yourself and this is not generally as hard as writing the fitting/estimation yourself. Any advice on the topic would be helpful. </p>
+"
+"0.58916498929874","0.582222509739582"," 29336","<p><strong>Introduction</strong> </p>
+
+<p>I am aiming to forecast the annual growth rates for a number of macroeconomic indicators (denote one by $Y_t$).
+One of the tasks is to test the forecasting performance of rival time series models with and without exogenous variables ($X_t$, a $T\times k$ matrix). The list of rival models include:</p>
+
+<ol>
+<li>AR(I)MA model (annual growth rates are unlikely to have ""unit Roo"", though the latter is either assumed or tested) $$A(L)Y_t =\mu+ B(L)\varepsilon_t$$</li>
+<li>linear regression model with ARMA errors $$Y_t = X_t\beta + \eta_t, \ \ A(L)\eta_t =  B(L)\varepsilon_t $$</li>
+<li>lagged dependent variable model (autoregressive model with exogenous variables)
+$$A(L)Y_t = X_t\beta + \varepsilon_t$$ </li>
+<li>linear regression model
+$$Y_t = X_t\beta + \varepsilon_t$$</li>
+</ol>
+
+<p>Where $\varepsilon_t$ is assumed to be a strong white noise, zero-mean constant variance i.i.d. process; $A(L)$ and $B(L)$ are autoregressive (of order $p$) and moving average (of order $q$) polynomials with $L$ - a back-shift (lag) operator.</p>
+
+<p>Note that the primary and the only goal is forecasting performance, thus any ""good"" properties of parameter estimates are of the secondary concern. All I need is to test for the most parsimonious, robust to starting conditions forecaster. Decision will be made with one of the <code>accuracy()</code> options, but first I need to obtain the material for the comparison.</p>
+
+<p>Models 1. and 2. are estimated by <code>auto.arima()</code> with default <code>""CSS-ML""</code> estimation method. Models 3. and 4. are estimated by ordinary least squares (<code>lm()</code>). $T$ is about $40$ quarters.</p>
+
+<p><strong>Approaches tried so far</strong></p>
+
+<p>To make the jack-knifed residuals the first approach denoted by ""rolling"" has been implemented. Starting from feasibly large sub-sample of time series data, parameters are estimated and an $h$ ahead forecast is done by the <code>predict()</code> function (EDIT: it is the same suggestion as in the first part Rob's answer to the second question). After that one point is added and the estimation\prediction steps are repeated. </p>
+
+<p>A weak point of such experiments is that the number of time ticks (sample size) used to estimate the parameters is different. While I would like to test the robustness to the starting conditions, keeping the sample size for estimation fixed.</p>
+
+<p>Bearing this in mind I tried to set the several subsequent values (EDIT: for the interval $k+p+q&lt;t_0&lt;t_1&lt;T-h+1$) in $Y_t$ being missing values (NA). In models 2.-4. this also implies dropping the corresponding subsequent rows in data matrix $X_t$. Prediction for 3. and 4. is straightforward (the same <code>predict()</code> with omitted $X_t$ data rows works well). All my concerns are about models 1. and 2.</p>
+
+<p>With just the AR($p$) part the predictions are done sequentially $Y_{t+1|t} = \hat A(L)Y_t$. But with the presence of MA($q$) one could not (?) use the estimated parameters directly. From the Brockwell and Davis ""Introduction to Time Series and Forecasting"" Chapter 3.3 it follows that one needs an innovation algorithm to recursively estimate the $\theta_{n,j}$ from the specific system of equations that involves estimated autoregressive and moving average parameters. EDIT: these $\theta_{n,j}$ parameters are used to make the ARMA prediction, not the originally estimated parameters $\theta_{j}$. However it is remarked in the same chapter that $\theta_{n,j}$ asymptotically approaches $\theta_{j}$ if the process is invertible. It is not evident that 30-40 points is enough for the asymptotic result to be used even if is invertible. </p>
+
+<p>Notes: I don't want to restrict $q$ to zero, since I am not doing so in true out-of-sample forecasting. EDIT: also not that it is not missing value imputation problem, but forecasting experiment, that the trajectory is not supposed to bridge two sub-samples by this imputing the missing values.</p>
+
+<p><strong>Questions</strong></p>
+
+<ol>
+<li>Does <code>auto.arima()</code> performs correctly with the presence of missing values inside of the sample? [Already answered by Rob.]</li>
+<li>(The actually crucial part of this post) How to correctly forecast (NOT impute) these missed points from the ARMA model when both $p&gt;0$ and $q&gt;0$? (I hope there are the ways already implemented in R language, but I simply is missing something.)</li>
+</ol>
+
+<p>EDIT: since the parameters for ARMA parts are estimated correctly could I legally rearrange the arima object to include the estimated parameters and the data only for the first subsample and then use a predict function? </p>
+
+<p>EDIT2: I have tried to modify the estimated <code>mod</code> structure - the resulting forecast from <code>predict.Arima</code> is identical (double precision differences) to the forecast where I use the estimated MA and AR coefficients predicting $Y_{t+1|t}$ directly as $\hat A(L)(Y_t-X_t\hat \beta)+ X_t\hat \beta+\hat B(L)\hat \varepsilon_t $, without <code>KalmanForecast()</code>. This was expected since state space representation is supplied with the same estimated $\theta_j$, not $\theta_{n,j}$. So the only question remains is the difference between $\theta_j$ and $\theta_{n,j}$ significant to influence the point forecasts? I hope the answer is negative.</p>
+"
+"0.392232270276368","0.368229847159329"," 43588","<p>The main <strong>problem</strong> is:  I cannot obtain similar parameter estimates with EViews and R.</p>
+
+<p>For reasons I do not know myself, I need to estimate parameters for certain data using EViews. This is done by picking the NLS (nonlinear least squares) option and using the following formula: <code>indep_var c dep_var ar(1)</code></p>
+
+<p>EViews <a href=""http://forums.eviews.com/viewtopic.php?f=7&amp;t=465"" rel=""nofollow"">claims</a> that they estimate linear AR(1) processes such as:
+$$
+Y_t = \alpha + \beta X_t + u_t
+$$
+where $u_t$ errors are defined as: 
+$$
+u_t = \rho \cdot u_{t-1} + \varepsilon
+$$
+by using an equivalent equation (with some algebraic substitutions):
+$$
+Y_t = (1 - \rho) \alpha + \rho Y_{t - 1} + \beta X_t - \rho \beta X_{t - 1} + \varepsilon_t
+$$
+Furthermore, <a href=""http://forums.eviews.com/viewtopic.php?f=4&amp;t=3768"" rel=""nofollow"">this thread over at the EViews forums</a> suggests that their NLS estimations are generated by the Marquardt algorithm.</p>
+
+<p>Now, the go-to R function to estimate AR(1) processes is <code>arima</code>. However, there are two problems:  </p>
+
+<ol>
+<li>the estimates are maximum likelihood estimates; </li>
+<li>the intercept estimate is not actually the intercept estimate (according to R.H. Shumway &amp; D.S. Stoffer).</li>
+</ol>
+
+<p>Therefore, I turned to the <code>nlsLM</code> function from the minpack.lm package. This function uses the Marquardt algorithm to achieve nonlinear least squares estimates, which should yield the same results as the EViews implementation (or very similar ones, at least).</p>
+
+<p>Now the code. I have a data frame (<code>data</code>) with an independent variable and a dependent variable such as the one generated by the following code:</p>
+
+<pre><code>data &lt;- data.frame(independent = abs(rnorm(48)), dependent = abs(rnorm(48)))
+</code></pre>
+
+<p>To estimate parameters in the equation EViews claims to estimate (3<sup>rd</sup> one on this post), I use the following commands:</p>
+
+<pre><code>library(minpack.lm)
+result &lt;-
+nlsLM(dependentB ~ ((1 - theta1) * theta2) + (theta1 * dependentA) +
+                    (theta3 * independentB) - (theta1 * theta3 * independentA),
+data = list(dependentB = data$dependent[2:48], dependentA = data$dependent[1:47],
+   independentB = data$independent[2:48], independentA = data$independent[1:47]),
+start = list(theta1 = -10, theta2 = -10, theta3 = -10)
+)
+</code></pre>
+
+<p>Unfortunately, the estimates output by <code>nlsLM</code> are not close to the ones output by EViews. Do you have any idea of what might be causing this? Or maybe my code is wrong?</p>
+
+<p>Finally, I would like to say that I personally am an R user - that is exactly why I'm trying to do this in R instead of EViews. I would also love to provide you the data I'm working with but it's impossible since it's confidential data.</p>
+"
+"NaN","NaN"," 44584","<p>I have been playing around with a seemingly unrelated regression (SUR) estimation. However, for dynamic SUR models it is known that -- analogous to the ARIMA case -- an OLS/GLS estimate is biased. For example <a href=""http://www.sciencedirect.com/science/article/pii/030440769401670U"" rel=""nofollow"">this article</a> provides a correction. So here's my question: Is there a <em>R</em> package or some other implementation that provides this correction? Thanks in advance!</p>
+"
+"0.240192230707631","0.225493808400849"," 47416","<p>We know that dealing with model involving MA factors is not easy to estimate, since there are past values of errors to be computed recursively. And this recursive estimation requires preliminary (initial) estimates of the parameters. For example, an ARMA(1,2)
+$$z_t=\phi z_{t-1}-\theta_1 \varepsilon_{t-1}-\theta_2 \varepsilon_{t-2}+\varepsilon_t$$
+To estimate the parameters, we need to compute first the values of $\varepsilon_{t-1}$ and $\varepsilon_{t-2}$, since these are not available yet. And they are computed using
+$$\varepsilon_t=z_t-\phi z_{t-1}+\theta_1 \varepsilon_{t-1}+\theta_2 \varepsilon_{t-2}$$
+Procedures for obtaining preliminary estimates of the parameters is available in Box and Jenkins, Time Series: Forecasting and Control. And this estimation is already available in much statistical software. My question is, ""Is there a function for obtaining a preliminary estimate of the parameters in R?""</p>
+
+<p>I need this to obtain a preliminary estimate for my Space-Time ARIMA. Another question is, ""How does <code>arima</code> function of R compute preliminary estimates of the parameters when there are MA factors involved?""</p>
+
+<p>Thanks in advance!</p>
+"
+"0.240192230707631","0.225493808400849"," 58090","<p>I want to look at the acf and pacf of my data, to identify the model for my mean equation, so I want to fit an ARMA for my mean equation and later on model the conditional variance by a ARCH/GARCH (I know I have to do jointly model estimation). In the first step I want to look at the ACF and PACF for identifying, I used the standard Acf of the forecast library, but I noticed, that the confidence bands in these plots are given for testing randomness and not for fitting a ARMA.</p>
+
+<p>As <a href=""http://en.wikipedia.org/wiki/Correlogram"" rel=""nofollow"">wikipedia</a> says:</p>
+
+<blockquote>
+  <p>Correlograms are also used in the model identification stage for
+  fitting ARIMA models. In this case, a moving average model is assumed
+  for the data and the following confidence bands should be generated:</p>
+</blockquote>
+
+<p>$   \pm z_{1-\alpha/2}\sqrt{\frac{1}{N}\left(1+2\sum_{i=1}^{k} y_i^2\right)} $
+How can I get these confidence bands, which increase as the lag increases?</p>
+"
+"0.392232270276368","0.368229847159329"," 68131","<p>Just asking if someone knows why the prediction intervals are quite different when one uses a time series analytic method of estimation <em>versus</em> when one simulates such time series. </p>
+
+<p>For example, I used the forecast package's <code>auto.arima</code> function to get the best fit to my data, say it was an ARIMA(1,1,1), and then, on the one hand, I simulated such process doing around 10 thousand simulations and then calculating the 95% percentile with ""quantile"" function, and on the other hand, I used R's <code>forecast</code> package to do it. So I realized that these different approaches gave prediction intervals with different width (actually, those related with simulation approach are closer than those obtained with forecast package). The way I simulated such time series process is simulating the parameters as random variables distributed normally with mean equal to its estimated value and standard deviation equal to its related standard error. The ""white noise"" variables related with the Moving Average (MA) part of the process were simulated as normally distributed with mean zero and variance equal to the variance of the residuals.</p>
+
+<p>Thanks in advance for your help.</p>
+"
+"0.138675049056307","0.130188910980824"," 68966","<p>I am trying to manually estimate the non-seasonal components of an SARIMA (p,d,q)x(P,D,Q)[s]. I thought the estimation is going the same way like in ARIMA, but the output says somehow something different. </p>
+
+<p>I have an autocorrelation in the acf correlogram and one significance bound at lag 1 in the pacf. That means I have an autocorrelation first order.</p>
+
+<p>I'm confused now, why <code>auto.arima</code> is giving me the result (0,1,1)x(0,0,1)[12] instead of (1,1,0)x(0,0,1)[12]</p>
+
+<p>Here is my code example:</p>
+
+<pre><code>timeseries &lt;- ts(daten, start=c(1955,1), freq=12)
+
+&gt; timeseries
+      Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
+1955  1.8  1.7  1.5  1.2  1.5  1.5  1.6  1.8  1.5  1.5  1.6  1.3
+1956  0.7  0.6  0.4  0.9  0.9  0.8  0.8  0.6  0.6  0.4  0.4  0.2
+1957  0.2  0.1  0.6  0.8  0.3  0.4  0.5  0.7  0.8  0.9  1.0  1.3
+1958  1.7  1.7  1.4  1.0  0.9  1.3  1.3  1.0  1.5  1.4  1.4  2.2
+1959  1.3  1.7  1.7  2.2  2.8  2.5  2.2  2.3  1.8  1.6  1.3  1.4
+1960  2.2  1.8  1.9  1.6  1.1  0.8  1.1  1.1  1.1  1.4  1.2  1.2
+1961  0.9  1.2  1.3  0.9  0.7  0.8  0.8  1.2  1.0  1.0  1.4  1.0
+1962  1.1  0.8  1.1  1.7  2.1  2.0  2.1  2.1  2.0  2.3  2.0  2.3
+1963  1.6  1.9  1.6  1.4  1.6  1.8  1.8  1.9  2.5  2.3  2.2  2.1
+1964  2.1  2.1  1.9  2.3  2.1  2.0  2.1  1.8  1.0  1.1  1.5  1.4
+1965  1.8  1.9  2.0  2.0  2.0  2.0  2.0  2.0  2.7  2.7  3.3  3.1
+1966  2.9  3.0  3.3  2.6  3.1  3.4  3.5  3.3  3.0  2.5  1.4  1.1
+1967  0.9  1.0  0.4  0.8  0.0  0.0 -0.7 -0.1 -0.5 -0.1  0.3  0.8
+1968  0.8  0.5  1.2  1.0  1.2  0.8  1.2  1.0  1.3  1.3  1.6  1.9
+1969  2.0  2.2  2.3  2.7  2.4  2.4  2.6  2.5  2.9  2.9  2.8  2.3
+1970  2.3  2.5  2.3  2.2  2.2  2.0  1.9  2.2  2.1  2.1  1.9  2.0
+1971  1.9  1.8  1.8  1.1  1.6  1.9  1.9   NA 
+
+diffts &lt;- diff(timeseries,12)
+tsdisplay(diffts, lag.max=36)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/2MgzU.jpg"" alt=""enter image description here""></p>
+
+<p>But <code>auto.arima</code> is giving me the following output:</p>
+
+<pre><code>auto.arima(timeseries)
+
+Series: timeseries 
+ARIMA(0,1,1)(0,0,1)[12]                    
+
+Coefficients:
+          ma1     sma1
+      -0.1280  -0.7260
+s.e.   0.0684   0.0584
+
+sigma^2 estimated as 0.07113:  log likelihood=-23.77
+AIC=53.54   AICc=53.66   BIC=63.42
+</code></pre>
+"
+"0.138675049056307","0.130188910980824"," 77531","<p>I have obtained the following estimations and forecasts in R for a seasonal ARIMA(1, 0, 1)(1, 0, 1)[7]</p>
+
+<blockquote>
+  <p>model1</p>
+</blockquote>
+
+<p>Series: PO </p>
+
+<p>ARIMA(1,0,1)(1,0,1)[7] with zero mean     </p>
+
+<p>Coefficients:</p>
+
+<pre><code>      ar1      ma1    sar1     sma1
+      0.9895  -0.8241  0.9974  -0.9551
+s.e.  0.0053   0.0223  0.0018   0.0136
+  sigma^2 estimated as 0.07273:  log likelihood=-109.35
+   AIC=228.7   AICc=228.76   BIC=252.96
+</code></pre>
+
+<blockquote>
+  <p>forecast(model1, h=2)</p>
+</blockquote>
+
+<p>Point   Forecast     Lo 80    Hi 80     Lo 95    Hi 95</p>
+
+<p>t+1      <strong>1.404053</strong> 1.0584363 1.749670 0.8754777 1.932629</p>
+
+<p>t+2      1.266133 0.9158214 1.616444 0.7303778 1.801888</p>
+
+<p>However, considering the back errors and observed values from below, I cannot seem to replicate the forecast for t+1 which is 1.404053, using the formula:</p>
+
+<pre><code>x[t+1]=0.9895*x[t]+0.9974*x[t-6]-0.9895*0.9974*x[t-7]-(-0.8241)*e[t]-(-0.9551)*e[t-6]+(-0.8241)*(-0.9551)*e[t-7]
+</code></pre>
+
+<p>Instead of 1.404053 I get 1.34755</p>
+
+<p>Point   Errors      Fitted          Observed</p>
+
+<p>... ...</p>
+
+<p>t-8 0.091543793 1.439935124     1.5314789</p>
+
+<p>t-7 -0.146540485    1.40181299      1.2552725</p>
+
+<p>t-6 -0.031449518    1.235569501     1.20412</p>
+
+<p>t-5 -0.008707829    1.263980334     1.2552725</p>
+
+<p>t-4 -0.009736316    1.472134314     1.462398</p>
+
+<p>t-3 0.079273123 1.477029378     1.5563025</p>
+
+<p>t-1 0.064970255 1.440179723     1.50515</p>
+
+<p>t   0.135555386 1.444228211     1.5797836</p>
+
+<p>Can you please help me understand what I am doing wrong?
+Thank you!</p>
+"
+"NaN","NaN"," 85374","<p>I am interesting in simulating AR(1) processes with 0.9 parameter and n = 10. The itterations should be 10000. 
+When I was trying to run the program it gave me an error in the estimation procedure. </p>
+
+<p>""Error in arima(newyt, order = c(1, 0, 0)) : 
+  non-stationary AR part from CSS ""</p>
+
+<p>My code is this:</p>
+
+<pre><code>set.seed(1123)
+rep&lt;-10000
+phix&lt;-0.90
+t&lt;-c(NA,rep)
+tstar&lt;-c(NA,rep)
+tdstar&lt;-c(NA,rep)
+r&lt;-c(NA,rep)
+cut.est&lt;-c(NA,rep)
+cut2.est&lt;-c(NA,rep)
+for(i in 1:rep)
+{
+ts.sim3 &lt;- arima.sim(n = 63, list(ar=c(phix)))
+new&lt;-ts(ts.sim3[c(0,14:63)])
+cut.ts&lt;-arima(new,order = c(1,0,0))
+yt&lt;-arima.sim(n = 63, list(ar=c(phix)))
+newyt&lt;-ts(yt[c(0,14:63)])
+cut2.ts&lt;-arima(newyt,order = c(1,0,0))
+r[i]&lt;-cor(new,newyt)
+tstar[i]&lt;-r[i]/(sqrt((((1+(phix*phix))/((1-(phix*phix)))/(50)))))
+t[i]&lt;-r[i]/(sqrt((1-r[i]^2)/(50-2)))
+cut.est[i]&lt;-coef(cut.ts)[""ar1""]
+cut2.est[i]&lt;-coef(cut2.ts)[""ar1""]
+tdstar[i]&lt;-r[i]/(sqrt((((1+(cut.est[i]*cut2.est[i]))/
+((1-cut.est[i]*cut2.est[i])))/(50)))))
+}
+values.t.test&lt;-matrix(t)
+mean(cut.est)
+mean(cut2.est)
+values.t.test
+sum(abs(t) &gt; 1.96)
+sum(abs(tstar) &gt; 1.96)
+sum(abs(tdstar) &gt; 1.96)
+</code></pre>
+
+<p>Do you have any ideas?</p>
+"
+"0.098058067569092","0.184114923579665"," 90118","<p>When trying to fit a AR(p) model to a time series in R, it seems that both ar.ols() and arima() will work. Is there some consideration of when to use which then?</p>
+
+<p>ar.ols() seems to use least square estimation, while arima() uses maximum likelihood or minimize conditional sum-of-squares (default method).</p>
+
+<p>Is minimizing conditional sum-of-squares equivalent to conditional MLE for Gaussian stationary process? So is arima() essentially MLE or conditional MLE?</p>
+
+<p>Thanks!</p>
+"
+"0.283069258536149","0.31889640207164","110589","<p>I'm using R to do some time series estimation.  I'm trying to rebuild the fitted values from an Arima model by hand to use in an Excel spreadsheet using the estimated coefficients and the input data. I can use the fitted command, but I'm trying to understand more how it works. Ex:  </p>
+
+<pre><code>library(MASS)
+library(tseries)
+library(forecast)
+
+set.seed(1)
+N = ts(mvrnorm(50, mu=c(0,0), Sigma=matrix(c(1,0.56,0.56,1), ncol=2), 
+       empirical=TRUE), frequency=12)
+head(N)
+
+&gt;            [,1]       [,2]
+&gt;[1,] -0.05270976  0.7239571
+&gt;[2,] -0.67232349 -0.6631604
+&gt;[3,] -0.20193415  0.8176053
+&gt;[4,] -0.54278281 -2.0458285
+&gt;[5,]  1.38279994  0.9405811
+&gt;[6,]  1.39979731  2.1717733
+
+# Model: x(t) = a * x(t-1) + e(t)
+fit = Arima(N[,1], order=c(1,0,0), include.constant=FALSE)
+
+&gt; fit  
+&gt;Series: N[, 1]  
+&gt;ARIMA(1,0,0) with zero mean          
+&gt;
+&gt;Coefficients:  
+&gt;         ar1  
+&gt;       0.0293
+&gt;s.e.   0.1400  
+&gt;
+&gt;sigma^2 estimated as 0.9791:  log likelihood=-70.42
+&gt;AIC=144.84   AICc=145.1   BIC=148.66
+
+# Build the fitted values: x(t)=a * x(t-1) 
+pred  = fit$coef[1] * lag(fit$x, -1) 
+pred1 = fitted(fit)
+head(cbind(pred, pred1))   
+
+&gt;             pred         pred1
+&gt;[1,]           NA -2.255567e-05
+&gt;[2,] -0.001541849 -1.541849e-03
+&gt;[3,] -0.019666597 -1.966660e-02
+&gt;[4,] -0.005906915 -5.906915e-03
+&gt;[5,] -0.015877313 -1.587731e-02
+&gt;[6,]  0.040449232  4.044923e-02 
+</code></pre>
+
+<p>In this case, <code>pred</code> and <code>pred1</code> match.  </p>
+
+<p>However when I add in an <code>xreg</code>:  </p>
+
+<pre><code># Model: x(t) = a*x(t-1) + b*xreg + e(t)
+fit1 = Arima(N[,1], order=c(1,0,0), xreg=N[,2], include.constant=FALSE)
+
+&gt;fit  
+&gt;Series: N[, 1]  
+&gt;ARIMA(1,0,0) with zero mean         
+&gt;
+&gt;Coefficients:  
+&gt;         ar1  N[, 5]  
+&gt;       0.0860  0.5606  
+&gt;s.e.   0.1401  0.1155  
+&gt;
+&gt;sigma^2 estimated as 0.6675:  log likelihood=-60.85
+&gt;AIC=127.69   AICc=128.22   BIC=133.4
+
+# Build the fitted values: x(t) = a*x(t-1) + b*xreg 
+pred2  = fit1$coef[1]*lag(fit1$x, -1) + fit1$coef[2]*fit1$xreg 
+pred21 = fitted(fit1) 
+head(cbind(pred2, pred21))
+
+&gt;              pred2     pred21
+&gt;[1,]         NA  0.4041670
+&gt;[2,]  0.4013329 -0.4112205
+&gt;[3,] -0.4296032  0.4325201
+&gt;[4,]  0.4410005 -1.2037229
+&gt;[5,] -1.1936161  0.5792684
+&gt;[6,]  0.6462336  1.2911169
+</code></pre>
+
+<p>In this case, <code>pred2</code> and <code>pred21</code> do not match, and the only thing changed was adding an <code>xreg</code>. The only time I cannot build out the fitted values by hand is when the AR part is included. I was able to do it when only MA parts were included with the <code>xreg</code>.  I would really appreciate knowing how <code>Arima</code> treats <code>xreg</code> when generating the fitted values. </p>
+"
+"0.196116135138184","0.184114923579665","117474","<p>A dataset I am working with (from the OECD), for harmonised unemployment seems to be seasonally adjusted:</p>
+
+<blockquote>
+  <p>The unemployment rates  shown here are calculated as the number of unemployed persons as a percentage of the labour force (i.e., the unemployed plus those in employment) and are seasonally adjusted.</p>
+</blockquote>
+
+<p>This is taken from their <a href=""http://www.oecd.org/std/labour-stats/44743407.pdf"" rel=""nofollow"">methodology notes</a>. Yet, while working with it, R (the software that I am using) shows a seasonal component in the decomposition of the series.</p>
+
+<p>Working backwards (with <code>auto.arima</code>) for the series, this is the result I get for the series:</p>
+
+<pre><code> Series: std 
+ ARIMA(2,1,1)(0,0,2)[12]                    
+
+ Coefficients:
+     ar1     ar2      ma1     sma1    sma2
+  0.5194  0.3131  -0.7888  -0.1570  0.0918
+ s.e.  0.1031  0.0552   0.0957   0.0569  0.0569
+
+ sigma^2 estimated as 0.06156:  log likelihood=-8.39
+ AIC=28.77   AICc=29.04   BIC=51.44
+
+ Training set error measures:
+                   ME      RMSE       MAE       MPE     MAPE      MASE
+ Training set 0.0006069076 0.2477273 0.1866529 -0.210822 5.128619 0.2163681
+</code></pre>
+
+<p>Whose criterions and error measurements seem to be unequivocally lower than any other model I have come up with <em>without</em> any seasonal component.</p>
+
+<p>R suggests <em>two</em> Seasonal Moving Average components for this series, but I am unsure of the validity of this, given the fact that the series was already adjusted according to the OECD. A minor problem is that the MPE is negative.</p>
+
+<p>I am worried about over estimation of the relevant parameters.</p>
+
+<p>Here is the structure of the data:</p>
+
+<pre><code> &gt; dput(std)
+ structure(c(4.5, 4.7, 4.2, 4.4, 3.9, 3.9, 3.7, 3.7, 3.4, 3.6, 
+ 3.5, 3.1, 3.5, 3.3, 3.7, 3.7, 3.7, 3.8, 3.6, 3.5, 3.5, 3.3, 3.5, 
+ 3.5, 3.4, 3.1, 3, 2.9, 3.1, 2.9, 2.8, 3.1, 2.8, 2.5, 2.7, 2.7, 
+ 2.5, 2.5, 2.5, 2.7, 2.8, 3, 3.2, 3.1, 2.4, 3, 2.6, 2.6, 2.7, 
+ 2.6, 2.9, 2.6, 2.3, 2.2, 2.4, 3.3, 2.8, 2.9, 2.9, 2.8, 2.8, 3.1, 
+ 2.7, 2.7, 2.9, 2.8, 2.8, 2.6, 2.4, 2.6, 3.3, 2.8, 3, 3.5, 3.5, 
+ 3, 3.3, 3.2, 3.3, 4, 3.7, 3.4, 3.5, 3.6, 3.7, 3.6, 3.5, 3.6, 
+ 3.3, 3.4, 3.5, 3.6, 3.6, 3.9, 4.1, 4, 4.4, 5.1, 5.6, 6.1, 6.5, 
+ 6.7, 6.8, 7.6, 6.7, 6.6, 6.4, 6.6, 6.2, 6.1, 5.8, 5.8, 5.4, 5.6, 
+ 5.4, 5.3, 5.4, 5, 5.1, 4.4, 4.3, 3.8, 4.1, 4, 4, 3.6, 4, 3.6, 
+ 3.4, 3.3, 3.4, 3.1, 3.5, 3.4, 3.3, 3.1, 3.3, 3.3, 3.3, 3.1, 3.2, 
+ 3.1, 3, 3.1, 2.6, 3.1, 2.7, 2.8, 2.6, 2.7, 2.3, 2.5, 2.3, 2.4, 
+ 2.3, 2.4, 2.3, 2.1, 2.2, 2.8, 2.7, 2.7, 2.5, 2.7, 2.6, 2.5, 2.4, 
+ 2.5, 2.5, 3.2, 2.7, 2.7, 2.8, 2.7, 2.8, 2.3, 2.5, 2.9, 3, 3.1, 
+ 3.4, 3, 3, 3.1, 3.1, 3, 2.9, 2.8, 2.9, 2.8, 3, 2.7, 2.9, 3, 3.1, 
+ 3.1, 3.2, 3.3, 3.6, 3.7, 3.8, 3.8, 4, 3.4, 3.8, 4, 3.9, 4, 3.9, 
+ 4, 3.8, 4, 3.8, 3.9, 3.9, 4, 3.9, 3.6, 3.7, 3.8, 3.7, 3.9, 3.7, 
+ 3.5, 3.6, 3.4, 3.1, 3.2, 3.3, 3.6, 3.5, 3.4, 3.3, 3.6, 3.6, 3.8, 
+ 3.8, 3.7, 3.7, 3.8, 3.7, 3.9, 4.1, 3.7, 3.6, 3.5, 3.6, 3.7, 3.7, 
+ 3.8, 3.6, 3.8, 3.8, 3.8, 4, 3.7, 3.6, 3.7, 3.8, 4, 4, 4, 4.6, 
+ 4.8, 4.7, 5.2, 5.1, 5.4, 5.7, 5.4, 5.7, 5.9, 6, 5.8, 5.4, 5.3, 
+ 5.6, 5.4, 5.2, 5.5, 5.4, 5.2, 5.3, 5.1, 5.3, 5.6, 5.5, 5.5, 5.2, 
+ 5.4, 5, 5.2, 5.4, 5.5, 5.3, 5.4, 5.3, 4.9, 5.1, 5, 4.7, 5.3, 
+ 5, 4.9, 5, 4.9, 4.7, 5.1, 4.7, 4.9, 5.3, 5, 5.2, 4.9, 4.9, 5.1, 
+ 5.1, 5, 4.8, 4.9, 5, 4.9, 4.6, 4.8), .Tsp = c(1987, 2013.91666666667, 
+ 12), class = ""ts"")
+</code></pre>
+"
+"0.477213572231833","0.537612921980549","122270","<p>This is a long post but it is <em>not</em> conceptually difficult. Please bear with me.</p>
+
+<p>I am trying to model the <strong>seasonality</strong> of production volume of an agricultural commodity. I do not care about the structure of the model (as long as it produces sensible output) nor about explaining seasonality; my goal is to adjust the series for seasonality before proceeding to forecasting. </p>
+
+<p>I know the seasonality is due to supply (weather is a key determinant) as well as demand (higher demand around Christmas and Easter, etc.). </p>
+
+<p>My <strong>data is weekly</strong>, and I am following the approach by prof. Hyndman of modelling the time series as an <strong>ARMA process with Fourier terms</strong> to account for seasonality (see <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">here</a>). I also include Christmas and Easter dummies together with Fourier terms. </p>
+
+<p>You might think I do not need a Christmas dummy since Christmas is always the 25th of December and thus Fourier terms would account for it, unlike for Easter which jumps back and forth in March-April from year to year. However, Christmas sometimes occur in week 51 and sometimes in week 52 (at least in my calendar), and Fourier terms will not account for that; hence a Christmas dummy is actually relevant.</p>
+
+<p>Actually, I would like to include up to four dummies for Christmas (from two weeks before Christmas to one week after Christmas) as the seasonal effect is not concentrated on just the Christmas week but also spread out a little in time. The same is with Easter.</p>
+
+<p>Thus I end up with $4+4=8$ dummies, up to 25 pairs of Fourier terms and an unknown ARMA order, which could be as high as (5,5), perhaps. This gives me an <strong>awfully large pool of models to choose from</strong>. Thus I have trouble replicating the approach used in the source above because of <strong>limited computational resources</strong>. Recall that in the original source there were no dummies, so the model pool was $2^{4+4}=256$ times smaller than mine and it was possible to try out a reasonably large proportion of all possible models, and then choose one of them by AIC. </p>
+
+<p>Even worse, I would like to repeat my exercise multiple times (100 times) using a rolling window on the data I have. Thus the <strong>computational requirements</strong> for my exercise <strong>become exorbitant</strong>. I am looking for a solution, and hope someone could help me out.</p>
+
+<p>Here are a few ideas I have:</p>
+
+<ol>
+<li><p>Drop the ARMA terms all together. </p>
+
+<ul>
+<li>This will make the estimates of coefficients on Fourier terms and dummies biased and inconsistent, thus the seasonal component (the Fourier terms times their coefficients plus dummies times their coefficients) might be rubbish. However, if ARMA patterns are pretty weak, maybe the bias and inconsistency of the coefficient estimates will not be too bad?</li>
+</ul></li>
+<li><p>Estimate only some models from the pool of all possible models. E.g. select the ARMA order by <code>auto.arima()</code> function in <code>forecast</code> package in <code>R</code>: <code>auto.arima()</code> does not consider all possible ARMA orders but only non-restricted ones (e.g. an AR(2) model with the AR(1) coefficient restricted to zero is not considered) and takes some other shortcuts. Also, I could force all dummies to be present without questioning whether all of them are really relevant. </p>
+
+<ul>
+<li>This indeed reduces the model pool considerably (by a factor of $2^{4+4}=256$ only due to dummies), but it comes at a cost of likely inclusion of irrelevant variables. Not sure how bad that could be. </li>
+</ul></li>
+<li><p>Use a different estimation method: conditional sum of squares (CSS) instead of maximum likelihood (ML) when possible, something else? </p>
+
+<ul>
+<li>Unfortunately, CSS in place of ML does not seem to reduce the computational time enough in practice (I tested a few examples).</li>
+</ul></li>
+<li><p>Do the estimation in two (or more) steps: select the ARMA order independently of the number of Fourier terms and inclusion/exclusion of dummies, then select the number of Fourier terms, then select the number of dummies, or something similar. </p>
+
+<ul>
+<li>This would reduce the model pool to the following: the number of all possible ARMA models (e.g. $2^{5+5}$) plus 26 (0 pairs of Fourier terms, 1 pair of Fourier terms, ..., 25 pairs of Fourier terms) plus $2^{4+4}$ (all combinations of dummies). This particular division into stages certainly does not make sense, I admit. But perhaps there exists a smart way to divide model selection into steps? I guess we need mutual orthogonality of regressors to be able to consider their inclusion/exclusion from the model one by one, or something similar. I need some insight here...</li>
+</ul></li>
+<li><p>Do something along the lines of Cochrane-Orcutt correction: <strong>(1)</strong> estimate a model without any ARMA terms (thus a simple OLS regression of production volume on Fourier terms and dummies); <strong>(2)</strong> examine the ARMA patterns in residuals and determine the relevant ARMA order; <strong>(3)</strong> estimate the corresponding ARMA model with Fourier terms and dummies as exogenous regressors. <br>(I know Cochrane-Orcutt does not consider ARMA(p,q) but just AR(1), but I thought maybe I could generalize it? Not sure, perhaps I am making a mistake here?)</p>
+
+<ul>
+<li>This would reduce the model pool to be estimated by a factor of $2^{5+5}$ if we would otherwise consider ARMA(5,5) and all sub-models nested in it, which is very nice. However, Cochrane-Orcutt correction is not as good as getting the model order correct in the first place. (I lack a theoretical argument there, but I suspect you do not always end up with the correct ARMA order if you use Cochrane-Orcutt or something similar.)</li>
+</ul></li>
+</ol>
+
+<p>I would appreaciate any comments on the ideas above and, even more, your own ideas on how to save computational time.</p>
+
+<p><strong>Thank you!</strong></p>
+
+<p>P.S. Here is the data (2007 week 1 to 2012 week 52): <br><code>6809  8281  8553  8179  8257  7426  8098  8584  8942  9049  9449 10099 10544  6351  8667  9395  9062  8602 10500  8723  9919  9120 10068  9937  9998  9379  9432  8751 10250  7690  6857  8199  8299  9204 11755  9861 10193 10452  9769 10289 10399 10181 10419 10324 11347 11692 12571 13049 13712 15381 13180  3704  5833  9909  8979  8883  9599  9034  9617  9710  9878 10872 12246  7122  8071  9656  9157  9729  8814  8704 10724  9294 10176 10394  9633 10872 10353  9400  9692  9244  8921  7698  8191  8494  8681  9420  8947  9287 10043  9953 10136 10235 10027 10137 11187 10383 11321 12023 11824 13752 13907 14658 14634  5353  5603 11607  9512  9537  9775  8558  9227  9146  9673 10225 10794 10646 10545 12375  7742  9269 11134  9588 10890 10061 10244 11275  9428 10301 11039 10779 10580  9215  9538  9717  9966 10678 10821 10898 11458 11090 12080 10904 12990 12325 12257 12246 12351 12408 11732 12702 14181 14963 15027 16657 17766  8265  7552 11067 10808 10891 10967 10826 10929 10891  9293 10902 11640 11921 13320  7751  9929 11632 11073 10955 11785 10533 10629 11535 12513 11780 12639 12280 12245 11817 11275 10242 10625  9884 10182 11048 12120 12697 13132 12597 13516 13536 13279 13935 13539 14335 13748 13988 14497 15255 15346 17626 17716 10713  7752  9309 11133 11853 11570 10320 10817 10982 10585 10941 12801 12165 11899 10941 12729 13763  8130  9888 11889 13036 10413 12609 10992 13201 11833 13159 12880 12160 13277 12758 10897 11197 12169 12639 13788 13819 14804 14613 14992 16079 16648 16376 16207 15906 15301 16194 17327 18890 18710 19953 22369 16499  9721 11785 12528 13994 12990 13226 12883 13613 14382 15829 15525 16395 17175 18334  9286 15530 16510 15370 13019 16526 14425 16542 15328 16993 17607 16734 15826 16555 16064 14412 14355 15238 15064 15317 15533 16542 16474 17354 18359 18459 17312 17499 18298 17301 17795 17867 18453 19372 19394 21897 23674 23219  7356</code></p>
+"
+"0.465474668125631","0.47060485181697","123576","<p>I am trying to test the effect on the heat flux between indoors and outdoors before and after removing insulation.</p>
+
+<p>Briefly, I have 26 sensors on a wall, measuring heat flow between indoors and outdoors over a number of days. The wall was part of a real world experimental setup so that the insulation on the wall was removed halfway through the experiment. Â What I care about is to have a measure of the effect of the removal of the insulation (I am not interested in any form of forecasting). Â I am exploring the use of a SARIMA/ARIMAX models with one regressor because, aside from the removal of the insulation, the heat flow between indoors and outdoors was affected by daily cyclical and random environmental effects (heating on or off, daily temperature changes, wind, etc).  Here I will present that data and analysis of one sensor.  My data has been collected hourly, and I have transformed the variable â€˜insulatedâ€™ â€˜not insulatedâ€™ as a factor of 0s and 1s as indicator.</p>
+
+<pre><code>heat.flux = c(8.677048,6.558642,5.920314,5.583614,5.373176,5.253928,4.938272,7.358305,9.743266,10.46577,11.06201,10.90067,11.49691,13.15236,12.10017,10.60606,10.45875,10.03788,9.588945,9.287318,8.578844,8.024691,10.26936,11.8757,10.20623,8.634961,8.305275,8.101852,8.12991,7.947531,7.814254,10.40264,13.08221,14.3729,14.94809,15.08838,15.20763,15.75477,14.57632,12.79461,11.97391,10.97082,10.33249,9.701178,9.715208,9.083895,10.63412,12.07912,9.736251,7.638889,6.453423,5.983446,5.499439,5.099607,4.70679,6.972503,9.259259,9.981762,10.24832,10.17116,10.27637,10.27637,9.546857,7.568743,7.168911,6.867284,6.705948,6.916386,8.319304,8.424523,11.41274,13.52413,11.70034,9.532828,8.957632,9.07688,9.694164,9.301347,9.048822,12.28255,14.95511,15.22868,15.24972,15.12346,15.08838,15.17256,13.68547,12.18434,12.1633,12.13524,11.81257,11.58109,11.44781,11.27946,13.87486,15.92312,14.07828,11.90376,10.46577,9.518799,8.978676,8.803311,8.684063,11.65123,14.39394,15.69865,16.61756,16.828,16.83502,16.16863,14.23962,12.19837,12.09315,11.5881,11.20932,10.50786,10.59203,10.64815,13.51712,15.71268,13.92396,12.10718,12.2615,11.65123,11.05499,10.31846,9.834456,12.9349,15.41807,15.78283,15.8179,16.11953,15.95118,15.63552,13.1243,11.22334,10.21324,8.705107,7.526655,6.15881,5.30303,5.597643,8.599888,11.17424,9.631033,8.038721,7.638889,7.203984,7.161897,6.76908,6.888328,9.518799,12.40881,13.21549,14.28872,14.43603,14.8078,14.81481,13.60129,12.59119,11.86167,11.91779,11.73541,12.04405,11.51796,11.74242,13.7486,15.85999,14.84989,12.63328,10.68322,9.343434,8.592873,8.333333,8.445567,10.97783,13.82576,15.12346,16.58249,17.61364,18.30808,19.10774,17.97138,16.62458,15.867,16.07744,15.63552,16.0073,15.42508,15.01122,17.10157,18.94641,22.44669,18.94641,16.01431,14.55527,13.88889,12.77357,11.66526,12.46493,15.41807,16.75786,17.27694,17.03143,16.84905,16.828,16.02834,16.35802,16.04237,15.03928,14.00112,14.1344,13.86785,13.99411,15.30584,18.20286,19.49355,16.16162,14.05022,12.05107,12.27553,13.01207,12.5491,13.72054,16.91218,18.62374,18.79209,20.80527,19.50758,20.18799,20.63692,18.49747,17.25589,17.38215,18.40629,18.60269,19.12177,18.66582,21.09989,24.45286,26.71156,23.54798,20.01964,17.98541,14.83586,14.31678,15.15152,15.30584,17.95735,19.71801,20.30724,20.19501,20.2862,20.1459,20.10382,18.20988,16.54742,15.22868,13.96605,12.71044,11.61616,10.71829,12.12121,14.77273,14.04321,12.44388,10.94978,10.2413,9.708193,9.638047,9.322391,11.27245,14.24663,14.77273,14.75168,14.92705,15.47419,15.48822,14.73765,13.68547,12.65432,12.35269,12.34568,12.32464,12.7385,12.84371,14.16947,17.34007,17.09456,15.0954,13.40488,11.70735,10.8165,10.64815,12.01599,13.55219,16.7298,17.45932,17.61364,19.58474,20.02666,19.79517,19.38833,17.32604,16.11953,15.62851,15.01122,14.70258,14.5693,14.35887,16.28086,18.69388,18.92536,16.56846,15.97222,13.34877,12.81566,12.04405,13.23653,14.1835,16.75786,17.55752,17.98541,18.85522,18.8482,19.02357,18.96044,17.31201,15.42508,14.38692,13.57323,12.36672,12.03002,11.41274,13.15236,15.88103,14.66049,12.8858,11.67228,11.03395,9.399551,8.375421,8.073793,10.6271,13.57323,13.61532,14.31678,14.73765,15.08838,15.62149,16.6807,15.28479,14.07127,13.14534,12.61223,12.57015,12.02301,12.17031,14.33782,18.83418,20.45455,18.67985,18.40629,16.51235,14.45006,14.61841,15.20763,15.57941,18.06958,19.88636,20.51066,21.633,23.24635,24.28451,24.70539,24.19332,22.81145,21.97671,21.58389,21.3945,21.21212,20.89646,21.1069,23.86364)
+
+insulation = c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+</code></pre>
+
+<p>First off, the time series plot of the heat flux is this (the red line is when the insulation is removed):</p>
+
+<p><img src=""http://i.stack.imgur.com/SYSQj.jpg"" alt=""Time series plot of heat flux""></p>
+
+<p>Than this are the ACF and PACF plots of the same data:</p>
+
+<p><img src=""http://i.stack.imgur.com/7keT7.jpg"" alt=""ACF and PACF of the data""></p>
+
+<p>For my data, an <code>stl()</code> decomposition, run as <code>stl(ts(heat.flux, frequency = 24), 'period')</code></p>
+
+<p>shows a strong â€˜seasonalâ€™ (i.e daily) component and a trend in the series. Â </p>
+
+<p><img src=""http://i.stack.imgur.com/CUsta.jpg"" alt=""STL of the data""></p>
+
+<p>Firs off I am trying to determine the best parameters for a SARIMA or ARIMAX model so that I can get an estimation of the effect removing the insulation. Despite the fact I can produce the ACF and PACF plots there is no way I can figure out the proper orders, so I load the library <code>forecast</code> and I run:</p>
+
+<pre><code>library(forecast)
+auto.arima(ts(heat.flux, frequency = 24), xreg = insulation, max.p = 10, max.q = 10, max.P = 10, max.Q = 10, stationary = F)Â 
+</code></pre>
+
+<p>The reason why I do not specify a stationary model is because of the trend I see with <code>stl()</code> and because I assume an effect of removing the insulation.</p>
+
+<p>from <code>auto.arima()</code> I get:</p>
+
+<pre><code>Series: ts(heat.flux, frequency = 24) 
+ARIMA(2,0,2)(1,0,1)[24] with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept  carp.hour$interv
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449            4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075            0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood=-411.28
+AIC=840.55   AICc=841.03   BIC=876.11
+</code></pre>
+
+<p>If I try to use the <code>TSA</code> package and use <code>arimax()</code> with those orders I get basically the same stuff:</p>
+
+<pre><code>library(TSA)
+arimax(ts(heat.flux, frequency = 24), xreg = insulation, order = c(2,0,2), seasonal = list(order = c(1,0,1), frequency = 24))
+Series: x 
+ARIMA(2,0,2)(1,0,1)[24] with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept    xreg
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449  4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075  0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood=-411.28
+AIC=838.55   AICc=839.03   BIC=874.11
+</code></pre>
+
+<p>And all is apparently well (Irrespective of the function I choose I get an estimate of the effect of the removal of the insulation and a se with it with is what I want). Â Unfortunately, when I test the fit of this model with the function <code>sarima()</code> from the <code>astsa</code>package I get significant Ljung-Box p-values for all my sensors and for all the lags:</p>
+
+<pre><code>library(astsa)
+sarima(ts(heat.flux, frequency = 24), p = 2, d = 0, q = 2, P =1, D = 0, Q = 1, S = 24, xreg = insulation)
+$fit
+
+Call:
+stats::arima(x = xdata, order = c(p, d, q), seasonal = list(order = c(P, D, 
+Q), period = S), xreg = xreg, optim.control = list(trace = trc, REPORT = 1, 
+reltol = tol))
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept    xreg
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449  4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075  0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood = -411.28,  aic = 840.55
+</code></pre>
+
+<p>but the plot that comes with is shows that at every single lag the Ljung-Box statistics is significant:</p>
+
+<p><img src=""http://i.stack.imgur.com/ZMGKN.jpg"" alt=""SARIMA""></p>
+
+<p>What is going on?  To sum it up:</p>
+
+<ol>
+<li>which of these models is the most correct to estimate the effect of insulation?</li>
+<li>why are the Ljung-Box p-values all significant?  I would have though that the ARIMA/ARIMAX/SARIMA would have sorted that issue</li>
+<li>If the orders calculated by <code>auto.arima()</code> are the problem, how could I find them in a different way (which is computationally feasible and does not take days).</li>
+</ol>
+
+<p>Finally, two notes.  I also have collected variables such as internal and external temperatures, windspeed, etc, but I would have though that integrating these in the model would be superfluous given the fact it is already an ARIMA model to start with.  Second, I am not at all wedded to this kind of analysis, but I am aware that a straightforward linear model would not be acceptable given the autocorrelation between the data points.</p>
+"
+"0.098058067569092","0.184114923579665","128837","<p>I am trying to replicate the code written by Prof. Rob on Multi-â€‹â€‹step foreÂ­casts withÂ­out re-â€‹â€‹estimation for weekly data. How to write the below code for weekly time series data?
+I have weekly data from 2011 to 2014 till date.
+train is 80% of the total observations and test is rest.</p>
+
+<p><code>h &lt;- 5
+train &lt;- window(hsales,end=1989.99)
+test &lt;- window(hsales,start=1990)
+n &lt;- length(test) - h + 1
+fit &lt;- auto.arima(train)
+fc &lt;- ts(numeric(n), start=1990+(h-1)/12, freq=12)
+for(i in 1:n)
+{<br>
+  x &lt;- window(hsales, end=1989.99 + (i-1)/12)
+  refit &lt;- Arima(x, model=fit)
+  fc[i] &lt;- forecast(refit, h=h)$mean[h]
+}</code></p>
+
+<p>Thanks for any kind of help in advance.</p>
+"
+"0.343203236491822","0.368229847159329","138108","<p>Using the attached data that has been recently updated I am not able to obtain a statistically significant forecast. The data is extremely seasonal. The data is stored here for easy replication: </p>
+
+<p><a href=""http://ge.tt/1uihVfA2/v/0?c"" rel=""nofollow"">http://ge.tt/1uihVfA2/v/0?c</a></p>
+
+<pre><code># 1. Make a R timeseries out of the rawdata: specify frequency &amp; startdate
+gIIP &lt;- ts(Data, frequency=12, start=c(2003,11))
+print(gIIP)
+plot.ts(gIIP, type=""l"", col=""blue"", ylab=""MTD Ships"", lwd=2,
+        main=""Full data"")
+grid()
+</code></pre>
+
+<p>Using the auto.arima function I don't need to factor a Box-Cox because the auto.arima factors that into selecting the best model. </p>
+
+<p>Upon ""selecting the best model"" I  The best model suggested was Arima(order = c(0, 0, 1),
+      seasonal = list(order = c(1, 0, 1), period = 12) with non-zero mean </p>
+
+<pre><code># 5. Perform estimation
+library(forecast)
+library(zoo)
+library(stats)
+auto.arima(gIIP, d=NA, D=NA, max.p=12, max.q=12,
+           max.P=2, max.Q=2, max.order=12, max.d=2, max.D=2,
+           start.p=2, start.q=2, start.P=1, start.Q=1,
+           stationary=FALSE, seasonal=TRUE,
+           ic=c(""aicc"",""aic"", ""bic""), stepwise=FALSE, trace=TRUE,
+           approximation=FALSE | frequency(gIIP)&gt;12), xreg=NULL,
+           test=c(""kpss"",""adf"",""pp""), seasonal.test=c(""ocsb"",""ch""),
+           allowdrift=TRUE, lambda=TRUE, parallel=FALSE, num.cores=4
+</code></pre>
+
+<p>)</p>
+
+<p>then proceed to conduct accuracy diagnostics but unable to obtain any output.</p>
+
+<pre><code>#Check standard error etc of ""fitted"" ARIMA
+pos.arima &lt;- function(gIIP, order = c(0, 0, 1),
+      seasonal = list(order = c(1, 0, 1), period = 12),
+      xreg = NULL, include.drift=TRUE, 
+      transform.pars = TRUE,
+      fixed = NULL, init = NULL,
+      method = c(""CSS-ML"", ""ML"", ""CSS""), 
+      optim.method = ""BFGS"",
+      optim.control = list(), kappa = 1e6)
+
+acf(pos.arima) 
+pacf(pos.arima)
+</code></pre>
+
+<p>The following step to conduct an ex ante (out of sample forecast) but also unable to obtain a statistically significant forecast---forecast with lowest standard error rate. I tested this by removing the last 5 observations to test the model. </p>
+
+<pre><code># 7. Forecast Out-Of-Sample ---this used to work
+fit &lt;- Arima(gIIP, order = c(0, 0, 1), seasonal = list(order = c(1, 0, 1), period = 12),
+             xreg = TRUE, include.mean = TRUE, transform.pars = TRUE, 
+             fixed = NULL, init = NULL, method = c(""CSS-ML"", ""ML"", ""CSS""), 
+             optim.method = ""BFGS"", optim.control = list(), kappa = 1e6)
+plot(forecast(fit,h=9))
+print(forecast(fit,h=9))
+</code></pre>
+
+<p>Used to obtain output here. Can you please help me diagnose why there ARIMA model is not working like it once did for me? Thank you for your time.  </p>
+"
+"0.208012573584461","0.260377821961648","148990","<p>I've been using <a href=""http://cran.r-project.org/web/packages/dlm/index.html"" rel=""nofollow"">DLM</a> package for modeling my timeseries in state-space format, and then use Kalman Filter to get better 2 step-ahead forecasts. </p>
+
+<p>Even though I've read the <a href=""http://cran.r-project.org/web/packages/dlm/dlm.pdf"" rel=""nofollow"">vignette</a> and parts of <a href=""http://rads.stackoverflow.com/amzn/click/0387772375"" rel=""nofollow"">their book</a>, I'm still struggling when it comes to modeling my ARIMA process in state-space format, specifically as the dlm package understands it. My plan is to use <strong>auto.arima()</strong> to get the best arima model, then represent it as a dlm.</p>
+
+<p>I've seen examples like <a href=""http://stats.stackexchange.com/q/66156/42176"">this</a>.</p>
+
+<pre><code># Estimation of a state space representation of Arima(1,1,1) model and forecast:
+level0 &lt;- data.s.g[1]
+slope0 &lt;- mean(diff(data.s.g))
+buildGap &lt;- function(u) {
+trend &lt;- dlmModPoly(dV = 1e-7, dW = exp(u[1 : 2]),
+                  m0 = c(level0, slope0),
+                  C0 = 2 * diag(2))
+gap &lt;- dlmModARMA(ar = ARtransPars(u[4]),ma=u[5], sigma2 = exp(u[3]))
+return(trend + gap)}
+</code></pre>
+
+<p>and the dlmModARMA part seems clear. What is baffling me is, what to do if I want to get for example ARIMA(1,3,1); how would I represent that 3 differencing part?</p>
+"
+"0.240192230707631","0.225493808400849","164075","<p>I am new to time series and I am trying to figure out exactly what does on beyond the scenes in R. Say I have the MA process:
+$$y_t - \mu = a_t+\theta_1 a_{t-1} + \theta_2 a_{t-2}$$ where $a_t$ are i.i.d. standard normal. For concreteness let $\mu = 0$, $\theta_1 = 0.2$ and $\theta_2 = 0.5$. I have implemented a simulation of this process and fit an MA(2) model back on it:</p>
+
+<pre><code>set.seed(47)
+n = 200
+
+a = rnorm(n,0,1)
+a0 = rnorm(1,0,1)
+an1 = rnorm(1,0,1)
+
+theta = c(0.2, 0.5)
+
+y = NULL
+y[1] = a[1] + theta[1]*a0 + theta[2]*an1
+y[2] = a[2] + theta[1]*a[1] + theta[2]*a0
+for (t in 3:n) {
+  y[t] = a[t] + theta[1]*a[t-1] + theta[2]*a[t-2]
+}
+
+MAfit = arima(y,order = c(0,0,2))
+</code></pre>
+
+<p>Now, when I take the residuals from this arima() call, the first residual is 2.745251. However when I subtract $y(1)$ from the estimation of the mean produced by arima(), I get 3.122668. How is R computing this first residual then? The code I used for these respective calculations is:</p>
+
+<pre><code>residuals(MAfit)[1]        (returns 2.745251)
+y[1] - coef(MAfit)[3]      (returns 3.122668)
+</code></pre>
+
+<p>My understanding is that for $t=1$, we have:
+$$\hat{a}_1 = y_1 - \hat{\mu}$$
+from rearranging my first equation and using only expected values for $a_0$ and $a_{-1}$. Where have I gone wrong? Thank you!</p>
+
+<p>Please note I have the same problem using TS data given to me, so I don't think this is an issue with my MA(2) implementation.</p>
+"
+"0.394676108688163","0.411693484796309","184880","<p>So I wanted to generate $500$ data points from an $ARMA(1,1)$ distribution in R, use the first $400$ as my training data and use the training data and the <code>predict</code> function to both see if I could obtain the correct model via AIC and then plot my prediction. I wanted to generate a whole bunch of different $ARMA$ models to use for the AIC which is why I basically built a grid, however I get a bunch of warnings and errors with my current method, despite the fact it seems to work. Note it is the estimation and not the actual prediction that raises the problems. Can I use a grid like so to produce AICs for various model types?</p>
+
+<pre><code>####### ARMA(1,1) ############
+# Causal stationary - root of the function phi(z) &gt; 1
+theta1&lt;- 0.5
+phi1&lt;- 0.6
+
+arma11&lt;- arima.sim(n = 500,list(ar = c(phi1), ma = c(theta1)), sd = sqrt(1))
+tr.data&lt;-arma11[1:400]
+AIC&lt;-c()
+for (i in 0:3){
+  for (j in 0:3){
+    aic.ij&lt;- arima(tr.data,order = c(i,0,j))$aic
+    AIC&lt;- c(AIC,aic.ij) 
+  }
+}
+AIC&lt;- matrix(AIC, ncol=4, byrow =T)
+colnames(AIC)&lt;- c(""q=0"",""q=1"",""q=2"",""q=3"")
+rownames(AIC)&lt;- c(""p=0"",""p=1"",""p=2"",""p=3"")
+AIC
+index&lt;-which(AIC==min(AIC),arr.ind=T)
+index
+prd&lt;-predict(arima(tr.data, order = c(index[1]-1,0,index[2]-1)),n.ahead =100)
+vld.data&lt;-arma11[401:500]
+
+# plot the training data with the next 100 predictions and the 95% confidence intervals
+plot.ts(arma11, xlim=c(0,500),ylim=c(floor(min(arma11)),ceiling(max(arma11)))) 
+lines(prd$pred, col='blue')
+lines(prd$pred-(1.96*prd$se), col='red')
+lines(prd$pred+(1.96*prd$se), col='red')
+</code></pre>
+
+<p>For this particular $ARMA$ I am error free but receive various size mismatch errors with other models under the same method, I receive this warning though. </p>
+
+<pre><code>Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1         q=0      q=1      q=2      q=3
+p=0 1608.907 1296.137 1207.432 1187.231
+p=1 1244.182 1178.820 1180.004 1181.993
+p=2 1190.716 1180.072 1182.002 1183.776
+p=3 1179.731 1181.688 1183.767 1181.305
+    row col
+p=1   2   2
+</code></pre>
+"
+"0.160128153805087","0.225493808400849","184899","<p>I have written the following code to generate 500 data points from a $SARIMA$ model, use $400$ as training data and then predict the following $100$, while estimating the model with AIC. It appeared to me that I did everything correctly as I could see the AIC correctly choosing the model with certain phi values, etc. etc., however my plot outputs for the estimations is very very dense and incomprehensible and I'm not sure why. I checked the number of data points, the window size, etc. and am not sure what I have done wrong in my implementation. </p>
+
+<pre><code>library(CombMSC)
+library(forecast)
+
+
+#####################
+#generate data
+sdat1&lt;- sarima.Sim(n=500, period=12, model = list(order = c(1,0,0), ar=0.5),list(order= c(1,0,0), ar = 0.5))
+#procure training data
+x.tr &lt;- window(sdat1, start=1, end=400)
+
+#candidate models
+op1 &lt;- arima(x.tr, order=c(0,0,0), list(order= c(0,1,0)))
+op2 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,1)))
+op3 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(0,2,0)))
+op4 &lt;- arima(x.tr, order=c(0,1,0), list(order= c(0,0,0)))
+op5 &lt;- arima(x.tr, order=c(1,0,1), list(order= c(0,0,0)))
+op6 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,0)))
+
+models &lt;- c(op1,op2,op3,op4,op5,op6)
+models.AIC &lt;- c(op1$aic,op2$aic,op3$aic,op4$aic,op5$aic,op6$aic)
+mod.best = NULL
+if (min(models.AIC) == op1$aic){
+        mod.best=op1
+    } else if (min(models.AIC) == op2$aic){
+    mod.best=op2
+} else if (min(models.AIC) == op3$aic){
+        mod.best=op3
+    } else if (min(models.AIC) == op4$aic){
+    mod.best=op4
+} else if (min(models.AIC) == op5$aic){
+        mod.best=op5 
+    } else if (min(models.AIC) == op6$aic){
+    mod.best=op6
+}
+models.AIC
+mod.best
+modpred &lt;- predict(mod.best, n.ahead=100)
+vld.data1&lt;-  sdat1[401:500]
+plot.ts(sdat1, ylim=c(floor(min(sdat1)),ceiling(max(sdat1))))
+plot.ts(sdat1, xlim=c(0,400),ylim=c(floor(min(sdat1)),ceiling(max(sdat1)))) 
+lines(modpred$pred, col='blue')
+    lines(modpred$pred-(1.96*modpred$se), col='red')
+    lines(modpred$pred+(1.96*modpred$se), col='red')
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/mUMEK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/mUMEK.png"" alt=""enter image description here""></a></p>
+"
+"0.196116135138184","0.184114923579665","202326","<p>I have a huge dataset with over 4000 companies and I have estimated a liquidity measure for these each 4000 companies. But liquidity is highly persistent and exihibits auto-correlation. In order to mitigate this autocorrelation problem each of the liquidity measure estimated for the company has to be trasformed by AR(2) process i.e. residuals of autoregressive model are used instead of actual values.
+But when I estiamate the AR(2) with following code in r</p>
+
+<pre><code>AR&lt;- data.frame(dfAR1, apply(dfAR1, 2, function(x) arima(x, order = c(2,0,0),optim.method=""Nelder-Mead"")$res))
+</code></pre>
+
+<p>I receive warning </p>
+
+<pre><code> arima(x, order = c(2, 0, 0), optim.method = ""Nelder-Mead"") :
+  possible convergence problem: optim gave code = 10
+</code></pre>
+
+<p>When I looked up in the manual it says: 
+""10
+indicates degeneracy of the Nelderâ€“Mead simplex""
+I don't understand how bad this warning is for my estimations and how can I fix it.
+I would really appreciate your help in this regard.</p>
+"
+"0.277350098112615","0.260377821961648","203477","<p>I would like a test to compare the trends of multiple time series.</p>
+
+<p>I have already saw others solutions, like fitting a same arima model and compare both with a f-test but I want to try another one.</p>
+
+<p>Now, I try to determine if there is a differencing parameter, hoping that the differencing parameter could give me an estimation of the presence of a general trend.</p>
+
+<p>I try to do an ANOVA on the lag, looking at the time series.</p>
+
+<p>A friend told me that this was non-sense. And a simulation shows me that it doesn't work, indeed. My graph don't have a general trend. Why the lag don't show a sense on a possible trend and could an ANOVA be correct, here?</p>
+
+<p>An exemple of code:</p>
+
+<pre><code>library(forecast)
+library(ggplot2)
+
+#### test if two arima ts have the same differencing or not:
+
+set.seed(1)
+dif.0 &lt;- arima.sim(list(order = c(0,1,0)), 100, rand.gen = rnorm, n.start = 50)
+lag.0 &lt;- diff(dif.0)
+dif.1 &lt;- arima.sim(list(order = c(0,1,0)), 100, rand.gen = rnorm, n.start = 50)
+lag.1 &lt;- diff(dif.1)
+dif.2 &lt;- arima.sim(list(order = c(0,0,0)), 101, rand.gen = rnorm, n.start = 50)
+lag.2 &lt;- diff(dif.2)
+
+ts &lt;- rbind(data.frame(ts = as.numeric(dif.0), type = ""t0"", t = 1:101)
+    , data.frame(ts = as.numeric(dif.1), type = ""t1"", t = 1:101)
+    , data.frame(ts = as.numeric(dif.2), type = ""t2"", t = 1:101))
+
+lag &lt;- rbind(data.frame(ts = as.numeric(lag.0), type = ""t0"", t = 1:100)
+        , data.frame(ts = as.numeric(lag.1), type = ""t1"", t = 1:100)
+        , data.frame(ts = as.numeric(lag.2), type = ""t2"", t = 1:100))
+
+ggplot(ts, aes(x = t, y = ts, color = type, group = type)) +
+  geom_line()
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/ZNllk.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ZNllk.png"" alt=""enter image description here""></a>
+    ggplot(lag, aes(x = t, y = ts, color = type, group = type)) +
+      geom_point()</p>
+
+<pre><code># t2 is white noise, t0 and t1 have a global trend.
+
+# differencing time series:
+
+summary(aov(ts~type, lag[lag$type %in% c(""t0"", ""t1""), ]))
+    summary(aov(ts~type, lag[lag$type %in% c(""t0"", ""t2""), ]))
+</code></pre>
+"
+"0.196116135138184","0.184114923579665","208080","<p>I compared the <code>auto.arima</code> forecast <code>checkts</code> below  to the rolling forecast <code>fc</code> and noticed that every of the error measures is lower for <code>fc</code>.  </p>
+
+<p>Will rolling forecasts have lower errors than a forecasted <code>auto.arima</code> model in general?<br>
+Why might that happen? </p>
+
+<p>The data to run the code below is in the ""fpp"" package. Code:</p>
+
+<pre><code>library(""fpp"")
+library(""forecast"")
+
+##Multi-step forecasts without re-estimation
+
+h &lt;- 5
+train &lt;- window(hsales,end=1989.99)
+test &lt;- window(hsales,start=1990)
+n &lt;- length(test) - h + 1
+fit &lt;- auto.arima(train)
+fc &lt;- ts(numeric(n), start=1990+(h-1)/12, freq=12)
+for(i in 1:n)
+{  
+  x &lt;- window(hsales, end=1989.99 + (i-1)/12)
+  refit &lt;- Arima(x, model=fit)
+  fc[i] &lt;- forecast(refit, h=h)$mean[h]
+}
+
+
+checkts&lt;-forecast(fit,h=71)
+
+accuracy(checkts$mean,test)
+	accuracy(fc,test) ##All Error measures are lower than Checkts$mean
+</code></pre>
+"
+"0.196116135138184","0.184114923579665","208091","<p>I'm trying to understand how the rolling forecast example below from <a href=""http://robjhyndman.com/hyndsight/rolling-forecasts/"" rel=""nofollow"">Rob Hyndman's blog</a> works. In the final line of the <code>for</code> loop, is <code>fc</code> forecasting horizons into the future beyond the end of test?  Or is <code>fc</code> meant to be a forecasted version of test, that could be compared to check for accuracy? </p>
+
+<p>My own goal is to create something similar that would train a model and forecast it several horizons in to the future.</p>
+
+<p>Code:</p>
+
+<pre><code>library(""fpp"")
+library(""forecast"")
+
+##Multi-step forecasts without re-estimation
+
+h &lt;- 5
+train &lt;- window(hsales,end=1989.99)
+test &lt;- window(hsales,start=1990)
+n &lt;- length(test) - h + 1
+fit &lt;- auto.arima(train)
+fc &lt;- ts(numeric(n), start=1990+(h-1)/12, freq=12)
+for(i in 1:n)
+{  
+  x &lt;- window(hsales, end=1989.99 + (i-1)/12)
+  refit &lt;- Arima(x, model=fit)
+  fc[i] &lt;- forecast(refit, h=h)$mean[h]
+}
+</code></pre>
+"
+"0.310086836473021","0.291111254869791","208515","<p>I'm trying to understand the steps in Rob Hyndman's Multi-step forecasts without re-estimation example below.  I'm wondering what the purpose is of </p>
+
+<pre><code>refit &lt;- Arima(x, model=fit)
+</code></pre>
+
+<p>The model has already been determined and trained by auto.arima in the ""fit"" step.  So in the ""refit"" step are we re-training the model on a new data set?  If so, what is the point of retraining the same model on a new data set?</p>
+
+<p>url:
+<a href=""http://robjhyndman.com/hyndsight/rolling-forecasts/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/rolling-forecasts/</a></p>
+
+<p>Code:</p>
+
+<pre><code>library(fpp)
+
+h &lt;- 5
+train &lt;- window(hsales,end=1989.99)
+test &lt;- window(hsales,start=1990)
+n &lt;- length(test) - h + 1
+fit &lt;- auto.arima(train)
+fc &lt;- ts(numeric(n), start=1990+(h-1)/12, freq=12)
+for(i in 1:n)
+{  
+  x &lt;- window(hsales, end=1989.99 + (i-1)/12)
+  refit &lt;- Arima(x, model=fit)
+  fc[i] &lt;- forecast(refit, h=h)$mean[h]
+}
+</code></pre>
+
+<p>Updated Code to re-estimate coefficients:</p>
+
+<pre><code>h &lt;- 5
+train &lt;- window(hsales,end=1989.99)
+test &lt;- window(hsales,start=1990)
+n &lt;- length(test) - h + 1
+fit &lt;- auto.arima(train)
+order &lt;- arimaorder(fit)
+fc &lt;- ts(numeric(n), start=1990+(h-1)/12, freq=12)
+for(i in 1:n)
+{  
+  x &lt;- window(hsales, end=1989.99 + (i-1)/12)
+  refit &lt;- Arima(x, order=order[1:3],seasonal=order[4:6])
+  fc[i] &lt;- forecast(refit, h=h)$mean[h]
+}
+</code></pre>
+"

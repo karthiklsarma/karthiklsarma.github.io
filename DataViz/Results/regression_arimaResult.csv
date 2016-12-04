@@ -1,0 +1,2521 @@
+"V1","V2","V3","V4"
+"NaN","NaN","  7956","<p>Starting out with arima models in R, I do not understand why fitted.values (of an AR(2) process for example) are not part of the output like they are in regressions. Did I miss them when running <code>str(result)</code> or did I get something completely wrong? </p>
+"
+"0.111111111111111","0.107520666114094","  7975","<p>Having worked mostly with cross sectional data so far and very very recently browsing, scanning stumbling through a bunch of introductory time series literature I wonder what which role explanatory variables are playing in time series analysis. </p>
+
+<p>I would like to <em>explain a trend</em> instead of de-trending.
+Most of what I read as an introduction assumes that the series is stemming from some stochastic process. I read about AR(p) and MA processes as well as ARIMA modelling. Wanting to deal with more information than only autoregressive processes I found VAR / VECM and ran some examples, but still I wonder if there is some case that is related closer to what explanatories do in cross sections. </p>
+
+<p>The motivation behind this is that decomposition of my series shows that the trend is the major contributor while remainder and seasonal effect hardly play a role. I would like to explain this trend.</p>
+
+<p>Can / should I regress my series on multiple different series? Intuitively I would use gls because of serial correlation (I am not so sure about the cor structure). I heard about spurious regression and understand that this is a pitfall, nevertheless I am looking for a way to explain a trend. </p>
+
+<p>Is this completely wrong or uncommon? Or have I just missed the right chapter so far?</p>
+"
+"0.0785674201318386","0.0760285921269706","  8750","<p>If I have an arima object like <code>a</code>:</p>
+
+<pre><code>set.seed(100)
+x1 &lt;- cumsum(runif(100))
+x2 &lt;- c(rnorm(25, 20), rep(0, 75))
+x3 &lt;- x1 + x2
+
+dummy = c(rep(1, 25), rep(0, 75))
+
+a &lt;- arima(x3, order=c(0, 1, 0), xreg=dummy)
+print(a)
+</code></pre>
+
+<p>.</p>
+
+<pre><code>Series: x3 
+ARIMA(0,1,0)                    
+
+Call: arima(x = x3, order = c(0, 1, 0), xreg = dummy) 
+
+Coefficients:
+        dummy
+      17.7665
+s.e.   1.1434
+
+sigma^2 estimated as 1.307:  log likelihood = -153.74
+AIC = 311.48   AICc = 311.6   BIC = 316.67
+</code></pre>
+
+<p>How do calculate the R squared of this regression?</p>
+"
+"0.136082763487954","0.131685384391844"," 10697","<p>I'm studying R package dlm. So far it seems very powerful and flexible package, with nice programming interfaces and good documentation.</p>
+
+<p>I've been able to successfully use dlmMLE and dlmModARMA to estimate the parameters of AR(1) process:</p>
+
+<pre><code>u &lt;- arima.sim(list(ar = 0.3), 100)
+fit &lt;- dlmMLE(u, parm = c(0.5, sd(u)),
+              build = function(x)
+                dlmModARMA(ar = x[1], sigma2 = x[2]^2))
+fit$par
+</code></pre>
+
+<p>Now I'm trying to use similar code to estimate the parameters of simple linear regression model:</p>
+
+<pre><code>r &lt;- rnorm(100)
+u &lt;- -1*r + 0.5*rnorm(100)
+fit &lt;- dlmMLE(u, parm = c(0, 1),
+              build = function(x)
+                dlmModReg(x[1]*r, FALSE, dV = x[2]^2))
+fit$par
+</code></pre>
+
+<p>I expect fit$par to be close to c(-1, 0.5), but I keep getting something like</p>
+
+<pre><code>[1] -0.0002118851  0.4884367070
+</code></pre>
+
+<p>The coefficient -1 is not estimated correctly. However, the strange thing is that the variance of the noise is returned correctly.</p>
+
+<p>I understand that max-likelihood estimation might fail given bad initial values, but I observed that the likelihood function returned by dlmLL is very flat in the first coordinate.</p>
+
+<p>So I wonder: can such model be estimated at all using dlm? I believe the model is ""non-singular"", however I'm not sure how the likelihood function is calculated inside the dlm.</p>
+
+<p>Any hint greatly appreciated.</p>
+"
+"0.157134840263677","0.152057184253941"," 16915","<p>Note that I do most of my analysis using R and Excel.</p>
+
+<p>Let's take this data set for example. I modified it as the data itself is proprietary: the years are also different:</p>
+
+<pre><code>1967    2,033,407
+1968    2,162,275
+1969    2,159,640
+1970    2,312,352
+1971    2,554,449
+1972    2,548,425
+1973    2,101,225
+1974    1,951,944
+1975    2,106,250
+1976    1,687,625
+1977    1,636,496
+1978    1,494,525
+1979    1,606,825
+1980    1,460,937
+1981    1,310,494
+1982    1,319,750
+1983    1,263,643
+1984    1,171,656
+1985    1,194,950
+</code></pre>
+
+<p>What I usually do:</p>
+
+<ol>
+<li>A linear regression</li>
+<li>Some form of polynomial trending</li>
+<li>Moving average and double moving average</li>
+<li>Basic ARIMA using p = 1, q = 0.</li>
+<li>I calculate the errors for all these as well</li>
+<li>I average all the forecasts out and the error to have my final result.</li>
+</ol>
+
+<p>Note that I'm an engineer that wants to get into statistics and the ability to properly validate and calibrate my models.</p>
+
+<h2>Question</h2>
+
+<p>What is the correct way to forecast this to 5, 10, or even 15 future years?</p>
+
+<p>In a way I'm looking to move beyond the plugging data into a model and believe the data. Yes, I'm aware I can look at the errors. I mainly use RMSE or MAE. But I still am not confident when it comes to just predicting data the right way.</p>
+
+<h3>Note</h3>
+
+<p>this is also related to <a href=""http://stats.stackexchange.com/questions/16545/how-can-i-be-confident-about-my-forecasts-and-improve-my-methodologies"">this question</a> I posted here before.</p>
+"
+"0.111111111111111","0.107520666114094"," 20725","<p>I have a model that looks like </p>
+
+<pre><code>lm(y ~ lag(x, -1) + lag(z, -1))
+</code></pre>
+
+<p>So basically, this is a time series regression with exogenous variables, and I want to carry out a rolling analysis of sample forecasts, meaning that:
+I first used a subsample (e.g., 1990-1995) for estimation, then I performed a one step ahead forecast, then I added one observation and made another one step ahead forecast, and so on.</p>
+
+<p>I have tried to work with <code>rollapply</code>, defining the model as <code>arima(0,0,0)</code> with <code>xreg=lags</code> of the other variables, but that doesn't work. </p>
+
+<p>Your help would be much appreciated!</p>
+"
+"0.0555555555555556","0.107520666114094"," 28472","<p>A Regression with ARIMA errors is given by the following formula (saw on Hyndman et al, 1998):</p>
+
+<p>$Y_t = b_0 + b_1 X_{1,t} + \dots + b_k X_{k,t} + N_t$</p>
+
+<p>where $N_t$ is modeled as an ARIMA process.</p>
+
+<p>If we have that the model for $N_t$ is ARIMA$(0,0,0)$, then $N_t = e_t$, and $Y_t$ is modeled by an ordinary regression.</p>
+
+<p>Suppose the following data:</p>
+
+<pre><code>a &lt;- structure(c(29305, 9900, 9802, 17743, 49300, 17700, 24100, 11000, 
+10625, 23644, 38011, 16404, 14900, 16300, 18700, 11814, 13934, 
+12124, 18097, 30026, 3600, 15700, 12300, 14600), .Tsp = c(2010.25, 
+2012.16666666667, 12), class = ""ts"")
+b &lt;- structure(c(1.108528016, 1.136920872, 1.100239002, 1.057191265, 
+1.044200511, 1.102063834, 1.083847756, 1.068585841, 1.084879628, 
+1.232979511, 1.168894672, 1.257302058, 1.264967051, 1.234793782, 
+1.306452369, 1.252644047, 1.178593218, 1.124432965, 1.132878661, 
+1.189926986, 1.17249669, 1.176285957, 1.176552, 1.179178082), .Tsp = 
+c(2010.25, 2012.16666666667, 12), class = ""ts"")
+</code></pre>
+
+<p>If I model it using <code>auto.arima</code> function, I have:</p>
+
+<pre><code>auto.arima(a, xreg=b)
+Series: a 
+ARIMA(0,0,0) with zero mean     
+
+Coefficients:
+              b
+      15639.266
+s.e.   1773.186
+
+sigma^2 estimated as 101878176:  log likelihood=-255.33
+AIC=514.65   AICc=515.22   BIC=517.01
+
+lm(a~b)
+
+Call:
+lm(formula = a ~ b)
+
+Coefficients:
+(Intercept)            b  
+      48638       -26143  
+</code></pre>
+
+<p>Coefficients from the models differ. Shouldn't they be the same? What am I missing?</p>
+"
+"0.377123616632825","0.380142960634853"," 29336","<p><strong>Introduction</strong> </p>
+
+<p>I am aiming to forecast the annual growth rates for a number of macroeconomic indicators (denote one by $Y_t$).
+One of the tasks is to test the forecasting performance of rival time series models with and without exogenous variables ($X_t$, a $T\times k$ matrix). The list of rival models include:</p>
+
+<ol>
+<li>AR(I)MA model (annual growth rates are unlikely to have ""unit Roo"", though the latter is either assumed or tested) $$A(L)Y_t =\mu+ B(L)\varepsilon_t$$</li>
+<li>linear regression model with ARMA errors $$Y_t = X_t\beta + \eta_t, \ \ A(L)\eta_t =  B(L)\varepsilon_t $$</li>
+<li>lagged dependent variable model (autoregressive model with exogenous variables)
+$$A(L)Y_t = X_t\beta + \varepsilon_t$$ </li>
+<li>linear regression model
+$$Y_t = X_t\beta + \varepsilon_t$$</li>
+</ol>
+
+<p>Where $\varepsilon_t$ is assumed to be a strong white noise, zero-mean constant variance i.i.d. process; $A(L)$ and $B(L)$ are autoregressive (of order $p$) and moving average (of order $q$) polynomials with $L$ - a back-shift (lag) operator.</p>
+
+<p>Note that the primary and the only goal is forecasting performance, thus any ""good"" properties of parameter estimates are of the secondary concern. All I need is to test for the most parsimonious, robust to starting conditions forecaster. Decision will be made with one of the <code>accuracy()</code> options, but first I need to obtain the material for the comparison.</p>
+
+<p>Models 1. and 2. are estimated by <code>auto.arima()</code> with default <code>""CSS-ML""</code> estimation method. Models 3. and 4. are estimated by ordinary least squares (<code>lm()</code>). $T$ is about $40$ quarters.</p>
+
+<p><strong>Approaches tried so far</strong></p>
+
+<p>To make the jack-knifed residuals the first approach denoted by ""rolling"" has been implemented. Starting from feasibly large sub-sample of time series data, parameters are estimated and an $h$ ahead forecast is done by the <code>predict()</code> function (EDIT: it is the same suggestion as in the first part Rob's answer to the second question). After that one point is added and the estimation\prediction steps are repeated. </p>
+
+<p>A weak point of such experiments is that the number of time ticks (sample size) used to estimate the parameters is different. While I would like to test the robustness to the starting conditions, keeping the sample size for estimation fixed.</p>
+
+<p>Bearing this in mind I tried to set the several subsequent values (EDIT: for the interval $k+p+q&lt;t_0&lt;t_1&lt;T-h+1$) in $Y_t$ being missing values (NA). In models 2.-4. this also implies dropping the corresponding subsequent rows in data matrix $X_t$. Prediction for 3. and 4. is straightforward (the same <code>predict()</code> with omitted $X_t$ data rows works well). All my concerns are about models 1. and 2.</p>
+
+<p>With just the AR($p$) part the predictions are done sequentially $Y_{t+1|t} = \hat A(L)Y_t$. But with the presence of MA($q$) one could not (?) use the estimated parameters directly. From the Brockwell and Davis ""Introduction to Time Series and Forecasting"" Chapter 3.3 it follows that one needs an innovation algorithm to recursively estimate the $\theta_{n,j}$ from the specific system of equations that involves estimated autoregressive and moving average parameters. EDIT: these $\theta_{n,j}$ parameters are used to make the ARMA prediction, not the originally estimated parameters $\theta_{j}$. However it is remarked in the same chapter that $\theta_{n,j}$ asymptotically approaches $\theta_{j}$ if the process is invertible. It is not evident that 30-40 points is enough for the asymptotic result to be used even if is invertible. </p>
+
+<p>Notes: I don't want to restrict $q$ to zero, since I am not doing so in true out-of-sample forecasting. EDIT: also not that it is not missing value imputation problem, but forecasting experiment, that the trajectory is not supposed to bridge two sub-samples by this imputing the missing values.</p>
+
+<p><strong>Questions</strong></p>
+
+<ol>
+<li>Does <code>auto.arima()</code> performs correctly with the presence of missing values inside of the sample? [Already answered by Rob.]</li>
+<li>(The actually crucial part of this post) How to correctly forecast (NOT impute) these missed points from the ARMA model when both $p&gt;0$ and $q&gt;0$? (I hope there are the ways already implemented in R language, but I simply is missing something.)</li>
+</ol>
+
+<p>EDIT: since the parameters for ARMA parts are estimated correctly could I legally rearrange the arima object to include the estimated parameters and the data only for the first subsample and then use a predict function? </p>
+
+<p>EDIT2: I have tried to modify the estimated <code>mod</code> structure - the resulting forecast from <code>predict.Arima</code> is identical (double precision differences) to the forecast where I use the estimated MA and AR coefficients predicting $Y_{t+1|t}$ directly as $\hat A(L)(Y_t-X_t\hat \beta)+ X_t\hat \beta+\hat B(L)\hat \varepsilon_t $, without <code>KalmanForecast()</code>. This was expected since state space representation is supplied with the same estimated $\theta_j$, not $\theta_{n,j}$. So the only question remains is the difference between $\theta_j$ and $\theta_{n,j}$ significant to influence the point forecasts? I hope the answer is negative.</p>
+"
+"0.175682092231577","0.136004080183609"," 32313","<p>I have a linear regression model that is used to forecast the 'afluent natural energy' (ANE) of some region.</p>
+
+<p>The predictors for this model are:</p>
+
+<ul>
+<li>the previous month ANE (<code>ANE0</code>)</li>
+<li>the previous month rain volume (<code>PREC0</code>)</li>
+<li>the current month forecast for rain volume (<code>PREC1</code>)</li>
+</ul>
+
+<p>We have 7 years of historical data for all of these variables, for each month. The current model just runs a OLS linear regression. I feel there's a lot of improvements to be done, but i'm not a time series specialist.</p>
+
+<p>The first thing I notice is that the predictors are highly correlated (multicollinearity).
+I'm not certain of the impacts of multicollinearity on prediction confidence.</p>
+
+<p>I decided to try a time series approach, so I ran a ACF and PACF on the historic data:
+The ACF shows a sine wave pattern, and the PACF has a spike at 1 and 2. So I tried both <code>ARIMA (2, 0, 0)</code> and <code>ARIMA(2,0,1)</code> to predict 20 periods ahead.</p>
+
+<p>The ARIMA(2,0,1) shows good results, but I'm not certain as to how to compare it to the linear regression model.</p>
+
+<p>What's the best way to test the performance of these model?  I'm using R as analysis tool (together with the <code>forecast</code> package). </p>
+"
+"0.111111111111111","0.107520666114094"," 32657","<p>I was playing with the <a href=""http://cran.r-project.org/web/packages/TSA/index.html"" rel=""nofollow"">TSA</a> package in R and wanted to test the <code>arimax</code> function to the solution provided in Pankratz's <em>Forecasting with Dynamic Regression Models</em>, chapter 8. The savings rate and the function seems to provide similar results as the ones in the book except for the IO weights which are quite different. I bet there is a transformation that I might be missing.</p>
+
+<p>Any help on understanding why IO coefficients are so different would be appreciated...</p>
+
+<p>the solution states </p>
+
+<pre><code>AO @ t=82,43,89
+LS @ t=99
+IO @ t=62,55
+</code></pre>
+
+<p>with Parameters estimates</p>
+
+<pre><code>C = 6.1635
+w82 = 2.3346
+w99 = -1.5114
+w43 = 1.1378
+w62 = 1.4574
+w55 = -1.4915
+w89 = -1.0702
+AR1 = 0.7976
+MA2 = -0.3762
+</code></pre>
+
+<p>To fit the model in R, I used
+(<code>saving</code> is the data)</p>
+
+<pre><code>arimax(saving, order = c(1,0,2), fixed=c(NA,0,NA,NA,NA,NA,NA,NA,NA,NA), io=c(55,62), 
+       xreg=data.frame(AO82=1*(seq(saving)==82),
+                       AO43=1*(seq(saving)==43),
+                       AO89=1*(seq(saving)==89),
+                       LS99=1*(seq(saving)&gt;=99)),
+       method='ML')
+</code></pre>
+
+<p>The savings rate data is (100 points)</p>
+
+<p>4.9
+5.2
+5.7
+5.7
+6.2
+6.7
+6.9
+7.1
+6.6
+7
+6.9
+6.4
+6.6
+6.4
+7
+7.3
+6
+6.3
+4.8
+5.3
+5.4
+4.7
+4.9
+4.4
+5.1
+5.3
+6
+5.9
+5.9
+5.6
+5.3
+4.5
+4.7
+4.6
+4.3
+5
+5.2
+6.2
+5.8
+6.7
+5.7
+6.1
+7.2
+6.5
+6.1
+6.3
+6.4
+7
+7.6
+7.2
+7.5
+7.8
+7.2
+7.5
+5.6
+5.7
+4.9
+5.1
+6.2
+6
+6.1
+7.5
+7.8
+8
+8
+8.1
+7.6
+7.1
+6.6
+5.6
+5.9
+6.6
+6.8
+7.8
+7.9
+8.7
+7.7
+7.3
+6.7
+7.5
+6.4
+9.7
+7.5
+7.1
+6.4
+6
+5.7
+5
+4.2
+5.1
+5.4
+5.1
+5.3
+5
+4.8
+4.7
+5
+5.4
+4.3
+3.5</p>
+
+<p>here it is my output</p>
+
+<pre><code>&gt; arimax(saving, order = c(1,0,2),fixed=c(NA,0,NA,NA,NA,NA,NA,NA,NA,NA),io=c(55,62),xreg=data.frame(AO82=1*(seq(saving)==82),
++ AO43=1*(seq(saving)==43),AO89=1*(seq(saving)==89),LS99=1*(seq(saving)&gt;=99)),method='ML')
+
+Call:
+arimax(x = saving, order = c(1, 0, 2), xreg = data.frame(AO82 = 1 * (seq(saving) == 
+    82), AO43 = 1 * (seq(saving) == 43), AO89 = 1 * (seq(saving) == 
+    89), LS99 = 1 * (seq(saving) &gt;= 99)), fixed = c(NA, 0, NA, NA, NA, NA, 
+    NA, NA, NA, NA), method = ""ML"", io = c(55, 62))
+
+Coefficients:
+         ar1  ma1     ma2  intercept    AO82    AO43     AO89     LS99    IO-55   IO-62
+      0.7918    0  0.3406     6.0628  2.3800  1.1297  -1.0466  -1.4885  -0.5958  0.5517
+s.e.  0.0674    0  0.1060     0.3209  0.3969  0.3780   0.3835   0.5150   0.4044  0.3772
+
+sigma^2 estimated as 0.2611:  log likelihood = -75.57,  aic = 169.14
+</code></pre>
+"
+"0.222222222222222","0.188161165699665"," 32735","<p>As a financial institution, we often run into analysis of time series data. A lot of times we end up doing regression using time series variables. As this happens, we often encounter residuals with time series structure that violates basic assumption of independent errors in OLS regression.  Recently we are building another model in which I believe we have regression with autocorrelated errors.The residuals from linear model have <code>lm(object)</code> has clearly a AR(1) structure, as evident from ACF and PACF.  I took two different approaches, the first one was obviously to fit the model using Generalized least squares <code>gls()</code> in R. My expectation was that the residuals from gls(object) would be a white noise (independent errors).  But the residuals from <code>gls(object)</code> still have the same ARIMA structure as in the ordinary regression. Unfortunately there is something wrong in what I am doing that I could not figure out.  Hence I decided to manually adjust the regression coefficients from the linear model (OLS estimates). Surprisingly that seems to be working when I plotted the residuals from adjusted regression (the residuals are white noise). I really want to use <code>gls()</code> in <code>nlme</code> package so that coding will be lot simpler and easier. What would be the approach I should take here? Am I supposed to use REML? or is my expectation of non-correlated residuals (white noise) from gls() object wrong?</p>
+
+<pre><code>gls.bk_ai &lt;- gls(PRNP_BK_actINV ~ PRM_BK_INV_ENDING + NPRM_BK_INV_ENDING, 
+                 correlation=corARMA(p=1), method='ML',  data  = fit.cap01A)
+
+gls2.bk_ai  &lt;- update(gls.bk_ai, correlation = corARMA(p=2))
+
+gls3.bk_ai &lt;- update(gls.bk_ai, correlation = corARMA(p=3))
+
+gls0.bk_ai &lt;- update(gls.bk_ai, correlation = NULL)
+
+anova(gls.bk_ai, gls2.bk_ai, gls3.bk_ai, gls0.bk_ai)  
+     ## looking at the AIC value, gls model with AR(1) will be the best bet
+
+acf2(residuals(gls.bk_ai)) # residuals are not white noise
+</code></pre>
+
+<p>Is there something wrong with what I am doing???????</p>
+"
+"0.111111111111111","0.107520666114094"," 33025","<p>Is there a way to use the factor scores from one dataset to ""partial out"" the effects from another dataset which has the same variables? Basically I have two datasets: healthy people and sick people. I'd run factor analysis on the healthy set (called ""base""), restricting to only one factor so that it acts like a summary score:</p>
+
+<pre><code>fa=factanal(base,1,rotation=""varimax"",scores=""regression"")
+</code></pre>
+
+<p>Then I'd like to use the factor scores from the healthy population and regress out the factor from the sick population. The aim of this is to partial out any underlying relationships in the variables which may not be due to the people being sick. I know how to partial out the scores from the ""base"" data (see below) but the dimensions for fa$scores differ from the healthy vs sick people... any ideas? Is this doable?</p>
+
+<pre><code>pdata=as.data.frame(matrix(0,0,nrow=nrow(base),ncol=ncol(base)))
+for (i in 1:ncol(base)){
+    pdata[,i]=residuals(lm(base[,i]~fa$scores))
+}
+</code></pre>
+"
+"0.0785674201318386","0.0760285921269706"," 34139","<p>I am using an ARIMA model to create a model for correlated errors from my regression model. I am using the <code>auto.arima</code> function from the <a href=""http://cran.r-project.org/web/packages/forecast/index.html"" rel=""nofollow"">forecast</a> package in R. I am able to get more data at some frequent interval after the regression model is created, so I get more values for the correlated errors. </p>
+
+<p>My question is how do I update the ARIMA model with a gap in time interval between readings.</p>
+"
+"NaN","NaN"," 44584","<p>I have been playing around with a seemingly unrelated regression (SUR) estimation. However, for dynamic SUR models it is known that -- analogous to the ARIMA case -- an OLS/GLS estimate is biased. For example <a href=""http://www.sciencedirect.com/science/article/pii/030440769401670U"" rel=""nofollow"">this article</a> provides a correction. So here's my question: Is there a <em>R</em> package or some other implementation that provides this correction? Thanks in advance!</p>
+"
+"NaN","NaN"," 45993","<p>I have a dataset covering daily data for 3 years (3x365 rows) for multiple attributes TotalPhoneCall (main attribute that I want to predict), Christmas day, weekend, weekday, Easter, 4th_july, etc.(some are seasonal). </p>
+
+<p>I would like to predict TotalPhoneCall for the following month. I have to use ARIMA with regression. I may filter out unnecessary attributes if needed.  How can I do this in R? </p>
+"
+"0.175682092231577","0.170005100229511"," 46568","<p>Given the following model which relates the full year home sales to the unemployment rate (observed or estimated) I get a projected increase of 14% for 2013 over 2012... last year the same approach over projected by 6% (the 2012 projection was for 41,992 and the actual is coming in about 39,535) So I think the model is over projecting but I'm at a dead end thinking of a good (valid) way to modify it? BTW the projection)s) is identical to what a simple straight line regression in a spreadsheet yields.</p>
+
+<p>I want to also thank the fine people at Stack overflow who got me this far in my 1st foray into R <a href=""http://stackoverflow.com/questions/14032768/csv-input-to-r-forecast-with-dates-via-r-studio#14032768"">http://stackoverflow.com/questions/14032768/csv-input-to-r-forecast-with-dates-via-r-studio#14032768</a></p>
+
+<p>Pointers appreciated.</p>
+
+<pre><code> # load the base data as presented in the question
+ Workbook1 &lt;- structure(list(Year = structure(1:10, .Label = c(""31-Dec-04"", 
+""31-Dec-05"", ""31-Dec-06"", ""31-Dec-07"", ""31-Dec-08"", ""31-Dec-09"", 
+""31-Dec-10"", ""31-Dec-11"", ""31-Dec-12"", ""31-Dec-13""), class = ""factor""), 
+total = c(51439L, 59674L, 58664L, 55698L, 42235L, 37918L, 
+36234L, 36965L, 39535L, NA), UnemplRt = c(5.7, 4.7, 3.8, 
+3.7, 4.3, 8.5, 10.9, 10, 8.3, 7.1)), .Names = c(""Year"", ""total"", 
+""UnemplRt""), class = ""data.frame"", row.names = c(NA, -10L))
+
+# Make a time series out of the value
+dependent &lt;- ts(Workbook1[1:9,]$total, start=c(2004), frequency=1)
+
+# load forecast package
+require(forecast)
+# load independent variables in variables.
+unemployment &lt;- ts(Workbook1[1:9,]$UnemplRt, start=c(2004), frequency=1)
+    unemployment_future &lt;- ts(Workbook1[10:10,]$UnemplRt, start=c(2004), frequency=1)
+
+# make a model that fits the history
+fit2 &lt;- auto.arima(dependent, xreg=unemployment)
+
+# generate a forecast with the already known unemployment rate for 2013.
+fcast2 &lt;- forecast(fit2,xreg=unemployment_future)
+fcast2
+     Point Forecast    Lo 80    Hi 80    Lo 95    Hi 95
+2013       45168.02 38848.92 51487.12 35503.79 54832.25
+</code></pre>
+
+<p>This yield exactly the same result a a simple spreadsheet liniear regression.
+ And I belive the suggested increase in home sales is too high, last year the projection turned out to be about 6% too high. So I'm trying to torture the numbers in some statically valid method to come up with a somewhat lower number for 2013</p>
+"
+"0.111111111111111","0.107520666114094"," 52035","<p>I have a weekly time series representing costs for a cohort. I want to tell whether an intervention on the cohort (we can assume it happened in a single week) has decreased costs for the cohort. I happen to know that the trend over this period for the population from which this cohort was taken was -120 per week per week.</p>
+
+<p>My initial thought was simply to do a linear regression <code>lm(Costs~Weeks,offset=-120*Weeks)</code> but (obviously) the significance is not only a function of the effect of the intervention but also how far back I look (if I look back to $-\infty$ it will of course appear non-significant).</p>
+
+<p>I looked at this website: <a href=""http://www.r-bloggers.com/time-series-intervention-analysis-wih-r-and-sas/"" rel=""nofollow"">http://www.r-bloggers.com/time-series-intervention-analysis-wih-r-and-sas/</a> and tried to replicate the R code with my data, but when I enter the arimax() command, I got the error message </p>
+
+<pre><code>Error in stats:::arima(x=x,order=order,seasonal=seasonal,fixed=par[1:narma], : wrong length for 'fixed'
+</code></pre>
+
+<p>Now, I'm not sure what to do. Can anyone give me some guidance?</p>
+"
+"0.0785674201318386","0.0760285921269706"," 55462","<p>I am using <code>KFAS</code> package for <code>R</code>.</p>
+
+<p>You can run</p>
+
+<pre><code>install.packages(""KFAS"")
+library(KFAS)
+?regSSM
+</code></pre>
+
+<p>to see how this package allows to build a state space representation of linear regression models and many others.</p>
+
+<p>Now let we have the following state space system:</p>
+
+<p>$S_{t}=\alpha+(1+k_{t})L_{t}+v_{t}$</p>
+
+<p>$k_{t}=\phi k_{t-1}+(1-\phi)\bar{k}+w_{t}$</p>
+
+<p>being $\bar{k}$ a constant, a.k.a. the unconditional mean of the unobservable AR(1) process.</p>
+
+<p>Anyone can tell me how may I set this state space representation in <code>KFAS</code> through <code>regSSM</code> or any other <code>KFAS</code> package's function (like <code>arimaSSM</code>)?</p>
+"
+"0.235702260395516","0.228085776380912"," 58101","<p>I am doing predictions on monthly temperature data for 100 years, from 1901 to 2000 (i.e 1200 data points). I want to know if the method I follow is correct because in my output, I do not see the requisite ""randomness"" of temperature being reproduced in the prediction.  </p>
+
+<p>Here is a link to the plot of the prediction (in red)<br>
+<a href=""https://docs.google.com/file/d/0B1Lm03a_91xiYks5TVJDYU05VUE/edit?usp=sharing"" rel=""nofollow"">https://docs.google.com/file/d/0B1Lm03a_91xiYks5TVJDYU05VUE/edit?usp=sharing</a>  </p>
+
+<p>EDIT: added the ACF and PACF of the detrended and de-seasonalised time series:
+<a href=""https://docs.google.com/file/d/0B1Lm03a_91xia2RTOHZrajJtZXM/edit?usp=sharing"" rel=""nofollow"">https://docs.google.com/file/d/0B1Lm03a_91xia2RTOHZrajJtZXM/edit?usp=sharing</a></p>
+
+<p>Below is the dput() of my data:</p>
+
+<pre><code>&gt; dput(fr.monthly.temp.ts)
+structure(c(2.7, 0.4, 4.7, 10, 13, 16.9, 19.2, 18.3, 15.7, 10.6,   
+4.9, 3.5, 4.1, 3.2, 7.5, 10.3, 10, 15.1, 18.2, 17.4, 15, 10.2, 
+6.3, 3.5, 3.8, 5.9, 7.6, 7.1, 12.9, 14.9, 17.6, 17.3, 15.5, 12.1, 
+6.9, 2.7, 3, 4.6, 5.5, 10.3, 13.6, 16.3, 20.2, 18.5, 13.9, 11.2, 
+5.4, 4.8, 1.7, 4, 7.4, 9.3, 11.9, 16.5, 20, 17.6, 14.7, 8.4, 
+5.5, 3.8, 4.3, 3.1, 5.6, 8.5, 12.6, 16.1, 18.2, 18.9, 16, 12.7, 
+7.4, 2.3, 2.5, 2.1, 6.3, 8.4, 12.7, 15.1, 16.5, 17.9, 16.2, 11.6, 
+7.6, 5.6, 1.7, 4.8, 5, 7.7, 14.2, 16.8, 17.9, 17.1, 14.8, 12.1, 
+6.5, 3.6, 2.2, 2, 4.7, 10.4, 12.8, 14.2, 16.3, 18, 14.2, 12.2, 
+5, 4.9, 4, 5.4, 6.6, 8.5, 11.9, 16.1, 16.4, 17.3, 14.2, 11.9, 
+5.9, 6, 1.6, 4.5, 6.4, 8.3, 13.6, 16.1, 20.8, 20.7, 17.5, 11.3, 
+7.3, 6.6, 4.6, 6.8, 8.4, 9.2, 13.8, 15.5, 17.9, 15.5, 12.5, 10, 
+5.5, 5.8, 5.4, 4.7, 7.9, 9.1, 13, 15.8, 16.5, 17.6, 15.4, 12.3, 
+9.2, 4, 0.7, 6.5, 7.4, 11.2, 12.2, 15.3, 17.3, 18.2, 15.3, 10.6, 
+6.3, 5.7, 3.5, 4.3, 5.7, 8.5, 14.2, 17, 17.2, 17.5, 14.7, 9.6, 
+4.6, 7, 6.4, 4.8, 5.9, 9.5, 13.8, 14, 17.4, 18.4, 14.5, 11.5, 
+7, 4.3, 1.1, 1.4, 4.4, 6.7, 15.1, 17.6, 18.3, 17.2, 16.4, 9.4, 
+7.3, 1.4, 3.7, 5.4, 6.5, 8.4, 14.2, 15, 18, 18.1, 15.4, 9.7, 
+6.4, 6.9, 3.3, 3.7, 6.2, 7.8, 13.8, 16.3, 15.9, 18.9, 16.2, 8.8, 
+4.6, 5.5, 5, 6.4, 8.2, 9.9, 14.4, 16, 17.4, 16.5, 15.2, 11.5, 
+6, 4, 6.4, 4.2, 7.2, 8.9, 13.7, 16.9, 20.6, 18, 17, 14.1, 4.7, 
+4.5, 3.4, 4.7, 6.6, 8, 14.8, 16.3, 16.7, 16.9, 13.7, 9.2, 5.4, 
+4.5, 3.7, 6.3, 7.6, 9.4, 12.2, 14.1, 19.9, 18.8, 15.1, 12.3, 
+5.3, 3.8, 3.8, 2.4, 6.4, 9.2, 14.1, 16.2, 18, 15.9, 15.2, 11.7, 
+7.1, 4.5, 4.8, 5.6, 4.3, 9.1, 12.9, 17, 18, 17.6, 13.3, 11.8, 
+4.9, 3.9, 4.1, 8.3, 7.2, 10.3, 11.6, 14.5, 18.2, 18.7, 17.3, 
+11.5, 8.3, 2.5, 4.3, 4.5, 7.7, 9.8, 13.7, 15.7, 18, 17.8, 15.2, 
+11.3, 6.7, 2.9, 5, 6.4, 7.1, 9.3, 11.8, 16.1, 20.5, 19.3, 15.8, 
+11.5, 8.2, 3.7, 0.3, -0.2, 6.7, 7.8, 13.2, 16.3, 19.1, 18.1, 
+18.4, 11.4, 7.3, 6.4, 5.8, 3.3, 7, 9.7, 12.1, 17.7, 17.3, 18.2, 
+15.9, 11.9, 8.6, 4.5, 3.7, 3.3, 5.8, 8.8, 13.8, 17.5, 17.7, 17, 
+12.8, 10.6, 8.2, 3.2, 4.8, 1.4, 5.5, 8, 12.1, 15.8, 17.4, 20.4, 
+17.2, 11, 7.4, 5, 1.8, 4.3, 7.8, 10.1, 13.1, 15.4, 19.5, 20.1, 
+16.7, 12, 5.5, 0.3, 3.3, 3.1, 6.3, 10.4, 13.8, 17.2, 20, 17.5, 
+17.1, 11.9, 5.8, 7.6, 2.6, 5.1, 6.2, 9.1, 11.6, 17.2, 19.5, 18.1, 
+16.1, 10.7, 7, 3.9, 6.5, 4.6, 7.9, 8.3, 13.4, 16.1, 17.2, 18, 
+16, 9.1, 6.6, 4.2, 5.3, 6.9, 5.6, 9.9, 14.2, 16.6, 18.6, 19.1, 
+15.5, 11.7, 6.3, 3.2, 4.4, 3.9, 8.8, 7.7, 11.7, 16.8, 17.5, 18.2, 
+15.6, 11.3, 9.3, 2.5, 5.3, 4.7, 5.4, 10.2, 11.5, 16.4, 17.3, 
+18.1, 15.2, 10.3, 8.7, 2.6, -0.9, 4.5, 7.1, 9.6, 13.5, 17.1, 
+17.1, 17.5, 15.6, 10.6, 7.6, 1.1, 0.7, 4.5, 7.3, 8.2, 10.3, 16.8, 
+19.3, 16.9, 15.5, 10.8, 6.6, 3.7, -0.2, -0.1, 7.7, 10.6, 13.1, 
+16.7, 18.1, 18.7, 16.7, 13.2, 5.5, 4.8, 4.8, 5.3, 8, 11.5, 14.2, 
+16.4, 19.2, 19.2, 16, 12.4, 5.9, 3.4, 5.1, 2.2, 5.1, 11.1, 13.4, 
+16, 18.6, 20.6, 15.2, 10.1, 7.1, 3.4, -1, 7.1, 8.4, 11.9, 14.8, 
+17.8, 20, 18.1, 16.7, 12.3, 6.5, 4.8, 1.7, 6.4, 6.7, 11.2, 13.1, 
+15.7, 18.9, 17.9, 16.2, 11.3, 7.1, 2.1, 1, 1.3, 7.3, 11.3, 14.8, 
+17.9, 20.4, 20.9, 17.6, 12.1, 8.3, 3.8, 5.7, 4.5, 9.5, 10.4, 
+14, 15.8, 17, 17.8, 15.5, 11.4, 7.2, 4.6, 4.5, 5.4, 5.7, 11.7, 
+12.2, 16.8, 20.6, 19.8, 18.6, 13.4, 6.4, 5.1, 3, 6.4, 8, 8.7, 
+14.2, 18.3, 20.2, 18.6, 15.2, 11.4, 7.4, 1.1, 4.6, 4.7, 5.8, 
+9.1, 11.8, 16.1, 18.7, 17.5, 16.5, 10.5, 8.7, 4.9, 2.7, 2.8, 
+8.1, 11.2, 14.5, 17.9, 20.2, 18.9, 13.1, 10.9, 5.5, 3.5, 1.1, 
+3, 7.5, 10.1, 14.8, 15.4, 18, 18.8, 16.2, 12.1, 7, 6.8, 1.7, 
+2.3, 7.5, 8.6, 12.6, 16, 16.4, 16.9, 15.5, 12.4, 8, 6.2, 4.4, 
+3.6, 4.6, 10.3, 12.5, 16.4, 19.1, 19.2, 15.7, 10.4, 6.7, 6.4, 
+4.4, -1.8, 6.7, 8.1, 13.8, 14.4, 17.8, 16.4, 16.4, 10.6, 5.3, 
+5.2, 3.1, 6.9, 9.8, 9.6, 11.5, 17, 18.5, 17.6, 15.1, 11.8, 6.8, 
+3.6, 3.7, 6.2, 4.9, 7.9, 13.9, 15.6, 17.9, 18.4, 17.3, 11.4, 
+6.7, 5.1, 3.4, 4.5, 8.6, 10.2, 13.8, 17, 20.3, 18.9, 17.2, 12.2, 
+6.8, 5.7, 3.5, 5, 8, 9.6, 14.5, 17.6, 16.8, 17.3, 14.5, 11.1, 
+8.4, 3.5, 3.6, 7.6, 8.3, 11.7, 12.5, 16.6, 17.7, 18, 18.5, 12.3, 
+6.4, 4.5, 4.8, 3.7, 3.9, 9.1, 11.5, 15.8, 17.6, 18.6, 15.5, 11.9, 
+5.4, 1.3, -1.6, -0.3, 6.5, 9.6, 12.2, 15.8, 18.5, 16.5, 15.2, 
+11.5, 9.3, 1.3, 1.5, 5.2, 5.6, 9.6, 14.5, 16.8, 19.6, 18.2, 16.7, 
+9.6, 7.2, 3.2, 3.6, 1.7, 6.6, 8.7, 12.7, 16.1, 16.7, 17.1, 13.7, 
+12.2, 6.3, 5.7, 2.6, 7.9, 6.2, 10.5, 13.2, 17, 16.8, 17.2, 16.6, 
+12.7, 5, 5.3, 3.5, 5.5, 7.7, 8.8, 12.5, 15.6, 19.8, 18.1, 15.3, 
+13.2, 7.1, 3, 3.3, 4.3, 6.8, 9.9, 11.8, 15.9, 17.8, 17.2, 15.1, 
+13.5, 6.8, 3, 4.8, 2.1, 6.2, 9.2, 13.2, 15, 19.1, 18.1, 15.9, 
+13.1, 7.1, 1.4, 4.1, 4.3, 4.4, 7.6, 12.8, 17.6, 17.8, 18.3, 16.6, 
+11.3, 8.7, 2.6, 3.1, 4.2, 3.8, 10.5, 13.7, 14.8, 19.7, 18.7, 
+15.7, 12.3, 5.8, 4.9, 3.2, 5.5, 7.9, 8.9, 11.7, 14.3, 18, 17.1, 
+13.3, 10.9, 7.3, 4.5, 3, 3.4, 6.1, 7.6, 13.5, 17, 18.1, 19.9, 
+16.7, 10.6, 6.8, 3.7, 6.2, 5.5, 7.3, 9.4, 12.5, 15.9, 17.7, 18.6, 
+14.5, 8.2, 7.4, 6.8, 6.4, 5.5, 5.3, 9, 12.1, 15.9, 19.1, 19.8, 
+16.1, 10.4, 6.7, 3.1, 4.1, 4.8, 6, 8.9, 14, 18.8, 20.1, 19, 14.8, 
+11.8, 6.6, 3.1, 3.7, 6.6, 8.3, 8.3, 12.1, 14.8, 17.8, 16.9, 14.7, 
+12.9, 7, 5.3, 3.3, 4, 7.2, 7.8, 12.3, 15.2, 17.3, 17.2, 15.6, 
+11.8, 6.7, 5.1, 1.3, 4, 6.6, 8.2, 12.3, 16.5, 18.5, 17.1, 15.7, 
+12.4, 6.7, 5.7, 2.2, 6.3, 6.2, 8.4, 11.9, 15, 16.4, 18.6, 16.5, 
+10.8, 5.8, 3.1, 3.3, 2.9, 9.2, 10, 12.6, 16, 17.5, 18.8, 16.2, 
+11.2, 7.2, 3.8, 4.6, 5, 6.3, 9.3, 13.4, 17.4, 20.1, 18, 17.4, 
+11.4, 8.3, 4.9, 5.5, 2.5, 7, 8.9, 11.5, 17.1, 22.2, 19.3, 16.3, 
+11.9, 7.6, 4.5, 4.2, 3.5, 5.2, 9.6, 10.4, 15.8, 18.8, 18.4, 14.7, 
+11.9, 9, 4.5, -1, 3.8, 5.2, 9.7, 12.5, 15.3, 19.4, 17.6, 17.3, 
+12.3, 4.4, 5.6, 3.9, -0.6, 5.9, 6.9, 13.7, 16.9, 18.7, 17.6, 
+14.9, 13.1, 7.9, 5, -0.8, 3.7, 4.8, 10.9, 11.4, 15, 18.6, 18.6, 
+17.8, 12.4, 7.1, 5.2, 6.4, 4.9, 6.5, 10.1, 13.8, 16.2, 17.8, 
+18.7, 15.7, 12.9, 6.3, 6, 4.2, 5.6, 9.3, 8.2, 15.3, 16.9, 20.2, 
+19.5, 16.5, 13.2, 7, 5.6, 4.8, 8.8, 8.7, 8.9, 15.3, 16, 19.7, 
+20.4, 15.9, 13.3, 7.2, 3.1, 3.9, 1.9, 9, 8.7, 11.7, 14.9, 19.6, 
+20.7, 17.9, 10.9, 6.9, 3.6, 2.8, 4.9, 7.6, 9.5, 15.3, 16.1, 19.1, 
+19.9, 15.5, 9.6, 9, 4.8, 5.9, 3.5, 7, 10.4, 14.1, 17.3, 17.8, 
+18.7, 14.7, 10.4, 4.8, 6.2, 5.2, 5.1, 9.4, 8.7, 13.6, 17.1, 21.4, 
+19.9, 15, 12, 10.2, 6.5, 4.5, 7.5, 6.5, 9.9, 13.6, 16.1, 21.1, 
+20.2, 14.5, 14.6, 7.5, 3.8, 5, 2.9, 6, 10, 12.2, 17.5, 18.7, 
+18.2, 14.2, 11.9, 6.9, 3.4, 2.3, 6.9, 9.3, 10, 14.2, 16.3, 18.6, 
+21, 17, 12.4, 8.4, 5.5, 5, 5.9, 8.1, 9, 14.9, 17, 18.5, 19.4, 
+16.1, 11.6, 5.2, 4.5, 5.3, 4.3, 8, 10, 15.2, 16.3, 20.2, 19.4, 
+17.9, 12.2, 6.4, 5, 3.7, 6.6, 7.5, 9.9, 15, 17.8, 17.5, 19.6, 
+16.9, 12.2, 8.2, 7.1), .Tsp = c(1901, 2000.91666666667, 12), class = ""ts"")  
+</code></pre>
+
+<p>I run <code>stl()</code> on it to remove the seasonality:  </p>
+
+<pre><code># calculate and remove the seasonality  
+fr.monthly.temp.ts.stl &lt;- stl(fr.monthly.temp.ts, s.window=""periodic"")    # get the    components  
+fr.monthly.temp.seas &lt;- fr.monthly.temp.ts.stl$time.series[,""seasonal""]  
+#plot(fr.monthly.temp.seas)  
+
+fr.monthly.temp.ts.noseas &lt;- fr.monthly.temp.ts - fr.monthly.temp.seas  
+#plot(fr.monthly.temp.ts.noseas)  
+</code></pre>
+
+<p>Then remove the trend with a regression:</p>
+
+<pre><code>fr.mtrend.noseas &lt;- lm(fr.monthly.temp.ts.noseas~t)  
+summary(fr.mtrend.noseas)  
+</code></pre>
+
+<p>and then use the residuals of this model to fit an ARIMA model (after checking the ACF and PACF for which one is appropriate):</p>
+
+<pre><code># create time series of residuals..this is our ""detrended"" series..for now use only linear trend result  
+fr.monthly.temp.ts.new &lt;- ts(fr.mtrend.noseas$resid, start=c(1901,1), frequency=12)
+#plot.ts(fr.monthly.temp.ts.new, main=""Detrended and de-seasonalized time series"")
+
+# ARIMA 1,1,1  
+fit6 &lt;- arima(fr.monthly.temp.ts.new,order=c(1,1,1))  
+fit6  
+tsdiag(fit6)  
+</code></pre>
+
+<p>I then make a prediction on the stationary time series:</p>
+
+<pre><code>#forecast for the stationary TS, for next 50 yrs months  
+forecast &lt;- predict(fit6,n.ahead=600)  
+</code></pre>
+
+<p>And then add back the trend and seasonality:</p>
+
+<pre><code>t.new &lt;- (n+1):(n+600)  
+
+#initial time series = stationaryTS + seasonality + trend  
+fr.monthly.temp.ts.init &lt;- fr.monthly.temp.ts.new + fr.monthly.temp.seas +
+                            fr.mtrend.noseas$coefficients[1] + t * fr.mtrend.noseas$coefficients[2]  
+
+#same for the prediction: we need to add seasonality and trend  
+pred.Xt &lt;- forecast$pred + fr.monthly.temp.seas[1:(1+50*12 - 1)] + 
+                                fr.mtrend.noseas$coefficients[1] + t.new * fr.mtrend.noseas$coefficients[2]  
+
+plot(fr.monthly.temp.ts.init,type=""l"",xlim=c(1940,2060))  
+lines(pred.Xt,col=""red"",lwd=2)  
+</code></pre>
+
+<p>So going back to my question: Do I need to add some white noise to the prediction to be able to realistically predict temperature? And more generally, is my method correct?</p>
+"
+"0.157134840263677","0.152057184253941"," 60200","<p>I am beginner in forecasting, especially forecasting with R and I am really willing to improve my knowledge. </p>
+
+<p>Recently, I started practicing electricity consumption time series forecasting. </p>
+
+<p>The first barrier I faced is the choice of out of sample data for assessing the forecast accuracy of the forecast model i will be using (regression with ARIMA errors). </p>
+
+<p>I have data for 147 months and I want to forecast the next 24 months, for the period June 2013 to January 2015. Furthermore, I have read in <a href=""http://stats.stackexchange.com/users/159/rob-hyndman"">@RobHyndman</a>'s online text book  </p>
+
+<p>HynÂ­dÂ­man, R.J. and AthanaÂ­sopouÂ­los, G. (2013),<br>
+<em>Forecasting: principles and practice</em>,<br>
+(accessed 28 May 2013),  <a href=""http://otexts.com/fpp/2/5/"" rel=""nofollow"">section 2.5</a><br>
+under '<strong>Training and test sets</strong>', that:</p>
+
+<blockquote>
+  <p>size of the test set is typÂ­iÂ­cally about 20% of the total samÂ­ple, although this value depends on how long the samÂ­ple is and how far ahead you want to foreÂ­cast</p>
+</blockquote>
+
+<p>If I divide the dataset with 20% of it being the out-of-sample data, the forecast model applied to the in-sample data is not quite accurate, since I guess it fails to capture the recent trend, (which began in the middle of the last year), of decreased electricity consumption due to a significantly raised electricity tariff. </p>
+
+<p>What do I do about this?</p>
+
+<p>Can you possibly give me instruction on what would be considered appropriate size of the out of sample data. I also tried with 7 months of out-of-sample data, but I am afraid that there might be an overfitting issue. Is that right?</p>
+"
+"0.272165526975909","0.241423204718381"," 60648","<p>I am trying to forecast electricity consumption in GWh for 2 years ahead (from June 2013 ahead), using R (the forecast package). For that purpose, I tried regression with ARIMA errors. I fitted the model using the <code>auto.arima</code> function, and I used the following variables in the <code>xreg</code> argument in the <code>forecast.Arima</code> function: </p>
+
+<p>- Heating and Cooling Degree Days,<br>
+- Dummies for all 12 months and<br>
+- Moving holidays dummies (Easter and Ramadan)  </p>
+
+<p>I have several questions regarding the model:</p>
+
+<p>1) Is it correct to use all 12 dummies for monthly seasonality, since when I tried to include 11, the function returned error. The <code>Auto.arima</code> function returned the model ARIMA(0,1,2)</p>
+
+<p>2)The model returned the following coefficients (I won't specify all of them as there are too many coefficients):</p>
+
+<pre><code>ma1      ma2     HDD     CDD   January  February  March     April
+-0.52 -0.16      0.27    0.12  525.84   475.13    472.57    399.01
+</code></pre>
+
+<p>I am trying to determine the influence of the temperature component over electricity load. In percentages, (interpreting the coefficients just as with the usual regression) the temperature components (<code>HDD</code>+<code>CDD</code>) account for 11,3% of the electricity consumption. Isn't this too little, considering the fact that the electricity consumption is mostly influenced by the weather component? On the other hand, taking look at the dummies' coefficients, it turns out that the seasonality accounts for the greater part of the load. Why is this? Is the model completely incorrect?</p>
+
+<p>I tried linear regression, and the temperature component accounts for 20%, but it is still a low percentage. Why is this?</p>
+
+<p>3) I am obviously making some mistakes in the use of <code>forecast.Arima</code> or the plot function parameters since when I plot the forecasts, I get a picture of the original time series which is continued (merged) with the forecasts for the whole time series period (from 2004 until 2015). I don't know how to explain this better, I tried to paste the picture, but it seems I cannot paste pictures here.</p>
+"
+"0.235702260395516","0.228085776380912"," 63681","<p>I have been adamantly searching the web to learn how to successfully implement a dynamic regression time series in the forecast package for R. The time series data that I am using is weekly data (frequency=52) of incoming call volume and prediction variables are mailers sent out every now and then. They are a significant predictor of the data for the week that they hit, the following week, and the week after that. I have created lagged variables and use these three as the predictors. </p>
+
+<p>My main concern is that the arima model is not taking into account the time series frequency. When I tell it to recognize the ts with a frequency of 52 it has an error. 
+I have looked at the <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">fortrain function</a> but do not understand it. I also have looked at the tbats suggested but found that those will not work with prediction variables. </p>
+
+<p>The Zoo function recognizes 52 frequency but it is not advised to use with the <a href=""http://stackoverflow.com/questions/16050684/using-the-combination-forecastauto-arima"">forecast package</a>.</p>
+
+<p>Here is the basic code. The problem is that the time series calwater[,5] is not recognized as such. It is imputed as a simple vector as an integer...</p>
+
+<pre><code>#this works without taking into acount the ts
+fit2 &lt;- auto.arima(calwater[6:96,5], xreg=calwater[6:96,6:8], d=0)
+fccal &lt;- forecast(fit2, xreg=calwater[97:106,6:8], h=10)
+fccal
+plot(fccal, main=""Forecast Cal Water"", ylab=""Calls"")
+
+#to form a ts object
+calincall&lt;-ts(calwater[1:106,5],start=c(2011,23),frequency=52)
+
+#once the ts is added to the model this dispalys
+#Error in `[.default`(calincall, 2:100, 1) : incorrect number of dimensions
+</code></pre>
+
+<p>Maybe the error is because there is just a little over two years of data. </p>
+
+<pre><code>#Time Series: Start = c(2011, 23), End = c(2013, 24),Frequency = 52 
+</code></pre>
+
+<p>I would be very grateful for any guidance in for this particular issue. I am using the forecast package and prefer to continue within the package but I am open to suggestions. </p>
+"
+"0.400891862868637","0.387937441218203"," 68812","<p>I'm really new to ARIMA methods and am trying to forecast electricity load. I've integrated: electricity load, temperature, weekday (dummy), public holidays, and school holidays. My model tries to perform a non seasonal ARIMA with linear regression for each hour of the day.</p>
+
+<p>Here is my code for an example of one of the 24 hours (6 AM):</p>
+
+<pre><code># ElecLoad contains hourly loads and other data for 2005 and 2006 (=2*365*24 entries):
+# 1. Electricity load in MW
+# 2. day of weak: sunday=0, monday=1, etc 
+# 3. Hour of the day 0 -&gt; 23
+# 4. Public Holiday: 1 if Public Holiday, 0 otherwise
+# 5. Scool vacation: 1 if no scool
+# 6. Temperature in Â°F
+
+# Create the weak matrix = dumy variables for the weakdays
+weakmatrix&lt;-model.matrix(~as.factor(ElecLoad[,2]))
+#Remove intercept
+weakmatrix&lt;-weakmatrix[,-1]
+
+#Generate FullTable
+FullTable&lt;-cbind(load=ElecLoad[,1], weakmatrix, ElecLoad[,4],
+                 ElecLoad[,3],ElecLoad[,5],ElecLoad[,5]^2, ElecLoad[,6])
+colnames(FullTable)&lt;-c(""Load"",""mon"",""tue"",""wed"",""thu"",""fri"",""sat"",
+                       ""ScoolHol"",""PubHol"",""Temp"",""Temp2"",""Hour"")
+
+#Create the xreg = substed for a specific hour of the day (column 12 = Hour)
+xreg&lt;-subset(FullTable[,2:11], FullTable[,12] == 7)
+
+#Create the Load time serie, also a subset of the full table
+LoadTs&lt;-ts(subset(FullTable[,1], FullTable[,12] == 7),start=1,frequency=1)
+
+#Launch of auto.arima
+ArimaLoad&lt;-auto.arima(LoadTs, xreg=xreg, lambda=0)
+</code></pre>
+
+<p>When I try to forecast with the same 2 years data as <code>xreg</code>, here is my output</p>
+
+<pre><code>plot(forecast(ArimaLoad,xreg=xreg), include=0)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/MpNeH.png"" alt=""enter image description here""></p>
+
+<p>While when I try to plot the fitted it looks identical to my original Load</p>
+
+<pre><code>plot(fitted(ArimaLoad))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/zsw81.png"" alt=""enter image description here""></p>
+
+<p>I don't understand why the <code>prediction()</code> is so much different than the <code>fitted()</code> with the same <code>xreg</code> matrix. Is this a normal behaviour, how can I improve my model to better fit with the real situation?</p>
+
+<hr>
+
+<p>Thank you so much for your support.</p>
+
+<p>I'm not sure I understood everything from what you propose.</p>
+
+<p>You mean that I should build a first model to forecast the daily average load (I prefer the average than the sum because due to DST, some days don't have 24 hours...). This model would be deterministic, but I don't see what kind of model you're thinking off? Is a multilinear regression ok? I prefer to consider the log(load) to make the different parameters multiplicative which I think is better fit to the reality.
+Then I should have 24 hourly models, taking the daily average then split with a sort seasonal effect?
+Should I use somewhere an ARIMA model?
+I'm not convince of considering the month as having an effect, in my opinion there is no reason that consumption is more important in January than August except if we consider the Temperature and Holidays effects. The hour of the day is related to the activity that's the reason why I'm considering the specific model for each hour. The same way each day of the weak is different.</p>
+
+<p>I've tried a multilinear regression for the same hour (7:00 AM) and the result looks not so bad.</p>
+
+<pre><code>#Create the frame.data
+Load&lt;-subset(FullTable[,1], FullTable[,12] == 7)
+FullData&lt;-cbind(LogLoad=log(Load), xreg)
+FrameData&lt;-data.frame(FullData)
+
+# multilinear regression
+mlin&lt;-lm(LogLoad ~ mon+tue+wed+thu+fri+sat+ScoolHol+PubHol+Temp+`Temp2`, FrameData)
+plot(exp(mlin$model$LogLoad), type=""l"",col=""blue"")
+lines(exp(fitted(mlin)), col=""red"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/MpNeH.png"" alt=""enter image description here""></p>
+
+<p>fitted() in red which is now exactly the same as predict() if I re-use the same data entry (2005-2006) and looks not so far from the original load in blue (no so bad for a simple model). I still don't fully understand why it did not work with ARIMA as it also takes into consideration multilinear regression.</p>
+
+<p>Now my ""simple"" model already takes into account several parameters, like the temperature, the holiday, the school vacations the day of the weak and the hour of the day (local time, not UCT).
+How can I improve my model further more? How can I make sure that the parameters are invariant? Is there a specific method?</p>
+"
+"0.136082763487954","0.0877902562612294"," 69949","<p>To use the scores of the extracted components/factors in a further regression analysis, like mixed effects model regression as predictors to an outcome variable or DV. Would be there any discrepancies in the results coming out of the regression analysis when using scores of the following scenarios (<code>psych</code> package in R):<br>
+- <code>none</code> non-rotated principal components<br>
+- <code>varimax</code> orthogonally rotated principal components<br>
+- <code>promax</code> obliquely rotated principal components<br>
+- <code>promax</code> obliquely rotated factors using <code>ml</code> (maximum likelihood) extraction<br>
+- <code>promax</code> obliquely rotated factors using <code>pa</code> (principal axes) extraction? </p>
+
+<p>Would it be invalid to use any of the above scores in a further regression analysis? any known issues in this field? or previous similar experiences?    </p>
+"
+"0.175682092231577","0.170005100229511"," 70866","<p>I have a modelling dilemma. I am creating a model that attempts to predict demand (leads not sales) based upon the correlation to advertising spend. We know that without advertising spend, demand is driven by seasonality. So our models include seasonal factors like month of the year and even day of the week. 
+If I were building a regular linear regression model, I would fit a linear regression model to a training dataset, to get estimates of the coefficients of the seasonal factors and advertising spend to demand. In order to get an estimate of future baseline demand, I would forecast demand using all the coefficients from the model and then I would estimate a baseline by setting adspend equal to zero. 
+For ARIMA models, there are additional factors such as AR and MA terms. Would I estimate my baseline the same way by just setting the coefficient on advertising spend equal to zero?
+Thanks for any thoughts.</p>
+"
+"0.175682092231577","0.170005100229511"," 74545","<p>I have a dataset with columns that represent lagged values of predictors. To illustrate with a simple example, suppose we had car sales data for 3 years and the only predictors available were income and population for a number of car dealers, the dataset could be represented as follows,</p>
+
+<pre><code>ID  IncLag1  PopLag1  SalesLag1  IncLag2  PopLag2 SalesLag2  IncCurrent  PopCurr  SalesCurr
+a       100      1000     200        150      2000    300        500       2500         450
+b       10        300      50         60       900     80         90       1000         100
+</code></pre>
+
+<p>...</p>
+
+<pre><code>k       30        60      10        200      2000     60         80          800         ??
+</code></pre>
+
+<p>My dependent variable is SalesCurr - i.e., given a history of past sales and corresponding Income and Population values (which we can use as the train-test data), predict what the Sales will be in the current year (SalesCurr). </p>
+
+<p>My question is as follows -- Using R or GRETL, how is it possible to create an ARIMA/TimeSeries model with the above data to predict the SalesCurrent variable. Using simple Linear Regression, one could simply have a formula such as say, <code>lm (SalesCurrent ~ ., data=mytable)</code>, but it would not be a time-series model since it does not take into account the relationship between the different variables.</p>
+
+<p>Alternatively, I am quite familiar with Machine Learning models and wanted to get your thoughts on how such a dataset could be modeled using say, randomForest, GBM, etc. </p>
+
+<p>Thanks in advance.</p>
+"
+"0.111111111111111","0.053760333057047"," 77915","<p>I have a time series $X_t$, which is shown in the first plot. In the second plot, I am doing a linear regression on $X_t\sim X_{t-1}$. The regression line is very close to $y=x$. But this is tricky since if if we look at the bottom left or the top right part of the data, they are almost random. From the diagnosis of residuals, it is not a good regression either. But the model passes all the $t$ tests and $F$ tests. How can I say it's not a good model then? Is there a statistic  to describe (not visually) the failure of this modelling?</p>
+
+<p>Here are the <code>R</code> codes I used to generate the plots:</p>
+
+<pre><code># Generating X_t
+x=c(arima.sim(list(order = c(1,0,0),ar=0.1),n=64,sd=1),3,5,7,11,14,17,rep(20,64)+arima.sim(list(order = c(1,0,0),ar=0.1),n=64,sd=1))
+# Regression X_t~X_{t-1}
+reg=lm(x[2:length(x)]~x[1:(length(x)-1)])
+# Plotting
+par(mfrow=c(3,2))
+plot(x,xlab='',ylab=expression(X[t]),ty='l')
+plot(x[1:(length(x)-1)],x[2:length(x)],xlab=expression(x[t-1]),ylab=expression(x[t]) ,main=paste('coeff= ',round(reg$coefficients[2],2)))
+# Plotting the regression line
+abline(reg,col=2)
+# Plotting the residual diagnose
+plot(reg)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/2xJ65.png"" alt=""enter image description here""></p>
+"
+"0.0555555555555556","0.107520666114094"," 83433","<p>I would like to ask how the long-term (multiple step ahead) prediction intervals are calculated by function <code>predict.Arima</code> in R. I am particularly interested in ARIMA models, SARIMA models and in ARIMA models with external regressors (include argument xreg => regression with ARIMA errors) </p>
+"
+"0.0785674201318386","0.0760285921269706"," 88722","<p>I am building a regression model of time series data in R, where my primary interest is the coefficients of the independent variables. The data exhibit strong seasonality with a trend.</p>
+
+<p><img src=""http://i.stack.imgur.com/GYxaU.png"" alt=""Original data""></p>
+
+<p>The model looks good, with four of the six regressors significant:
+<img src=""http://i.stack.imgur.com/ZmoSd.png"" alt=""Model""></p>
+
+<p>Here are the OLS residuals:
+<img src=""http://i.stack.imgur.com/EIybo.png"" alt=""Residuals""></p>
+
+<p>I used auto.arima to select the sARIMA structure, and it returns the model (0,1,1)(1,1,0)[12].</p>
+
+<pre><code>fit.ar &lt;- auto.arima(at.ts, xreg = xreg1, stepwise=FALSE, approximation=FALSE)
+summary(fit.ar)
+
+Series: at.ts 
+ARIMA(0,1,1)(1,1,0)[12]                    
+
+Coefficients:
+          ma1    sar1      v1       v2      v3       v4         v5
+      -0.7058  0.3974  0.0342  -0.0160  0.0349  -0.0042  -113.4196
+s.e.   0.1298  0.2043  0.0239   0.0567  0.0555   0.0333   117.1205
+
+sigma^2 estimated as 3.86e+10:  log likelihood=-458.13
+AIC=932.26   AICc=936.05   BIC=947.06
+
+Training set error measures:
+                   ME     RMSE      MAE       MPE     MAPE      MASE
+Training set 7906.896 147920.3 103060.4 0.1590107 3.048322 0.1150526
+</code></pre>
+
+<p>My question is this: based on the parameter estimates and s.e. of the regressors, I believe that none of them are significant - is this correct, and if so, what does it imply if my goal is to interpret the relative importance of these predictors as opposed to forecasting?</p>
+
+<p>Any other advice relative to the process of building this model is welcome and appreciated.</p>
+
+<p>Here are the ACF and PACF for the residuals:</p>
+
+<p><img src=""http://i.stack.imgur.com/a3Gvy.png"" alt=""ACF-PACF""></p>
+
+<pre><code>&gt; durbinWatsonTest(mod.ols, max.lag=12)
+ lag Autocorrelation D-W Statistic p-value
+   1     0.120522674     1.6705144   0.106
+   2     0.212723044     1.4816530   0.024
+   3     0.159828108     1.5814771   0.114
+   4     0.031083831     1.8352377   0.744
+   5     0.081081308     1.6787808   0.418
+   6    -0.024202465     1.8587561   0.954
+   7    -0.008399949     1.7720761   0.944
+   8     0.040751905     1.6022835   0.512
+   9     0.129788310     1.4214391   0.178
+  10    -0.015442379     1.6611922   0.822
+  11     0.004506292     1.6133994   0.770
+  12     0.376037337     0.7191359   0.000
+ Alternative hypothesis: rho[lag] != 0
+</code></pre>
+"
+"0.111111111111111","0.107520666114094"," 93815","<p>I have some experiences with time series modelling, in the form of simple ARIMA models and so on. Now I have some data that exhibits volatility clustering, and I would like to try to start with fitting a GARCH (1,1) model on the data. </p>
+
+<p>I have a data series and a number of variables I think influence it. So in basic regression terms, it looks like: </p>
+
+<p>$$
+y_t = \alpha + \beta_1 x_{t1} + \beta_2 x_{t2} + \epsilon_t .
+$$</p>
+
+<p>But I am at a complete loss at how to implement this into a GARCH (1,1) - model? I've looked at the <code>rugarch</code>-package and the <code>fGarch</code>-package in <code>R</code>, but I haven't been able to do anything meaningful besides the examples one can find on the internet. </p>
+"
+"0.160375074774896","0.18623125657326"," 95709","<p>I am fitting a regression with ARMA errors using the base R function <code>arima()</code> and the <code>Arima()</code> function from the <code>forecast</code> package.  </p>
+
+<p>The estimated coefficients from both are identical. My problem comes from using <code>arima.errors()</code> on these two models, and using <code>tsdisplay()</code> to view these structural residuals (that is, the residuals straight from the regression, before any ARMA model is fit on them). These ARMA errors (and their corresponding ACFs, PACFs) are different between the two, and I don't know why. Even more curious is that the final residuals from both are in fact the same, which would make me think the structural residuals would have to be the same. I have put a MWE below.</p>
+
+<pre><code>library('forecast')
+data(usconsumption, package='fpp')
+
+fit1 = arima(usconsumption[ ,1], xreg=usconsumption[ ,2], order=c(2,0,0))
+tsdisplay(arima.errors(fit1), main=""ARIMA errors, arima function"") # not the same as the other
+
+
+fit2 = Arima(usconsumption[,1], xreg=usconsumption[,2], order=c(2,0,0))
+dev.new()
+tsdisplay(arima.errors(fit2), main=""ARIMA errors, Arima function"") # not the same as the other
+
+
+View(cbind(resid(fit1), resid(fit2))) # final residuals are the same
+</code></pre>
+
+<p>Note this example is from <a href=""https://www.otexts.org/fpp/9/1"" rel=""nofollow"">https://www.otexts.org/fpp/9/1</a></p>
+"
+"0.166666666666667","0.188161165699665","103129","<p>I am trying to understand what the reported intercept is showing when I use <code>arima()</code> with <code>xreg=</code>. The documentation says</p>
+
+<p>""If am xreg term is included, a linear regression (with a constant term if include.mean is true and there is no differencing) is fitted with an ARMA model for the error term.""</p>
+
+<p>Thus I expect the intercept shown to come from the regression using <code>xreg=</code> as the X variables, before any arima model is done on those residuals. </p>
+
+<p>However I tried to double check this by actually doing the regression with <code>lm()</code> and the intercept from that does not match what is reported from <code>arima()</code> (although the slope coefficient is pretty close). </p>
+
+<p>Here is my example:</p>
+
+<pre><code>set.seed(456)
+v = rnorm(100,1,1)
+x = cumsum(v)  ; x = as.xts(ts(x)) 
+
+# Fit AR(1) after taking out a time trend (aka, drift)
+model5 = arima(x, order=c(1,0,0), xreg=1:length(x), include.mean=TRUE)
+# Coefficients:
+#         ar1     intercept  1:length(x)
+#       0.8995     0.8815       1.1113
+# s.e.  0.0422     1.6193       0.0265
+
+
+# Double check
+MyTime = 1:length(x)
+model5_Part1 = lm(x ~ MyTime )
+# Coefficients:
+#      (Intercept)       MyTime  
+#         1.856           1.096
+</code></pre>
+
+<p>The intercepts do not match, thus I do not know what the intercept is showing from the arima with xreg.</p>
+
+<p>Note the example shown is based on ""Issue 2"" shown here <a href=""http://www.stat.pitt.edu/stoffer/tsa3/Rissues.htm"" rel=""nofollow"">http://www.stat.pitt.edu/stoffer/tsa3/Rissues.htm</a></p>
+
+<p>Also note that this isn't a problem particular to modeling drift. Here is another example, where in addition to the intercept not matching, even the slope coefficient on the <code>xreg=</code> variable doesn't match what is shown from using <code>lm()</code>. This example has nothing to do with drift and uses the cars dataset as if it were time series data.</p>
+
+<pre><code>data(cars)
+cars = as.xts(ts(cars, start=c(1980,1), freq=12))
+model6 = arima(cars$speed, xreg=cars$dist, order=c(1,0,0), include.mean=TRUE)
+# Coefficients:
+#         ar1    intercept   dist
+#       0.9979    15.2890  -0.0172
+# s.e.  0.0030    10.5452   0.0055
+
+model6_Part1 = lm(cars$speed ~ cars$dist)
+# Coefficients:
+#      (Intercept)    cars$dist  
+#        8.2839        0.1656 
+</code></pre>
+
+<p>Intercepts do not match, slope coefficient does not match.</p>
+"
+"0.283278861866266","0.27412498731513","108374","<p>I have a monthly time series with an intervention and I would like to quantify the effect of this intervention on the outcome. I realize the series is rather short and the effect is not yet concluded.</p>
+
+<p><strong>The Data</strong></p>
+
+<pre><code>  cds&lt;- structure(c(2580L, 2263L, 3679L, 3461L, 3645L, 3716L, 3955L, 
+    3362L, 2637L, 2524L, 2084L, 2031L, 2256L, 2401L, 3253L, 2881L, 
+    2555L, 2585L, 3015L, 2608L, 3676L, 5763L, 4626L, 3848L, 4523L, 
+    4186L, 4070L, 4000L, 3498L), .Dim = c(29L, 1L), .Dimnames = list(
+        NULL, ""CD""), .Tsp = c(2012, 2014.33333333333, 12), class = ""ts"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/lNOEk.jpg"" alt=""enter image description here""></p>
+
+<p><strong>The methodology</strong></p>
+
+<p>1) The pre-intervention series (up until October 2013) was used with the <code>auto.arima</code> function. The model suggested was ARIMA(1,0,0) with non-zero mean. The ACF plot looked good.</p>
+
+<pre><code>pre&lt;-window(cds,start = c(2012,01), end=c(2013,09))
+
+mod.pre&lt;-auto.arima(log(pre))
+
+Coefficients:
+         ar1  intercept
+      0.5821     7.9652
+s.e.  0.1763     0.0810
+
+sigma^2 estimated as 0.02709:  log likelihood=7.89
+AIC=-9.77   AICc=-8.36   BIC=-6.64
+</code></pre>
+
+<p>2) Given the plot of the full series, the pulse response was chosen below, with T = Oct 2013,</p>
+
+<p><img src=""http://i.stack.imgur.com/YU3nB.jpg"" alt=""enter image description here""></p>
+
+<p>which according to cryer and chan can be fit as follows with the arimax function:</p>
+
+<pre><code>   mod.arimax&lt;-arimax(log(cds), order=c(1,0,0), seasonal=list(order=c(0,0,0),frequency=12), include.mean = TRUE,       
+            xtransf=data.frame(Oct13=1*(seq(cds)==22)),
+            transfer=list(c(1,1))
+          )
+
+    mod.arimax
+
+
+Series: log(cds) 
+ARIMA(1,0,0) with non-zero mean 
+
+Coefficients:
+         ar1  intercept  Oct13-AR1  Oct13-MA0  Oct13-MA1
+      0.7619     8.0345    -0.4429     0.4261     0.3567
+s.e.  0.1206     0.1090     0.3993     0.1340     0.1557
+
+sigma^2 estimated as 0.02289:  log likelihood=12.71
+AIC=-15.42   AICc=-11.61   BIC=-7.22
+</code></pre>
+
+<p>The residuals from this appeared OK:</p>
+
+<p><img src=""http://i.stack.imgur.com/wvdXD.jpg"" alt=""enter image description here""></p>
+
+<p>The plot of fitted and actuals:</p>
+
+<pre><code>plot(fitted(mod.arimax),col=""red"", type=""b"")
+lines(window(log(cds),start=c(2012,02)),type=""b"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/kJ1pj.jpg"" alt=""enter image description here""></p>
+
+<p><strong>The Questions</strong></p>
+
+<p>1) Is this methodology correct for intervention analysis?</p>
+
+<p>2) Can I look at estimate/SE for the components of the transfer function and say that the effect of the intervention was significant?</p>
+
+<p>3) How can one visualize the transfer function effect (plot it?)</p>
+
+<p>4) Is there a way to estimate how much the intervention increased the output after 'x' months? I guess for this (and maybe #3) I am asking how to work with an equation of the model - if this were simple linear regression with dummy variables (for example) I could run scenarios with and without the intervention and measure the impact - but I am just unsure how to work this this type of model.</p>
+
+<p><strong>ADD</strong></p>
+
+<p>Per request, here are the residuals from the two parametrizations.</p>
+
+<p>First from the fit:</p>
+
+<pre><code>fit &lt;- arimax(log(cds), order = c(1,0,0), 
+              xtransf = data.frame(Oct13a = 1*(seq_along(cds)==22), Oct13b = 1*(seq_along(cds)==22)),
+              transfer = list(c(0,0), c(1,0)))
+
+plot(resid(fit), type=""b"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/sqMZN.jpg"" alt=""enter image description here""></p>
+
+<p>Then, from this fit</p>
+
+<pre><code>mod.arimax&lt;-arimax(log(cds), order=c(1,0,0), seasonal=list(order=c(0,0,0),frequency=12), include.mean = TRUE,       
+                   xtransf=data.frame(Oct13=1*(seq(cds)==22)),
+                   transfer=list(c(1,1))
+)
+
+mod.arimax
+plot(resid(mod.arimax), type=""b"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/DjAyu.jpg"" alt=""enter image description here""></p>
+"
+"0.296296296296296","0.322561998342282","109835","<p>While working on a big data set made of 10-minutes-points of information - i.e. <code>144</code> points per day, <code>1008</code> per week and <code>52560</code> per year - I encountered a few problem in R. The information concerns electricity load on a source substation during the year.</p>
+
+<h3>Multiple seasonality :</h3>
+
+<p>The data set clearly shows multiple seasonalities, which are daily, weekly and yearly. From <a href=""http://stats.stackexchange.com/questions/47729/two-seasonal-periods-in-arima-using-r"">there</a> I understood that R doesn't handle multiple seasonality within the ARIMA modeling functions.  I would really like to work with ARIMA models though, because my previous work is based on ARIMA models and I know approximatively how to translate a model into an equation.  </p>
+
+<h3>Long seasonality :</h3>
+
+<p>Each of the seasonalities is of high value, with the shortest one being the daily seasonality at 144. Unfortunately from the SARIMA general equation which is<br>
+$\phi(B)\Phi(B^s)W_t = \theta(B)\Theta(B^s)Z_t$<br>
+I guessed that the maximum lag for a given model <code>SARIMA(p,d,q)(P,D,Q)144</code> is<br>
+$max((p+P*144), (q+Q*144))$</p>
+
+<p>I would really like to try and fit models with values of P and/or Q greater than 1, but R doesn't allow me since the <code>maximum supported lag = 350</code>. To do so I found <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">this link</a> which is really interesting and led to new functions in the forecast package by M. Hyndman, called <code>fourier</code> and <code>fourierf</code> which you can find <a href=""http://www.inside-r.org/packages/cran/forecast/docs/fourier"" rel=""nofollow"">here</a>. But since I am not a specialist in forecasting nor in statistics, I have some difficulties understanding how I can make this work.  </p>
+
+<hr>
+
+<p>The thing is I thing this whole fourier regressors package could help me a lot. From what I understood I could use it to simulate the long-seasonality of my data set, maybe use it to simulate multiple seasonality, and even more it could allow me to introduce exogenous variables - which are the <code>temperature</code> and (<code>public holiday + sundays</code>).<br>
+I also tried doing some regression following <a href=""http://robjhyndman.com/hyndsight/forecasting-weekly-data/"" rel=""nofollow"">this example</a> but I couldn't make it work because :</p>
+
+<pre><code>Error in forecast.Arima(bestfit, xreg = fourierf(gas, K = 12, h = 1008)) : 
+Number of regressors does not match fitted model
+</code></pre>
+
+<p>I really hope somebody can help me get a better understanding of these functions. Thanks.</p>
+
+<p><strong>Edit :</strong> So I tried my best with the fourier example given <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">here</a> but couldn't figure out how it handles the fitting. Here is the code (I copy-pasted M. Hyndman one and adapted to my data set - unsuccessfully) :</p>
+
+<pre><code>n &lt;- 50000
+m &lt;- 144
+y &lt;- read.table(""auch.txt"", skip=1)
+fourier &lt;- function(t,terms,period)
+{
+  n &lt;- length(t)
+  X &lt;- matrix(,nrow=n,ncol=2*terms)
+  for(i in 1:terms)
+  {
+    X[,2*i-1] &lt;- sin(2*pi*i*t/period)
+    X[,2*i] &lt;- cos(2*pi*i*t/period)
+  }
+  colnames(X) &lt;- paste(c(""S"",""C""),rep(1:terms,rep(2,terms)),sep="""")
+  return(X)
+}
+
+library(forecast)
+fit &lt;- Arima(y[1:n,1], order=c(2,1,5), seasonal=c(1,2,8), xreg=cbind(fourier(1:n,4,m),fourier(1:n,4,1008)))
+plot(forecast(fit, h=14*m, xreg=cbind(fourier(n+1:(14*m),4,m), fourier(n+1:(14*m),4,1008))))
+</code></pre>
+
+<p>So I wanted to ""force"" the model to be a <code>SARIMA(2,1,5)(1,2,8)[144]</code> but when I type <code>arimod</code>this is the result of the Arima fitting :</p>
+
+<pre><code>&gt; fit  
+Series: y[1:n, 1] , 
+ARIMA(2,1,5)                  
+
+sigma^2 estimated as 696895:  log likelihood=-407290.2  
+AIC=814628.3   AICc=814628.3   BIC=814840
+</code></pre>
+
+<p>It doesn't even take into consideration the seasonal part of the model, and I don't know much about the range the AIC values can take, but it seems way too high to be a good fitting model right there. I think it all comes down to my misunderstanding of the use of Fourier terms as regressors, but I can't figure out why.</p>
+
+<p><strong>Edit 2 :</strong> Also I can't seem to be able to add another exogenous variable to the Arima function. I need to use <code>temperature</code> - probably as a lead - to fit the <code>SARIMAX</code> model, but as soon as I write this :</p>
+
+<pre><code>fit &lt;- Arima(y[1:n,1], order=c(2,1,5), seasonal=c(1,2,8), xreg=cbind(fourier(1:n,4,m),fourier(1:n,4,1008), tmp[1:n]))
+plot(forecast(fit, h=14*m, xreg=cbind(fourier(n+1:(14*m),4,m),fourier(n+1:(14*m),4,1008), tmp[n+1:(14*m)])))
+</code></pre>
+
+<p>Nothing is plotted besides the initial data set. There is no forecast while without <code>tmp</code> as an <code>xreg</code> I still get some results.</p>
+"
+"0.17817416127495","0.172416640541423","110618","<p>I have a regression with ARMA errors, which I am fitting with <code>arima()</code>. I know that the ARMA model is being fit on these residuals from the regression. My problem is that when I use <code>include.mean=TRUE</code> the output does not return any estimate of the mean (of the residuals, which yes, I know is always zero). The documentation says that ARMA model will include a mean if this option is set to <code>TRUE</code>. </p>
+
+<p>I do see an intercept reported, which is the intercept from the regression of y on x, not the intercept from the ARMA model on the residuals.</p>
+
+<p>How do I get the <code>include.mean</code> argument to work? Is there any other way to get the intercept from the ARMA model on residuals? Is R just censoring this because residuals are always mean zero (if intercept is in regression)?</p>
+
+<p>MWE is below, thanks in advance.</p>
+
+<p><code>set.seed(123)
+y = as.xts(ts(rnorm(20)+3, start=c(1980,1), freq=12))
+x = as.xts(ts(rnorm(20)+5, start=c(1980,1), freq=12))</code></p>
+
+<p><code>fit1 = arima(y, xreg=as.data.frame(x), order=c(1,0,0), include.mean=TRUE)
+fit1 # intercept shown is from the regression, 3-(-.0935)*(5), not for the residual ARMA model</code></p>
+"
+"0.192450089729875","0.18623125657326","114675","<p>I really want to understand how the math is working here. I am trying to get the standard error of the fitted values for a time series regression model. In the non-time series regression, I know I can take the transpose of the data multiplied by the variance - covariance matrix of the model coefficients and then multiply by the data values again to get the standard errors of the fitted values.</p>
+
+<p>But I'm not sure how to do this when I am including an autoregressive term.</p>
+
+<pre><code>require(forecast)
+require(tserieS)
+</code></pre>
+
+<p>Response variable</p>
+
+<pre><code>Sablects &lt;- rnorm(10)
+</code></pre>
+
+<p>Covariates</p>
+
+<pre><code>my.xreg &lt;- cbind(rnorm(10),rbinom(10,1,0.5))
+</code></pre>
+
+<p>In my actual data, values are normalized so I set the intercept equal to zero here.</p>
+
+<pre><code>m4&lt;-arima(Sablects, order=c(2,0,0),fixed=c(0,NA,0,NA,NA),xreg=my.xreg) 
+</code></pre>
+
+<p>The predict function will give me standard errors on my in-sample prediction (the fitted values of my model).</p>
+
+<pre><code>my.se &lt;- predict(m4, newxreg = my.xreg, n.ahead = 10)$se         
+
+my.se
+</code></pre>
+
+<p>Now to compare the output of my.se, I want to do this mathematically but I don't know what to use for the values of the ar2 term. I use 1's as a placeholder to demonstrate that my output does not equal the values from <code>my.se</code> above</p>
+
+<pre><code>C &lt;- cbind(rep(1, nrow(my.xreg)), my.xreg[, 1], my.xreg[, 2])
+
+C
+</code></pre>
+
+<p>I think this value should equal the first value in my.se, but is not producing the same value as my.se</p>
+
+<pre><code>sqrt(t(C[1, ]) %*% vcov(m4) %*% C[1, ])
+</code></pre>
+
+<p>Also, I'm not so great with matrix multiplication but here is my work around for getting all of the se values.</p>
+
+<pre><code>se.output &lt;- matrix(nrow=nrow(C))
+</code></pre>
+
+<p>Specify that the max number of i is equal to number of rows of <code>C</code>.</p>
+
+<pre><code>  for(i in 1:nrow(C)){
+
+    # Loop through your multiplication for each row (i) of `C`. For each iteration, save the new data into the new row of se.output
+
+    se.output[i] &lt;- sqrt(t(C[i, ]) %*% vcov(m4) %*% C[i, ])  
+    }
+
+se.output
+</code></pre>
+"
+"0.194444444444444","0.188161165699665","115154","<p>Relatively new to stats. I use linear regression  and get R^2, which is quite low.</p>
+
+<p><strong>MODEL 1</strong></p>
+
+<pre><code>    lmoutar=lm(formula = ts_y ~ ts_y_lag + ts_x)
+</code></pre>
+
+<p>So switched to arima with external regressor. Using ""auto.arima"", I formulate arimax model</p>
+
+<p><strong>MODEL 2</strong></p>
+
+<pre><code>    fitarima &lt;- auto.arima(ts_y, xreg=ts_x)
+    arimaout&lt;-arima(ts_y,order=c(2,0,5),xreg=ts_x)
+</code></pre>
+
+<p>How can I compare the explanability of AR model with arima model. From the thread <a href=""http://stats.stackexchange.com/questions/8750/how-can-i-calculate-the-r-squared-of-a-regression-with-arima-errors-using-r"">How can I calculate the R-squared of a regression with arima errors using R?</a>, I understand R^2 is not an option for ARIMA.</p>
+
+<p>From the thread <a href=""http://stats.stackexchange.com/questions/11850/model-comparison-between-an-arima-model-and-a-regression-model"">Model comparison between an ARIMA model and a regression model</a>, AIC/BIC is not the right criteria and MSE from forcast/predict can be possible criteria for comparison across AR and ARIMA model. Is MSE the best option for model comparison, if so how would I generate MSE for AR and ARIMA?</p>
+
+<p>I tried to compare the above ar and arima model using anova, but I get following error message</p>
+
+<pre><code>anova.lm(lmoutar,arimaout)
+   Warning message:
+    In anova.lmlist(object, ...) :
+            models with response â€˜""NULL""â€™ removed because response differs from model 1
+</code></pre>
+
+<p>What does this error message mean? </p>
+
+<p><strong><em>EDIT</em></strong></p>
+
+<p>Thanks for the response so far and insight that AR is nested within ARIMA. How would one answer this question, if I rephrase  as ""How to compare AR, ARIMA and General Linear Models?"". The first model I listed has AR(1) and independent variable; it is a general linear model. So how would I compare a GLM versus ARIMAX model? Any thing else besides MSE that I could use to judge between GLM and ARIMAX</p>
+"
+"0.160375074774896","0.18623125657326","120008","<p>I am interested in fitting an ARIMAX model using R.
+As known, ARIMAX can be understood as a composition of ARIMA models and regression models with exogenous (independent) variables. I have a time series $Y_i$, and want to estimate the ARIMA and nonlinear coefficients. The nonlinear model is the following:</p>
+
+<p>$y_i=Î²_0+Î²_1t_i+Î²_2d+Î²_3 sin(2Ï€t_i/Î²_4 )+Î²_5 (-1^{t_i})+Îµ_i$,  nonlinear 
+regression with an exogenous variable.
+Where 
+$t_i$ =1, 2â€¦, 60
+and</p>
+
+<p>d = dummy variable with 20 0's and 40 number 1's</p>
+
+<pre><code>d=c(rep(0,20),rep(1,40))
+</code></pre>
+
+<p>And an ARIMA model (1,1,1) for $Y_i$. Therefore, I want to estimate simultaneously the $Î²_i$ and the ARIMA coefficients in order to avoid the confusion between the exogenous coefficients and ARIMA coefficients.  I know that $arima()$ can deal with this formulation but, how do the nonlinear model can be set within function function?. It seems that the <em>xreg</em> term only deals with linear parameters.</p>
+"
+"0.160375074774896","0.12415417104884","121566","<p>Here is a problem that was puzzling me. Suppose I simulate the AR(2) process with constant and trend using the code below (I apologize for inefficiency and inelegance - the aim was to get job done at this point; also - it may seem strangely constructed, but it has some other purpose too for which is irrelevant here).</p>
+
+<p>My question is - why the constant estimates are so poor? The true value is <code>70</code> but if we average 1000 regressions each over 1000 observations I get an average of <code>381.9234</code>. </p>
+
+<p>Is it because I interpret something wrong or the did I make a mistake somwhere?</p>
+
+<pre><code>set.key(123)
+
+#parameter values
+V=7
+P=10
+S=4
+r1 = 50/(50+P)
+r2 = V/(30+V)
+mu = 10*P
+l2 = 10*(S+V)
+a0 = 10*V
+d0 = 10*P
+a1 = 0
+d1 = P+V
+s2 = 2*(P+V+S)
+
+#simulate and estimate the parameters
+data&lt;-NULL
+data50 &lt;- NULL
+
+for (firm in 1:1000){
+
+  y_zero &lt;- rnorm(1, mean = mu, sd = l2)
+  gamma_0 &lt;- rnorm(1, mean = a0, sd = d0)
+  gamma_1 &lt;- rnorm(1, mean = a1, sd = d1)
+
+  y_first &lt;- r1*y_zero + gamma_0 + gamma_1 + rnorm(1, mean = 0, sd = s2)
+  y_second &lt;- r1*y_first - r2*(y_first - y_zero) + gamma_0 + 2*gamma_1 + rnorm(1, mean = 0, sd = s2)
+  y_third &lt;- r1*y_second - r2*(y_second - y_first) + gamma_0 + 3*gamma_1 + rnorm(1, mean = 0, sd = s2)
+  y_fourth &lt;- r1*y_third - r2*(y_third - y_second) + gamma_0 + 4*gamma_1 + rnorm(1, mean = 0, sd = s2)
+
+  column &lt;- cbind(""firm"" = firm, ""t"" = 1:4, ""y"" = c(y_first, y_second, y_third, y_fourth))
+
+  data &lt;- rbind(data, column)
+  ###################################################################################
+  firm50 &lt;- NULL
+
+  y_fifth &lt;- r1*y_fourth - r2*(y_fourth - y_third) + gamma_0 + 5*gamma_1 + rnorm(1, mean = 0, sd = s2)
+  y_sixth &lt;- r1*y_fifth - r2*(y_fifth - y_fourth) + gamma_0 + 6*gamma_1 + rnorm(1, mean = 0, sd = s2)
+
+  y_previous1 &lt;- y_sixth
+  y_previous2 &lt;- y_fifth
+
+  firm50 &lt;- cbind(""firm"" = firm, ""t"" = c(5,6), ""y"" = c(y_fifth, y_sixth), ""ro1-ro2"" = c(y_fourth, y_fifth), ""ro2"" = c(y_third, y_fourth))
+
+  for (run in 1:5000){
+    time &lt;- run + 6
+
+    the_y &lt;- r1 * y_previous1 - r2 * (y_previous1 - y_previous2) + gamma_0 + time*gamma_1 + rnorm(1, mean = 0, sd = s2)
+
+    firm50 &lt;- rbind(firm50, cbind(""firm"" = firm, ""t"" = time, ""y"" = the_y, ""ro1-ro2"" = y_previous1, ""ro2"" = y_previous2))
+
+    y_previous2 &lt;- y_previous1
+    y_previous1 &lt;- the_y
+
+  }
+  firm50 &lt;- cbind(firm50, ""gamma0"" = gamma_0, ""gamma1"" = gamma_1)
+  data50 &lt;- rbind(data50, firm50)
+}
+
+#estimate the coefficients
+data &lt;- data.table(as.data.frame(data50))[t %in% c(4000:5000)]
+coefs &lt;- NULL
+for(i in 1:1000){
+  coefs &lt;- rbind(coefs, t(coef(arima(data[firm==i, y], c(2,0,0), xreg = data[firm==i, t])))
+}
+</code></pre>
+"
+"0.362887369301212","0.380424443798661","122270","<p>This is a long post but it is <em>not</em> conceptually difficult. Please bear with me.</p>
+
+<p>I am trying to model the <strong>seasonality</strong> of production volume of an agricultural commodity. I do not care about the structure of the model (as long as it produces sensible output) nor about explaining seasonality; my goal is to adjust the series for seasonality before proceeding to forecasting. </p>
+
+<p>I know the seasonality is due to supply (weather is a key determinant) as well as demand (higher demand around Christmas and Easter, etc.). </p>
+
+<p>My <strong>data is weekly</strong>, and I am following the approach by prof. Hyndman of modelling the time series as an <strong>ARMA process with Fourier terms</strong> to account for seasonality (see <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">here</a>). I also include Christmas and Easter dummies together with Fourier terms. </p>
+
+<p>You might think I do not need a Christmas dummy since Christmas is always the 25th of December and thus Fourier terms would account for it, unlike for Easter which jumps back and forth in March-April from year to year. However, Christmas sometimes occur in week 51 and sometimes in week 52 (at least in my calendar), and Fourier terms will not account for that; hence a Christmas dummy is actually relevant.</p>
+
+<p>Actually, I would like to include up to four dummies for Christmas (from two weeks before Christmas to one week after Christmas) as the seasonal effect is not concentrated on just the Christmas week but also spread out a little in time. The same is with Easter.</p>
+
+<p>Thus I end up with $4+4=8$ dummies, up to 25 pairs of Fourier terms and an unknown ARMA order, which could be as high as (5,5), perhaps. This gives me an <strong>awfully large pool of models to choose from</strong>. Thus I have trouble replicating the approach used in the source above because of <strong>limited computational resources</strong>. Recall that in the original source there were no dummies, so the model pool was $2^{4+4}=256$ times smaller than mine and it was possible to try out a reasonably large proportion of all possible models, and then choose one of them by AIC. </p>
+
+<p>Even worse, I would like to repeat my exercise multiple times (100 times) using a rolling window on the data I have. Thus the <strong>computational requirements</strong> for my exercise <strong>become exorbitant</strong>. I am looking for a solution, and hope someone could help me out.</p>
+
+<p>Here are a few ideas I have:</p>
+
+<ol>
+<li><p>Drop the ARMA terms all together. </p>
+
+<ul>
+<li>This will make the estimates of coefficients on Fourier terms and dummies biased and inconsistent, thus the seasonal component (the Fourier terms times their coefficients plus dummies times their coefficients) might be rubbish. However, if ARMA patterns are pretty weak, maybe the bias and inconsistency of the coefficient estimates will not be too bad?</li>
+</ul></li>
+<li><p>Estimate only some models from the pool of all possible models. E.g. select the ARMA order by <code>auto.arima()</code> function in <code>forecast</code> package in <code>R</code>: <code>auto.arima()</code> does not consider all possible ARMA orders but only non-restricted ones (e.g. an AR(2) model with the AR(1) coefficient restricted to zero is not considered) and takes some other shortcuts. Also, I could force all dummies to be present without questioning whether all of them are really relevant. </p>
+
+<ul>
+<li>This indeed reduces the model pool considerably (by a factor of $2^{4+4}=256$ only due to dummies), but it comes at a cost of likely inclusion of irrelevant variables. Not sure how bad that could be. </li>
+</ul></li>
+<li><p>Use a different estimation method: conditional sum of squares (CSS) instead of maximum likelihood (ML) when possible, something else? </p>
+
+<ul>
+<li>Unfortunately, CSS in place of ML does not seem to reduce the computational time enough in practice (I tested a few examples).</li>
+</ul></li>
+<li><p>Do the estimation in two (or more) steps: select the ARMA order independently of the number of Fourier terms and inclusion/exclusion of dummies, then select the number of Fourier terms, then select the number of dummies, or something similar. </p>
+
+<ul>
+<li>This would reduce the model pool to the following: the number of all possible ARMA models (e.g. $2^{5+5}$) plus 26 (0 pairs of Fourier terms, 1 pair of Fourier terms, ..., 25 pairs of Fourier terms) plus $2^{4+4}$ (all combinations of dummies). This particular division into stages certainly does not make sense, I admit. But perhaps there exists a smart way to divide model selection into steps? I guess we need mutual orthogonality of regressors to be able to consider their inclusion/exclusion from the model one by one, or something similar. I need some insight here...</li>
+</ul></li>
+<li><p>Do something along the lines of Cochrane-Orcutt correction: <strong>(1)</strong> estimate a model without any ARMA terms (thus a simple OLS regression of production volume on Fourier terms and dummies); <strong>(2)</strong> examine the ARMA patterns in residuals and determine the relevant ARMA order; <strong>(3)</strong> estimate the corresponding ARMA model with Fourier terms and dummies as exogenous regressors. <br>(I know Cochrane-Orcutt does not consider ARMA(p,q) but just AR(1), but I thought maybe I could generalize it? Not sure, perhaps I am making a mistake here?)</p>
+
+<ul>
+<li>This would reduce the model pool to be estimated by a factor of $2^{5+5}$ if we would otherwise consider ARMA(5,5) and all sub-models nested in it, which is very nice. However, Cochrane-Orcutt correction is not as good as getting the model order correct in the first place. (I lack a theoretical argument there, but I suspect you do not always end up with the correct ARMA order if you use Cochrane-Orcutt or something similar.)</li>
+</ul></li>
+</ol>
+
+<p>I would appreaciate any comments on the ideas above and, even more, your own ideas on how to save computational time.</p>
+
+<p><strong>Thank you!</strong></p>
+
+<p>P.S. Here is the data (2007 week 1 to 2012 week 52): <br><code>6809  8281  8553  8179  8257  7426  8098  8584  8942  9049  9449 10099 10544  6351  8667  9395  9062  8602 10500  8723  9919  9120 10068  9937  9998  9379  9432  8751 10250  7690  6857  8199  8299  9204 11755  9861 10193 10452  9769 10289 10399 10181 10419 10324 11347 11692 12571 13049 13712 15381 13180  3704  5833  9909  8979  8883  9599  9034  9617  9710  9878 10872 12246  7122  8071  9656  9157  9729  8814  8704 10724  9294 10176 10394  9633 10872 10353  9400  9692  9244  8921  7698  8191  8494  8681  9420  8947  9287 10043  9953 10136 10235 10027 10137 11187 10383 11321 12023 11824 13752 13907 14658 14634  5353  5603 11607  9512  9537  9775  8558  9227  9146  9673 10225 10794 10646 10545 12375  7742  9269 11134  9588 10890 10061 10244 11275  9428 10301 11039 10779 10580  9215  9538  9717  9966 10678 10821 10898 11458 11090 12080 10904 12990 12325 12257 12246 12351 12408 11732 12702 14181 14963 15027 16657 17766  8265  7552 11067 10808 10891 10967 10826 10929 10891  9293 10902 11640 11921 13320  7751  9929 11632 11073 10955 11785 10533 10629 11535 12513 11780 12639 12280 12245 11817 11275 10242 10625  9884 10182 11048 12120 12697 13132 12597 13516 13536 13279 13935 13539 14335 13748 13988 14497 15255 15346 17626 17716 10713  7752  9309 11133 11853 11570 10320 10817 10982 10585 10941 12801 12165 11899 10941 12729 13763  8130  9888 11889 13036 10413 12609 10992 13201 11833 13159 12880 12160 13277 12758 10897 11197 12169 12639 13788 13819 14804 14613 14992 16079 16648 16376 16207 15906 15301 16194 17327 18890 18710 19953 22369 16499  9721 11785 12528 13994 12990 13226 12883 13613 14382 15829 15525 16395 17175 18334  9286 15530 16510 15370 13019 16526 14425 16542 15328 16993 17607 16734 15826 16555 16064 14412 14355 15238 15064 15317 15533 16542 16474 17354 18359 18459 17312 17499 18298 17301 17795 17867 18453 19372 19394 21897 23674 23219  7356</code></p>
+"
+"0.128300059819917","0.18623125657326","122704","<p>I have used auto.arima to fit a time series model (a linear regression with ARIMA errors, as described <a href=""http://robjhyndman.com/hyndsight/arimax/"" rel=""nofollow"">on Rob Hyndman's site</a> )  When finished - the output reports that the best model has a (5,1,0) with drift structure - and reports back values of information criteria as </p>
+
+<p>AIC:  2989.2
+AICC:  2989.3
+BIC: 3261.2</p>
+
+<p>When I use Arima to fit a model with a (1,1,1) with drift structure - the output reports back noticeably lower IC's of</p>
+
+<p>AIC:  2510.3
+AICC:  2510.4
+BIC:  2759</p>
+
+<p>I can force auto.arima to consider the (1,1,1) with drift model (using the start.p and start.q parameters), and when I do that, and set ""trace=TRUE"" - I do see that the (1,1,1) with drift model is considered, but rejected, by auto.arima.  It still reports back the (5,1,0) with drift model as the best result.</p>
+
+<p>Are there circumstances when auto.arima uses other criteria to choose between models?</p>
+
+<p>Edited to add (in response to request)</p>
+
+<p>Data for this example can be found at <a href=""https://drive.google.com/file/d/0B6afOuS0y79aenBMeFYyWVNwUUU/view?usp=sharing"" rel=""nofollow"">this Google spreadsheet</a></p>
+
+<p>and R code to reproduce the example is</p>
+
+<pre><code>repro = read.csv(""mindata.csv"")
+reprots = ts(repro, start=1, frequency=24)
+fitauto = auto.arima(reprots[,""lnwocone""],
+xreg=cbind(fourier(reprots[,""lnwocone""], K=11),
+reprots[,c(""temp"",""sqt"",""humidity"",""windspeed"",""mist"",""rain"")]),
+start.p=1, start.q=1, trace=TRUE, seasonal=FALSE)
+fitdirect &lt;- Arima(reprots[,""lnwocone""], order=c(1,1,1), seasonal=c(0,0,0),
+xreg=cbind(fourier(reprots[,""lnwocone""], K=11),
+reprots[,c(""temp"",""sqt"",""humidity"",""windspeed"",""mist"",""rain"")]), include.drift=TRUE)
+summary(fitauto)
+summary(fitdirect)
+</code></pre>
+
+<p>Apologies if the Google docs data - inline code is not the best way to provide the example.  I think I have seen in the past guidelines on the best way to do this - but could not locate those guidelines in searching this morning.</p>
+"
+"0.0785674201318386","0.0760285921269706","123889","<p>I recently started a job in power trading. But due to a sudden change in employment I am required to work on econometric models to gauge the supply and demand side of national power markets. So something beween analyst and trader really. Since my job will also be to import power I have to gauge day ahead (spot) prices for a couple of markets. (I've got raw from Reuters for all my explanatory variables and I made pretty good experiences so far with their data)</p>
+
+<p>I got so far: i have the impression that a dynamic regression would do the job quite well. The explanatory variables should be consumption, wind production, hydro production, solar production, nuclear production and gas prices (for the sake of simplicity I assume that consumption already takes care of the variable temperature). There is an additional variable I'd like to include, net import capacity, but I don't want to overdo it to start with. </p>
+
+<p>Since there should be an auto regressive tendency, an ARIMA model should work? As software I chose R as MatLab was too pricey. </p>
+
+<p>I appreciate that this is probably a rather basic question for this community. Nevertheless I would be very grateful if someone took the time to go through the process in an example (of course including R code would be wicked). I did find lots of papers online, nevertheless I would much prefer help from practitioners rather than academics. Also, I would be very interested in any form of relevant remote or f2f courses/seminars. If you know anything relevant please let me know. Equally, if someone with the right skill set is up for remote tutoring, please give me a buzz...</p>
+
+<p>Thanks in advance!</p>
+
+<p>Cheers
+Markus</p>
+"
+"0.207869854820775","0.201152747298327","124700","<p>I am trying to create a linear regression model containing two predictors and 1 response variable. My response variable has a short term pattern, i.e. surge during weekdays and slump during weekends and I suspect this pattern is a result of two things: 
+1) A natural trend - people are more active on weekdays and 
+2) Partially related to my independent variables which follows a similar pattern.</p>
+
+<p>There is also lagged cross-correlation between predictor and response.</p>
+
+<p>Should I take some steps to normalize the data before running a linear regression? I've been reading about detrending time series, ARIMA, moving averages etc. but am a little lost on the right approach. Attached below are are time series plots of the predictor and response and the lagged cross correlation.</p>
+
+<p><img src=""http://i.stack.imgur.com/NNkB1.jpg"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/cxYFk.jpg"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/zBzmC.jpg"" alt=""enter image description here""></p>
+"
+"0.361410132606458","0.380142960634853","151657","<p>I am running X-13 SEATS on r for monthly data in six years of observations and I think I got a (sufficiently) reasonable fit for the ARIMA model, but the output also shows me that my original series does not have significant seasonality, as it follows:</p>
+
+<pre><code> Call:
+seas(x = data_r[, 1], transform.function = ""log"", regression.aictest = NULL, 
+    outlier = NULL, arima.model = ""(0 1 1)(1 1 0)"")
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+AR-Seasonal-12     -0.6194     0.1110  -5.581 2.39e-08 ***
+MA-Nonseasonal-01   0.6220     0.1093   5.690 1.27e-08 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+SEATS adj.  ARIMA: (0 1 1)(1 1 0)  Obs.: 60  Transform: log
+AICc: 773.4, BIC: 778.4  QS (no seasonality in final):    0  
+Box-Ljung (no autocorr.): 20.04   Shapiro (normality): 0.9754
+    &gt; 
+                qs p-val
+    qsori        0     1
+    qsorievadj   0     1
+    qsrsd        0     1
+    qssadj       0     1
+    qssadjevadj  0     1
+    qsirr        0     1
+    qsirrevadj   0     1
+</code></pre>
+
+<p>(Still, there is also the fact that the irregular component seems to dominate the SI ratio for some specific months in some years. So maybe there is some dummy variable in the pre-adjustment that I am missing (right?)) </p>
+
+<p>But when I run a regression on Stata for yearly and monthly dummies on the original series -- assuming the seasonality is deterministic --, I cannot reject with an F test that they are all equal to zero. What does this show me? That my ARIMA fit is not correct?</p>
+
+<p>Also, if someone could point me out the difference in interpretation that you should have when running a regression on seasonal dummies and deseasonalizing data with a X-13 SEATS, it would be also very helpful. Maybe that is what I am missing here.</p>
+
+<p>Edit: is it by any chance a common practice, in some particular situations (when you are deseasonalizing a set of series), still deseasonalize a given series even if that series does not show significant seasonality?</p>
+
+<p>Edit2: Adding the results of the automatic adjustment:</p>
+
+<pre><code>Coefficients:
+                   Estimate Std. Error z value Pr(&gt;|z|)    
+Constant            59.1761    38.0551   1.555  0.11994    
+Easter[15]        -903.6151   341.1891  -2.648  0.00809 ** 
+MA-Nonseasonal-01    0.4974     0.1138   4.370 1.24e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+SEATS adj.  ARIMA: (0 1 1)  Obs.: 60  Transform: none
+AICc: 925.6, BIC: 933.2  QS (no seasonality in final):    0  
+Box-Ljung (no autocorr.):  21.9   Shapiro (normality): 0.9498 *
+
+            qs p-val
+qsori        0     1
+qsorievadj   0     1
+qsrsd        0     1
+qssadj       0     1
+qssadjevadj  0     1
+qsirr        0     1
+qsirrevadj   0     1 
+</code></pre>
+
+<p>I also, I get the following error for the monthplot function with the automatic adjustment: </p>
+
+<pre><code>Error in `[.default`(x$data, , ""seasonal"") : subscript out of bounds
+</code></pre>
+
+<p>Following this result from the automatic adjustment, the use of the dummy for easter, with the original specification, does not change that much the first output:</p>
+
+<pre><code>Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+Easter[15]        -0.08307    0.02690  -3.088  0.00202 ** 
+AR-Seasonal-12    -0.63353    0.10816  -5.858  4.7e-09 ***
+MA-Nonseasonal-01  0.50391    0.12075   4.173  3.0e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+SEATS adj.  ARIMA: (0 1 1)(1 1 0)  Obs.: 60  Transform: log
+AICc: 767.9, BIC: 774.3  QS (no seasonality in final):    0  
+Box-Ljung (no autocorr.): 29.37   Shapiro (normality): 0.9721  
+            qs p-val
+qsori        0     1
+qsorievadj   0     1
+qsrsd        0     1
+qssadj       0     1
+qssadjevadj  0     1
+qsirr        0     1
+qsirrevadj   0     1
+</code></pre>
+
+<p>Most recent observation: Now I Think I am fairly sure that there is no significant seasonality in this series, but I would be thankful if someone could show me other problems that I might not be considering. Still, I would like a possible canonical/scholarly answer on why I can reject the null hypothesis for the whole set of seasonal dummies being zero (though I had a small result for the F test with my data, ~4, but I still reject the null) and still get a reasonable ARIMA fit with which I cannot reject no seasonality in my original data. Does that have something to do with the difference of the adjustment with ARIMA models and deterministic seasonality? An intuitive answer on this difference would be of some help.</p>
+"
+"0.157134840263677","0.152057184253941","152012","<p>This might fit better here than on stackoverflow, I guess.</p>
+
+<p>I was <a href=""http://stackoverflow.com/questions/30139874/r-dynamic-linear-regression-with-dynlm-package-how-to-predict"">trying to build a dynamic regression model with the dynlm</a> package, but it did not work out. After reading <a href=""http://robjhyndman.com/hyndsight/arimax/"" rel=""nofollow"">this</a> by Hyndman, I now switched to an ARMAX model:</p>
+
+<pre><code>y_t = a_1*x1_t + a_2*x2_t + ... + a_k*xk_t + n_t
+</code></pre>
+
+<p>where the error term follows an ARMA model</p>
+
+<pre><code>n_t ~ ARMA(p,q)
+</code></pre>
+
+<p>So far I am using the function <code>auto.arima(y, xreg=cbind(x1, ..., xk))</code> from the <code>forecast</code>package, which is doing the job!</p>
+
+<p>As a benchmark I am running a pure multiple regression with <code>lm()</code>, where I make use of the <code>step()</code> function to kick out non relevant variables (about 100 variables, from which 96 are dummies) to optimize the model according to <code>AIC</code>.</p>
+
+<p>The in-sample forecasting for both models is more or less equal. As the ARMAX model always includes <strong>all</strong> independent variables <code>(x1, ..., xk)</code>, I am pretty sure that, if I could apply the <code>step()</code> function on it, I would achieve a further improvement here.</p>
+
+<p>The problem is that the <code>step()</code> function does not work on <code>auto.arima()</code>?!</p>
+
+<p>Do you have any suggestions how I could still do this? Or would I need a totally new approach?</p>
+
+<p>(I have not provide a reproducible example, as this is a rather general question of which methods/functions/packages to use. If the question is not clear enough, please tell me and I will try to provide one)</p>
+"
+"0.136082763487954","0.131685384391844","158701","<p>I use the svm function (for regression) to make forecast like I would with for exemple the arima function:<br>
+<code>fit&lt;-auto.arima(ts)</code><br>
+<code>prediction&lt;-forecast(fit,h=20)</code><br>
+which returns different attributes : </p>
+
+<blockquote>
+  <ol>
+  <li><code>prediction$mean</code> which is the actual prediction  </li>
+  <li><code>prediction$lower</code> and <code>prediction$upper</code> which are the   <strong>boundaries of the confidence intervals</strong> on each points of the   <code>prediction$mean</code>.  </li>
+  </ol>
+</blockquote>
+
+<p>I would like the <code>svm</code> function (from <em>e1071</em> package) to return a more detailed answer than just the value (like the <code>forecast()</code> would).<br>
+ But I guess it is not implemented in the function yet.
+Is there another function to do it ? Or should I use <strong>bootstrap</strong> methods to try to estimate those boundaries? And if I should use this are they pre-implemented version of them instead of using sample over a for loop which is very time-consuming ?</p>
+"
+"0.248451997499977","0.240423518417172","159428","<p>I have a set of data, let's say average weight of employees, captured every month over a period of 5 years (2010 - 2014). I cannot find a seasonality trend in the data over these years. Also, I have found that it is not dependent on any other factors.</p>
+
+<p>I am trying to forecast values for 2015 to get a general sense of this data as it is an important metric in the operations of my business. </p>
+
+<p>I have tried ARIMA, R-regression, Exponential smoothing, Excel forecast to find any seasonality whatsoever. However, my efforts are yet to materialize. </p>
+
+<p>My question is: How do I forecast a variable that has no seasonality?</p>
+
+<p>I have attached my data herewith. </p>
+
+<p><strong>Graphs</strong></p>
+
+<p>Yearly Values for years 2010 - 2014</p>
+
+<p><img src=""http://i.stack.imgur.com/rmoeD.jpg"" alt=""enter image description here""></p>
+
+<p>Value Cumulative over 2010 - 2014</p>
+
+<p><img src=""http://i.stack.imgur.com/iwyh8.jpg"" alt=""enter image description here""></p>
+
+<p>All Values from 2010 - 2014</p>
+
+<p><img src=""http://i.stack.imgur.com/dfcGd.jpg"" alt=""enter image description here""></p>
+
+<p><strong>Auto ARIMA in R</strong></p>
+
+<pre><code># Map 1-based optional input ports to variables
+dataset1 &lt;- maml.mapInputPort(1) # class: data.frame
+library(forecast)
+
+
+dates &lt;-  dataset1$Date
+values &lt;- dataset1$Weight
+
+dates &lt;-  as.Date(dates, format = '%m/%d/%Y')
+values &lt;- as.numeric(values)
+
+train_ts &lt;- ts(values, frequency=12)
+fit1 &lt;- auto.arima(train_ts)
+train_model &lt;- forecast(fit1, h = 12)
+plot(train_model)
+
+# produce forecasting
+train_pred &lt;- round(train_model$mean,2)
+data.forecast &lt;- as.data.frame(t(train_pred))
+#colnames(dataset1.forecast) &lt;- paste(""Forecast"", 1:data$horizon, sep="""")
+
+# Select data.frame to be sent to the output Dataset port
+maml.mapOutputPort(""data.forecast"");
+</code></pre>
+
+<p><strong>Forecasted Value with Auto ARIMA</strong></p>
+
+<pre><code>Date        Weight
+01-01-15    11.77
+01-02-15    11.76
+01-03-15    11.77
+01-04-15    11.76
+01-05-15    11.77
+01-06-15    11.77
+01-07-15    11.76
+01-08-15    11.77
+01-09-15    11.76
+01-10-15    11.77
+01-11-15    11.77
+01-12-15    11.76
+</code></pre>
+
+<p><strong>Data</strong></p>
+
+<pre><code>Date        Weight      Cumulative Weight
+01-01-10    11.8800     11.8800
+01-02-10    10.4000     22.2800
+01-03-10    6.9500      29.2300
+01-04-10    15.5000     44.7300
+01-05-10    17.0400     61.7700
+01-06-10    10.4700     72.2400
+01-07-10    12.1400     84.3800
+01-08-10    2.5800      86.9600
+01-09-10    12.6300     99.5900
+01-10-10    11.6800     111.2700
+01-11-10    9.0700      120.3400
+01-12-10    10.8900     131.2300
+01-01-11    1.7500      132.9800
+01-02-11    -1.7700     131.2100
+01-03-11    5.9300      137.1400
+01-04-11    -4.9200     132.2200
+01-05-11    4.3900      136.6100
+01-06-11    1.5100      138.1200
+01-07-11    1.2200      139.3400
+01-08-11    10.2900     149.6300
+01-09-11    13.0600     162.6900
+01-10-11    10.1400     172.8300
+01-11-11    8.5250      181.3550
+01-12-11    6.4350      187.7900
+01-01-12    -5.5100     182.2800
+01-02-12    -4.3000     177.9800
+01-03-12    2.3200      180.3000
+01-04-12    4.0700      184.3700
+01-05-12    12.2700     196.6400
+01-06-12    14.7400     211.3800
+01-07-12    8.4600      219.8400
+01-08-12    11.6300     231.4700
+01-09-12    -0.1500     231.3200
+01-10-12    2.5200      233.8400
+01-11-12    6.7400      240.5800
+01-12-12    35.6300     276.2100
+01-01-13    26.4000     302.6100
+01-02-13    26.1300     328.7400
+01-03-13    16.2100     344.9500
+01-04-13    56.0800     401.0300
+01-05-13    32.2300     433.2600
+01-06-13    17.5100     450.7700
+01-07-13    3.6700      454.4400
+01-08-13    7.7700      462.2100
+01-09-13    -14.2800    447.9300
+01-10-13    1.0800      449.0100
+01-11-13    9.4000      458.4100
+01-12-13    7.3400      465.7500
+01-01-14    6.1400      471.8900
+01-02-14    3.8200      475.7100
+01-03-14    16.7600     492.4700
+01-04-14    0.4900      492.9600
+01-05-14    17.9800     510.9400
+01-06-14    14.8000     525.7400
+01-07-14    12.6400     538.3800
+01-08-14    5.7300      544.1100
+01-09-14    -2.0900     542.0200
+01-10-14    9.1300      551.1500
+01-11-14    12.5100     563.6600
+01-12-14    -1.3900     562.2700
+</code></pre>
+
+<p><strong>Actual Values for 2015</strong></p>
+
+<pre><code>Date        Weight
+01-01-15    -18.43
+01-02-15    13.94
+01-03-15    26.14
+01-04-15    24.36
+01-05-15    18.37
+</code></pre>
+"
+"0.140545673785261","0.170005100229511","160435","<p>I'm diving into arima models and was trying to repreduce the results of auto regression.</p>
+
+<p>here is a reproducable example:</p>
+
+<pre><code>set.seed(1)
+z=arima.sim(n = 101, list(ar = c(0.8)))
+</code></pre>
+
+<p>when running ar(1) without an intercept </p>
+
+<pre><code>&gt; ceof(arima(z, order = c(1,0,0),include.mean =FALSE))
+ar1 
+0.7622461
+</code></pre>
+
+<p>when comparing to a linear regression </p>
+
+<pre><code>&gt; coef(lm(z[2:101] ~ z[1:100] + 0))
+z[1:100] 
+0.7586725 
+</code></pre>
+
+<p>which are very similar and can be explained by the different methods used.
+However when I do this comparison with models that include an intercept, I get again similar results in the ar1 coefficient but very different measures for the intercept. while the intercept that I get in the arima model is the one that makes less sense to me.</p>
+
+<pre><code>&gt; coef(arima(z, order = c(1,0,0)))
+      ar1 intercept 
+0.7274511 0.4241322 
+&gt; coef(lm(z[2:101] ~ z[1:100]))
+(Intercept)    z[1:100] 
+  0.1578015   0.7130261 
+</code></pre>
+
+<p>Any ideas on these differencing and in what way the arima procedure is different?</p>
+"
+"0.239697498502225","0.253038449829351","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"0.192450089729875","0.18623125657326","163074","<p>So I've been learning how to forecast over this summer and I've been using Rob Hyndman's book Forecasting: principles and practice.  I've been using R, but my questions aren't about code.  For the data I've been using, I've found that an average forecast of multiple models has produced higher accuracy levels that any sole model by itself.  </p>
+
+<p>Recently I read an blog that talked about averaging forecasting methods and assigning weights to them.  So in my case, lets say I assign 11 different models to my set of data (Arima, ETS, Holt Winters, naive, snaive, and so forth) and I want to average a few of these to get a forecast.  Has anyone had any experience with this or can point me to an article that might give some insight on the best way of going about this?</p>
+
+<p>As of right now, I'm using cross validation and Mean Absolute Error to figure out which models perform best and which perform worst. I can even use this to identify the top k # of models.</p>
+
+<p>I guess my questions are</p>
+
+<p>1) How many models would you suggest selecting? (2,3,4,5,6, etc)</p>
+
+<p>2) Any ideas on weights?  (50% to the best, 25% to the second best, 15% third best, 10% to the 4th best, etc)</p>
+
+<p>3) Are any of these forecasting models redundant and shouldn't be included? 
+(Arima, snaive, naive, HW's ""additive"", ETS, HoltWinters exponential smoothing, HoltWinters smoothing w/ trend, HoltWinters w/ trend/seasonality, multiple regression)</p>
+"
+"0.111111111111111","0.107520666114094","163092","<p>Iâ€™m looking to build an ARIMA model in R to help me predict the number of shots a football player is going to take in a game. </p>
+
+<p>I have last season's data to analyse to determine the optimal lags for my AR and MA parameters. I have a data frame in R, with the columns for the player name, date of match and the number of shots. </p>
+
+<p>Unfortunately, I only have a maximum 38 data points for each player which isnâ€™t enough to build a statistically confident model. I suspect I need a way to analyse the data holistically/all-at-once to help me determine the optimal lags.</p>
+
+<p>I donâ€™t, however, know how to do that or even if this is a statistically sound technique. </p>
+
+<p>At the moment I am just analysing my residuals (which have come from a linear regression with independent variables such as Home/Away and Team Possession) with code such as the following:</p>
+
+<pre><code>arima(residuals, order=c(3,0,0))
+</code></pre>
+
+<p>Is there a way to instruct R to perform this ARIMA analysis whilst looking at lots of mini-groups (where the groups are categorised by player name)?</p>
+
+<p>Any help would be much appreciated. </p>
+
+<p>Will </p>
+"
+"0.117851130197758","0.152057184253941","163922","<p>I am trying to find any evidence of warming in monthly times series data of water temperature over a 21-year period that is serially correlated. Essentially I am looking to determine a global trend, like what can be done with OLS regression with data that is from independent observations. I am at a crossroads in trying to determine whether a seasonal ARIMA model or a linear mixed model with a trend component as detailed by Crawley on page 799 of ""The R Book"" (2nd ed.) is the most appropriate method to use. I therefore explored both techniques, but got very contradicting answers!</p>
+
+<p>ARIMA modelling gave me a seasonal ARIMA of form (2,0,2)(0,0,1)[12], indicating that no differencing is required and therefore that the series is stationary with NO trend.</p>
+
+<p>However, the linear mixed affects modelling, comparing two models with and without a trend component using ANOVA and maximum likelihood indicated a highly significant trend (R notation):</p>
+
+<pre><code>model2: ave ~ sin(time * 2 * pi) + cos(time * 2 * pi) + (1 | factor(yr))
+
+model1: ave ~ index + sin(time * 2 * pi) + cos(time * 2 * pi) + (1 | factor(yr))
+
+ANOVA(model2,model1)
+
+      Df  AIC     BIC     logLik deviance Chisq Chi Df Pr(&gt;Chisq)   
+model2 5 346.82   364.49    -168.41   336.82                           
+model1 6 338.54   359.74    -163.27   326.54 10.28      1   0.001345 **
+</code></pre>
+
+<p>How can this be? What am I missing? Is it about assuming whether the trend is a parametric form (appropriate for linear mixed model) or whatever weird shape (appropriate for ARIMA)? If so how do I go about choosing which approach to adopt?</p>
+
+<p>Thank you kindly for any advice.</p>
+"
+"0.117851130197758","0.114042888190456","164421","<p>I have a balanced panel data (N= 190, T=5) on income and personal characteristics of the householder.</p>
+
+<p>I would like to estimate the coefficients and variances of a temporary and of a permanent income shock. </p>
+
+<p>I fitted an OLS regression model as follows:
+$log(income)=sex+age+age^2+study+ public administration + type of house + country$</p>
+
+<p>I then took the residuals and regressed them on a ARMA (1,1) model. The coefficient of AR(1) should be the permanent part and should be around 1, the MA(1) should be the temporary part. I also found that the AR(1) coefficient is only 0.2 instead of about 1. Moreover, AUTOARIMA fits them with an ARMA(2,2). How can I read the coefficients of the ARMA (2,2) to find out the temporary and permanent shock on the income?</p>
+
+<p>I would like also to find the variance of the income (which is the residuals of the ARMA regression) but is it right even if the model is not correct?</p>
+"
+"0.0785674201318386","0.0760285921269706","174476","<p>how to best predict data like this which contains multiple levels of nearly constant data?</p>
+
+<p>Simple linear models even with weights (exponential) did not cut it.</p>
+
+<p>I experimented with some clustering and then robust linear regression but my problem is that the relationship between these levels of constant data is lost.</p>
+
+<p>Here is the data from the picture:</p>
+
+<pre><code>structure(list(date = structure(c(32L, 10L, 11L, 14L, 5L, 6L, 
+1L, 2L, 12L, 9L, 19L, 13L, 4L, 17L, 15L, 3L, 18L, 7L, 8L, 21L, 
+16L, 22L, 28L, 29L, 30L, 26L, 27L, 31L, 20L, 23L, 24L, 25L), .Label = c(""18.02.13"", 
+""18.03.13"", ""18.11.13"", ""19.08.13"", ""19.11.12"", ""20.01.13"", ""20.01.14"", 
+""20.02.14"", ""20.05.13"", ""20.08.12"", ""20.09.12"", ""21.04.13"", ""21.07.13"", 
+""21.10.12"", ""21.10.13"", ""22.04.14"", ""22.09.13"", ""22.12.13"", ""23.06.13"", 
+""25.01.15"", ""25.03.14"", ""25.05.14"", ""26.02.15"", ""26.03.15"", ""26.04.15"", 
+""26.10.14"", ""26.11.14"", ""27.07.14"", ""27.08.14"", ""28.09.14"", ""28.12.14"", 
+""29.03.10""), class = ""factor""), amount = c(-4, -12.4, -9.9, -9.9, 
+-9.94, -14.29, -9.97, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, 
+-9.9, -9.9, -9.9, -4, -4, -11.9, -11.9, -11.9, -11.9, -11.98, 
+-11.98, -11.9, -13.8, -11.64, -11.96, -11.9, -11.9, -11.9)), .Names = c(""date"", 
+""amount""), class = ""data.frame"", row.names = c(NA, -32L))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DWypm.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DWypm.jpg"" alt=""regression for multiple levels""></a></p>
+
+<h1>revisiting rollmedian</h1>
+
+<p>@Gaurav - you asked: Have you tried building a model with moving averages? as ARIMA didn't work - I did not try it. But I have now.</p>
+
+<pre><code>zoo::rollmedian(rollTS, 5)
+</code></pre>
+
+<p>Seems to get the pattern of the data. However I wonder now how to reasonably forecast it. Is this possible?</p>
+
+<p><a href=""http://i.stack.imgur.com/dPhK8.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dPhK8.png"" alt=""rollmedian""></a></p>
+"
+"0.111111111111111","0.107520666114094","180217","<p>I'm using time series data containing both trend and seasonality. I also have 2 endogenous predictor variables that I would like to include in my model.</p>
+
+<p>In R I've used the forecast package to develop a dynamic regression model with use of <code>auto.arima()</code> and the <code>xreg</code> argument from the <code>forecast package</code>. I understand this procedure takes a regression and then attempts to fit the residuals with an ARMA Model.</p>
+
+<p>I've also developed what seems to be an appropriate model using the forecasting Module in SPSS by specifying a Seasonal ARIMA model and including my covariates. However, one of the coefficients on one of my endogeneous predictors has a negative sign which makes no sense intuitively. </p>
+
+<p>I've read Dr. Hyndman's article <a href=""http://robjhyndman.com/hyndsight/arimax/"" rel=""nofollow"">The ARIMAX model muddle</a> and found it to be extremely insightful and useful. However, I have not been able to find any documentation on what type of statistical procedure SPSS uses to fit an ARIMA model with covariates, so I'm not sure how I should interpret the coefficients or how concerned I should be with a flipped sign. Any help clarifying the modelling procedure used by SPSS would be tremendously appreciated. </p>
+"
+"0.136082763487954","0.131685384391844","180820","<p>I am using the auto.arima function in R.  I'm using this to forecast daily sales and am loading a number of covariates (mostly holiday/seasonal dummy variables) with Xreg.  </p>
+
+<p>Question (I apologize if this question is too fundamental, however, my experience is with regressions on cross sectional data in fixed time periods and I have little experience with dynamic regressions): Using auto.arima, do I still need to exclude a dummy variable from my set of covariates (ie, 6 dummy variables for day of the week instead of 7)?  Is the excluded dummy still caught in the output for the intercept variable?</p>
+
+<p>Thanks.</p>
+"
+"0.157134840263677","0.152057184253941","184713","<p>I am fairly new to R. I have attempted to read up on time series analysis and have already finished </p>
+
+<ol>
+<li>Shumway and Stoffer's <a href=""http://www.stat.pitt.edu/stoffer/tsa3/"" rel=""nofollow"">Time series analysis and its applications 3rd Edition</a>,</li>
+<li>Hyndman's excellent <a href=""https://www.otexts.org/fpp"" rel=""nofollow"">Forecasting: principles and practice</a></li>
+<li>Avril Coghlan's <a href=""http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html"" rel=""nofollow"">Using R for Time Series Analysis</a></li>
+<li>A. Ian McLeod et al <a href=""http://www.stats.uwo.ca/faculty/aim/tsar/tsar.pdf"" rel=""nofollow"">Time Series Analysis with R</a></li>
+<li>Dr. Marcel Dettling's <a href=""https://stat.ethz.ch/education/semesters/ss2013/atsa/ATSA-Scriptum-SS2013_130218.pdf"" rel=""nofollow"">Applied Time Series Analysis</a></li>
+</ol>
+
+<p>Edit: I'm not sure how to handle this but I found a usefull resource outside of Cross Validated. I wanted to include it here in case anyone stumbles upon this question. </p>
+
+<p><a href=""http://isites.harvard.edu/fs/docs/icb.topic79832.files/L06_Program_Evaluation_2/Segmented_Regression.Wagner.2002.pdf"" rel=""nofollow"">Segmented regression analysis of interrupted time series studies in medication use research</a></p>
+
+<p>I have a univariate time series of the number of items consumed (count data) measured daily for 7 years. An intervention was applied to the study population at roughly the middle of the time series. This intervention is not expected to produce an immediate effect and the timing of the onset of effect is essentially unknowable.</p>
+
+<p>Using Hyndman's <code>forecast</code> package I have fitted an ARIMA model to the pre-intervention data using <code>auto.arima()</code>. But I am unsure of how to use this fit to answer whether there has been a statistically significant change in trend and quantify the amount.</p>
+
+<pre><code># for simplification I will aggregate to monthly counts
+# I can later generalize any teachings the community supplies
+count &lt;- c(2464, 2683, 2426, 2258, 1950, 1548, 1108,  991, 1616, 1809, 1688, 2168, 2226, 2379, 2211, 1925, 1998, 1740, 1305,  924, 1487, 1792, 1485, 1701, 1962, 2896, 2862, 2051, 1776, 1358, 1110,  939, 1446, 1550, 1809, 2370, 2401, 2641, 2301, 1902, 2056, 1798, 1198,  994, 1507, 1604, 1761, 2080, 2069, 2279, 2290, 1758, 1850, 1598, 1032,  916, 1428, 1708, 2067, 2626, 2194, 2046, 1905, 1712, 1672, 1473, 1052,  874, 1358, 1694, 1875, 2220, 2141, 2129, 1920, 1595, 1445, 1308, 1039,  828, 1724, 2045, 1715, 1840)
+# for explanatory purposes
+# month &lt;- rep(month.name, 7)
+# year &lt;- 1999:2005
+ts &lt;- ts(count, start(1999, 1))
+train_month &lt;- window(ts, start=c(1999,1), end = c(2001,1))
+require(forecast)
+arima_train &lt;- auto.arima(train_month)
+fit_month &lt;- Arima(train_month, order = c(2,0,0), seasonal = c(1,1,0), lambda = 0)
+plot(forecast(fit_month, 36)); lines(ts, col=""red"")
+</code></pre>
+
+<p>Are there any resources specifically dealing with interrupted time series analysis in R? I have found <a href=""http://epoc.cochrane.org/sites/epoc.cochrane.org/files/uploads/21%20Interrupted%20time%20series%20analyses%202013%2008%2012_1.pdf"" rel=""nofollow"">this</a> dealing with ITS in SPSS but I have not been able to translate this to R. </p>
+"
+"0.192450089729875","0.18623125657326","185058","<p>I have to forecast sales for stores. So for that I am using ARIMA model.Here first we need to create times series object using ts function which takes frequency parameter.As far as I know we use 1=annual, 4=quarterly, 12=monthly but don't know sure what will be frequency for daily observations. I tried using 1,7,365 and number of observation as values for frequency parameter but with these I am not able to get proper plots and forecast.My second question is how to deal with 0 values for specific observation as they are producing errors as follows:</p>
+
+<pre><code>Error in na.fail.default(as.ts(x)) : missing values in object for acf() and pacf() 
+</code></pre>
+
+<p>and</p>
+
+<pre><code>Error in OCSBtest(x, m) : The OCSB regression model cannot be estimatedauto.arima() functions.
+</code></pre>
+
+<p>Here is the data:
+<a href=""https://drive.google.com/file/d/0B-KJYBgmb044QlNUS3FhVFhUbE0/view?usp=sharing"" rel=""nofollow"">https://drive.google.com/file/d/0B-KJYBgmb044QlNUS3FhVFhUbE0/view?usp=sharing</a></p>
+
+<p>Below is my code:</p>
+
+<pre><code> data&lt;-read.csv(""Book5.csv"")
+   View(data)
+
+   mydata&lt;- ts(data[,2], start=1, end=181, frequency = 7)
+   View(mydata)
+   plot(mydata, xlab=""Day"", ylab = ""Sales"")
+
+   plot(diff(mydata),xlab=""Day"",ylab=""Differenced Sales"")
+   plot(log10(mydata),ylab=""Log(Sales)"")
+   plot(diff(log10(mydata)),ylab=""Differenced Log (Sales)"")
+
+   par(mfrow = c(1,2))
+   acf(ts(diff(log10(mydata))),main=""ACF Sales"")
+   pacf(ts(diff(log10(mydata))),main=""PACF Sales"")
+
+   require(forecast)
+   ARIMAfit &lt;- auto.arima(log10(mydata), approximation=FALSE,trace=FALSE)
+   summary(ARIMAfit)
+
+   pred &lt;- predict(ARIMAfit, n.ahead= 31)
+   pred
+   class(pred$pred)
+       10^(pred$pred)
+
+   # Write CSV in R
+   write.csv(10^(pred$pred), file = ""MyData.csv"")
+
+   plot(mydata,type=""l"",xlim=c(1,52),ylim=c(1,6000),xlab = ""Day"",ylab =   ""Sales"")
+   lines(10^(pred$pred),col=""blue"")
+       lines(10^(pred$pred+2*pred$se),col=""orange"")
+       lines(10^(pred$pred-2*pred$se),col=""orange"")
+</code></pre>
+"
+"0.260578653323524","0.25215831342413","186725","<p>Short version: How would one be able to quantify an intervention effect in time-series analysis when the intervention decreases seasonal amplitude variation but doesn't directly effect the median?</p>
+
+<p><a href=""https://www.dropbox.com/s/hb3g7j17igeqnoc/dat.csv?dl=0"" rel=""nofollow"">Here</a> is a link to my raw data.</p>
+
+<p>I have a complex time-series of daily incidence numbers for a population over 7 years, totaling 2557 observations. There is a strong weekly and yearly seasonality (high incidence in winter months and low incidence in summer months). There is a baseline negative trend which is orders of magnitude smaller than the seasonality. An intervention was introduced at time = 1700. This intervention should theoretically not cause a level shift. My aim is to detect whether the intervention increases the baseline negative trend.</p>
+
+<p>I have attempted to fit a dynamic linear regression with ARIMA errors in R using <code>auto.arima()</code> in the <code>forecast</code> package. I modeled the weekly season using a dummy variable for each weekday and the weekend. I modeled the monthly seasonality with harmonics using <code>fourier()</code> function in the <code>forecast</code> package. An the intervention effect was coded in by specifying the time index and post-intervention times as independent variables using the methods described in <a href=""http://isites.harvard.edu/fs/docs/icb.topic79832.files/L06_Program_Evaluation_2/Segmented_Regression.Wagner.2002.pdf"" rel=""nofollow"">Segmented regression analysis of interrupted time series studies in medication use research</a>. With these variables specified <code>auto.arima()</code> suggests an ARMA(7,7) process. The coefficients for baseline trend and post-intervention trend are however non-significant.  </p>
+
+<p>I am concerned that by using fourier terms to model away the seasonality I am artificially removing any intervention effect, as visual analysis of the time series indicates that the intervention is specifically decreasing incidence during the winter months and therefore reducing the yearly seasonal variability. </p>
+"
+"0.222222222222222","0.215041332228188","188597","<p>I have daily data for 3 years. This sales data is of seasonal nature as business has spikes and downfall by month. Also, sales differ by each day of the week. for example, monday in general in a month tend to have similar pattern.</p>
+
+<p>I have used ARIMA and created a matrix of month dummy variables and day of week dummy variables and have passed that in ARIMA. however i hit the bottom when i couldn't reconvert differenced stationary number forecasts into the actual sales metric. <a href=""http://stats.stackexchange.com/questions/188595/convert-double-differenced-forecast-into-actual-value"">Posted here already</a></p>
+
+<p>I have also tried dummy regression using sales as dependent variable and 11 month dummy variables and 6 day of week dummy variables. i abandoned this as R square was low at 48% and MAPE from the forecasted results was more than 20%</p>
+
+<p>Edit: I have tried auto.arima as well.
+My question: What technique can i use for forecasting sales for next 365 days? that will consider this month of the year and day of the week seasonality?</p>
+"
+"0.136082763487954","0.131685384391844","190586","<p>I am using cross correlation to demonstrate a potential link between two time series (ext &amp; co). Both series are strongly autocorrelated, so it is difficult to assess the dependence between the two series. For a quick preliminary analysis, the cross correlation shows a clear (somehow delayed) link between the two time series, although it might spurious. <a href=""http://i.stack.imgur.com/eHUnj.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/eHUnj.jpg"" alt=""CCF""></a>. Prewhitening seems to be the best option; I will prewhiten my x variable by fitting an ARIMA process and then use the coefficients to filter my variable y. My question is if I should estimate the coefficients of the ARIMA process (for example using <code>auto.arima</code>) using my series x or by using the residuals of the OLS regression of x on y.</p>
+"
+"0.136082763487954","0.131685384391844","196703","<p>For all my forecast models (<code>arima</code> with Fourier, <code>tbats</code>, <code>ets</code> and <code>stlf</code> from the ""forecast"" package in R) I use the following:</p>
+
+<pre><code>model &lt;- auto.arima(x, xreg=fourierf(x, K=y, h=52)) 
+</code></pre>
+
+<p>or </p>
+
+<pre><code>model &lt;- tbats(x) 
+</code></pre>
+
+<p>or </p>
+
+<pre><code>model &lt;- ets(x)
+</code></pre>
+
+<p>or </p>
+
+<pre><code>model &lt;- stlf(x)
+</code></pre>
+
+<p>then</p>
+
+<pre><code>forecast(model, h=52)
+</code></pre>
+
+<p><code>h=52</code> as that takes my data to the end of this quarter.</p>
+
+<p>I also used multiple regression separately. </p>
+
+<p>I then decided to use ARIMA with the dummy variables I'd used in my regression model:</p>
+
+<pre><code>model &lt;- auto.arima(x, xreg=dummy)
+</code></pre>
+
+<p>then</p>
+
+<pre><code>forecast(model, xreg=dummy, h=52)
+</code></pre>
+
+<p>However it doesnt matter if I use <code>h=52</code> or <code>h=1</code> or leave it blank, the forecast automatically seems to forecast the total length of my data set i.e. if I had 404 values it forecasted 404 values forward.</p>
+
+<p>Just wondering why this happens and can I restrict the forecast to less?</p>
+"
+"0.230978289061194","0.264153447385195","198844","<p>I'm trying to understand how <code>auto.arima</code> with covariates in the xreg parameter works. I'm familiar with regression and I'm starting to work on forecasting.</p>
+
+<p>My understanding of forecasting is that you look for patterns in the past time series and then project those paterns onto the future.  </p>
+
+<p>My uderstanding of regression is that you use predictors to try to generate an output value and minimize the difference between your created value and the real value.  </p>
+
+<p>So how does forecasting <code>auto.arima</code> with <code>xreg</code> work? Do you create a forecast for a timeseries based on past data and regression model based on the input time series and input <code>xreg</code>, and then forecast each data point in the time series and for each forecasted data point use the regression model you built and future <code>xreg</code> values to adjust the forecasted values?</p>
+
+<p>I'm a former physics grad student, so I'm not allergic to math but I'm just looking for a high level overview of the process here to understand how forecasting <code>auto.arima</code> works.  </p>
+
+<p>For example like, </p>
+
+<ul>
+<li><p>step 1: build forecast model on input time series, and regression model on input time series and input <code>xreg</code> values</p></li>
+<li><p>step 2: forecast model into future one step, and predict value with regression model and future <code>xreg</code> values</p></li>
+<li><p>step 3: algorithm combines forecasted value and regression model prediction to get combined value</p></li>
+</ul>
+
+<p>This is just a guess at how it works, but it's an example of the kind of high level explanation I'm looking for.</p>
+
+<p>I've included some code below that I've been working on trying to forecast time in to out <code>TiTo</code> for customers at a restaurant with predictor count of customers in the restaurant <code>CustCount</code>.</p>
+
+<pre><code>OV&lt;-zoo(SampleData$TiTo, 
+    order.by=SampleData$DateTime)
+
+
+eDate &lt;- ts(OV, frequency = 24)
+
+Train &lt;-eDate[1:15000]
+Test &lt;- eDate[15001:22773]
+
+xregTrain &lt;- SampleData[1:15000,]$CustCount
+    xregTest &lt;- SampleData[15001:22773,]$CustCount
+
+Arima.fit &lt;- auto.arima(Train, xreg = xregTrain)
+
+Acast&lt;-forecast(Arima.fit, h=7772, xreg = xregTest)
+
+accuracy(Acast$mean,Test)
+</code></pre>
+"
+"0.136082763487954","0.0877902562612294","200219","<p>I want to do a regression with a PCA component. I have my varimax components, and I want to make my first component into an object in R. I can't find the code to do so.</p>
+
+<p>Edit: I have found out that there is a difference between PCA components and varimax components. I am not sure which one would be more useful? I have a PCA/Varimax of 10 survey questions which I will use as my dependent variable, and I am interested in gender as my independent variable. </p>
+
+<p><strong>So, how do I decide whether to go for a varimax or PCA component and how do I make these components into objects in R?</strong></p>
+
+<p>This is for Advanced Quantitative Research Methods. I have a group-presentation on PCA, doing a regression is optional. I am allowed to ask help here. </p>
+
+<p>Edit 2: In the article linked by amoeba, I can't follow the coding and I don't understand the theoretical purposes of using varimax versus PCA in a regression. </p>
+"
+"0.0785674201318386","0.0760285921269706","204440","<p>I'm using the <code>auto.arima</code> function in R's <code>forecast</code> package to build an ARIMA model with external regressors. I have a non-seasonal monthly stationary time-series dataset as shown below:</p>
+
+<pre><code>&gt; dim(tsdata)
+[1] 95  4
+&gt; head(tsdata)
+                    y         x1         x2          x3
+2007-02-01  0.0532113 -0.7547812 -1.1156320  1.15193457
+2007-03-01 -0.4461565  0.5104070  1.2489777 -1.19172591
+2007-04-01 -1.4087036  2.0866994  0.2835917  0.15941672
+2007-05-01 -0.4960451 -1.9455242 -2.6847517 -0.06603252
+2007-06-01  0.8025322 -2.9295067 -0.6049654  0.34332637
+2007-07-01 -0.8053754 -0.2385492 -1.7850528 -1.29843072
+</code></pre>
+
+<p>I can use <code>auto.arima(tsdata[,1], xreg=tsdata[,2:4])</code> to fit a model with <code>x1</code>, <code>x2</code>, and <code>x3</code> as regressors. My question is, is there a way to model the interaction between external regressions?</p>
+"
+"0.207869854820775","0.201152747298327","204763","<p>Using linear regression as an equation for prediction is straightforward with,</p>
+
+<p>$$ Y_i = \beta_0 + \beta_1 X_i. $$</p>
+
+<p>Once the betas are estimated I can insert different values of $X$ to use as a what-if analysis for different scenarios. </p>
+
+<p>But trying to do the same with ARIMA models is proving difficult to translate. For example with an ARIMA(2,1,1) model, how do I create an equation where I can try out different scenarios to see how the projection changes? </p>
+
+<p>Below I have the output for a projection of sales based on past sales and extra regressors. I see that a unit change in <code>poc0_3_PER</code> results in a <code>135.2229</code> change in sales. But how do I account for the moving average and auto-regression components?</p>
+
+<pre><code>arima(ts.count, order=c(2,1,1), xreg=df.back[3:4])
+
+Call:
+arima(x = ts.count, order = c(2, 1, 1), xreg = df.back[3:4])
+
+Coefficients:
+          ar1     ar2     ma1  poc0_3_PER
+      -0.4569  0.2458  0.9455    135.2229
+</code></pre>
+
+<p>I have <code>ar1</code> and <code>ar2</code> estimates along with <code>ma1</code> and the extra regressors. How do I convert this into a working equation wherein I can try out different scenarios for the extra regressors to see how the prediction is affected?</p>
+
+<p>I'm hoping that the solution is not an equation like <a href=""http://stats.stackexchange.com/questions/69407/how-do-i-write-a-mathematical-equation-for-arima-2-1-0-x-0-2-2-period-12?rq=1"">this post here</a>. I do have SARIMA models at times with orders like <code>SARIMA(2,0,1)(1,0,1)[12]</code>.</p>
+"
+"0.111111111111111","0.107520666114094","205967","<p>Suppose I have a website which has some baseline hourly traffic. I also run TV advertising intermittently which drives up my web traffic. I want to determine how much effect my TV advertising is having in terms of driving up web traffic.</p>
+
+<p>If I fit an ARMAX model with hourly TV advertising spend or impressions as exogenous variables, is it valid to claim that the AR terms represent the ""baseline traffic"" while the regression terms represent the traffic that should be attributed to TV advertising?</p>
+
+<p>Here is some example code of what I'm trying to do:</p>
+
+<pre><code>library(forecast)
+
+xmat &lt;- as.matrix(cbind(data[,c(""AdSpend"",""Impressions"")]))
+xvar &lt;- data$WebSessions
+
+fit &lt;- Arima(x=xvar, xreg=xmat, order=c(12,0,0), include.constant=FALSE)
+
+reg_terms &lt;- fit$coef[""AdSpend""] * data$AdSpend + fit$coef[""Impressions""] * data$Impressions
+AR_terms &lt;- fitted(fit) - reg_terms
+</code></pre>
+
+<p>I can then create a stacked area chart using AR_terms (the baseline hourly web traffic) and reg_terms (the TV attributed hourly traffic).</p>
+
+<p><a href=""http://i.stack.imgur.com/PjaLr.png""><img src=""http://i.stack.imgur.com/PjaLr.png"" alt=""enter image description here""></a></p>
+
+<p>Is this a valid approach?</p>
+
+<p>Thanks for the help.</p>
+"
+"0.272165526975909","0.241423204718381","209247","<p>I am trying to predict surface temperature using solar energy. I have 3650 daily averages for both variables. The plots of both are below: </p>
+
+<p><a href=""http://i.stack.imgur.com/ywSHs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ywSHs.png"" alt=""enter image description here""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/JjFDG.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/JjFDG.png"" alt=""enter image description here""></a></p>
+
+<p>I attempt to seasonally adjust with a periodic regression in R for both: </p>
+
+<pre><code>stmp.model.sa &lt;- lm(stmp ~ sin((2*pi/365)*t) + cos((2*pi/365)*t))
+slrd.model.sa &lt;- lm(slrd ~ sin((2*pi/365)*t) + cos((2*pi/365)*t))
+</code></pre>
+
+<p>Here are the plots of the residuals from these models: 
+<a href=""http://i.stack.imgur.com/jhdLw.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/jhdLw.png"" alt=""enter image description here""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/fyzuq.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/fyzuq.png"" alt=""enter image description here""></a></p>
+
+<p>As you can see, the temperature data responded well to the treatment. The solar energy data did not, as the yearly humps are still somewhat present.</p>
+
+<p>A few questions: </p>
+
+<ul>
+<li>Is there a more effective way to remove seasonality for the solar data? </li>
+<li>Is further treatment of the temperature trend recommended? Would a polynomial regression be sufficient to remove this trend?</li>
+<li>What model might be recommended to predict the temperature? Linear model, ARIMA/ARIMAX models, linear regression with ARIMA errors, etc? </li>
+</ul>
+
+<p>Thanks in advance for any responses! </p>
+
+<p>EDIT:</p>
+
+<p>I attempted to apply a Hodrick Prescott filter (lambda = 100*365^2) with poor results. I then attempted to fit a cycle to the solar data using a 20 period moving maximum. This was done using the following code:</p>
+
+<pre><code>seq &lt;- 11:(n-11)
+ns &lt;- length(seq)
+slrd.seasonal &lt;- slrd[seq]
+for(i in seq){
+  slrd.seasonal[i-10] &lt;- max(slrd[(i-10):(i+10)])
+}
+</code></pre>
+
+<p>The moving maximum, the solar cycle, and the cycle subtracted from the original series is presented below: </p>
+
+<p><a href=""http://i.stack.imgur.com/k1RuT.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/k1RuT.png"" alt=""enter image description here""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/2QwSR.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/2QwSR.png"" alt=""enter image description here""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/IMMjE.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/IMMjE.png"" alt=""enter image description here""></a></p>
+
+<p>This did not remove the yearly cycle entirely either. Any advice?
+EDIT 2: </p>
+
+<p>I have successfully removed seasonality by fitting a 20 order polynomial to the first three years (using more years proves computationally difficult). If anyone can think of a better or more elegant way to achieve this, let me know. </p>
+"
+"0.0785674201318386","0.0760285921269706","209307","<p>I am working with 8 variables that are correlated with each other, and want to use factor analysis to construct two factors and then use them in my regression analysis. I typed this in R:</p>
+
+<pre><code>fit.2 &lt;- factanal(mydata, factor = 2, rotation=""varimax"")
+print(fit.2)
+</code></pre>
+
+<p>and it gives me that</p>
+
+<pre><code>Loadings:
+   Factor1 Factor2
+V1 -0.174   0.341 
+V2 -0.902  -0.124 
+V3 -0.141  -0.882 
+V4  0.855  -0.198 
+V5  0.800         
+V6  0.938  -0.121 
+V7          0.931 
+V8 -0.949         
+
+               Factor1 Factor2
+SS loadings      4.018   1.837
+Proportion Var   0.502   0.230
+Cumulative Var   0.502   0.732
+</code></pre>
+
+<p>What should I do next to create these two new variables?</p>
+"
+"0.0555555555555556","0.107520666114094","220830","<p>I need to forecast using <code>HoltWinters</code> with regression parameters using R. But I found there is not any option of <code>xreg</code> in <code>HoltWinters</code> function in R. I thought to use <code>auto.arima</code> with <code>xreg</code> option but my <code>HoltWinters</code> is performing better than <code>auto.arima</code> without any regression parameters.</p>
+
+<p>Can you please suggest me how to incorporate <code>xreg</code> in <code>HoltWinters</code> function in R?</p>
+"
+"0.17817416127495","0.201152747298327","223379","<p>I'm fitting an <code>arima</code>(1,0,0) model using the <code>forecast</code> package in R on the <code>usconsumption</code> dataset. However, when I mimic the same fit using <code>lm</code>, I get different coefficients. My understanding is that they should be the same (in fact, they give the same coefficients if I model an <code>arima</code>(0,0,0) and <code>lm</code> with only the external regressor, which is related to this post: <a href=""http://stats.stackexchange.com/questions/28472/regression-with-arima0-0-0-errors-different-from-linear-regression"">Regression with ARIMA(0,0,0) errors different from linear regression</a>). </p>
+
+<p>Is this because <code>arima</code> and <code>lm</code> use different techniques to calculate coefficients? If so, can someone explain the difference?  </p>
+
+<p>Below is my code.</p>
+
+<pre><code>&gt; library(forecast)
+&gt; library(fpp)
+&gt; 
+&gt; #load data
+&gt; data(""usconsumption"")
+&gt; 
+&gt; #create equivalent data frame from time-series
+&gt; lagpad &lt;- function(x, k=1) {
++   c(rep(NA, k), x)[1 : length(x)] 
++ }
+&gt; usconsumpdf &lt;- as.data.frame(usconsumption)
+&gt; usconsumpdf$consumptionLag1 &lt;- lagpad(usconsumpdf$consumption)
+&gt; 
+&gt; #create arima model
+&gt; arima(usconsumption[,1], xreg=usconsumption[,2], order=c(1,0,0))
+
+Call:
+arima(x = usconsumption[, 1], order = c(1, 0, 0), xreg = usconsumption[, 2])
+
+Coefficients:
+         ar1  intercept  usconsumption[, 2]
+      0.2139     0.5867              0.2292
+s.e.  0.0928     0.0755              0.0605
+
+sigma^2 estimated as 0.3776:  log likelihood = -152.87,  aic = 313.74
+&gt; 
+&gt; #create lm model
+&gt; lm(consumption~consumptionLag1+income, data=usconsumpdf)
+
+Call:
+lm(formula = consumption ~ consumptionLag1 + income, data = usconsumpdf)
+
+Coefficients:
+    (Intercept)  consumptionLag1           income  
+         0.3779           0.2456           0.2614  
+</code></pre>
+"
+"0.157134840263677","0.152057184253941","224078","<p>I have three related questions on the package CausalImpact in R. The package can be found <a href=""https://github.com/google/CausalImpact"" rel=""nofollow"">here</a> and a reproducible example is below.</p>
+
+<ol>
+<li>Do I basically understand correctly, that the model makes ""1-step ahead""
+predictions? I assume it works like a simple lm model that makes
+lots of regressions for t+1 with predictors values from t-1 and then looks for the most contributory predictors?</li>
+<li>When talking about ""coefficients"", does that mean they are (Pearson)
+correlation coefficients?</li>
+<li>The function <code>plot(impact$model$bsts.model,""coefficients"")</code> produces
+a plot with inclusion probabilities ranging from 0 to 1. Is there
+any way to access the actual values in a table? I found
+that <code>colMeans(impact$model$bsts.model$coefficients)</code> provides some
+values but I'd like to have a confirmation for this.</li>
+<li>In my code, I changed <code>bsts.model &lt;- bsts(y ~ x1, ss, niter = 1000)</code> to <code>bsts.model &lt;- bsts(y ~ x1 + x2 + x3 + x4 + x5, ss, niter = 1000)</code> in order to get values for different variables that I defined before. I did not change the cbind functions for that, as I weren't sure if that was necessary. Now I wonder what to do when I do have a table with -let's say- 200 predictors? Do I have to enter x1 to x200 after <code>bsts(y ~</code> to find the best predictors?</li>
+</ol>
+
+<p>R code below:</p>
+
+<pre><code>install.packages(""devtools"")
+library(devtools)
+devtools::install_github(""google/CausalImpact"")
+#Download the tar from the git and then install the package in RStudio.
+
+library(CausalImpact)
+
+set.seed(1)
+x1 &lt;- 100 + arima.sim(model = list(ar = 0.999), n = 100)
+x2 &lt;- 50 + arima.sim(model = list(ar = 0.899), n = 100)
+x3 &lt;- 80 + arima.sim(model = list(ar = 0.799), n = 100)
+x4 &lt;- 1.25 * x1 + rnorm(100)
+x5 &lt;- 101 + arima.sim(model = list(ar = 0.999), n = 100)
+y &lt;- 1.2 * x1 + rnorm(100)
+y[71:100] &lt;- y[71:100] + 10
+data &lt;- cbind(y, x1)
+
+dim(data)
+head(data)
+data
+matplot(data, type = ""l"")
+
+time.points &lt;- seq.Date(as.Date(""2014-01-01""), by = 1, length.out = 100)
+data &lt;- zoo(cbind(y, x1), time.points)
+head(data)
+
+pre.period &lt;- as.Date(c(""2014-01-01"", ""2014-03-11""))
+post.period &lt;- as.Date(c(""2014-03-12"", ""2014-04-10""))
+
+impact &lt;- CausalImpact(data, pre.period, post.period)
+plot(impact)
+
+summary(impact)
+summary(impact, ""report"")
+impact$summary
+
+post.period &lt;- c(71, 100)
+post.period.response &lt;- y[post.period[1] : post.period[2]]
+y[post.period[1] : post.period[2]] &lt;- NA
+
+ss &lt;- AddLocalLevel(list(), y)
+
+bsts.model &lt;- bsts(y ~ x1 + x2 + x3 + x4 + x5, ss, niter = 1000)
+
+impact &lt;- CausalImpact(bsts.model = bsts.model,post.period.response =     post.period.response)
+
+plot(impact)
+summary(impact)
+summary(impact, ""report"")
+
+plot(impact$model$bsts.model,""coefficients"")
+plot(impact$model$bsts.model, ""coef"", inc = .1)
+plot(impact$model$bsts.model, ""coef"", inc = .05)
+
+colMeans(impact$model$bsts.model$coefficients)
+</code></pre>
+"
+"0.222222222222222","0.215041332228188","225578","<p>I have the following time series dataset (dependent | independent) :</p>
+
+<pre><code>Sales | Income,Inflation, Interest Rates etc
+</code></pre>
+
+<p>All of this is dynamic data pertaining to each of 24 months (month:0 to month:24). For 25th month onward I have no data for the independent variables (Income,Inflation, Interest Rates etc), yet I want to be able to predict sales for month:25 +.</p>
+
+<p>I have been trying to figure out models which I can used to implement this scenario including Dynamic Regression and ARMAX/ARIMAX models. However, it seems that to be able to predict sales for the 25th month, i need data for dependent variables (Income,Inflation, Interest Rates etc) for the month (25). </p>
+
+<p>Can I create a model using lagged values of the dependent and independent variables, used together in a regression model? I'm not sure if that makes sense.</p>
+
+<p>This is my first time series model and im not sure if i am on the right track. Please advise.</p>
+"

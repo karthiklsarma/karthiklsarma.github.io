@@ -1,0 +1,166 @@
+"V1","V2","V3","V4"
+"NaN","NaN","  8126","<p>I want to calculate the hat matrix directly in R for a logit model. According to Long (1997) the hat matrix for logit models is defined as:</p>
+
+<p>$$H = VX(X&#39;VX)^{-1} X&#39;V$$</p>
+
+<p>X is the vector of independent variables, and V is a diagonal matrix with $\sqrt{\pi(1-\pi)}$ on the diagonal. </p>
+
+<p>I use the <code>optim</code> function to maximize the likelihood and derive the hessian. So I guess my question is: how do i calculuate $V$  in R?</p>
+
+<p><em>Note:</em> My likelihood function looks like this:</p>
+
+<pre><code>loglik &lt;-  function(theta,x,y){
+y &lt;- y
+x &lt;- as.matrix(x)
+beta &lt;- theta[1:ncol(x)]
+loglik &lt;- sum(-y*log(1 + exp(-(x%*%beta))) - (1-y)*log(1 + exp(x%*%beta)))
+return(-loglik)
+}
+</code></pre>
+
+<p>And i feed this to the optim function as follows:</p>
+
+<pre><code>logit &lt;- optim(c(1,1),loglik, y = y, x = x, hessian = T)
+</code></pre>
+
+<p>Where x is a matrix of independent variables, and y is a vector with the dependent variable.</p>
+
+<p><em>Note:</em> I know that there are canned procedures for doing this, but I need to do it from scratch</p>
+"
+"NaN","NaN","229824","<p>I understand for squared loss, add a $\frac 1 2$ to objective function will simplify many derivations, since the derivative of a square has a constant $2$.</p>
+
+<p>Are we doing similar things to logistic loss? If not why, residual deviance is twice the negative log likelihood?</p>
+
+<p>Few lines of code to demo my question.</p>
+
+<pre><code>fit=glm(vs~mpg+hp+wt,mtcars,family = binomial())
+p=fit$fitted.values
+y=mtcars$vs
+
+# these two values are the same
+fit$deviance/2
+-sum(y*log(p)+(1-y)*log(1-p))
+</code></pre>
+"
+"0","0.577350269189626","187796","<p>I've been trying to fit exactly the same logistic regression model (same data) in SAS and R. As far as the coefficients are concerned I didn't notice any differences. 
+However, when I tried to perform some of the Goodness of fit tests (Pearson residuals and Deviance residuals GOF tests ) I noticed there is huge difference on how they are computed.
+It's hard to bring in some reproducible data here but that's my output:</p>
+
+<ol>
+<li>R
+
+<blockquote>
+  <p>1 - pchisq(deviance(modelx),df.residual(modelx))</p>
+</blockquote></li>
+</ol>
+
+<p>[1] 0.0003661318</p>
+
+<blockquote>
+  <p>1 - pchisq(sum(residuals(modelx, type = ""pearson"")^2),df.residual(modelx))</p>
+</blockquote>
+
+<p>[1] 0.4574779</p>
+
+<blockquote>
+  <p>deviance(modelx)</p>
+</blockquote>
+
+<p>[1] 3284.208</p>
+
+<blockquote>
+  <p>df.residual(modelx)</p>
+</blockquote>
+
+<p>[1] 3015</p>
+
+<blockquote>
+  <p>sum(residuals(modelx, type = ""pearson"")^2)</p>
+</blockquote>
+
+<p>[1] 3022.632</p>
+
+<p>While in SAS its:</p>
+
+<p>Criterion | Value | DF | Value/DF | Pr. > chi-sq.</p>
+
+<p>Deviance | 2347.8792 | 2116 | 1.1096 | 0.0003 </p>
+
+<p>Pearson | 2126.1138 | 2116 | 1.0048 | 0.4343 </p>
+
+<p>the probabilities are similar but values and the degrees of freedom are completely different. </p>
+
+<p>I've read that both the statistic and DF in SAS are calculated using ""profiles"" (<a href=""http://support.sas.com/resources/papers/proceedings14/1485-2014.pdf"" rel=""nofollow"">http://support.sas.com/resources/papers/proceedings14/1485-2014.pdf</a>, page 3) but I still don't understand how those profiles are calculated - I have 7 predictors in my data, each with 3,4,5,5,5,6,6 categories - or why one would use profiles at all.</p>
+
+<p>Any ideas?</p>
+"
+"1","0.816496580927726"," 71292","<p>I need to compare the goodness of fit of several averaged logistic regression models by calculating the deviance explained. I'm using the <code>MuMIn</code> package in R to average many logistic regression models into a single averaged model. I ultimately want to compare the explanatory power of several averaged models, in part by using the deviance explained.</p>
+
+<p>My questions are:</p>
+
+<ol>
+<li><p>Does deviance explained apply to averaged models as a strong measure of the goodness of fit?</p></li>
+<li><p>How does one calculate the deviance explained (calculated as the null deviance less the residual deviance as a proportion of the null deviance) from the averaged model output from the <code>model.avg()</code> command in <code>MuMIn</code>? </p>
+
+<p>Examining the structure of the averaged model object indicates that the null and residual deviances are calculated on each individual model that contributes to the averaged model, but I'm not sure how to extract them and then calculate the overall deviance explained by the averaged model.</p></li>
+</ol>
+"
+"1","0.816496580927726","161113","<p>I am working on example 7.3.1 from the Second Edition of the book <a href=""https://www.google.com/webhp?sourceid=chrome-instant&amp;ion=1&amp;espv=2&amp;ie=UTF-8#q=an+introduction+to+generalized+linear+models+second+edition+pdf"" rel=""nofollow"">An Introduction to Generalized Linear Models</a> in section <em>7.3 Dose response models</em>. This example fits a simple logistic regression model on the following data: </p>
+
+<p><img src=""http://i.stack.imgur.com/YkHCG.png"" alt=""enter image description here""></p>
+
+<p>This seems easy enough. However, I am having an issue with the Deviance Statistic calculated for this example. The following is my R code that will reproduce a Deviance Statistic $D=11.23$ just like this example in the book has. </p>
+
+<pre><code>#original data
+#copied in by row
+( df &lt;-  data.frame( 
+  Trial = 1:8,
+  Dose = c(1.6907, 1.7242, 1.7552, 1.7842, 1.8113, 1.8369, 1.8610, 1.8839),
+  Yes = c(6, 13, 18, 28, 52, 53, 61, 60),
+  No = c(59, 60, 62, 56, 63, 59, 62, 60)- c(6, 13, 18, 28, 52, 53, 61, 60),
+  Total = c(59, 60, 62, 56, 63, 59, 62, 60)
+) )
+
+#Logistic Regression Model
+mle_beet &lt;- glm(cbind(Yes, No)~Dose, family=binomial(logit), data=df)
+mle_beet$deviance
+##
+</code></pre>
+
+<p>Section 5.6.1 of this same book derives the <em>Deviance Statistic</em> for the Binomial Model to be: </p>
+
+<p>$D = 2\sum^{N}_{i=1}y_{i}[ log_{e}(\frac{y_i}{\hat{y_i}})+(n_i - y_i)log_{e}(\frac{n_i - y_i}{n_i - \hat{y_i}}) ]$</p>
+
+<p>However, looking closely at the given data, it can be seen that for the last row, the number of beetles killed is the same as the total number of beetles ( $n_{8}=y_{8}$ ). This means that the very last part in the sum for <code>D</code> is: </p>
+
+<p>$ y_{8}log_{e}(\frac{y_8}{\hat{y_8}})+(n_8 - y_8)log_{e}(\frac{n_8 - y_8}{n_8 - \hat{y_8}}) = 60log_{e}(\frac{60}{\hat{y_8}})+(0)log_{e}(\frac{0}{n_8 - \hat{y_8}})$</p>
+
+<p>In particular, this value contains: </p>
+
+<p>$0log_{e}(0)=0(-\infty)=$ <strong><em>undefined</em></strong></p>
+
+<p>Here is the R code that agrees with this: </p>
+
+<pre><code>sum( 2*(df$Yes*(log(df$Yes/(mle_beet$fitted.values*df$Total))) + (df$Total-df$Yes)*
+log((df$Total-df$Yes)/(df$Total-mle_beet$fitted.values*df$Total) ) ) )
+</code></pre>
+
+<p>My question is: What is the mathematical reasoning for computing the Deviance Statistic when $n_i=y_i$? What do the book and R do in the background to obtain $D=11.23$?</p>
+
+<p>(Note that the book likely didn't use R to get this value, but the two agree)</p>
+
+<p>Thank you!</p>
+
+<p>EDIT: See the accepted answer and its comments for a great explanation.</p>
+
+<p>If you happen to be computing the Deviance through the formula in R (you likely shouldn't since <code>mle_beet$deviance</code> shows this for you), you can replace <code>-Inf</code> or <code>Nan</code> in each vector that results from an individual operation. The following works for this example: </p>
+
+<pre><code>x &lt;- df$Yes*(log(df$Yes/(mle_beet$fitted.values*df$Total))) 
+x[is.na(x) | x==-Inf ] &lt;- 0 #only in a case $n_i = y_i$ 
+y &lt;- (df$Total-df$Yes)*
+    log((df$Total-df$Yes)/(df$Total-mle_beet$fitted.values*df$Total) ) ) 
+    y[is.na(y) | y==-Inf ] &lt;- 0 #only in a case $n_i = y_i$ 
+
+sum(x+y)*2 #the deviance
+</code></pre>
+"

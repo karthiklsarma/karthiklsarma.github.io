@@ -1,0 +1,419 @@
+"V1","V2","V3","V4"
+"0.21320071635561","0.21320071635561"," 21024","<p>Plotting a <strong>glm</strong> binomial model is reasonably simple with the <strong>predict</strong> function. I'm having trouble creating a similar plot for a <strong>glmer</strong> model; predict doesn't work:  </p>
+
+<pre><code>id    &lt;- factor(rep(1:20, 3))
+age   &lt;- rep(sample(20:50, 20, replace=T), 3)
+age   &lt;- age + c(rep(0, 20), rep(3, 20), rep(6, 20))
+score &lt;- rbinom(60, 15, 1-age/max(age))
+dfx   &lt;- data.frame(id, age, score)
+
+library(lme4)
+glmerb  &lt;- glmer(cbind(score, 15-score) ~ age + (1|id), dfx, family=binomial)
+ndf     &lt;- expand.grid(age=10:60) #for extensibility, usually also have factors
+ndf$fit &lt;- predict(glmerb, ndf, type=""response"")
+*Error in UseMethod(""predict"") : no applicable method for 'predict' applied to an object of class ""mer""*
+</code></pre>
+
+<ol>
+<li>How can I produce the desired plot?</li>
+<li>While I'm at it, what other plots would be useful for this kind of model for either diagnostic, presentation or glam purposes?</li>
+</ol>
+"
+"0.606779876216918","0.606779876216918"," 88960","<p>this is my first post, so I hope everything is in the right format. I have some problems with glmer and don't know how to fix it, so I hope somebody can help me out with this. I could not find an answer to this anywhere.</p>
+
+<p>My experiment: The experimental setup has eight sites, each site has a central area in which organisms get marked. From the central area, organisms have the choice to go into three different areas which are equipped with traps. The three areas are crossed with sites. The recapture rates in these three areas are very low and the sampling effort (trap days) is very high. Due to external influences, traps got destroyed to different degrees in all the sampling areas. In addition to the marked organisms, unmarked organisms of the same species get caught, too. </p>
+
+<p>The dataset looks something like this:</p>
+
+<pre><code>library(lme4)
+data &lt;- structure(list(site = c(""A"", ""A"", ""A"", ""B"", ""B"", ""B"", ""C"", ""C"", ""C"", ""D"", ""D"", ""D"", ""E"", ""E"", ""E"", ""F"", ""F"", ""F"", ""G"", ""G"", ""G"", ""H"", ""H"", ""H""), area = c(""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III"", ""I"", ""II"", ""III""), marked = c(2, 6, 3, 5, 3, 9, 0, 8, 1, 1, 1, 18, 3, 0, 0, 1, 5, 6, 3, 0, 2, 2, 4, 5), unmarked = c(38, 78, 104, 1, 6, 10, 1, 13, 0, 13,7, 85, 7, 1, 0, 9, 4, 36, 3, 4, 3, 10, 20, 29), sampl_effort = c(9300, 9100, 8700, 9900, 9600, 8600, 9800, 9400, 10800, 11600, 11000, 13950, 10300, 9700, 9800, 10450, 10100, 10800, 9600, 9900, 9300, 11800, 11250, 9450)), .Names = c(""site"", ""area"", ""marked"", ""unmarked"", ""sampl_effort""), row.names = c(NA,-24), class = ""data.frame"")
+</code></pre>
+
+<p>Now I wanted to fit a glmer. Because the amount of marked organisms may be related to the total amount of organisms, I chose to take a binomial approach, with cbind(marked, unmarked). I use area with the three treatments as explanatory variable, and site as random factor. Because the sampling effort differs between the different areas, I want to include it as an offset. The code looks like this:</p>
+
+<pre><code>mod.glmer1= glmer(cbind(marked,unmarked) ~ area + (1 | site) + offset(sampl_effort), family=binomial, data=data)
+</code></pre>
+
+<p>Then, I get the error:</p>
+
+<blockquote>
+  <p>Error: (maxstephalfit) PIRLS step-halvings failed to reduce deviance in pwrssUpdate</p>
+</blockquote>
+
+<p>If I try the glmer without the offset, everything works out fine:</p>
+
+<pre><code>mod.glmer2= glmer(cbind(marked,unmarked) ~ area + (1 | site), family=binomial, data=data)
+</code></pre>
+
+<p>Out of interest, I tried a glm without the random factor and with offset:</p>
+
+<pre><code>mod.glm1= glm(cbind(marked,unmarked) ~ area + offset(sampl_effort), family=binomial, data=data)
+</code></pre>
+
+<p>and I get the following Warnings:</p>
+
+<blockquote>
+  <p>Warning messages:
+  1: glm.fit: fitted probabilities numerically 0 or 1 occurred 
+  2: glm.fit: fitted probabilities numerically 0 or 1 occurred</p>
+</blockquote>
+
+<p>By looking at the fitted values</p>
+
+<pre><code>round(cbind(data[,3:5],fits=fitted(mod.glm1)),8)
+</code></pre>
+
+<p>I can see that all the fitted values are 0. 
+I now thought that the offset is just too large to get reasonable fitted value. As the sampling effort is arbitrary (instead of days, I could have taken sampling hours, weeks, etc.), I decided to divide the sampling effort by 1000.
+By doing this, the glm now works:</p>
+
+<pre><code>mod.glm2= glm(cbind(marked,unmarked) ~ area + offset(sampl_effort/1000), family=binomial, data=data)
+</code></pre>
+
+<p>However, for the glmer</p>
+
+<pre><code>mod.glmer3= glmer(cbind(marked,unmarked) ~ area + (1 | site) + offset(sampl_effort/1000), family=binomial, data=data)
+</code></pre>
+
+<p>I still get</p>
+
+<blockquote>
+  <p>Error: (maxstephalfit) PIRLS step-halvings failed to reduce deviance in pwrssUpdate</p>
+</blockquote>
+
+<p>So my questions are basically:</p>
+
+<ol>
+<li><p>Am I allowed to divide the sampling effort by 1000? In my mind it should lead to the same results, as the relative differences in sampling effort stay the same (and sampling days are a arbitrary measurement). However, I of course tried it with e.g. dividing by 10000 and I get different results. </p></li>
+<li><p>How can I include the sampling effort in the glmer? The sampling effort is just too important to keep it out, however, I also need the sites as random factor. Is the offset the right approach and if yes, why doesn't it work.</p></li>
+</ol>
+
+<p>P.S.: My session information:</p>
+
+<blockquote>
+  <p>R version 3.0.2 (2013-09-25)
+  Platform: i386-w64-mingw32/i386 (32-bit)</p>
+  
+  <p>locale:
+  [1] LC_COLLATE=English_United States.1252  LC_CTYPE=English_United States.1252<br>
+  [3] LC_MONETARY=English_United States.1252 LC_NUMERIC=C<br>
+  [5] LC_TIME=English_United States.1252    </p>
+  
+  <p>attached base packages:
+  [1] stats     graphics  grDevices utils     datasets  methods   base     </p>
+  
+  <p>other attached packages:
+  [1] car_2.0-19      lme4_1.0-6      Matrix_1.1-2    lattice_0.20-23</p>
+  
+  <p>loaded via a namespace (and not attached):
+  [1] grid_3.0.2    MASS_7.3-29   minqa_1.2.3   nlme_3.1-111  nnet_7.3-7<br>
+  [6] Rcpp_0.11.0   splines_3.0.2 tools_3.0.2</p>
+</blockquote>
+
+<p>Thanks in advance!
+John</p>
+"
+"0.426401432711221","0.426401432711221","175773","<p>I have a hypothesis testing model in which I would like to know if environmental variables I collected influences the probability a bacteria on a given amphibian kills a pathogen. </p>
+
+<p>Following Crawley's R intro to stats book on binomial models I do this:</p>
+
+<pre><code>y &lt;- cbind(df$Antipathogen, df$Total_isolated - df$Antipathogen)
+</code></pre>
+
+<p>I still follow Crawley, but bring in a glmer model (using help from online) as I want to examine this at the Site level and not transect level. So, I make transect a random effect. I sampled three sites. One site has one transect, the second site has two transects, and the third site was sampled along an altitudinal gradient and has seven transects.</p>
+
+<p>This is my model:</p>
+
+<pre><code>model &lt;- glmer(y ~ Site + Species + sex + BodyCon + Leaf_litter + (1|Transect), 
+               data = df, family = binomial)
+</code></pre>
+
+<p>I use the Anova function in car to see which terms are significant when they are introduced into the model</p>
+
+<pre><code>Anova(model, type = ""III"", test.statistic = ""Chisq"")
+</code></pre>
+
+<p>I get this:</p>
+
+<pre><code>Response: y
+              Chisq Df Pr(&gt;Chisq)    
+(Intercept) 21.3200  1  3.887e-06 ***
+Site        12.0107  2   0.002466 **
+Species      0.0617  2   0.969644  
+sex          0.2313  2   0.890785    
+BodyCon      0.7058  1   0.400851    
+Leaf_litter  2.8763  1   0.089890 . 
+</code></pre>
+
+<p>I am starting to understand the function lsmeans in lsmeans package to look at pairwise comparisons to figure out how each of my sites differ from one another. </p>
+
+<p>This is where my question comes in:</p>
+
+<p>What is the appropriate approach -- use the full model and apply the lsmeans function to the full model </p>
+
+<pre><code>lsmeans(model, pairwise~Site, adjust = ""tukey"")
+</code></pre>
+
+<p>OR -- remove non-significant terms in a step-wise manner following Crawleyâ€™s (2007, pg. 325) Principle of Parsimony to simplify the full model. And use </p>
+
+<pre><code>model2 &lt;- update(model, ~.-Species)
+anova(model, model2, test = ""Chisq"")
+</code></pre>
+
+<p>To make sure removing the terms is valid.</p>
+
+<p>Then, I can do lsmeans on the final model that now only contains the only significant variable -- site. </p>
+
+<pre><code>lsmeans(model5, pairwise~Site, adjust = ""tukey"")
+</code></pre>
+
+<p>Regardless of how I do it I still get a significant p-value for Site, and the pairwise comparisons give similar results. The p-value is only much lower when I do lsmeans on the reduced model. </p>
+
+<p>I don't know what the better approach is, and doing some basic searching I could not find a similar question. </p>
+"
+"0.319801074533416","0.319801074533416"," 92366","<p>I am investigating variation in pollinator visitation rate (number of visits per inflorescence) with treatment and time category as fixed factors. Block is a random factor. Following Zuur et al. (2009), I used the number of visits as the response variable with the $\log$(number of inflorescences) as the offset variable in the analysis. A Poisson model was overdispersed, and therefore I opted for a negative binomial model in <code>lme4</code>, as follows:<br>
+<code>model1 = glmer.nb(visits ~ treat + timecat + offset(log(infl)) + (1|block))</code></p>
+
+<p>I am specifically interested in differences in visitation rates between treatments. I therefore performed a post hoc test: <code>OPexp1 =  glht(model1,mcp(treat = ""Tukey"")); plot(cld(OPexp1))</code></p>
+
+<p>When I plot these results, I get number of visits on the $y$ axis. But what I want is visitation rate (visits per inflorescence). </p>
+
+<p>Is the post hoc test taking into account the number of inflorescences? Or how do I specify that the post hoc test should be performed using visitation rate? 
+I thought that running the model above is analogous to analysing the visitation rate, so are the Tukey's differences between treatments for number of visits also the same for visitation rates?</p>
+
+<p>I assume what is happening is that fitted values are currently expressed as $Î¼ Ã— V$ (where $Î¼ =$ visitation rate and $V =$ number of inflorescences), but how do I specify that they should be expressed as $Î¼$ (visits per inflorescence) only? On p. 240, Zuur et al. (2009) mentions that this is possible, but I have not been able to find an example.</p>
+
+<p>I am quite new to R, and this is my first post here, as I have been unsuccessful in finding an answer elsewhere, so any advice or kick in the right direction would be much appreciated.
+Kind regards.</p>
+"
+"0.369274472937998","0.369274472937998","128750","<p>I am running a glmer model and I want to determine the total variance. My data is for survival and it is coded as 0 and 1, where 1 represents that the individual survived and 0 represents that the individual died. My data represents offspring from a full factorial cross where some individuals are full sibs or half sibs. </p>
+
+<p>When running a glmer model, and there is no residual variance in the summary output. I have read that the residual variance should be (Ï€^2)/3 for generalized linear mixed models with binomial data and logit link function (Nakagawa, S., Schielzeth, H. 2010. Repeatability for Gaussian and non-Gaussian data: a practical guide for biologists. Biol. Rev. 85:935-956.).</p>
+
+<p>Is this true? Or is there a different way to calculate the residual variance for glmer?</p>
+
+<p>Here is my model and output:</p>
+
+<pre><code>model6 = glmer(X09.Nov~(1|Dam)+(1|Sire)+(1|Sire:Dam), family=binomial, data=data)
+summary(model6) 
+
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation 
+      [glmerMod]
+ Family: binomial  ( logit )
+Formula: X09.Nov ~ (1 | Dam) + (1 | Sire) + (1 | Sire:Dam)
+   Data: data
+
+    AIC      BIC   logLik deviance df.resid 
+ 1274.4   1295.3   -633.2   1266.4     1375 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2747  0.3366  0.3931  0.4664  1.1090 
+
+Random effects:
+Groups   Name        Variance  Std.Dev. 
+Sire:Dam (Intercept) 3.853e-01 6.207e-01
+Sire     (Intercept) 4.181e-02 2.045e-01
+Dam      (Intercept) 6.036e-09 7.769e-05
+Number of obs: 1379, groups:  Sire:Dam, 49; Sire, 7; Dam, 7
+Fixed effects:
+            Estimate Std. Error z value     Pr    
+(Intercept)   1.6456     0.1419    11.6 &lt;2e-16 *
+</code></pre>
+"
+"0.150755672288882","0.301511344577764","182315","<p>I'm using R to fit a generalized linear model with random effects using a negative binomial distribution. One of the main issues is that to run glmer() with a negative binomial, the dispersion parameter $\theta$ needs to be specified. <a href=""http://stats.stackexchange.com/questions/138109/r-glmer-nb-output-how-to-get-hat-theta"">From what I understand</a>, the glmer.nb() function makes an initial guess for $\theta$ and then runs the glmer() function. This is then iterated until convergence is achieved. This becomes a huge issue when the dataset is large with big number of factors. My question is: is there any other reasonable way of guessing the $\theta$ parameter and running the glmer() function once? For example, if I were to remove all random effects, and run glmer.nb() on the fixed effects alone, would that be a decent guess of $\theta$?</p>
+"
+"0.674199862463242","0.674199862463242","207395","<p>I have bird nesting data and I am trying to see whether the nest treatment has any significant effects on the survival of the nestling. My original data set is relatively small (n=101). The response variable is binomial (No treatment = 0,  treatment = 1) as is the fixed effect (survived = 1, died = 0). </p>
+
+<p>A copy of my original data set is available <a href=""https://drive.google.com/file/d/0B2vynKP39eZed1pwMFh4ekhGV00/view?usp=sharing"" rel=""nofollow"">here</a>. </p>
+
+<p>I have obtained the following results from my model:</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood  (Laplace Approximation)
+  ['glmerMod']
+Family: binomial  ( logit )
+Formula: Survived ~ Treatment + (1 | Nest) + (1 | Year)
+Data: Treatment_original
+Control: glmerControl(optimizer = ""bobyqa"", optCtrl = list(maxfun = 4e+05))
+
+  AIC      BIC   logLik deviance df.resid 
+109.8    120.2    -50.9    101.8       97 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.9725  0.1557  0.2853  0.3653  1.2021 
+
+Random effects:
+Groups Name        Variance Std.Dev.
+Nest   (Intercept) 3.2860   1.8127  
+Year   (Intercept) 0.5109   0.7148  
+Number of obs: 101, groups:  Nest, 39; Year, 7
+
+Fixed effects:
+    Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)   1.6228     0.7258   2.236   0.0254 *
+Treatment     0.9063     0.7676   1.181   0.2377  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+  (Intr)
+Treatment -0.152
+</code></pre>
+
+<p>To account for the possible influence of small sample size, I produced a bootstrap data set using the following code:</p>
+
+<pre><code>bootstrapdata &lt;- data.frame()
+for (i in 1:1000){
+  boot &lt;- sample(1:nrow(Treatment_original), replace=TRUE)
+  bootdata &lt;- Treatment_original[boot,]
+  bootstrapdata &lt;- rbind(bootstrapdata, bootdata)
+}
+</code></pre>
+
+<p>The bootstrap data set is available <a href=""https://drive.google.com/file/d/0B2vynKP39eZeS3VQVHcwMmw4MkE/view?usp=sharing"" rel=""nofollow"">here</a>.</p>
+
+<p>I then ran the above model on the bootstrap data set, which produced the following results:</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+  ['glmerMod']
+Family: binomial  ( logit )
+Formula: Survived ~ Treatment + (1 | Nest) + (1 | Year)
+Data: Treatment_bootstrap
+Control: glmerControl(optimizer = ""bobyqa"", optCtrl = list(maxfun = 4e+05))
+
+ AIC      BIC   logLik deviance df.resid 
+2957.0   2985.8  -1474.5   2949.0     9996 
+
+Scaled residuals: 
+  Min      1Q  Median      3Q     Max 
+-3.5915  0.0001  0.0002  0.0026  2.4168 
+
+Random effects:
+Groups Name        Variance Std.Dev.
+Nest   (Intercept) 511.888  22.625  
+Year   (Intercept)   4.251   2.062  
+Number of obs: 10000, groups:  Nest, 38; Year, 7
+
+Fixed effects:
+    Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  16.0123     1.9144   8.364   &lt;2e-16 ***
+Treatment     1.5813     0.1465  10.795   &lt;2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+  (Intr)
+Treatment 0.009 
+</code></pre>
+
+<p>I would like to know how to interpret the bootstrap model results. Can I now say that the nest treatment had a positive effect on nestling survival?</p>
+
+<p>The original data set showed no significant effect of nest treatment. Should I rather be using these results and adjusting the p value for false discovery rate?</p>
+
+<p>I am unsure as to which results are correct. Should I report both results? What inferences can I make from these results? </p>
+"
+"0.369274472937998","0.369274472937998","114213","<pre><code>library(lme4)
+    out &lt;- glmer(cbind(incidence, size - incidence)
+                 ~ period
+                 + (1 | herd),
+                 data = cbpp,
+                 family = binomial,
+                 contrasts = list(period = ""contr.sum""))
+
+summary(out)
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -2.32337    0.22129 -10.499  &lt; 2e-16 ***
+period1      0.92498    0.18330   5.046 4.51e-07 ***
+period2     -0.06698    0.22845  -0.293    0.769
+period3     -0.20326    0.24193  -0.840    0.401
+</code></pre>
+
+<p>I was never in a situation where I needed to fit a generalised linear model with effect coding (<code>contr.sum</code> for <code>R</code> users). Can I apply the same interpretation as in the linear model case? In a normal linear model the intercept would be the grand mean and the $\beta$s (parameters for <code>period1</code>, <code>period2</code>, <code>period3</code> and <code>period4 = (Intercept) - period1 - period2 - period3</code> the effects i.e. how the factor levels deviate from the grand mean.</p>
+
+<p>Here is how I think the analogous interpretation for generalised linear models goes. (I will exponentiate all parameters and hence transform the log-odds(-ratios) to odds(-ratios).) The intercept $\exp((\text{Intercept}))$ would then be the overall <strong>odds</strong> of success vs. failure (sticking here to classical binomial terminology) and the $\beta$s the <strong>log-odds-ratios</strong>. And we get the <strong>odds</strong> for e.g. <code>period1</code> by adding $\text{(Intercept)}+\text{period1}$ and then exponentiating: $\exp(\text{(Intercept)}+\text{period1})$. Is the $\text{(Intercept)}$ really the overall/medium <strong>odds</strong> and the $\beta$s <strong>odds-ratios</strong>?</p>
+"
+"0.740743746987647","0.740743746987647","114895","<p>I am a user more familiar with R, and have been trying to estimate random slopes (selection coefficients) for about 35 individuals over 5 years for four habitat variables. The response variable is whether a location was ""used"" (1) or ""available"" (0) habitat (""use"" below).</p>
+
+<p>I am using a Windows 64-bit computer.</p>
+
+<p>In R version 3.1.0, I use the data and expression below. PS, TH, RS, and HW are fixed effects (standardized, measured distance to habitat types). lme4 V 1.1-7. </p>
+
+<pre><code>str(dat)
+'data.frame':   359756 obs. of  7 variables:
+ $ use     : num  1 1 1 1 1 1 1 1 1 1 ...
+ $ Year    : Factor w/ 5 levels ""1"",""2"",""3"",""4"",..: 4 4 4 4 4 4 4 4 3 4 ...
+ $ ID      : num  306 306 306 306 306 306 306 306 162 306 ...
+ $ PS: num  -0.32 -0.317 -0.317 -0.318 -0.317 ...
+ $ TH: num  -0.211 -0.211 -0.211 -0.213 -0.22 ...
+ $ RS: num  -0.337 -0.337 -0.337 -0.337 -0.337 ...
+ $ HW: num  -0.0258 -0.19 -0.19 -0.19 -0.4561 ...
+
+glmer(use ~  PS + TH + RS + HW +
+     (1 + PS + TH + RS + HW |ID/Year),
+     family = binomial, data = dat, control=glmerControl(optimizer=""bobyqa""))
+</code></pre>
+
+<p>glmer gives me parameter estimates for the fixed effects that make sense to me, and the random slopes (which I interpret as selection coefficients to each habitat type) also make sense when I investigate the data qualitatively. The log-likelihood for the model is -3050.8.</p>
+
+<p>However, most research in animal ecology do not use R because with animal location data, spatial autocorrelation can make the standard errors prone to type I error. While R uses model-based standard errors, empirical (also Huber-white or sandwich) standard errors are preferred. </p>
+
+<p>While R does not currently offer this option (to my knowledge - PLEASE, correct me if I am wrong), SAS does - although I do not have access to SAS, a colleague agreed to let me borrow his computer to determine if the standard errors change significantly when the empirical method is used.</p>
+
+<p>First, we wished to ensure that when using model-based standard errors, SAS would produce similar estimates to R - to be certain that the model is specified the same way in both programs. I don't care if they are exactly the same - just similar.
+I tried (SAS V 9.2):</p>
+
+<pre><code>proc glimmix data=dat method=laplace;
+   class year id;
+   model use =  PS TH RS HW / dist=bin solution ddfm=betwithin;
+   random intercept PS TH RS HW / subject = year(id) solution type=UN;
+run;title;
+</code></pre>
+
+<p>I also tried various other forms, such as adding lines</p>
+
+<pre><code>random intercept / subject = year(id) solution type=UN;
+random intercept PS TH RS HW / subject = id solution type=UN;
+</code></pre>
+
+<p>I tried without specifying the </p>
+
+<pre><code>solution type = UN,
+</code></pre>
+
+<p>or commenting out</p>
+
+<pre><code>ddfm=betwithin;
+</code></pre>
+
+<p>No matter how we specify the model (and we have tried many ways), I cannot get the random slopes in SAS to remotely resemble those output from R - even though the fixed effects are similar enough. And when I mean different, I mean that not even the signs are the same. The -2 Log Likelihood in SAS was 71344.94. </p>
+
+<p>I can't upload my full dataset; so I made a toy dataset with only the records from three individuals. SAS gives me output in a few minutes; in R it takes over an hour. Weird. With this toy dataset I'm now getting different estimates for the fixed effects. </p>
+
+<p>My question:
+Can anyone shed light on why the random slopes estimates might be so different between R and SAS? Is there anything I can do in R, or SAS, to modify my code so that the calls produce similar results? I'd rather change the code in SAS, since I ""believe"" my R estimates more. </p>
+
+<p>I'm really concerned with these differences and want to get to the bottom of this problem!</p>
+
+<p>My output from a toy dataset that uses only three of the 35 individuals in the full dataset for R and SAS are included as jpegs.</p>
+
+<p><img src=""http://i.stack.imgur.com/ucNnh.jpg"" alt=""R output"">
+<img src=""http://i.stack.imgur.com/jUC0K.jpg"" alt=""SAS output 1"">
+<img src=""http://i.stack.imgur.com/IfCJm.jpg"" alt=""SAS output 2"">
+<img src=""http://i.stack.imgur.com/7XJdA.jpg"" alt=""SAS output 3""></p>
+
+<hr>
+
+<p>EDIT AND UPDATE:</p>
+
+<p>As @JakeWestfall helped discover, the slopes in SAS do not include the fixed effects. When I add the fixed effects, here is the result - comparing R slopes to SAS slopes for one fixed effect, ""PS"", between programs: (Selection coefficient = random slope). Note the increased variation in SAS. </p>
+
+<p><img src=""http://i.stack.imgur.com/JozTd.jpg"" alt=""R vs SAS for PS""></p>
+"
+"0.21320071635561","0.21320071635561","179668","<p>So I get the non-integer #successes in a binomial glm! warning, which has been asked about many times and I understand what it is. My dv is a % measure of accuracy, and these have weights so that they can be modeled using glmer(family=binomial). Sometimes however, people received fractional scores-- so although it is correct to think of  them having 5 trials, they might have earned a 0.9 when the weights say it is 5, because they were awarded 4.5/5 as correct. Hence the non-integer successes.</p>
+
+<p>Of course R only gives you a warning here, the models converge and the results look sensible. If I round up or down (to 4/5 or 5/5) to force the data to have only integer successes, the estimates change only slightly-- so it's clear to me that whatever R does with these non-integer successes, it isn't crazy.</p>
+
+<p>However I'm now super worried about understanding WHAT it does with these non-integer successes, and why the warning is there if the estimates seem fine... do I need to be doing something else to model these data even though the results look valid?</p>
+"

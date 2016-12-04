@@ -1,0 +1,14 @@
+id,value
+anova,6
+lsmeans,6
+repeated-measures,3
+tukey-hsd,3
+glmm,2
+lmer,2
+lme4,1
+nlme,1
+estimation,1
+quantiles,1
+regression,1
+data-visualization,1
+permutation,1

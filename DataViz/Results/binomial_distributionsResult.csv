@@ -1,0 +1,291 @@
+"V1","V2","V3","V4"
+"0.471404520791032","0.5","  5347","<p>I am modeling a random variable ($Y$) which is the sum of some ~15-40k independent Bernoulli random variables ($X_i$), each with a different success probability ($p_i$). Formally, $Y=\sum X_i$ where $\Pr(X_i=1)=p_i$ and $\Pr(X_i=0)=1-p_i$.</p>
+
+<p>I am interested in quickly answering queries such as $\Pr(Y&lt;=k)$ (where $k$ is given).</p>
+
+<p>Currently, I use random simulations to answer such queries. I randomly draw each $X_i$ according to its $p_i$, then sum all $X_i$ values to get $Y&#39;$. I repeat this process a few thousand times and return the fraction of times $\Pr(Y&#39;\leq k)$.</p>
+
+<p>Obviously, this is not totally accurate (although accuracy greatly increases as the number of simulations increases). Also, it seems I have enough data about the distribution to avoid the use simulations. Can you think of a reasonable way to get the exact probability $\Pr(Y\leq k)$?</p>
+
+<p>p.s.</p>
+
+<p>I use Perl &amp; R.</p>
+
+<p><strong>EDIT</strong></p>
+
+<p>Following the responses I thought some clarifications might be needed. I will shortly describe the setting of my problem. Given is a circular genome with  circumference <code>c</code> and a set of <code>n</code> ranges mapped to it. For example, <code>c=3*10^9</code> and <code>ranges={[100,200],[50,1000],[3*10^9-1,1000],...}</code>. Note all ranges are closed (both ends are inclusive). Also note that we only deal with integers (whole units).</p>
+
+<p>I am looking for regions on the circle that are undercovered by the given <code>n</code> mapped ranges. So to test whether a given a range of length <code>x</code> on the circle is undercovered, I test the hypothesis that the <code>n</code> ranges are mapped randomly. The probability a mapped range of length <code>q&gt;x</code> will fully cover the given range of length <code>x</code> is <code>(q-x)/c</code>. This probability becomes quite small when <code>c</code> is large and/or <code>q</code> is small. What I'm interested is the number of ranges (out of <code>n</code>) which cover <code>x</code>. This is how <code>Y</code> is formed. </p>
+
+<p>I test my null hypothesis vs. one sided alternative (undercoverage). Also note I am testing multiple hypothesis (different <code>x</code> lengths), and sure to correct for this.</p>
+"
+"0.471404520791032","0.5","171705","<p>I'm trying to find out what distribution my empirical count data fits. Scores can run from 0-8 and I have ~360 observations. I've been using the <code>fitdistrplus</code> package and have tested a poisson distribution. The gof stats I got were: </p>
+
+<pre><code>Fitting of the distribution ' pois ' by maximum likelihood 
+Parameters : 
+       estimate Std. Error
+lambda 4.490489 0.07811023
+Loglikelihood:  -1571.578   AIC:  3145.155   BIC:  3149.756 
+</code></pre>
+
+<p>I tried testing a negative binomial also but got this error message:</p>
+
+<pre><code>&gt; fitnbinom &lt;-fitdist(survival,""nbinom"")
+Warning messages:
+1: In dnbinom(c(4L, 3L, 1L, 1L, 6L, 5L, 4L, 3L, 4L, 1L, 0L, 0L, 6L,  :
+  NaNs produced
+2: In dnbinom(c(4L, 3L, 1L, 1L, 6L, 5L, 4L, 3L, 4L, 1L, 0L, 0L, 6L,  :
+  NaNs produced
+</code></pre>
+
+<p>I'm not sure the fit of the Poisson is that good so would like to test an alternative. Any suggestions? Also any help with the code for testing an alternative in <code>fitdistrplus</code> would be great - The examples provided in the vignette for count data test a Poisson and negative binomial but no others. I'm aware that you can test distributions provided in other packages but I haven't been able to work out how to do this.</p>
+
+<p>[<img src=""http://i.stack.imgur.com/eV6s6.jpg"" alt=""Testing the poisson distribution]""></p>
+"
+"0.471404520791032","0.25"," 49408","<p>I'd like to plot the probability distribution for a set of binomial trials in R, the catch is that each trial has an independent probability of success (which I have in vector form).</p>
+
+<p>So, in R if I were doing this with coin tosses: <code>plot(x,dbinom(x,10,.5))</code> would work, where <code>x</code> is <code>0:10</code>. This shows the probability distribution by plotting number of successful trials on the x-axis with percent of the time that specific results is achieved as the <code>y</code> (4 successes is 20.5%).</p>
+
+<p>That said, how do I plot the same graph for 10 discrete trials with varying probabilities. For instance if <code>odds&lt;-c(.1,.8,.2,.2,.3,.7,.9,.99,.05,.5)</code>, was the probability of success for each independent toss, and I wanted to see a probability distribution?</p>
+"
+"0.666666666666667","0.707106781186547","  6728","<p>I was trying to fit my data into various models and figured out that the <code>fitdistr</code> function from library <code>MASS</code> of <code>R</code> gives me <code>Negative Binomial</code> as the best-fit. Now from the <a href=""http://en.wikipedia.org/wiki/Negative_binomial_distribution"">wiki</a> page, the definition is given as:</p>
+
+<blockquote>
+  <p>NegBin(r,p) distribution describes the probability of k failures and r
+  successes in k+r Bernoulli(p) trials
+  with success on the last trial.</p>
+</blockquote>
+
+<p>Using <code>R</code> to perform model fitting gives me two parameters <code>mean</code> and <code>dispersion parameter</code>. I am not understanding how to interpret these because I cannot see these parameters on the wiki page. All I can see is the following formula:</p>
+
+<p><img src=""http://i.stack.imgur.com/Tpnyi.png"" alt=""Negative Binomial Distribution Formula""></p>
+
+<p>where <code>k</code> is the number of observations and <code>r=0...n</code>. Now how do I relate these with the parameters given by <code>R</code>? The help file does not provide much information either. </p>
+
+<p>Also, just to say a few words about my experiment: In a social experiment that I was conducting, I was trying to count the number of people each user contacted in a period of 10 days. The population size was 100 for the experiment. </p>
+
+<p>Now, if the model fits the Negative Binomial, I can blindly say that it follows that distribution but I really want to understand the intuitive meaning behind this. What does it mean to say that the number of people contacted by my test subjects follows a negative binomial distribution? Can someone please help clarify this?</p>
+"
+"0.333333333333333","0.353553390593274"," 30677","<p>An experiment was run 10 times in configuration a and there were A failures, 10 times in configuration b giving B failures, 10 times ... (in all 9 different configurations).  I have a list of 9 numbers giving the number of failures for each configuration (out of 10).</p>
+
+<p>4  4  4  3  3  2  0  2 10</p>
+
+<p>I suspect the configuration makes no difference and that the failure counts might have a binomial distribution (it is tempting to classify that 10 as an outlier and remove it).</p>
+
+<p>Feeding the above list of values into R's <a href=""http://stat.ethz.ch/R-manual/R-patched/library/stats/html/prop.test.html"" rel=""nofollow"">prop.test</a> function, along with the probabilities for a binomial distribution with p=0.3556 (the mean of failure count/10) generates a warning that the Chi-squared approximation may be incorrect; not surprising giving the small sample size.</p>
+
+<p>A qq-plot would also suffer from the same sample size issues.</p>
+
+<p>Is there a ""Fisher's exact test"" equivalent for testing whether a sequence of values might be drawn from a binomial distribution?</p>
+
+<p>A related but different experiment produced a failure count sequence of (no outliers here :-):</p>
+
+<p>10  8  7 10  9  9 10  8  7</p>
+"
+"0.235702260395516","0.25","218483","<p><strong>I have the TPM (transcripts per million) values generated for my RNAseq data. My overall goal is to identify genes that show allele specific expression differences.</strong></p>
+
+<p>In the table below the TPM values (gene.erc.M and gene.erc.S) are for two different haplotypes (flagged as M and S) and the total TPM for that locus (gene or id) is T, so reads for M+S = reads for T. <strong>See the data table and description below for more details.</strong></p>
+
+<p><strong>Here is my data structure:</strong></p>
+
+<pre><code>gene_id_locus   gene.erc.M  gene.erc.S  gene.erc.T
+Al_scaffold_0001_1044   713 314 1027
+Al_scaffold_0001_1048   774 483 1257
+Al_scaffold_0001_1062   193 199 392
+Al_scaffold_0001_1084   8   50  58
+Al_scaffold_0001_1095   7   9   16
+Al_scaffold_0001_1106   392 8   400
+Al_scaffold_0001_1120   253 62  315
+Al_scaffold_0001_1122   38  38  76
+Al_scaffold_0001_1125   311 135 446
+Al_scaffold_0001_1133   164 71  235
+Al_scaffold_0001_1146   364 302 666
+Al_scaffold_0001_1151   265 51  316
+Al_scaffold_0001_1171   34  37  71
+Al_scaffold_0001_1186   26  39  65
+Al_scaffold_0001_1189   170 208 378
+Al_scaffold_0001_1195   551 158 709
+Al_scaffold_0001_1209   91  56  147
+Al_scaffold_0001_1233   81  46  127
+Al_scaffold_0001_1245   121 19  140
+Al_scaffold_0001_125    378 153 531
+Al_scaffold_0001_1271   138 95  233
+Al_scaffold_0001_1275   35  150 185
+Al_scaffold_0001_128    73  2115    2188
+Al_scaffold_0001_1280   67  149 216
+Al_scaffold_0001_1283   28  67  95
+Al_scaffold_0001_1304   12  12  25
+Al_scaffold_0001_1307   48  16  64
+Al_scaffold_0001_1326   248 73  321
+#contd.......
+</code></pre>
+
+<p>There are about 16000 gene_id (after filtering), thats why there is going to be a some good amount of over dispersion.</p>
+
+<p><strong>Description:</strong>  </p>
+
+<ul>
+<li><code>gene_locus_id</code> - is the gene name</li>
+<li><code>gene.erc.T</code> - represent the total number of transcripts from the  - <code>corresponding gene_locus_id.</code> This values is different than RPKM, FPKM, so I don't have to worry about normalization any more.</li>
+<li><code>gene.erc.M</code> - represent the total number of transcripts from the corresponding <code>gene_locus_id</code> but with haplotype M.</li>
+<li><code>gene.erc.S</code> - same as above but for haplotype S.</li>
+</ul>
+
+<p><strong>This is what I want to do specifially:</strong>  </p>
+
+<ol>
+<li><p>Find the appropriate distribution of my data (for M, S and T); poisson vs. negative binomial? Generally data from RNAseq have over-dispersion so negative binomial regression might be appropriate, but I want to check for dispersion and distribution for the data either way?</p></li>
+<li><p>If any transformation is needed? - I have tried some log transformation but I am not getting anything useful.  </p>
+
+<p><a href=""http://i.stack.imgur.com/beU6N.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/beU6N.png"" alt=""log of (erc.gene.M/erc.gene.S)""></a>  </p>
+
+<p><a href=""http://i.stack.imgur.com/EFCDs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/EFCDs.png"" alt=""gene.erc.T vs. (log(erc.M/S) * sqrt(gene.erc.T))""></a></p></li>
+<li><p>My main goal is to see if there is significant expression differences between two haplotypes (M vs. S) for the same gene ID. - I tried looking for similar examples around but not finding anythig useful. DeSeq, edgeR mainly focus on variation between samples and condition. I tried to apply those but looks like I am having brain freeze in here.</p></li>
+</ol>
+"
+"0.235702260395516","0.25"," 19169","<p>I'm trying to implement the extended binomial density function with support on c( 0 : (floor(N) + 1)), but I'm running into (I think) precision issues, as running:</p>
+
+<pre><code>########################
+#---DENSITY FUNCTION---#
+########################
+debinom &lt;- function(k, n, p, sum) {
+    if (k &lt;=  n) {
+  return( choose(n, k) * p^k * (1-p)^(n-k) )
+  } else {
+    return (1.0 - sum)
+    }
+}#END: pebinom
+
+##########################################
+#---CUMULATIVE DISTRIBUTION FUNCTION 2---#
+##########################################
+pebinom &lt;- function(x, n, p) {
+
+  # point mass at 0
+  totalDensity = cumProb = debinom(0.0, n, p, 0.0)
+
+  k = 0
+  while (k &lt;= (x)) {
+    density2 = debinom(k, n, p, totalDensity)
+    totalDensity = totalDensity + density2
+    cumProb = cumProb + density2
+    k = k + 1
+  }
+
+  k = k + 1
+  density = debinom(k, n, p, totalDensity)
+  cumProb = cumProb + density * (x - k)
+
+  return (cumProb) 
+}#END: debinom
+
+############
+#---TEST---#
+############
+for (i in 0:10) {
+x = i + runif(1)
+cat(x, "" "", pebinom(x, 100, 0.1), ""\n"")
+}
+</code></pre>
+
+<p>gives a negative probabilities for tail values. </p>
+
+<h1>EDIT</h1>
+
+<p>I have changed, and mostly simplified the routines along the comments and answers I've received:</p>
+
+<pre><code>#########################################
+#---PROBABILITY DISTRIBUTION FUNCTION---#
+#########################################
+
+debinom &lt;- function(k, n, p) {
+
+if (k &lt;=floor(n)) {
+
+  return( choose(n, k) * p^k * (1-p)^(n-k) )
+
+  } else if(k == (floor(n)+1)) {
+
+    cumProb = 0.0
+    for(i in 0 : floor(n)) {
+      cumProb = cumProb + debinom(i, n, p)  
+    }
+
+    return (1.0 - cumProb)
+
+    } else {
+
+  return(0.0)
+    }
+
+}#END: pebinom
+
+########################################
+#---CUMULATIVE DISTRIBUTION FUNCTION---#
+########################################
+pebinom &lt;- function(x, N, P) {
+
+cumProb = 0
+for(i in 0 : (floor(x)) ) {
+ cumProb = cumProb + debinom(i, N, P)
+}
+
+return(cumProb)
+}
+</code></pre>
+"
+"0.333333333333333","0.353553390593274"," 41902","<p>After doing some reading about the binomial distribution I found this about lower and upper bound probabilities</p>
+
+<p>We can get the <strong>lower tail probability</strong> of X as:
+$$P(X \leq x)=P(X=0)+...+P(X=x)$$ </p>
+
+<ul>
+<li><strong>Stata:</strong> as <code>binomial(n,k,p)</code></li>
+<li><strong>R:</strong> <code>pbinom(q, size, prob, lower.tail = TRUE)</code></li>
+</ul>
+
+<p>And the <strong>upper tail probability</strong> can be obtained as the complement of lower tail probability to find the area above the cutoff x-value
+$$P(X&gt;x)= 1-P(X \leq x)$$ </p>
+
+<ul>
+<li><strong>Stata:</strong> <code>1- binomial(n, k, p)</code></li>
+<li><strong>R:</strong> <code>pbinom(q, size, prob, lower.tail = FALSE)</code></li>
+</ul>
+
+<p><img src=""http://i.imgur.com/glxH4.png?1"" alt=""enter image description here""></p>
+
+<p>Am I right for the R and Stata commands? </p>
+
+<p>And also how can I get these probabilities? 
+Are they complementary, as upper and lower bound probabilities?</p>
+
+<p>$$P(X &lt; x)$$
+$$P(X \geq x)$$</p>
+"
+"0.333333333333333","0"," 44271","<p>I have an infinite population with unknown mean of successes and failures. I'm drawing 400 times from the population and get 400 successes. Now I want to generate random estimates for the true mean of the population from which I have drawn the 400 successes. Can anyone tell me which probability distribution I have to use, respectively how the function to use in R would look like?</p>
+
+<p>I thought that</p>
+
+<pre><code>rbeta(1,400+1,400-400+1)
+</code></pre>
+
+<p>might be the right function, but even if I perform this one 10 000 000 times I never get the result 1 (and the same accounts for <code>rbeta(10000000,0+1,400-0+1)</code> and the result 0). So I ask myself why isn't it possible to have a population which consists only of successes or only of failures? </p>
+
+<p>Many thanks in advance!</p>
+"
+"0.577350269189626","0.612372435695795","178426","<p>I have counts and I am trying to determine if they conform to the negative binomial distribution.  I am using goodfit() from the vcd package, however the two methods are giving me conflicting results:</p>
+
+<pre><code>library(vcd)
+data = c(8,3,17,6,34,5,16,8,2,4,1,10,3,6,16,10,5,14,5,6,21,21,17,4,3,6)
+minchisq = goodfit(data, type = ""nbinomial"", method = ""MinChisq"")
+ml = goodfit(data, type = ""nbinomial"", method = ""ML"")
+</code></pre>
+
+<p>In the case of minchisq, the df is 32 and P = 0.5632191 (therefore I would not reject the null that the data conform to the negative binomial).  </p>
+
+<p>However, in the case of ml, the df is 10 and P = 3.247571e-05 (therefore I would reject the null that these data come from the negative binomial).  </p>
+
+<p>It seems like the result lies in how the df are calculated for each method.  What is the difference?  And is one more correct than the other?</p>
+
+<p>Thank you for any help!</p>
+"

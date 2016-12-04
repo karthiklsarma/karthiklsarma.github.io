@@ -1,0 +1,774 @@
+"V1","V2","V3","V4"
+"0.43495883620084","0.429197537639476"," 13172","<p>I would like to use a binary logistic regression model in the context of streaming data (multidimensional time series) in order to predict the value of the dependent variable of the data (i.e. row) that just arrived, given the past observations. As far as I know, logistic regression is traditionally used for postmortem analysis, where each dependent variable has already been set (either by inspection, or by the nature of the study). </p>
+
+<p>What happens in the case of time series though,  where we want to make prediction (on the fly) about the dependent variable in terms of historical data (for example in a time window of the last $t$ seconds) and, of course, the previous estimates of the dependent variable?</p>
+
+<p>And if you see the above system over time, how it should be constructed in order for the regression to work? Do we have to train it first by labeling, let's say, the first 50 rows of our data (i.e. setting the dependent variable to 0 or 1) and then use the current estimate of vector ${\beta}$ to estimate the new probability of the dependent variable being 0 or 1 for the data that just arrived (i.e. the new row that was just added to the system)?</p>
+
+<p>To make my problem more clear, I am trying to build a system that parses a dataset row by row and tries to make prediction of a binary outcome (dependent variable) , given the knowledge (observation or estimation) of all the previous dependent or explanatory variables that have arrived in a fixed time window. My system is in Rerl and uses R for the inference. </p>
+"
+"0.232495277487639","0.229415733870562"," 27032","<p>I have successfully implemented a <a href=""http://en.wikipedia.org/wiki/Maximum_likelihood"" rel=""nofollow"">maximum likelihood estimation</a> of model parameters with bounds by creating a likelihood function that returns NA or Inf values when the function is out of bounds. I optimize the function using <a href=""http://stat.ethz.ch/R-manual/R-devel/library/stats/html/optim.html"" rel=""nofollow"">optim</a> in <code>R</code>.</p>
+
+<p><a href=""https://github.com/edielivon/Useful-R-functions/blob/master/Growth%20curves/logistic_growth_mle_norm.R"" rel=""nofollow"">detailed example available on github</a></p>
+
+<p>Quick example:  </p>
+
+<pre><code>likelihood.fun&lt;-function(par, ...){
+
+  likelihood&lt;- -sum(dnorm(..., log=T))
+
+  if(any(c(par[1]&lt;0,
+         par[1]&gt;5, 
+         par[2]&gt;5,
+         par[2]&lt;0)){likelihood&lt;-NA}
+
+  return(likelihood)
+
+}
+</code></pre>
+
+<p>Is this equivalent to box optimization or deprecated compare to box optimization?</p>
+
+<p>If this is not equivalent:</p>
+
+<p>How can I implement this using</p>
+
+<pre><code>optim(..., method=""L-BFGS-B"", lower=c(...), upper=c(...))
+
+
+from example, this does not seem to work:
+optim(..., method=""L-BFGS-B"", lower=c(0,0), upper=c(5,5))
+</code></pre>
+
+<p>or</p>
+
+<pre><code>constrOptim()
+</code></pre>
+
+<p>This is linked to <a href=""http://stats.stackexchange.com/questions/27030/how-to-set-limits-using-constroptim-in-r"">this question on constrOptim</a>.</p>
+"
+"0.328797974610715","0.324442842261525"," 30491","<p>Given a dataset: </p>
+
+<pre><code>x &lt;- c(4.9958942,5.9730174,9.8642732,11.5609671,10.1178216,6.6279774,9.2441754,9.9419299,13.4710469,6.0601435,8.2095239,7.9456672,12.7039825,7.4197810,9.5928275,8.2267352,2.8314614,11.5653497,6.0828073,11.3926117,10.5403929,14.9751607,11.7647580,8.2867261,10.0291522,7.7132033,6.3337642,14.6066222,11.3436587,11.2717791,10.8818323,8.0320657,6.7354041,9.1871676,13.4381778,7.4353197,8.9210043,10.2010750,11.9442048,11.0081195,4.3369520,13.2562675,15.9945674,8.7528248,14.4948086,14.3577443,6.7438382,9.1434984,15.4599419,13.1424011,7.0481925,7.4823108,10.5743730,6.4166006,11.8225244,8.9388744,10.3698150,10.3965596,13.5226492,16.0069239,6.1139247,11.0838351,9.1659242,7.9896031,10.7282936,14.2666492,13.6478802,10.6248561,15.3834373,11.5096033,14.5806570,10.7648690,5.3407430,7.7535042,7.1942866,9.8867927,12.7413156,10.8127809,8.1726772,8.3965665)
+</code></pre>
+
+<p>..
+I would like to determine the most fitting probability distribution (gamma, beta, normal, exponential, poisson, chi-square, etc) with an estimation of the parameters. I am already aware of the question on the following link, where a solution is provided using R:
+<a href=""http://stackoverflow.com/questions/2661402/given-a-set-of-random-numbers-drawn-from-a-continuous-univariate-distribution-f"">http://stackoverflow.com/questions/2661402/given-a-set-of-random-numbers-drawn-from-a-continuous-univariate-distribution-f</a>
+the best proposed solution is the following:</p>
+
+<pre><code>&gt; library(MASS)
+&gt; fitdistr(x, 't')$loglik                                                              #$
+&gt; fitdistr(x, 'normal')$loglik                                                         #$
+&gt; fitdistr(x, 'logistic')$loglik                                                       #$
+&gt; fitdistr(x, 'weibull')$loglik                                                        #$
+&gt; fitdistr(x, 'gamma')$loglik                                                          #$
+&gt; fitdistr(x, 'lognormal')$loglik                                                      #$
+&gt; fitdistr(x, 'exponential')$loglik                                                    #$
+</code></pre>
+
+<p>And the distribution with the smallest loglik value is selected.
+However, other distrubtions such as beta distribution require the specification of some addition parameters in the fitdistr() function:</p>
+
+<pre><code>   fitdistr(x, 'beta', list(shape1 = some value, shape2= some value)).
+</code></pre>
+
+<p>Given that i am trying to determine the best distribution without any prior information, i don't know what the value of the parameters can possibly be for each distribution. 
+Is there another solution that takes this requirement into account? 
+it does not have to be in R.</p>
+"
+"0.43495883620084","0.429197537639476"," 46322","<blockquote>
+  <p><strong>Possible Duplicate:</strong><br>
+  <a href=""http://stats.stackexchange.com/questions/28936/how-to-compute-significant-interaction-estimates-when-main-effect-is-not-signifi"">How to compute significant interaction estimates when main effect is not significant?</a>  </p>
+</blockquote>
+
+
+
+<p>I am an applied linguist and I am modelling responses to a vocabulary test taken by second language learners of English; the aim is to test theoretical hypotheses regarding the relationship between the nature of the word and the likelihood of the learnersâ€™ knowing that word. The models I am using to explore the role of explanatory variables are the random item Item Response Theory model LLTM+e (see de Boeck et al. 2011; de Boeck 2008). These are created using the lmer function in the LME4 package in R and treat item and person responses as random. The estimates shown below are effectively like those from a binary logistic regression model, indicating the log-odds of a correct response on a word, given certain properties. Covariates relate to both item and person characteristics. </p>
+
+<p>The nature of my concern is actually a basic regression issue. I have found a significant interaction between ability grouping of the test taker (GRP; with two levels High and Low) and the length of the word in letters (LEN_L). As far as I can see the estimate of the fixed effects for the first model shows that (a) the lower level learners have an overall lower probability of giving a correct answer (b) that LEN_L does not provide a significant explanation across the pattern of responses for the whole test-taker population, and (c) a significant interaction between GRP and LEN_L indicates that the lower ability learners are less likely to give a correct answer for a longer word. This is in keeping with theory. </p>
+
+<p>However, when I model the data without including the main effect for LEN_L, I am not seeing a significant effect for either high or low groups as shown in Model 2. LEN_L does not show as significant if modelled without interaction with grp low (not shown). I feel that I am missing something obvious, but I cannot quite grasp what is happening. And my references have run dry on this particular issue and I am thinking myself around in circles about it.</p>
+
+<p>(NB: in my full model I have many other significant covariates, but this pattern holds true.) 
+My query basically regards whether I should use Model 1, including the non-significant main effect, or whether my findings from Model 2 indicate that the finding is a little unstable. Any advice would be much appreciated! (I can post more details if necessary.)
+Karen</p>
+
+<p>Model 1 Fixed effects:</p>
+
+<pre><code>              Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    0.25244    0.83194   0.303  0.76156    
+grp low       -2.09126    0.26406  -7.920 2.38e-15 ***
+LEN_L          0.02093    0.13062   0.160  0.87272    
+grp low:LEN_L -0.09185    0.03146  -2.919  0.00351 **
+</code></pre>
+
+<p>Model 2 Fixed effects:</p>
+
+<pre><code>               Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)     0.25243    0.83194   0.303    0.762    
+grp low        -2.09126    0.26406  -7.920 2.38e-15 ***
+grp high:LEN_L  0.02093    0.13062   0.160    0.873    
+grp low:LEN_L  -0.07092    0.13202  -0.537    0.591  
+</code></pre>
+
+<blockquote>
+  <p>De Boeck, P., Bakker, M., Zwitser, R., Nivard, M., Hofman, A.,
+  Tuerlinckx, F. and Partchev, I. (2011) <a href=""http://www.jstatsoft.org/v39/i12/"" rel=""nofollow"">The Estimation of Item
+  Response Models with the 'lmer' Function from the lme4 Package in
+  R</a>. Journal of Statistical Software (39:12) pp 1-28</p>
+</blockquote>
+"
+"0.367607311046904","0.362738125055006","105346","<p>I am interested in estimating an adjusted risk ratio, analogous to how one estimates an adjusted odds ratio using logistic regression. Some literature (e.g., <a href=""http://aje.oxfordjournals.org/content/159/7/702.abstract"">this</a>) indicates that using Poisson regression with Huber-White standard errors is a model-based way to do this</p>
+
+<p>I have not found literature on how adjusting for continuous covariates affects this. The following simple simulation demonstrates that this issue is not so straightforward: </p>
+
+<pre><code>arr &lt;- function(BLR,RR,p,n,nr,ce)
+{
+   B = rep(0,nr)
+   for(i in 1:nr){
+   b &lt;- runif(n)&lt;p 
+   x &lt;- rnorm(n)
+   pr &lt;- exp( log(BLR) + log(RR)*b + ce*x)
+   y &lt;- runif(n)&lt;pr
+   model &lt;- glm(y ~ b + x, family=poisson)
+   B[i] &lt;- coef(model)[2]
+   }
+   return( mean( exp(B), na.rm=TRUE )  )
+}
+
+set.seed(1234)
+arr(.3, 2, .5, 200, 100, 0)
+[1] 1.992103
+arr(.3, 2, .5, 200, 100, .1)
+[1] 1.980366
+arr(.3, 2, .5, 200, 100, 1)
+[1] 1.566326 
+</code></pre>
+
+<p>In this case, the true risk ratio is 2, which is recovered reliably when the covariate effect is small. But, when the covariate effect is large, this gets distorted. I assume this arises because the covariate effect can push up against the upper bound (1) and this contaminates the estimation.</p>
+
+<p>I have looked but have not found any literature on adjusting for continuous covariates in adjusted risk ratio estimation. I am aware of the following posts on this site: </p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/questions/18595/poisson-regression-to-estimate-relative-risk-for-binary-outcomes"">Poisson regression to estimate relative risk for binary outcomes</a></li>
+<li><a href=""http://stats.stackexchange.com/questions/38004/poisson-regression-for-binary-data"">Poisson regression for binary data</a></li>
+</ul>
+
+<p>but they do not answer my question. Are there any papers on this? Are there any known cautions that should be exercised? </p>
+"
+"0.43495883620084","0.429197537639476","140761","<p>I have a question regarding the use of propensity score in a survival analysis with use of mutliple imputation to handle missing data. The question is of theoretical nature and may well apply to other situations.</p>
+
+<p>I have a data set of <em>n</em> individuals. The aim is to estimate the effect of a treatment on a binary outcome (death). The analysis is based on propensity score; the propensity score is derived by means of logistic regression, which includes 30 predictors variables. Effect estimation is carried out by means of Cox regression (which uses the propensity score in various ways [stratification, covariate adjustments etc]). There are a large number of patients, and on average 2â€“7% missing for each variable (of which there are 30 included in the prop. score).</p>
+
+<p>Thus, I have a large data set with a substantial amount of missing data (at least in terms of complete cases) which is why I use multiple imputation - 5 complete data sets are imputed. Now the question is what to do with the muliply imputed data sets; which one of the strategies below should I prefer?</p>
+
+<p><strong>1.</strong> Calculate one average propensity score for each individual using the 5 separate data sets. That way, each individual will have one propensity score, which is the average from the n complete data sets. Then do the Cox regression..</p>
+
+<p><strong>2.</strong> Analyze each separate multiply imputed data set (with Cox regression), and then pool the 5 hazard ratio estimates to one hazard ratio.</p>
+
+<p>The second method appears to be used more often, but is it better/worse?</p>
+
+<p>Any thoughts about this?</p>
+"
+"0.367607311046904","0.362738125055006","143615","<p>I estimate a multilevel ordinal logistic regression models in Stata and R, and receive different estimators for the variance and the covariance of the latent variable of the higher level.
+Among other data, I use this Stata datafile (from Stata help for meologit):
+<a href=""http://www.stata-press.com/data/r13/tvsfpors.dta"" rel=""nofollow"">http://www.stata-press.com/data/r13/tvsfpors.dta</a>
+I estimate (among others) this model:</p>
+
+<pre><code># R formula syntax
+library(ordinal)
+library(readstata13)
+mydata &lt;- read.dta13(file = ""http://www.stata-press.com/data/r13/tvsfpors.dta"",  
+                     convert.factors = FALSE)
+res &lt;- clmm(as.factor(thk) ~ prethk + cc + tv + (1 | school), mydata, nAGQ  =7)
+summary(res)
+
+* Stata equation
+webuse tvsfpors
+meologit thk prethk cc tv || school:
+</code></pre>
+
+<p>The columns in the variance-covariance-matrix for the variance of the latent higher-level variable seem to differ systematically. The covariances differ by an identical constant, and the variances (of the variance) themselves by the squared term of the constant. The constant differ dependent on the data and model structure.</p>
+
+<p>Does anyone know the source of this difference?</p>
+
+<p>This is the variance-covariance-matrix for the estimation described above for R:
+Here is the var-cov-matrix for R</p>
+
+<pre><code>&gt; vcov(m1)
+                1|2          2|3          3|4        prethk            cc            tv           ST1
+1|2     0.023567239  0.022089030  0.022112907  0.0030638974  0.0105995218  0.0111725311 -0.0043760134
+2|3     0.022089030  0.023866162  0.023611332  0.0033154896  0.0111666464  0.0111977570 -0.0031374135
+3|4     0.022112907  0.023611332  0.026259339  0.0036017005  0.0116806803  0.0112381854 -0.0018698361
+prethk  0.003063897  0.003315490  0.003601701  0.0015113830  0.0003659838  0.0001657595 -0.0009479396
+cc      0.010599522  0.011166646  0.011680680  0.0003659838  0.0216625428 -0.0002137013  0.0004195043
+tv      0.011172531  0.011197757  0.011238185  0.0001657595 -0.0002137013  0.0214436765 -0.0012672853
+ST1    -0.004376013 -0.003137414 -0.001869836 -0.0009479396  0.0004195043 -0.0012672853  0.0642318747
+</code></pre>
+
+<p>This is the analogue in Stata</p>
+
+<pre><code>. matrix list e(V), nohalf
+
+symmetric e(V)[7,7]
+                                   thk:          thk:          thk:         cut1:         cut2:         cut3:  var(_cons~):
+                                prethk            cc            tv         _cons         _cons         _cons         _cons
+              thk:prethk     .00151138     .00036598     .00016576      .0030639     .00331549      .0036017    -.00015693
+                  thk:cc     .00036598     .02166253    -.00021371     .01059951     .01116663     .01168067     .00006945
+                  thk:tv     .00016576    -.00021371     .02144367     .01117254     .01119776     .01123818    -.00020983
+              cut1:_cons      .0030639     .01059951     .01117254     .02356724     .02208902      .0221129    -.00072444
+              cut2:_cons     .00331549     .01116663     .01119776     .02208902     .02386615     .02361132     -.0005194
+              cut3:_cons      .0036017     .01168067     .01123818      .0221129     .02361132     .02625932    -.00030956
+var(_cons[school]):_cons    -.00015693     .00006945    -.00020983    -.00072444     -.0005194    -.00030956     .00176027
+</code></pre>
+
+<p>Note that the column and row order is different. My question points at the diffference between the rows/columns of the variable var(_cons[school]) in the Stata matrix and ST1 in the R matrix.</p>
+"
+"NaN","NaN","145402","<p>I have been trying logistic regression to fit the data and get an estimation of the response rate, but the power of the model is quite limited. The area under the ROC curve is always around 0.6. </p>
+
+<p>I am just wondering whether there are other models to predict binary response variables that I can try? Thanks!</p>
+"
+"0.545249756806271","0.53802758684897","156465","<p>The following multilevel logistic model with
+one explanatory variable at level 1 (individual level) and
+one explanatory variable at level 2 (group level) : </p>
+
+<p>$$\text{logit}(p_{ij})=\pi_{0j}+\pi_{1j}x_{ij}\ldots (1)$$
+$$\pi_{0j}=\gamma_{00}+\gamma_{01}z_j+u_{0j}\ldots (2)$$
+$$\pi_{1j}=\gamma_{10}+\gamma_{11}z_j+u_{1j}\ldots (3)$$</p>
+
+<p>where , the group-level residuals $u_{0j}$ and $u_{1j}$ are assumed to have a multivariate normal distribution with expectation zero . The variance of the residual errors  $u_{0j}$ is specified as $\sigma^2_0$ , and the variance of the residual errors  $u_{1j}$ is specified as $\sigma^2_1$ .</p>
+
+<p>I want to estimate the parameter of the model and I like to use  <code>R</code> command <code>glmmPQL</code> . </p>
+
+<p>Substituting  equation (2) and (3) in equation (1) yields ,</p>
+
+<p>$$\text{logit}(p_{ij})=\gamma_{00}+\gamma_{10}x_{ij}+\gamma_{01}z_j+\gamma_{11}x_{ij}z_j+u_{0j}+u_{1j}x_{ij}\ldots (4)$$</p>
+
+<p>There are 30 groups$(j=1,...,30)$ and 5 individual in each group .</p>
+
+<p>R code  :</p>
+
+<pre><code>   #Simulating data from multilevel logistic distribution 
+   library(mvtnorm)
+   set.seed(1234)
+
+   J &lt;- 30             ## number of groups
+   n_j &lt;- rep(5,J)     ## number of individuals in jth group
+   N &lt;- sum(n_j)
+
+   g_00 &lt;- -1
+   g_01 &lt;- 0.3
+   g_10 &lt;- 0.3
+   g_11 &lt;- 0.3
+
+   s2_0 &lt;- 0.13  ##variance corresponding to specific ICC
+   s2_1 &lt;- 1     ##variance standardized to 1
+   s01  &lt;- 0     ##covariance assumed zero
+
+   z &lt;- rnorm(J)
+   x &lt;- rnorm(N)
+
+   #Generate (u_0j,u_1j) from a bivariate normal .
+   mu &lt;- c(0,0)
+  sig &lt;- matrix(c(s2_0,s01,s01,s2_1),ncol=2)
+  u &lt;- rmvnorm(J,mean=mu,sigma=sig,method=""chol"")
+
+  pi_0 &lt;- g_00 +g_01*z + as.vector(u[,1])
+  pi_1 &lt;- g_10 + g_11*z + as.vector(u[,2])
+  eta &lt;- rep(pi_0,n_j)+rep(pi_1,n_j)*x
+  p &lt;- exp(eta)/(1+exp(eta))
+
+  y &lt;- rbinom(N,1,p)
+</code></pre>
+
+<p>Now the parameter estimation .</p>
+
+<pre><code>  #### estimating parameters 
+  library(MASS)
+  library(nlme)
+
+  sim_data_mat &lt;- matrix(c(y,x,rep(z,n_j),rep(1:30,n_j)),ncol=4)
+  sim_data &lt;- data.frame(sim_data_mat)
+  colnames(sim_data) &lt;- c(""Y"",""X"",""Z"",""cluster"")
+  summary(glmmPQL(Y~X*Z,random=~1|cluster,family=binomial,data=sim_data,,niter=200))
+</code></pre>
+
+<h3>OUTPUT :</h3>
+
+<pre><code>      iteration 1
+      Linear mixed-effects model fit by maximum likelihood
+      Data: sim_data 
+
+      Random effects:
+      Formula: ~1 | cluster
+              (Intercept)  Residual
+      StdDev: 0.0001541031 0.9982503
+
+      Variance function:
+      Structure: fixed weights
+      Formula: ~invwt 
+      Fixed effects: Y ~ X * Z 
+                      Value Std.Error  DF   t-value p-value
+      (Intercept) -0.8968692 0.2018882 118 -4.442404  0.0000
+      X            0.5803201 0.2216070 118  2.618691  0.0100
+      Z            0.2535626 0.2258860  28  1.122525  0.2712
+      X:Z          0.3375088 0.2691334 118  1.254057  0.2123
+      Correlation: 
+           (Intr) X      Z     
+      X   -0.072              
+      Z    0.315  0.157       
+      X:Z  0.095  0.489  0.269
+
+      Number of Observations: 150
+      Number of Groups: 30 
+</code></pre>
+
+<ul>
+<li><p>Why does it take only $1$ iteration while I mentioned to take $200$ iterations inside the function <code>glmmPQL</code> by the argument <code>niter=200</code> ?</p></li>
+<li><p>Also p-value of group-level variable $(Z)$ and cross-level interaction $(X:Z)$ shows they are not significant . Still why in this <a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1955447/"" rel=""nofollow"">article</a>, they keep the group-level variable $(Z)$ and cross-level interaction $(X:Z)$ for further analysis ?</p></li>
+<li><p>Also How are the degrees of freedom <code>DF</code> being calculated ?</p></li>
+<li><p>It doesn't match with the relative bias of the various estimates of <a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1955447/table/T1/"" rel=""nofollow"">the table</a> .  I tried to calculate the relative bias as :</p>
+
+<pre><code> #Estimated Fixed Effect parameters :
+
+ hat_g_00 &lt;- -0.8968692 #overall intercept
+ hat_g_10 &lt;- 0.5803201  # X
+ hat_g_01 &lt;-0.2535626   # Z
+ hat_g_11 &lt;-0.3375088   #X*Z
+
+fixed &lt;-c(g_00,g_10,g_01,g_11)
+hat_fixed &lt;-c(hat_g_00,hat_g_10,hat_g_01,hat_g_11)
+
+
+#Estimated Random Effect parameters :
+
+hat_s_0 &lt;-0.0001541031  ##Estimated Standard deviation of random intercept 
+hat_s_1 &lt;-  0.9982503 
+
+std  &lt;- c(sqrt(0.13),1) 
+hat_std  &lt;- c(0.0001541031,0.9982503) 
+
+##Relative bias of Fixed Effect :
+rel_bias_fixed &lt;- ((hat_fixed-fixed)/fixed)*100
+[1] -10.31308  93.44003 -15.47913  12.50293
+
+##Relative bias of Random Effect :
+rel_bias_Random &lt;- ((hat_std-std)/std)*100
+[1] -99.95726  -0.17497
+</code></pre></li>
+<li>Why doesn't the relative bias match with the table ?</li>
+</ul>
+"
+"0.37282185960072","0.429197537639476","179250","<p>I am conducting a multifactorial analyisis involving categorical variables by using R. The response is â€œyesâ€ or â€œnoâ€ (Iâ€™m therefore using binary logistic regression) and the predictors have 2 up to 3 levels. The sample size is quite small (n = 230).</p>
+
+<p>I tried before both the glm and rsm packages, but one predictor (B2) had an extremely high standard error; it was a separation problem since one of its level has zero observation. I have been then suggested to rely on penalized logistic regression and in particular the brglm package.</p>
+
+<p>Here as follows, you can see the new output (brglm) for the model containing all the variables:</p>
+
+<pre><code>Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)  1.64053    0.78655   2.086   0.0370 * 
+B1x         -0.07434    0.71502  -0.104   0.9172   
+B1y         -0.20966    0.59622  -0.352   0.7251   
+B2x          0.09004    0.57168   0.158   0.8748   
+B2y         -2.68270    1.67192  -1.605   0.1086   
+B3x         -0.53347    0.33882  -1.574   0.1154   
+B4x         -0.59495    0.30320  -1.962   0.0497 (*) 
+B5x         -0.79962    0.47249  -1.692   0.0906 . 
+B5y         -1.42761    0.59344  -2.406   0.0161 (*) 
+B6x          1.36948    0.49224   2.782   0.0054 (**)
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+Null deviance: 275.58  on 229  degrees of freedom
+Residual deviance: 270.93  on 220  degrees of freedom
+Penalized deviance: 253.9314 
+AIC:  290.93 
+</code></pre>
+
+<p>As you can see, the problem regarding the huge standard error has been finally solved but there are still several issues:</p>
+
+<p>1) In the description of the bglrm package, they say:</p>
+
+<p>â€œIt is not advised to use methods associated with model comparison (add1, drop1,anova, etc.) on objects of class ""brglm"". Model comparison when estimation is performed using the modified scores or the penalized likelihood is an on-going research topic and will be implemented as soon as it is concludedâ€</p>
+
+<p><strong>How can I safely remove non significant predictors?</strong> <strong>Have I only to rely on the p-value in the above output?</strong> 
+That means that I have to remove from a further model predictors from B1 to B4, is that correct? (that was also case when I used a non penalized logistic regression model (such as lrm), but then I could use drop1).</p>
+
+<p>2) <strong>How can I detect multicollinearity issues in brglm?</strong> </p>
+
+<p>By using a non penalized likelihood model, I know that there is multicollinearity between B5 and B6, but how can I prove it now?</p>
+
+<p>3) <strong>How can I calculate in brglm indexes such as C and Nagelgerkeâ€™s R</strong>? </p>
+
+<p>4) In the description of the package, it is also written: â€œThe use of Akaike's information criterion (AIC) for model selection when method = ""brglm.fit"" is controversial.â€  </p>
+
+<p>Is it safe or not to publish AIC in a paper?</p>
+
+<p>Thank you very much in advance!</p>
+"
+"0.328797974610715","0.324442842261525","180135","<p>I have fit a generalized additive model (GAM) using the mgcv package in R. My model has a dichotomous response variable and so i've used the binomial family link function. After creating the model I would like to do a little post-estimation inference above and beyond the plot.gam graphs. </p>
+
+<p>I would like to take two x-values, for example, and calculate the risk ratio and 95% confidence intervals for that ratio. Obtaining the risk ratio seems fairly straightforward. I could transform the predictions into probabilities and simply divide the two probabilities corresponding to the x-values of interest in order to get the risk ratio. I am less certain how to get the confidence intervals.</p>
+
+<p>In this link here: <a href=""http://grokbase.com/t/r/r-help/125qbnw21a/r-mgcv-how-to-calculate-a-confidence-interval-of-a-ratio"" rel=""nofollow"">http://grokbase.com/t/r/r-help/125qbnw21a/r-mgcv-how-to-calculate-a-confidence-interval-of-a-ratio</a> Simon Wood, the author of the mgcv package explained how to get the CIs for a log ratio using a poisson model. I'm uncertain how I would need to change the code to get the risk ratios and 95% CIs from my logistic model. </p>
+
+<p>Here is a reproducible example provided by Simon Wood in the link above:</p>
+
+<pre><code>    library(mgcv)
+
+    ## simulate some data
+    dat &lt;- gamSim(1, n=1000, dist=""poisson"", scale=.25)
+
+    ## fit log-linear model...
+    b &lt;- gam(y~s(x0)+s(x1)+s(x2)+s(x3), family=poisson,
+    data=dat, method=""REML"")
+
+    ## data at which predictions to be compared...
+    pd &lt;- data.frame(x0=c(.2,.3),x1=c(.5,.5),x2=c(.5,.5),
+    x3=c(.5,.5))
+
+    ## log(E(y_1)/E(y_2)) = s(x_1) - s(x_2)
+    Xp &lt;- predict(b,newdata=pd,type=""lpmatrix"")
+
+    ## ... Xp%*%coef(b) gives log(E(y_1)) and log(E(y_2)),
+    ## so the required difference is computed as...
+    diff &lt;- (Xp[1,]-Xp[2,])
+    dly &lt;- t(diff)%*%coef(b) ## required log ratio (diff of logs)
+    se.dly &lt;- sqrt(t(diff)%*%vcov(b)%*%diff) ## corresponding s.e.
+    dly + c(-2,2)*se.dly ## 95%CI
+</code></pre>
+
+<p>Any help is greatly appreciated.</p>
+"
+"0.406866735603368","0.458831467741123","188112","<p>I am studying logistic regressions and I wonder why are estimators biased when the independent variables have low variance (maybe low variance compared to its mean, but anyway).</p>
+
+<p>I simulate the underlying model as a linear function of a single variable <code>x</code> and I do not include an error term. <code>x</code> is generated from a normal distribution, with mean <code>mx</code> and sd <code>sx</code>.</p>
+
+<p><code>f</code> is a helper to map the probabilities using a logistic function</p>
+
+<p>I use <code>mx = 1.0</code>, and sample <code>sx</code> from a uniform distribution from 0 to 1, so I can estimate the model for different values of <code>sx</code>.</p>
+
+<pre><code>SAMPLE_SIZE = 1000
+set.seed(100)
+
+f &lt;- function(v) exp(v) / (1 + exp(v));
+
+sim = function(b0, b1, mx, sx) {
+  xs &lt;- rnorm(SAMPLE_SIZE, mean = mx, sd = sx)
+  ps &lt;- f(b0 + b1 * xs)
+  ys &lt;- rbinom(SAMPLE_SIZE, 1, ps)
+  glm(ys ~ xs, family = binomial)
+}  
+
+
+sx &lt;- runif(n = 1000, min = 0.05, max = 1.0)
+b0 = 1.5
+b0s &lt;- sapply(sx, function(v) {
+  sim(b0 = b0, b1 = 1.0, mx = 1.0, sx = v)$coefficients[[1]]
+})
+</code></pre>
+
+<p>And then I plot the error between the estimated <code>b0</code> coefficient and the real one, for different values of <code>sx</code>:</p>
+
+<pre><code>plot(sx, b0s - b0)
+</code></pre>
+
+<p>What I get is that the error gets smaller the greater <code>sx</code> is.</p>
+
+<p>From common linear regressions, we know that the estimators get more precise the larger the variance in the independent variables. But that does not say anything about the biases. </p>
+
+<p>How to interpret this result? Are the estimators really biased in logistic regressions? What's missing here? Is there any problem related to numerical estimates here?</p>
+
+<p><a href=""http://i.stack.imgur.com/aj8md.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/aj8md.png"" alt=""Estimation error vs. standard deviation in X""></a></p>
+"
+"0.164398987305357","0.162221421130763","198219","<p>I ran the same Logistic regression with R and STATA. </p>
+
+<p>The regressors include many dummy variables.</p>
+
+<p>In R, the code I used is</p>
+
+<pre><code>fit &lt;- glm(formula = y ~ ., family = ""binomial"", data = df)
+</code></pre>
+
+<p>which reports the warning message:</p>
+
+<pre><code>glm.fit: algorithm did not converge 
+</code></pre>
+
+<p>In STATA, I simply ran</p>
+
+<pre><code>Logit y x1 - x20
+</code></pre>
+
+<p>and the reported table looks OK and the estimation seems to be reasonable.</p>
+
+<p>Actually if I have only a few regressors, say only $x_1, x_2, x_3$, they report the same result.</p>
+
+<p>I'm wondering why there could be such difference? In R, how to fix the problem?</p>
+
+<p>Thanks a lot!</p>
+"
+"0.402693633128415","0.397359707119513","202973","<p>Suppose I have a data set of <code>N</code> observations <code>(n = 1...N)</code> for out-of-sample estimation and values of ($y_n$). I have also <code>I</code> statistical models <code>(i= 1...I)</code> which every model has its own estimate on each data point ($\hat{y}^i_n$).</p>
+
+<p>In addition I have a model selection method $\phi$ which would pick a model's estimate among the model set as its own according to its assessment on previous performance of the models ($\hat{y}^\phi_n = \min_i\{\hat{f_i}(y_n), i \in I\} $).</p>
+
+<p>My claim should be ""model selection's performance is better than all models it picks estimates from"". I am trying to find a proper method to describe the statistical power of the model selection method, compared to individual models in the model set.</p>
+
+<p>All individual models follow different assumptions, distributions and dependence structure. Some are iid, some have heteroskedasticity. Actually, there is no restriction on models except it should yield an estimate.</p>
+
+<p>Some The models are employed on time series but what they do is asset pricing on different assets and contracts. But for a broaded audience I will make the following analogy.</p>
+
+<p>Suppose you have a machine that predicts the scores on basketball matches. It does not only predict the final score, it also predicts a distribution of the scores throughout the time. It also predicts which player will score when.</p>
+
+<p>Suppose you have many machines of this sort and all have different predictions. All of them had been right on some occasion (That is what statistics is after all right? No model is perfect.). </p>
+
+<p>I am trying to figure out which machine is better at predicting what and when, using the previous performance of the machines. I can say stuff like 'oh machine A was good at predicting scores occured in the last 10 mins, but for the last 2 months model B became better'. </p>
+
+<p>It turns out my estimates using the machines are better than any machine could do it alone in the long run. I checked for several error terms starting with MAPE and MSE. But I want to show that it is not a coincidence but a statistically significant fact. I have a fair sample size (~100k) over a good enough time period (5 years).</p>
+
+<p>I fiddled with some thoughts about proportion of $\phi$ selecting the model with the lowest error and some logistic regression on that according to the criteria it uses to pick the models. But I lack the comprehensive knowledge on this domain of statistics.</p>
+
+<p>ps. R package suggestions are also appreciated.</p>
+"
+"0.467887720419033","0.512989176042577","203816","<p>I am trying to duplicate the results from <code>sklearn</code> logistic regression library using <code>glmnet</code> package in R.</p>
+
+<p>From the <code>sklearn</code> logistic regression <a href=""http://scikit-learn.org/stable/modules/linear_model.html#logistic-regression"" rel=""nofollow"">documentation</a>, it is trying to minimize the cost function under l2 penalty
+$$\min_{w,c} \frac12 w^Tw + C\sum_{i=1}^N \log(\exp(-y_i(X_i^Tw+c)) + 1)$$</p>
+
+<p>From the <a href=""https://cran.r-project.org/web/packages/glmnet/vignettes/glmnet_beta.html#log"" rel=""nofollow"">vignettes</a> of <code>glmnet</code>, its implementation minimizes a slightly different cost function
+$$\min_{\beta, \beta_0} -\left[\frac1N \sum_{i=1}^N y_i(\beta_0+x_i^T\beta)-\log(1+e^{(\beta_0+x_i^T\beta)})\right] + \lambda[(\alpha-1)||\beta||_2^2/2+\alpha||\beta||_1]$$</p>
+
+<p>With some tweak in the second equation, and by setting $\alpha=0$, $$\lambda\min_{\beta, \beta_0} \frac1{N\lambda} \sum_{i=1}^N \left[-y_i(\beta_0+x_i^T\beta)+\log(1+e^{(\beta_0+x_i^T\beta)})\right] + ||\beta||_2^2/2$$</p>
+
+<p>which differs from <code>sklearn</code> cost function only by a factor of $\lambda$ if set $\frac1{N\lambda}=C$, so I was expecting the same coefficient estimation from the two packages. But they are different. I am using the dataset from UCLA idre <a href=""http://www.ats.ucla.edu/stat/r/dae/logit.htm"" rel=""nofollow"">tutorial</a>, predicting <code>admit</code> based on <code>gre</code>, <code>gpa</code> and <code>rank</code>. There are 400 observations, so with $C=1$, $\lambda = 0.0025$.</p>
+
+<pre><code>#python sklearn
+df = pd.read_csv(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+y, X = dmatrices('admit ~ gre + gpa + C(rank)', df, return_type = 'dataframe')
+X.head()
+&gt;  Intercept  C(rank)[T.2]  C(rank)[T.3]  C(rank)[T.4]  gre   gpa
+0          1             0             1             0  380  3.61
+1          1             0             1             0  660  3.67
+2          1             0             0             0  800  4.00
+3          1             0             0             1  640  3.19
+4          1             0             0             1  520  2.93
+
+model = LogisticRegression(fit_intercept = False, C = 1)
+mdl = model.fit(X, y)
+model.coef_
+&gt; array([[-1.35417783, -0.71628751, -1.26038726, -1.49762706,  0.00169198,
+     0.13992661]]) 
+# corresponding to predictors [Intercept, rank_2, rank_3, rank_4, gre, gpa]
+
+
+&gt; # R glmnet
+&gt; df = fread(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+&gt; X = as.matrix(model.matrix(admit~gre+gpa+as.factor(rank), data=df))[,2:6]
+&gt; y = df[, admit]
+&gt; mylogit &lt;- glmnet(X, y, family = ""binomial"", alpha = 0)
+&gt; coef(mylogit, s = 0.0025)
+6 x 1 sparse Matrix of class ""dgCMatrix""
+                    1
+(Intercept)      -3.984226893
+gre               0.002216795
+gpa               0.772048342
+as.factor(rank)2 -0.530731081
+as.factor(rank)3 -1.164306231
+as.factor(rank)4 -1.354160642
+</code></pre>
+
+<p>The <code>R</code> output is somehow close to logistic regression without regularization, as can be seen <a href=""http://stats.stackexchange.com/questions/203740/logistic-regression-scikit-learn-vs-statsmodels"">here</a>. Am I missing something or doing something obviously wrong?</p>
+
+<p>Update: I also tried to use <code>LiblineaR</code> package in <code>R</code> to conduct the same process, and yet got another different set of estimates (<code>liblinear</code> is also the solver in <code>sklearn</code>):</p>
+
+<pre><code>&gt; fit = LiblineaR(X, y, type = 0, cost = 1)
+&gt; print(fit)
+$TypeDetail
+    [1] ""L2-regularized logistic regression primal (L2R_LR)""
+    $Type
+[1] 0
+$W
+            gre          gpa as.factor(rank)2 as.factor(rank)3 as.factor(rank)4         Bias
+[1,] 0.00113215 7.321421e-06     5.354841e-07     1.353818e-06      9.59564e-07 2.395513e-06
+</code></pre>
+
+<p>Update 2: turning off standardization in <code>glmnet</code> gives:</p>
+
+<pre><code>&gt; mylogit &lt;- glmnet(X, y, family = ""binomial"", alpha = 0, standardize = F)
+&gt; coef(mylogit, s = 0.0025)
+6 x 1 sparse Matrix of class ""dgCMatrix""
+                     1
+(Intercept)      -2.8180677693
+gre               0.0034434192
+gpa               0.0001882333
+as.factor(rank)2  0.0001268816
+as.factor(rank)3 -0.0002259491
+as.factor(rank)4 -0.0002028832
+</code></pre>
+"
+"0.328797974610715","0.324442842261525","206870","<p>By converting and by trying to interpret the parameters of a logistic regression ran in R, I just find them to be overestimated. Therefore I tried to compute them myself but I can not obtain the same values reported by the regression.</p>
+
+<p>I used this web-page for computations:
+<a href=""http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm"" rel=""nofollow"">http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm</a></p>
+
+<p>Let say we only focus on the LagC parameter:</p>
+
+<p><strong>Logistic Regression</strong></p>
+
+<pre><code>&gt; model &lt;- glmer(RepT2 ~ DistractorC1 + DistractorC2 + LagC + DistractorC1:LagC + DistractorC2:LagC + (LagC | Subject) + (1 | Item),
+                data = DF,
+                family = binomial(link = ""logit""),
+                control = glmerControl(optimizer = ""bobyqa""))
+&gt; summary(model)
+
+  Fixed effects:
+                    Estimate Std. Error z value Pr(&gt;|z|)    
+  (Intercept)       -0.81039    0.22040  -3.677 0.000236 ***
+  DistractorC1       0.33129    0.06393   5.182  2.2e-07 ***
+  DistractorC2       0.03436    0.10011   0.343 0.731467    
+  LagC               2.09567    0.12725  16.469  &lt; 2e-16 ***
+  DistractorC1:LagC -0.21654    0.12770  -1.696 0.089932 .  
+  DistractorC2:LagC -0.84018    0.20055  -4.189  2.8e-05 ***
+</code></pre>
+
+<p>Odds of the parameters:</p>
+
+<pre><code>&gt; show(Odds &lt;- exp(summary(model)$coefficients[,""Estimate""])
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.4446833         1.3927594         1.0349529         8.1308503         0.8052993         0.4316343 
+</code></pre>
+
+<p>Probabilities of the parameters:</p>
+
+<pre><code>&gt; show(P &lt;- Odds / (1 + Odds))
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.3078068         0.5820725         0.5085881         0.8904812         0.4460752         0.3014976 
+</code></pre>
+
+<p><strong>My Estimations</strong></p>
+
+<pre><code>&gt; Means &lt;- DF %&gt;%
+    group_by(Subject, Lag) %&gt;%
+    filter(RepT1 == 1) %&gt;%
+    summarise(repok = sum(RepT2) / (n())) %&gt;%
+    group_by(Lag) %&gt;%
+    summarise(Means = mean(repok))
+
+&gt; show(Means)
+
+     Lag     Means
+  (fctr)     (dbl)
+1   Lag3 0.1972174
+2   Lag8 0.5475624
+</code></pre>
+
+<p>Odds of the parameter:</p>
+
+<pre><code>&gt; OddsLag3 &lt;- 0.1972174 / (1-0.1972174)
+&gt; OddsLag8 &lt;- 0.5475624 / (1-0.5475624)
+&gt; OddsLagC &lt;- OddsLag8 / OddsLag3
+&gt; show(OddsLagC)
+
+[1] 4.926377
+</code></pre>
+
+<p>Probabilities of the parameter:</p>
+
+<pre><code>&gt; show(OddsLag / (1 + OddsLag))
+
+[1] 0.8312628
+</code></pre>
+
+<p>We can see that it is close, but not accurate. Does anyone have an explanation?
+Note that I compute a mean for each subject and then only a mean for each condition. I also did estimate the parameters without taking into account the subjects, but still, the mismatch was here.</p>
+
+<p><a href=""http://i.stack.imgur.com/YRdPf.png"" rel=""nofollow"">Graphical representation</a></p>
+"
+"0.28474739872575","0.280975743474508","207427","<p>I am confused with the answer from
+<a href=""http://stackoverflow.com/questions/23282048/logistic-regression-defining-reference-level-in-r"">http://stackoverflow.com/questions/23282048/logistic-regression-defining-reference-level-in-r</a></p>
+
+<p>It said if you want to predict the probability of ""Yes"", you set as  <code>relevel(auth$class, ref = ""YES"")</code>. However, in my experiment, if we have a binary response variable with ""0"" and ""1"". We only get the estimation for probability of ""1"" when we set <code>relevel(factor(y),ref=""0"")</code>.</p>
+
+<pre><code>n &lt;- 200
+x &lt;- rnorm(n)
+sumx &lt;- 5 + 3*x
+exp1 &lt;- exp(sumx)/(1+exp(sumx))
+y &lt;- rbinom(n,1,exp1) #probability here is for 1
+model1 &lt;- glm(y~x,family = ""binomial"")
+summary(model1)$coefficients
+            Estimate Std. Error  z value     Pr(&gt;|z|)
+(Intercept) 5.324099  1.0610921 5.017565 5.233039e-07
+x           2.767035  0.7206103 3.839849 1.231100e-04
+model2 &lt;- glm(relevel(factor(y),ref=""0"")~x,family = ""binomial"")
+
+summary(model2)$coefficients
+            Estimate Std. Error  z value     Pr(&gt;|z|)
+(Intercept) 5.324099  1.0610921 5.017565 5.233039e-07
+x           2.767035  0.7206103 3.839849 1.231100e-04
+</code></pre>
+
+<p>I think if we want to get probability of ""Yes"", we should set <code>relevel(auth$class, ref = ""No"")</code>, am I correct? And what is reference level here means? Actually, what is glm() to predict in default if we use response other than ""0"" and ""1""? </p>
+"
+"0.164398987305357","0.162221421130763","212027","<p>I am using <code>gbm</code> to predict an imbalanced binary outcome, with the intent of obtaining a ranking by class probability estimation that produces a strong class separation on out-of-sample data.  (I am combining this class probability with other predictions, including from logistic regression, in an ensemble model.)</p>
+
+<p>According to <a href=""http://bioconductor.wustl.edu/extra/vignettes/gbm/inst/doc/gbm.pdf"" rel=""nofollow"">this gbm vignette</a> (Ridgeway, 2007), under ""common user options"" for loss functions:</p>
+
+<blockquote>
+  <p>This should be easily dictated by the application.  For most
+  classification problems either <code>bernoulli</code> or <code>adaboost</code> will be
+  appropriate, the former being recommended. (p. 5)</p>
+</blockquote>
+
+<p>There's no explanation provided for favoring bernoulli over <a href=""http://stats.stackexchange.com/questions/37497/how-to-use-r-gbm-with-distribution-adaboost"">adaboost</a> nor any mention of the option for <a href=""https://en.wikipedia.org/wiki/Huber_loss"" rel=""nofollow""><code>huberized</code> loss function</a>, although this function may have been added at a later date.</p>
+
+<p>Related question, but broader than mine:  <a href=""http://stats.stackexchange.com/questions/112359/choosing-between-loss-functions-for-binary-classification"">Choosing between loss functions for binary classification</a>.  This answer references <a href=""http://www.eecs.berkeley.edu/~wainwrig/stat241b/bartlettetal.pdf"" rel=""nofollow"">Bartlett (2006)</a> which is a challenging read for me.</p>
+
+<p>Although performance is satisfactory under the bernoulli loss function, I am having a hard time understanding the justification for selecting one over another.  I'm trying all of them, but are there any theoretical justifications that are at least somewhat intuitive?</p>
+"
+"0.402693633128415","0.397359707119513","229624","<p>I have been working to fit a normal distribution to data that is truncated to only be zero or greater. Given my data, which I have at the bottom, I previously used the following code: </p>
+
+<pre><code>library(fitdistrplus)
+library(truncnorm)
+fitdist(testData, ""truncnorm"", start = list(a = 0, mean = 0.8, sd = 0.9))
+</code></pre>
+
+<p>Which, of course, won't work for a number of reasons, not least of which being that the mle estimator provides increasingly negative estimates as <code>a</code> tends towards zero. I previously got some very helpful information about fitting a normal distribution to this data <a href=""http://stackoverflow.com/questions/38838343/fitting-truncnorm-using-fitdistrplus/38839835#38839835"">here</a>, where two basic options were presented:</p>
+
+<p>I might either use a low, negative value for <code>a</code>, and try out a number of different values</p>
+
+<pre><code>fitdist(testData, ""truncnorm"", fix.arg=list(a=-.15),
+        start = list(mean = mean(testData), sd = sd(testData)))
+</code></pre>
+
+<p>or I might set lower bounds for the parameters</p>
+
+<pre><code>fitdist(testData, ""truncnorm"", fix.arg=list(a=0),
+        start = list(mean = mean(testData), sd = sd(testData)),
+        optim.method=""L-BFGS-B"", lower=c(0, 0))
+</code></pre>
+
+<p>Either way, though, it seems that some information is being lost - in the first case, because <code>a</code> isn't being truncated at zero, and in the second because the parameters have arbitrary lower bounds - I'm only concerned with achieving a good fit of the data, not with having positive a positive mean for the distribution. Given that mle estimators tend negative as <code>a</code> goes to zero, would it be better to use non-mle estimation? Does it make sense to have negative values of a if the data itself can't be negative?</p>
+
+<p>This question applies more generally as well, as I have been using the <code>truncdist</code> package to try to fit Weibull, Log Normal, and Logistic distributions as well (for the Weibull, of course, there is no need to truncate at zero).</p>
+
+<p>Finally, here's the data:</p>
+
+<pre><code>testData &lt;- c(3.2725167726, 0.1501345235, 1.5784128343, 1.218953218, 1.1895520932, 
+              2.659871271, 2.8200152609, 0.0497193249, 0.0430677458, 1.6035277181, 
+              0.2003910167, 0.4982836845, 0.9867184303, 3.4082793339, 1.6083770189, 
+              2.9140912221, 0.6486576911, 0.335227878, 0.5088426851, 2.0395797721, 
+              1.5216239237, 2.6116576364, 0.1081283479, 0.4791143698, 0.6388625172, 
+              0.261194346, 0.2300098384, 0.6421213993, 0.2671907741, 0.1388568942, 
+              0.479645736, 0.0726750815, 0.2058983462, 1.0936704833, 0.2874115077, 
+              0.1151566887, 0.0129750118, 0.152288794, 0.1508512023, 0.176000366, 
+              0.2499423442, 0.8463027325, 0.0456045486, 0.7689214668, 0.9332181529, 
+              0.0290242892, 0.0441181842, 0.0759601229, 0.0767983979, 0.1348839304
+)
+</code></pre>
+"

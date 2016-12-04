@@ -1,0 +1,612 @@
+"V1","V2","V3","V4"
+"0.566946709513841","0.641688947919748"," 55232","<p>I am trying to fit a finite mixture model to a dependent variable which is bounded (practically) between -0.594 and 1 (theoretically, the latent variable is bounded between -Inf - 1). The data are also bimodal, with a large number of values at '1'. The objective of the analysis is prediction of the dependent variable.</p>
+
+<p>My current approach has been to fit a mixture of normal distributions using the <code>flexmix</code> package in R, but I'd really like to account for the bounded nature of the data, as a recent study found this to be important (I also choose k=3 components based on this study). Using <code>flexmix</code> for truncated data appears non-trivial, as suggested <a href=""http://r.789695.n4.nabble.com/model-based-clustering-with-flexmix-td908418.html"" rel=""nofollow"">here</a>.</p>
+
+<p>Is there an R package that will permit mixture models with bounded data? I've noticed that actually predicted values do not seem to fall outside the bounded range; i.e. predicted values are not in practice greater than 1. Is this just a fluke of my data, or is it a feature of the methods I've used? Is the bounding even a problem in this context?</p>
+
+<p>As an alternative, I've tried transforming the data by simply taking 1-the dependent variable, thereby giving me a (zero-inflated) variable bounded by 0 and Inf which I have tried to model as a mixture of zero-inflated poisson models but I get the error:    </p>
+
+<pre><code>Error in FLXfit(model = model, concomitant = concomitant, control = control,  
+: 1 Log-    likelihood: NaN
+</code></pre>
+
+<p>Is it possible to model non-integers with the poisson family in this context? Any suggestions or thoughts would be greatly appreciated, I'm very new to mixture modelling and indeed GLMs etc.</p>
+
+<p>Here's some simulated data: <a href=""https://dl.dropbox.com/u/65336009/mydata.csv"" rel=""nofollow"">https://dl.dropbox.com/u/65336009/mydata.csv</a></p>
+
+<p>Here's my code:</p>
+
+<pre><code>require(flexmix)
+require(ggplot2)
+mydata &lt;- data.frame(read.csv(""mydata.csv"", head=T))
+attach(mydata)
+
+#Plot of y var
+summary(y)
+ggplot(mydata, aes(y)) + geom_histogram(binwidth = .1)
+
+#Simplified example of my current 'best' approach####
+m1 &lt;- flexmix(y ~ x1 + x2 + x3,
+              data = mydata,
+              k = 3)
+
+#Predict cluster membership
+clusters &lt;- data.frame(clusters(m1, newdata = mydata))
+
+#Predict y
+a &lt;- data.frame(predict(m1, newdata = mydata))
+
+#Select prediction based on predicted cluster membership
+mydata$flexmix.norm &lt;- ifelse(clusters[,1]==1, a[,1],
+                                   ifelse(clusters[,1] == 2,
+                                          a[,2], a[,3]))
+    print(max(mydata$flexmix.norm))
+
+#Plot predicted values
+ggplot(mydata, aes(flexmix.norm)) + geom_histogram(binwidth = .1)
+
+#Maybe it's more natural to model as 1 - y, which is bounded (0,Inf) ####
+y.d &lt;- 1 - y
+ggplot(mydata, aes(y.d)) + geom_histogram(binwidth = .1)
+
+#Error here ***
+m2 &lt;- flexmix(y.d ~ x1 + x2 + x3,
+              data = mydata,
+              k = 3,
+              model=FLXMRziglm(family=""poisson""))
+rm2 = refit(m2)
+
+#Predict cluster membership
+clusters &lt;- NULL
+clusters &lt;- data.frame(clusters(m2, newdata = mydata))
+
+#Predict y (note back on original scale of y)
+b &lt;- 1 - data.frame(predict(m2, newdata = mydata))
+
+#Select prediction based on predicted cluster membership
+preds$flexmix.pois &lt;- ifelse(clusters[,1]==1, b[,1],
+                              ifelse(clusters[,1] == 2,
+                                     b[,2], b[,3]))
+
+ggplot(mydata, aes(flexmix.pois)) + geom_histogram(binwidth = .1)
+</code></pre>
+
+<p>Thanks</p>
+"
+"0.433012701892219","0.420084025208403"," 66728","<p>I'm trying to write my own code for cluster-robust (AKA panel-robust, AKA heteroskedasticity and serial-correlation-consistent) standard errors, so that I can make a couple of small extensions.  But I can't get my results to match Stata's (in which this procedure is routine), so I am probably missing some detail.  Would appreciate pointers on the code, below.</p>
+
+<p>The model is 
+$$
+y_{ig} = \alpha_g + X'_{ig}\beta + \epsilon_{ig}
+$$
+The groupwise mean is the subtracted from every term above, getting rid of the $\alpha$, and leaving de-meaned group-varying variables:
+$$
+ydm_{ig} = Xdm'_{ig}\beta + \epsilon dm_{ig}
+$$</p>
+
+<p>The variance of $\beta$ is estimated as </p>
+
+<p>$$
+\left(\displaystyle\sum_G Xdm_g'Xdm_g\right)^{-1} \displaystyle\sum_G Xdm_g' \epsilon dm_g \epsilon dm_g' Xdm_g \left(\displaystyle\sum_G Xdm_g'Xdm_g\right)^{-1}
+$$</p>
+
+<p>Standard errors are the square root of the diagonal of this matrix, inflated by $G/(G-1) \times (N-1)/(N-K)$.</p>
+
+<p>This is all textbook econometrics.  Standard in stata, and code exists to do it in R.  (<a href=""http://people.su.se/~ma/clustering.pdf%E2%80%8E"" rel=""nofollow"">this</a>, for example)</p>
+
+<p>I want my code to not rely on <code>plm</code>, <code>lmtest</code> or <code>sandwich</code>.</p>
+
+<p>The following script is supposed to implement the math above, simulating a panel dataset in which outcomes are autocorrelated and groups have different forms of heteroskedasticity.  It gives the right point estimates but the standard errors are bigger than those given by stata:</p>
+
+<pre><code>rm(list=ls()) 
+set.seed(999)
+N = 1000
+G = 200
+x = rnorm(N)
+z = rexp(N)
+obs = N/G
+fe = data.frame(ID=1:G,fe = rnorm(G)+5)
+fe = data.frame(ID = rep(fe$ID,obs),fe = rep(fe$fe,obs))
+t = rep(1,G); for (i in 2:obs) {t = c(t,rep(i,G))}
+data = data.frame(y=x+z+fe$fe+x*rnorm(N,mean=0,sd=fe$fe*runif(N)), ID=fe$ID,x,z,t)
+write.csv(data,""testdata.csv"")
+
+demean = function(var,ID){
+    dat = data.frame(var,ID)
+    library(doBy)
+    means = summaryBy(var~ID,data=dat,fun=mean)
+    d = data.frame(var,ID)
+    a = merge(d,means,by=""ID"")
+    adm = a[,2]-a[,3]
+    adm
+    }
+xdm = demean(data$x,data$ID)
+ydm = demean(data$y,data$ID)
+zdm = demean(data$z,data$ID)
+
+mdm = lm(ydm~xdm+zdm-1)
+summary(mdm)
+
+e = mdm$resid
+
+lpm = cbind(xdm,zdm)
+
+bread = matrix(0,ncol(lpm),ncol(lpm))
+tofu = matrix(0,ncol(lpm),ncol(lpm))
+K = mdm$rank
+    for (i in 1:G){
+    	X = lpm[data$ID==unique(data$ID)[i],]
+    bread = t(X)%*%X +bread
+
+    r = e[data$ID==unique(data$ID)[i]]
+    tofu = t(X) %*% r %*% t(r) %*% X + tofu
+    }
+bread = solve(bread)
+vcv = bread%*%tofu%*%bread
+se = G/(G-1)*(N-1)/(N-K)*sqrt(diag(vcv))
+summary(mdm)
+se
+</code></pre>
+
+<p>Using that <code>testdata.csv</code> file, I can compare to Stata:</p>
+
+<pre><code>clear all
+insheet using ""testdata.csv""
+xtset id t
+xtreg y x z,fe cluster(id)
+</code></pre>
+
+<p>My R-code:</p>
+
+<pre><code>1&gt; se
+       xdm        zdm 
+0.16946120 0.08793485 
+</code></pre>
+
+<p>Stata's output:</p>
+
+<pre><code>             |               Robust
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+           x |   1.223739   .1992449     6.14   0.000     .8308371    1.616642
+           z |    .876592   .0960943     9.12   0.000     .6870981    1.066086
+</code></pre>
+
+<p>Mine are consistently more optimistic than Stata's.  Anybody help me figure out why?  I feel like it is probably some small bug, but I can't pinpoint where.</p>
+
+<p><strong>EDIT</strong>:  The answer to the question is <a href=""http://www.stata.com/support/faqs/statistics/intercept-in-fixed-effects-model/"" rel=""nofollow"">here</a> and <a href=""http://www.stata.com/manuals13/xtxtreg.pdf"" rel=""nofollow"">here</a>.  Stata doesn't run a textbook ``within'' estimator, rather it adds the averages back into each variable, which is what allows for the estimation of a constant term (which has the interpretation of the mean of the fixed effects, and which allows for prediction.  When I alter my code to copy those procedures, my SE's are equivalent up to the 3rd or 4th decimal point.</p>
+"
+"0.790569415042095","0.76696498884737","101077","<p>I have very big data and low number of observations. So I decided to use PCA to reduce dimension of the data. The following is R example (just an dummy example - for workout):</p>
+
+<pre><code>xmat &lt;- matrix(sample(-1:1, 100000, replace = TRUE), ncol = 1000)
+colnames(xmat) &lt;- paste (""V"", 1:1000, sep ="""")
+rownames(xmat) &lt;- paste(""S"", 1:100, sep = """")
+</code></pre>
+
+<p>In this example dataset I have <code>1000</code> variables and <code>100</code> observations / subjects. </p>
+
+<p>I am doing PCA. Lets say.</p>
+
+<pre><code>out &lt;- princomp(xmat)
+Error in princomp.default(xmat) : 
+  'princomp' can only be used with more units than variables
+</code></pre>
+
+<p>Q1: is there a way to reduce dimensionality with <code>p &gt; n</code> ? I would like to use all variables information as opposed to representative ones. Without having proper solution I went anyway to use cluster analysis of variables to categorize the variables and pick the randomly from the clusters. </p>
+
+<p>To create a list of representative variables I tried to cluster the variables.</p>
+
+<pre><code># cluster variables 
+d &lt;- dist(t(xmat), method = ""euclidean"") # distance matrix
+fit &lt;- hclust(d, method=""ward"")
+plot(fit)
+groups = cutree(fit,40)
+groupd &lt;- data.frame(var = names(groups), group = groups)
+</code></pre>
+
+<p>What I am thinking is randomly pick one variable from each group above and use this in PCA. Assume that I have the following y variable.</p>
+
+<pre><code>set.seed(1234)
+yvar.d &lt;- data.frame (subject = c(paste(""S"", 1:100, sep = """")), yvar = rnorm (100, 50,10))
+</code></pre>
+
+<p><strong>Here is my question</strong>: </p>
+
+<ol>
+<li>What could be statistical challenge of using cluster analysis ?</li>
+<li><p>Can we use PCA scores in predictions of y. How ? Just multiple
+regression or we can introduce something such as variance explained
+by each components in the model ?</p>
+
+<p><strong>Edits:</strong></p>
+
+<p>Based on the discussions (see the comments below), I am using different function to do PC analysis.</p></li>
+</ol>
+
+<p>""The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. The print method for these objects prints the results in a nice format and the plot method produces a scree plot."" - from function help. </p>
+
+<pre><code>     out1 &lt;- prcomp(xmat)
+      out1$x[1:3,1:3]
+                      PC1        PC2       PC3
+S1  2.940862 -2.7379835  6.527103
+S2 -1.081124 -0.5294796 -0.276591
+S3  2.375710  0.4505205 -4.236289
+
+   out1$sdev
+ screeplot(out1,npcs=30, type=""lines"",col=3) # 30 PCA plotted
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/gMJys.jpg"" alt=""enter image description here""></p>
+
+<pre><code> out1$rotation
+</code></pre>
+
+<p>I also come to see an example in SO <a href=""http://stackoverflow.com/questions/10876040/principal-component-analysis-in-r"">how to use PCA in prediction</a>. Here is my workout: </p>
+
+<pre><code>## take our training and test sets
+YY &lt;-  yvar.d$yvar 
+prop &lt;- 0.5
+train = sample(1:length(YY), round(length(YY)*prop,0))
+
+
+# data for testing model purpose 
+testid = setdiff (1:length(YY), train)
+YY1 &lt;- YY
+newXPCA &lt;- data.frame(out1$x)
+test.data &lt;- data.frame (y = YY1[testid],newXPCA[testid,]) 
+test.data[1:10,1:10]
+
+train.data &lt;- data.frame(y= YY1[train],newXPCA [train,])
+train.data[1:10,1:10]
+
+## fit the PCA
+pc &lt;- prcomp(train.data[, -1])
+trainwPC &lt;- data.frame (y = train.data$y, pc$x)
+
+model1 &lt;- lm(y ~ ., data = trainwPC)
+
+#predict() method for class ""prcomp""
+test.p &lt;- predict(pc, newdata = test.data)
+pred &lt;- predict(model1, newdata = data.frame(test.p), type = ""response"")
+pred 
+Warning message:
+In predict.lm(model1, newdata = data.frame(test.p), type = ""response"") :
+  prediction from a rank-deficient fit may be misleading
+</code></pre>
+
+<p>I just adopted this script from the SO link, I am not sure about accuracy of the script. </p>
+
+<p>I still have technical questions remaining such as clarification to <strong>remaining question 2</strong> above: </p>
+
+<p>(1) If I want to split data into training and test set by sampling <code>50% of data</code> (as show in the script). Should I do just multiple regression with y and the <code>out1$x</code> ? how many components to use ? is variance of each component play role in good model selection such as avoid over-fitting ? How ? </p>
+
+<p>(2) Clustering (using x clusters) vs PCA analysis (with subset of x components vs all ) what would be statistically favorite for predictions in the situations where have <code>p &gt; n</code> ? As I said to my mind the PCA analysis can use all information but I do not know if there is downside of such information such as <code>over-fitting</code> and ""error consumption"". </p>
+
+<p>Worked example appreciated.   </p>
+"
+"0.559016994374947","0.54232614454664","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.353553390593274","0.342997170285018","164333","<p>I have been looking at some tutorials and articles and couldn't get a scenario where two variables are in different scales and used in modeling.</p>
+
+<p>So, firstly lets assume I have one metric of numeric type, other in percentages, and other in decimals. </p>
+
+<ol>
+<li>If I want to use those variables in a regression model for
+prediction then do I need to do some standardization before fitting a<br>
+model to the variables? If so how do we it in R or Python?</li>
+<li>Moreover, if I want to use these features in k-means
+clustering, do I need to follow the same steps as mentioned above?</li>
+</ol>
+"
+"0.25","0.242535625036333","189135","<p>I have some data that I want to get the important variables from. I want to use random forest to get this information. The problem is that the data does not have labels. From what I understand random forest is a supervised learning algorithm, but one can generate synthetic data to help with the prediction.</p>
+
+<p>Can random forest look for an underlying pattern in the data? If so how would I do this? Essentially can I get the important variables from this unlabeled data and how?</p>
+
+<p>How does this compare to clustering?</p>
+
+<p>Some source:</p>
+
+<p><a href=""https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#unsup"" rel=""nofollow"">https://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm#unsup</a></p>
+"
+"0.5","0.485071250072666","190284","<p>I am using the <code>mice</code> package in R to create multivariate imputed datasets. For this, I am using <code>mice(data, meth= ""rf"")</code>function. I want all the variables to use this method for prediction because there are many non-linear relationships and hypothetical interactions between several of the variables. <a href=""http://aje.oxfordjournals.org/content/early/2014/01/12/aje.kwt312.full"" rel=""nofollow"">http://aje.oxfordjournals.org/content/early/2014/01/12/aje.kwt312.full</a></p>
+
+<p>My dataset is also a hierarchical dataset with clustering. Is there a way to take this clustering into account when specifying the prediction matrix for the <code>mice</code> function? I am aware that if you use other methods like <code>meth = 2l.pan</code> or <code>meth =2l.norm</code>, you can take clustering into account, but I want to avoid these methods because I think the non-linear relationships trump the homogeneity introduced by the cluster effect. </p>
+
+<p>If there is a way to use the random forest method with MICE and take clustering into account, could you also provide some mock code for specifying the prediction matrix?</p>
+"
+"0.433012701892219","0.420084025208403","215961","<p>I have a set of distributions corresponding to predictions for how each of hundreds of players will perform.  I am looking to identify the distinct distributions of players.  In other words, I'm looking to identify the <a href=""https://stats.stackexchange.com/questions/57921/how-to-prove-the-number-of-distinct-distributions-in-a-group-of-distributions"">distinct distributions in a group of distributions</a>.</p>
+
+<p>I know <code>Mclust()</code> can perform clustering on a vector, e.g.:</p>
+
+<pre><code>library(""mclust"")
+
+mydata &lt;- c(1,1,2,2,3,3,5,7,8,9,10)
+
+summary(Mclust(mydata), parameters=TRUE)
+Mclust(mydata)$classification
+</code></pre>
+
+<p>However, my data are a series of vectors (i.e., distributions)---one vector for each player, e.g.:</p>
+
+<pre><code>set.seed(12345)
+playerA &lt;- rnorm(10, mean=1, sd=.1)
+playerB &lt;- rnorm(100, mean=1, sd=1)
+playerC &lt;- rnorm(10, mean=2, sd=1)
+playerD &lt;- rnorm(5, mean=2, sd=2)
+playerE &lt;- rnorm(2, mean=3, sd=1)
+playerF &lt;- rnorm(20, mean=5, sd=1)
+playerG &lt;- rnorm(100, mean=7, sd=.5)
+playerH &lt;- rnorm(10, mean=8, sd=2)
+playerI &lt;- rnorm(5, mean=9, sd=1)
+playerJ &lt;- rnorm(10, mean=10, sd=.5)
+</code></pre>
+
+<p>How can I perform clustering to identify the distinct clusters of players based on their distributions, focusing on differences in their means, rather than their variances.  I don't want to just cluster the mean values, though, because I want to take into account the variances to know whether their means are in the same or in a different cluster (e.g., high variability in two players' distributions may indicate that two players with different means are in the same cluster).  Ideally, I'd like two players with the same mean and different variability distributions to be in the same cluster.  Is there a way to do this using the <code>mclust</code> or another package in R?  I've considered doing pairwise t-tests, but this seems that it would be heavily dependent on the sample size in each distribution (which I'd rather it not be <em>too</em> dependent on sample size, if possible).  I've also considered comparisons based on effect size (Cohen's d).  I'm not sure what other options there are (e.g., Tukey's HSD, hierarchical clustering, etc.)</p>
+"
+"0.25","0.242535625036333","226226","<p>I'm new to predictive analytics. I have data variables which are highly skewed, I want to normalize those for better predictions. I've used normalization,standardization. but they gave same data distributions as before. how can I bring my data to Normality,and what techniques should I use.
+Is normalizing data variables necessary in every case (clustering, regression, classification) ? 
+please help with an example if possible.
+Thank you.</p>
+"
+"0.433012701892219","0.420084025208403","232590","<p>I have a number of groups with monthly data from 2010 to 2016. It's over 80 groups. I succesfully ran an ARIMA model with the montly data but with the sales data summed up (without groups). </p>
+
+<p>Now I'd like to compare the performance with a per group model that runs an ARIMA model for each group and maybe later consider another type of grouping (geographical location, clustering, etc.)</p>
+
+<p>I ran my original model with the following code:</p>
+
+<pre><code>        Datos &lt;- read.csv(""C:/Users/borja.sanz/Desktop/Borja/Forecasting/V`enter code here`entas/Datos para Forecast.csv"")
+        options(scipen=999)
+        library(lubridate)
+        Datos$Fecha = dmy(Datos$Fecha)
+
+        #Declare time series
+        tsDatos&lt;-ts(Datos$VentaLocal,start = c(2010,1),frequency = 12)
+        plot(tsDatos)
+        library(forecast)
+        library(dplyr)
+
+        #AutoArima Model
+        m_aa = auto.arima(tsDatos)
+        f_aa = forecast(m_aa, h=36)
+        plot(f_aa)
+
+#Create the forecasts along with the lower and upper bound
+    forecast_df = data.frame(prediction=f_aa$mean,
+                             abajo=f_aa$lower[,2],
+                             arriba=f_aa$upper[,2],
+                             date=last_date + seq(1/12, 3, by=1/12))
+    forecast_df
+</code></pre>
+
+<p>This is how my data looks like:</p>
+
+<pre><code>       Group    Year    Month   Date    Sales
+1   2010    1   1/01/2010   134536.625
+1   2010    2   1/02/2010   117506.625
+1   2010    3   1/03/2010   132153.75
+1   2010    4   1/04/2010   129723.125
+1   2010    5   1/05/2010   135834.5
+1   2010    6   1/06/2010   130115.375
+1   2010    7   1/07/2010   144716
+1   2010    8   1/08/2010   137195
+1   2010    9   1/09/2010   137522.875
+1   2010    10  1/10/2010   187063
+1   2010    11  1/11/2010   162002.75
+1   2010    12  1/12/2010   262297.375
+1   2011    1   1/01/2011   177291.25
+1   2011    2   1/02/2011   154816
+1   2011    3   1/03/2011   171231.125
+1   2011    4   1/04/2011   217717
+1   2011    5   1/05/2011   178767.75
+1   2011    6   1/06/2011   180817.75
+1   2011    7   1/07/2011   216927.125
+1   2011    8   1/08/2011   204509.125
+1   2011    9   1/09/2011   199449.5
+1   2011    10  1/10/2011   243812.125
+1   2011    11  1/11/2011   232135.875
+1   2011    12  1/12/2011   330854.75
+1   2012    1   1/01/2012   217123.875
+1   2012    2   1/02/2012   200558
+1   2012    3   1/03/2012   215689.5
+1   2012    4   1/04/2012   245500.25
+1   2012    5   1/05/2012   219687.25
+1   2012    6   1/06/2012   243345.625
+1   2012    7   1/07/2012   249042
+1   2012    8   1/08/2012   198443.75
+1   2012    9   1/09/2012   209157.375
+1   2012    10  1/10/2012   234089
+1   2012    11  1/11/2012   237531
+1   2012    12  1/12/2012   365301.25
+1   2013    1   1/01/2013   211129.375
+1   2013    2   1/02/2013   185249.625
+1   2013    3   1/03/2013   256565.625
+1   2013    4   1/04/2013   183549.5
+1   2013    5   1/05/2013   189698.25
+1   2013    6   1/06/2013   207955.625
+1   2013    7   1/07/2013   230764.125
+1   2013    8   1/08/2013   212551.625
+1   2013    9   1/09/2013   201329.5
+1   2013    10  1/10/2013   242745.125
+1   2013    11  1/11/2013   261893.375
+1   2013    12  1/12/2013   418313.25
+1   2014    1   1/01/2014   205532.75
+1   2014    2   1/02/2014   170487.75
+1   2014    3   1/03/2014   196077
+1   2014    4   1/04/2014   221760.875
+1   2014    5   1/05/2014   198185
+1   2014    6   1/06/2014   204919.25
+1   2014    7   1/07/2014   218972.75
+1   2014    8   1/08/2014   221439.875
+1   2014    9   1/09/2014   195888.375
+1   2014    10  1/10/2014   234595.75
+1   2014    11  1/11/2014   259712.875
+1   2014    12  1/12/2014   355691.875
+1   2015    1   1/01/2015   205156.25
+1   2015    2   1/02/2015   185358.875
+1   2015    3   1/03/2015   218555.75
+1   2015    4   1/04/2015   204233.625
+1   2015    5   1/05/2015   212160.625
+1   2015    6   1/06/2015   207217.25
+1   2015    7   1/07/2015   225723.75
+1   2015    8   1/08/2015   205902.625
+1   2015    9   1/09/2015   196940.625
+1   2015    10  1/10/2015   250916
+1   2015    11  1/11/2015   236835.125
+1   2015    12  1/12/2015   358327.625
+2   2010    1   1/01/2010   227175.875
+2   2010    2   1/02/2010   205042
+2   2010    3   1/03/2010   239206.375
+2   2010    4   1/04/2010   212059.875
+2   2010    5   1/05/2010   232789
+2   2010    6   1/06/2010   247876.125
+2   2010    7   1/07/2010   278557
+2   2010    8   1/08/2010   270410.125
+2   2010    9   1/09/2010   251060.375
+2   2010    10  1/10/2010   302738.625
+2   2010    11  1/11/2010   266869.75
+2   2010    12  1/12/2010   272978.75
+2   2011    1   1/01/2011   238614.5
+2   2011    2   1/02/2011   224240.375
+2   2011    3   1/03/2011   245457.375
+2   2011    4   1/04/2011   238583.5
+2   2011    5   1/05/2011   252392.75
+2   2011    6   1/06/2011   256749.5
+2   2011    7   1/07/2011   264736.125
+2   2011    8   1/08/2011   256414
+2   2011    9   1/09/2011   242335.125
+2   2011    10  1/10/2011   305224.75
+2   2011    11  1/11/2011   289199.875
+2   2011    12  1/12/2011   281807.75
+2   2012    1   1/01/2012   244886.125
+2   2012    2   1/02/2012   232062.375
+2   2012    3   1/03/2012   264991.75
+2   2012    4   1/04/2012   232750.5
+2   2012    5   1/05/2012   248498.375
+2   2012    6   1/06/2012   264290.875
+2   2012    7   1/07/2012   272689.75
+2   2012    8   1/08/2012   260441.25
+2   2012    9   1/09/2012   251852.375
+2   2012    10  1/10/2012   305929.625
+2   2012    11  1/11/2012   276711.625
+2   2012    12  1/12/2012   278672.875
+2   2013    1   1/01/2013   242613.875
+2   2013    2   1/02/2013   227575.75
+2   2013    3   1/03/2013   250318.875
+2   2013    4   1/04/2013   250150.375
+2   2013    5   1/05/2013   258467.25
+2   2013    6   1/06/2013   261359.25
+2   2013    7   1/07/2013   279113.75
+2   2013    8   1/08/2013   258699
+2   2013    9   1/09/2013   244841.375
+2   2013    10  1/10/2013   308197.25
+2   2013    11  1/11/2013   284195.5
+2   2013    12  1/12/2013   287718.75
+2   2014    1   1/01/2014   239510.375
+2   2014    2   1/02/2014   216338.125
+2   2014    3   1/03/2014   245626.75
+2   2014    4   1/04/2014   230619.875
+2   2014    5   1/05/2014   251758.875
+2   2014    6   1/06/2014   254946.75
+2   2014    7   1/07/2014   276268.75
+2   2014    8   1/08/2014   266151.75
+2   2014    9   1/09/2014   245859.375
+2   2014    10  1/10/2014   317797.5
+2   2014    11  1/11/2014   283786.625
+2   2014    12  1/12/2014   289767.875
+2   2015    1   1/01/2015   244008
+2   2015    2   1/02/2015   228638
+2   2015    3   1/03/2015   260056
+2   2015    4   1/04/2015   232560.875
+2   2015    5   1/05/2015   252642.125
+2   2015    6   1/06/2015   249018.5
+2   2015    7   1/07/2015   278113.125
+2   2015    8   1/08/2015   255851
+2   2015    9   1/09/2015   263046.625
+2   2015    10  1/10/2015   344240.75
+2   2015    11  1/11/2015   295486.125
+2   2015    12  1/12/2015   293499.375
+</code></pre>
+
+<p>I only included two groups in the sample. I would like to use a function like one of the apply (tapply, lapply, sapply, etc.) that can run an AUTO.ARIMA model per group. Then I would like to obtain the forecast for each group for x number of months and also if I could visualize the model coefficients.</p>
+"

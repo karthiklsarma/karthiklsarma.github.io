@@ -1,0 +1,11 @@
+"V1","V2","V3","V4"
+"NaN","NaN","157396","<p>I am curious if R or any other open source code can deal with forecasting changes in water elevation based on a predicted/forecasted value of rain.</p>
+
+<p>I have a ton of data that shows water elevations (height ft) measured every hour for almost 30 years.  I would like to quantify the relationship between the volume of rainfall received (inches) and change in water elevation (river/lake).  In the end, creating a distribution curve that shows the relationship and expected outcome of change in water elevation based on  rainfall volumes.</p>
+
+<p>I am only interested in a statistical approach based on data trends over time at this point.  I understand when dealing with changes to water body elevations, there are numerous other factors to consider. </p>
+
+<p>Any suggestions on available open source code or references to similar would be appreciated.</p>
+
+<p>Martin</p>
+"

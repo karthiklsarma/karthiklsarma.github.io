@@ -1,0 +1,9 @@
+time-series=3
+aggregation=2
+spatial=2multivariate-analysis=1
+distance=1
+correlation=1
+repeated-measures=1
+data-visualization=1
+binomial=1
+distributions=1

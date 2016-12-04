@@ -1,0 +1,8 @@
+bonferroni=5
+anova=5
+statistical-significance=2
+repeated-measures=2
+logistic=1
+poisson=1
+dataframe=1
+lmer=1

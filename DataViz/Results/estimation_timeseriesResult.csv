@@ -1,0 +1,252 @@
+"V1","V2","V3","V4"
+"0.707106781186547","0.707106781186547"," 71731","<p>I am using <a href=""http://mcmc-jags.sourceforge.net/"" rel=""nofollow"">JAGS</a> in R to construct a probabilistic graph model and estimate the corresponding parameters. The models is described as follows:</p>
+
+<pre><code>model
+{
+
+   for (i in 1:N)
+
+   {
+
+       # sample the hidden variable 
+
+       z[i]  ~ dbeta(alpha+0.01,beta)T(0,0.9999)
+
+       # determined relation 
+       lambda[i] &lt;- z[i] * mu
+       # conditional data likelihood 
+       X[i] ~ dpois(lambda[i])
+   }
+
+       # prior probability 
+       alpha ~ dgamma(0.1,0.0001)
+       beta ~ dgamma(0.1,0.0001)
+       mu ~ dgamma(0.1,0.0001)
+
+}
+</code></pre>
+
+<p>where <code>X[1:N]</code> is the training samples, which are generated according to a Poisson distribution. The Poisson mean is also a random variable, which is denoted as <code>mu*z</code>. <code>z</code> is a hidden variable following a Beta distribution parametrized by variables <code>alpha</code> and <code>beta</code>. The parameters of this probabilistic model are <code>mu</code>, <code>alpha</code> and <code>beta</code>, and they follow Gamma distribution. I tested this model on a simulated set of data samples:</p>
+
+<pre><code>library('rjags')
+
+N=5000
+
+lambda=rbeta(N,0.2,0.3)*15 #alpha = 0.2,beta = 0.3 and mu = 15 
+
+X=rpois(N,lambda)
+
+jags = jags.model('poissontrunc.bugs',data = list('X' = X, 'N' = N),
+                   n.chains = 4,
+                   n.adapt = 1000)
+
+mcmc.samples &lt;- coda.samples(jags,
+c('alpha', 'beta', 'mu'),
+5000)
+
+summary(mcmc.samples)  
+</code></pre>
+
+<p>The MCMC-based parameter estimation results are as follows:</p>
+
+<p>Empirical mean and standard deviation for each variable, plus standard error of the mean:</p>
+
+<pre><code>         Mean      SD     Naive SE   Time-series SE
+
+alpha  951.13,    35.0186,   0.247619,    9.72810   
+beta  1013.24,   26.4553,   0.187068,     7.13232
+mu      12.47,   0.3134,    0.002216,     0.08993
+</code></pre>
+
+<p>The sampling results give the right estimate of the true <code>mu</code> (12.47 vs. 15). However, for <code>alpha</code> and <code>beta</code>, it seems that the estimated values are severely biased (951.13 vs 0.2, 1013.24 vs 0.3). Even considering the variance of the sampling results, estimates for <code>alpha</code> and <code>beta</code> are still far from satisfaction. Is this a problem caused by any potential improper setting of the MCMC sampling, or perhaps MCMC is blocked within the local optimum region of a multi-modal conditional distribution in this case ?  </p>
+"
+"0.353553390593274","0.353553390593274"," 77617","<p>I have done a cross-sectional regression of time-series average returns on estimated Betas (over the same time horizon) to determine average premiums. So far so good. But I was told that the standard t-statistics can be biased, due to the fact that betas are estimated.</p>
+
+<p>There is a solution by:</p>
+
+<blockquote>
+  <p>Shanken (1992) - On the estimation of beta-pricing models [Review of Financial Studies].  </p>
+</blockquote>
+
+<p>It does some small adjustments to the formula of the estimated covariance matrix. However I don't understand how to implement this in R. The paper is also very mathematical, but the solutions are supposed to be easy if you look e.g. at Cochrane Asset Pricing, chap 12 or <a href=""http://www.uv.es/qf/06006.pdf"" rel=""nofollow"">http://www.uv.es/qf/06006.pdf</a>. I cannot find anything close to that in the original paper though. I think the notation is very different.</p>
+
+<p>Does anyone know how to do it, or has done it already? I needed the adjusted formula in my context (in-sample regression), or even better the R-code.</p>
+"
+"0.790569415042095","0.790569415042095","124707","<p>Sorry for the rather long introduction, but since I was (legitimately) critizised for not explaining my cause and questions enough, I will do so now. </p>
+
+<p>I would like to conduct a <strong><em>(price)-forecast</em></strong> based on a multiple time series VAR-Model (vector autoregressive Model) with multiple endogeneous variables and two exogeneous. Since I am not that skillfull with regards to neither statistics nor R I want to keep is as simple as possible (Trend forecast for 3 months is sufficient).</p>
+
+<p>I am using the ""vars"" - Package, <a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a> and all in all those four functions: decompose(), VARselect(), VAR(), and predict()</p>
+
+<p>I have 1 dependent time series (y, in my model referred to as ""RH"", or ""raRH""), 4-5 endogeneous predictors and 2 exogeneous predictors.
+All timeseries have a length of 1-91 observations and are monthly data without any gaps.</p>
+
+<p><strong><em>Data description:</em></strong>
+My y (dependent var) are sawlog prices, sawlogs are raw material for plenty of follow up products.<br> My endogeneous (since they all kind of correlate with each other and y) are follow up product-prices or further elaborated sawlogs. <br>My 2 exogeneous predictors are economic indicators similar to BIP etc.</p>
+
+<p>All the time series are <em>non-stationary</em>, since I have read that you should use stationary data in order to gain a valid VAR-Model, I used the decompose() - function in R to split each variable into trend, season and the randwom walk. </p>
+
+<pre><code> raKVH&lt;-decompose(KVH)$random
+raKVH&lt;-na.omit(raKVH)
+raSNS&lt;-decompose(SNP_S)$random
+raSNS&lt;-na.omit(raSNS)
+</code></pre>
+
+<p>... and so on for every variable.<br><br>
+What I'm interested now in order to do some forecasting are predictions of the randwom walk (right?!). Anyways, I found out that all my data is first-order-integrated, since taking the logarithm makes them all stationary timeseries (ts), tested via Dickey-Fuller-Test. </p>
+
+<p>The picture also provides data example, first picture shows the raw-data, <img src=""http://i.stack.imgur.com/BcMOT.png"" alt=""enter image description here""></p>
+
+<p>second picture the random walks gained by decomposing$random the raw-data. 
+<img src=""http://i.stack.imgur.com/96yii.png"" alt=""enter image description here""></p>
+
+<p>I used the command VARselect that automatically computes the optimal lag for my model, whereas tsall is my time-series matrix containing all the timeseries mentioned above.</p>
+
+<pre><code>VARselect(tsall)
+</code></pre>
+
+<p>proceeding now with the estimation of the model VAR(p=number of lags given by VARselect), <strong><em>I encountered the following problem</em></strong>: how should I use the attribute ""type"" within the VAR-function? What does ""trend"",""none"", ""const"", ""both"" exactly mean? Since I have stationary data, there won't be any trend right? How can I check if there is a constant? Since the default value is ""const"", I chose to go with that.
+<br><br>
+<strong><em>The main question I have is the following:</em></strong><br>
+How do I get ""real"" forecasts out of the prediction of the randwom walks anyways? If I want to predict the price of yt+3, I need more than the prediction of the random walks here, I need ""real figures"" like in graphic 1. How can I ""add back"" trend and season?</p>
+
+<p>Third picture shows the Forecast of the random walk of my ""target Variable"" Y, but what's the next step here? 
+<img src=""http://i.stack.imgur.com/ZtInk.png"" alt=""enter image description here""></p>
+
+<p>Thank you for any help, if my questions/introduction are insufficient, please let me know. I'll try to explain myself better then.</p>
+"
+"0.790569415042095","0.790569415042095","157606","<p>Today I have tried to play a little with CausalImpact R-package <a href=""https://google.github.io/CausalImpact/CausalImpact.html"" rel=""nofollow"">https://google.github.io/CausalImpact/CausalImpact.html</a>
+(Brodersen et al. 2015) to explore the impact of some decissions in a sales data flow. </p>
+
+<p>The documentation of the package says that it estimates the impact given a response time series and a set of control of time series (i.e two or more series are needed to get an estimation of the causal impact effect) by estimating a Bayesian Structural time-series model.</p>
+
+<p>However I have used the package using only a single time-series (a single vector of data) and I have obtained an output (plot and model) that seems at prior reasonable. </p>
+
+<p>My question is, in this case, with only one time series, what kind of model is the package estimating. Are the results obtained reliable? Is the package also useful in this case where only one time series is used?</p>
+
+<p>The data and the plot are available <a href=""https://github.com/Joseperles/R-statistical-course"" rel=""nofollow"">here</a>.</p>
+
+<p>The code for obtaining the plot is:</p>
+
+<pre><code>pre.period&lt;-c(1,72) 
+post.period&lt;-c(73,length(salesdata)) 
+impact&lt;-CausalImpact(salesdata, pre.period, post.period, model.args = list(nseasons=12)) 
+plot(impact) 
+summary(impact)
+</code></pre>
+"
+"0.707106781186547","0.707106781186547","175813","<p>I want estimate distribution of fitted parameters using or maximum likelihood or Bayesian statistics.</p>
+
+<p>I make a simple example in R to show my ""problem"".</p>
+
+<p>In ML, I get a standard error for mean and sd estimation (based on fitdistr [package MASS] or optim); in Bayesian statistics (MCMC and package coda for analysis), I get a ""standard deviation"" for both mean and sd which are similar to the standard error estimated using ML. I get also time-series SE (or batch SE) which are much more small than the corresponding ""standard deviation"".</p>
+
+<p>I am a little bit lost.
+1/ Can the SE obtained in ML be used to build a confidence interval (+/- 2 SE) for both estimated parameters (mean and sd) of the Gaussian distribution? (based on my knowledge, estimates obtained my ML are asymptotically normal distributed).
+2/ Based on the similarity of SE in ML and SD in Bayesian stats, I suspect that I should use the SD from Bayesian stats to build a confidence interval... but what represent the SE ?</p>
+
+<p>Thanks a lot. Here is the R code. You will need libraries MASS and HelpersMG.</p>
+
+<pre><code># Generate 100 values from Gaussian distribution
+val=rnorm(100, mean=20, sd=5)
+
+###################################
+# Use library MASS to estimate parameters from this observed distribution
+library(MASS)
+(r&lt;-fitdistr(val, ""normal""))
+
+# Use optim to do the same
+# Return -ln L of values in val in Gaussian distribution with mean and sd
+fitnorm&lt;-function(par, val) {
+  -sum(dnorm(val, par[""mean""], par[""sd""], log = TRUE))
+}
+
+# Initial values for search
+p&lt;-c(mean=20, sd=5)
+# fit the model
+result&lt;-optim(par=p, fn=fitnorm, val=val, method=""BFGS"", hessian=TRUE)
+# Inverse the hessian matrix to get SE for each parameters
+mathessian=result$hessian
+inversemathessian=solve(mathessian)
+res=sqrt(diag(inversemathessian))
+
+# results; similar to what was obtained with fitdistr
+data.frame(Mean=result$par, SE=res)
+
+###################################
+# Now using Bayesian
+library(""HelpersMG"")
+# generate priors
+parameters_mcmc &lt;- data.frame(Density=c('dunif', 'dunif'),
+                              Prior1=c(-100, 0), Prior2=c(100, 10), SDProp=c(0.2, 0.2),
+                              Min=c(-100, 0), Max=c(100, 10), Init=c(20, 5), stringsAsFactors = FALSE,
+                              row.names=c('mean', 'sd'))
+mcmc_run &lt;- MHalgoGen(n.iter=50000, parameters=parameters_mcmc, val=val,
+                      likelihood=fitnorm, n.chains=1, n.adapt=100, thin=1, trace=1)
+
+mcmcforcoda &lt;- as.mcmc(mcmc_run)
+# raftery.diag(mcmcforcoda)
+# heidel.diag(mcmcforcoda)
+
+###################################
+# comparisons of estimates between bayesian and ML
+summary(mcmcforcoda)$statistics
+    data.frame(Mean=result$par, SE=res)
+</code></pre>
+"
+"0.707106781186547","0.707106781186547","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"

@@ -1,0 +1,108 @@
+"V1","V2","V3","V4"
+"1","1","203354","<p>I have a data series which is continuous (there is data in between individual data points not captured by the series). There are many inflection points within the series and my goal is to find 5 most frequently occurring values. </p>
+
+<p>I am using R and had some success with:</p>
+
+<pre><code>&gt; w=table(DF.1)
+&gt; w[max(w)==w] 
+</code></pre>
+
+<p>Which output multiple instances of most commonly occurring values in the data series, but it does not output values which might be ""in-between"" data points in the time series. </p>
+
+<p>Could anyone point me in the right direction please.</p>
+
+<p>Thank you,</p>
+
+<p>Martin</p>
+
+<p>Edit #1:</p>
+
+<p>Example of what I mean:</p>
+
+<pre><code>     ff.1 ff.2
+[1,]    1    1
+[2,]    2    3
+[3,]    3    2
+[4,]    4    4
+[5,]    5    3
+[6,]    6    1
+</code></pre>
+
+<p>running: </p>
+
+<pre><code>&gt; w=table(ff)
+&gt; w[max(w)==w]
+</code></pre>
+
+<p>gets me 3 as the answer....</p>
+
+<p>However, if you graph this, with first column being the x value.. then 2 should be the most frequently occurring value (drawing a horizontal line at 2 will intersect the graph in most places).</p>
+"
+"NaN","NaN"," 94519","<p>Considering that we want to use optimize() on the interval [0,1] how can I write an R code for finding the value of Î² that produces the minimum forecast error without using external packages like <code>forecast</code>?</p>
+
+<p><img src=""http://i.stack.imgur.com/DE1Hn.png"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/gb7Bh.png"" alt=""enter image description here""></p>
+
+<p>For simplicity assume that:
+<img src=""http://i.stack.imgur.com/B9c2A.png"" alt=""enter image description here""></p>
+
+<p>I want to use the following package:</p>
+
+<pre><code>&gt; require(datasets)
+&gt; str(nhtemp)
+ Time-Series [1:60] from 1912 to 1971: 49.9 52.3 49.4 51.1 49.4 47.9 49.8 50.9 49.3 51.9 ...
+</code></pre>
+
+<p>in which <code>nhtemp</code> is the <code>Yearly Average Temperatures in New Haven CT</code>.</p>
+"
+"1","1","197337","<p>I have monthly temperature averages for a weather station across 100 years.
+I am wondering how I should analyze this data in a regression. </p>
+
+<p>The data are set up in the following fashion:</p>
+
+<pre><code>year  month  temp.avg
+1900    11      9 
+1900    12      6       
+1901    01      5 
+1901    02      4 
+....
+2015    12      7 
+</code></pre>
+
+<p>My question is: <strong>how do I go about accounting for the time and incorporating it into my model?</strong></p>
+
+<p>Here are my <strong>4 proposed methods:</strong></p>
+
+<ol>
+<li><p>Should I add a ""time"" variable which essentially counts my months from 1 through <em>n</em> rows of data? </p>
+
+<ul>
+<li>Ex: Using the example above, I would have a ""time"" column of 1,2,3,4,etc.</li>
+<li>I essentially lose the actual year &amp; month data, but does this matter? -- can I just add back, for example, ""Dec 1900"" for time 1?</li>
+</ul></li>
+<li><p>Given a month <em>i</em> in year <em>j</em>, should I create a continuous time by adding 0.0833 (1/12) to each year for each i-1 month? </p>
+
+<ul>
+<li><p>Ex. Again using the above example, I would have a ""time"" column consisting of values 1900, 1900.8333, 1900.9167, 1901.0000, 1901.0833, etc...</p></li>
+<li><p>The linear regression model for the prior two methods would essentially be: <code>lm(temp.avg ~ time)</code></p></li>
+</ul></li>
+<li><p>Do I just incorporate year and month (or perhaps more usefully <em>season</em>) in the model together?</p>
+
+<ul>
+<li>This would result in: <code>lm(temp.avg ~ year + month)</code></li>
+</ul></li>
+<li><p>Or is 3 wrong and instead I'd have to create a dummy variable for each month (or season)?</p>
+
+<ul>
+<li><code>lm(temp.avg ~ year + jan + feb + mar + apr ...)</code></li>
+</ul></li>
+</ol>
+
+<p>So <strong>which is correct?</strong> 
+I assume perhaps the questions I'm asking would dictate this to some degree. But perhaps someone could describe simply the validity of each method and when to apply each?</p>
+
+<p>Note: I understand that I will have to account for temporal autocorrelation, but I'm wondering how I incorporate time data <em>prior</em> to worrying about that.</p>
+
+<p>I will note that I perform my analyses in <code>R</code>.</p>
+"

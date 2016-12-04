@@ -1,0 +1,498 @@
+"V1","V2","V3","V4"
+"NaN","NaN","16636","<p>I have two large (sparse) matrices (500000*500000) and would like to perform the mantel test to get a similarity measure. </p>"
+"NaN","NaN","<ul>",""
+"NaN","NaN","<li>Is there a way to break-up these matrices into smaller ones and perform the test? </li>",""
+"NaN","NaN","<li>Or can you suggest a way to do it efficiently without running into memory problems? </li>",""
+"NaN","NaN","</ul>",""
+"NaN","NaN","","<r><matrix><correlation>"
+"0.596284793999944","0.707106781186547","115356","<p>I'm a beginner in statistics and I have to run multilevel logistic regressions. I am confused with the results as they differ from logistic regression with just one level. </p>
+
+<p>I don't know how to interpret the variance and correlation of the random variables. And I wonder how to compute the ICC.</p>
+
+<p>For example : I have a dependent variable about the protection friendship ties give to individuals (1 is for individuals who can rely a lot on their friends, 0 is for the others). There are 50 geographic clusters of respondant and one random variable which is a factor about the social situation of the neighborhood. Upper/middle class is the reference, the other modalities are working class and underprivileged neighborhoods. </p>
+
+<p>I get these results :</p>
+
+<pre><code>&gt; summary(RLM3)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: Arp ~ Densite2 + Sexe + Age + Etudes + pcs1 + Enfants + Origine3 +      Sante + Religion + LPO + Sexe * Enfants + Rev + (1 + Strate |  
+    Quartier)
+   Data: LPE
+Weights: PONDERATION
+Control: glmerControl(optimizer = ""bobyqa"")
+
+     AIC      BIC   logLik deviance df.resid 
+  3389.9   3538.3  -1669.9   3339.9     2778 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2216 -0.7573 -0.3601  0.8794  2.7833 
+
+Random effects:
+ Groups   Name           Variance Std.Dev. Corr       
+ Neighb. (Intercept)     0.2021   0.4495              
+          Working Cl.    0.2021   0.4495   -1.00      
+          Underpriv.     0.2021   0.4495   -1.00  1.00
+Number of obs: 2803, groups:  Neigh., 50
+
+Fixed effects:
+</code></pre>
+
+<p>The differences with the ""call"" part is due to the fact I translated some words.</p>
+
+<p>I think I understand the relation between the random intercept and the random slope for linear regressions but it is more difficult for logistics ones. I guess that when the correlation is positive, I can conclude that the type of neighborhood (social context) has a positive impact on the protectiveness of friendship ties, and conversely. But how do I quantify that ?</p>
+
+<p>Moreover, I find it odd to get correlation of 1 or -1 and nothing more intermediate.</p>
+
+<p>As for the ICC I am puzzled because I have seen a post about lmer regression that indicates that intraclass correlation can be computed by dividing the variance of the random intercept by the variance of the random intercept, plus the variance the random variables, plus the residuals. </p>
+
+<p>But there are no residuals in the results of a glmer. I have read in a book that ICC must be computed by dividing the random intercept variance by the random intercept variance plus 2.36 (piÂ²/3). But in another book, 2.36 was replaced by the inter-group variance (the first level variance I guess). 
+What is the good solution ?</p>
+
+<p>I hope these questions are not too confused.
+Thank you for your attention !</p>
+"
+"0.471404520791032","0.447213595499958","62127","<p>I am trying to obtain the correlation between two matrices of equal dimensions.
+I have used both column by column correlation and the canonical correlation but I don't get a symmetrical correlation matrix. I get something like the following:</p>
+
+<pre><code>     A    B   C
+A  0.20 0.51 0.48
+B  0.21 0.56 0.43
+c  0.25 0.58 0.45
+</code></pre>
+
+<p>Any ideas why?</p>
+
+<p>This is how I generate the data:</p>
+
+<pre><code>mat1 &lt;- matrix(rnorm(100),10)
+mat2 &lt;- matrix(rnorm(100),10)
+</code></pre>
+
+<p>And this is how I calculate the correlation</p>
+
+<pre><code>correl &lt;- matcor(mat1,mat2)
+</code></pre>
+"
+"0.333333333333333","0.316227766016838","193502","<p>I have a matrix $G$ in which I would like to compute the correlation matrix of. The matrix in <code>R</code> looks like:</p>
+
+<pre><code>&gt; G
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,]   -1    0   -1   -1    0   -1
+[2,]   -1    0   -1    1    1    0
+[3,]   -1    0    1   -1    0    1
+[4,]   -1    0    1    1   -1    0
+[5,]    1   -1    0   -1    0    1
+[6,]    1   -1    0    1   -1    0
+[7,]    1    1    0   -1    0   -1
+[8,]    1    1    0    1    1    0
+</code></pre>
+
+<p>Now, I would like to find the correlation matrix. However, when I use the function <code>cor()</code>, I get the following:</p>
+
+<pre><code>&gt; cor(G)
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,]    1  0.0  0.0    0  0.0  0.0
+[2,]    0  1.0  0.0    0  0.5 -0.5
+[3,]    0  0.0  1.0    0 -0.5  0.5
+[4,]    0  0.0  0.0    1  0.0  0.0
+[5,]    0  0.5 -0.5    0  1.0  0.0
+[6,]    0 -0.5  0.5    0  0.0  1.0
+</code></pre>
+
+<p>Why were two rows omitted here? Am I missing something?</p>
+"
+"0.471404520791032","0.447213595499958","94150","<p>I am trying to obtain a Pearson correlation between 6 different variables (represented by columns in the matrix below) with two datapoints each (rows). 
+This is the matrix:</p>
+
+<pre><code>     scer       bay      par       mik      glab       lac
+var1 2.2273444 2.0923416 2.044007 1.7664921 1.3832924 2.4294228
+var2 0.3000878 0.2792936 0.286928 0.3246768 0.4946222 0.3083171 
+</code></pre>
+
+<p>When I apply the standard R code for correlation:</p>
+
+<pre><code>cor(mat)
+</code></pre>
+
+<p>I obtain the following result:</p>
+
+<pre><code>     scer bay par mik glab lac
+scer    1   1   1   1    1   1
+bay     1   1   1   1    1   1
+par     1   1   1   1    1   1
+mik     1   1   1   1    1   1
+glab    1   1   1   1    1   1
+lac     1   1   1   1    1   1
+</code></pre>
+
+<p>If I add another two rows to the original matrix:</p>
+
+<pre><code>                scer       bay       par       mik      glab       lac
+var1    2.2273444 2.0923416 2.0440068 1.7664921 1.3832924 2.4294228
+var2    0.3000878 0.2792936 0.2869280 0.3246768 0.4946222 0.3083171
+var3    1.1399738 1.2899311 1.1071462 1.0180361 1.4507592 2.4078977
+var4    0.7107440 0.6415944 0.7197905 0.7357125 0.4571745 0.3173547
+</code></pre>
+
+<p>and re-execute the above code with the new matrix, I obtain a more familiar result:</p>
+
+<pre><code>          scer       bay       par       mik      glab       lac
+scer 1.0000000 0.9895959 0.9991065 0.9967358 0.7860344 0.8246286
+bay  0.9895959 1.0000000 0.9916464 0.9890492 0.8647974 0.8958393
+par  0.9991065 0.9916464 1.0000000 0.9991332 0.7928330 0.8310776
+mik  0.9967358 0.9890492 0.9991332 1.0000000 0.7845007 0.8235245
+glab 0.7860344 0.8647974 0.7928330 0.7845007 1.0000000 0.9978420
+lac  0.8246286 0.8958393 0.8310776 0.8235245 0.9978420 1.0000000
+</code></pre>
+
+<p>Why does the correlation function return a matrix of 1s if I use 2 values?</p>
+"
+"0.471404520791032","0.447213595499958","100770","<p>I am trying to generate a simulated data matrix that is correlated by both observation and variable directions. So far I know how to do this for <strong>variable x variable</strong>. </p>
+
+<p><img src=""http://i.stack.imgur.com/NgP8j.jpg"" alt=""enter image description here""></p>
+
+<pre><code> # correlated matrix between variables 
+    n = 200
+    p = 100 
+    CRMt &lt;- matrix(NA, nrow = p, ncol = p)
+    diag(CRMt) &lt;- 1
+    CRMt[upper.tri (CRMt, diag = FALSE)] &lt;- 0.5
+    CRMt[lower.tri (CRMt, diag = FALSE)] &lt;- 0.5
+
+L = chol(CRMt)# Cholesky decomposition
+p = dim(L)[1]
+
+set.seed(999)
+M = t(L) %*% matrix(rnorm(p*n), nrow=p, ncol=n)
+M1 &lt;- t(M)
+rownames(M1) &lt;- paste(""S"", 1:200, sep = """") 
+colnames(M1) &lt;- paste(""M"", 1:100, sep = """")
+cor(M1)
+</code></pre>
+
+<p>Now say I want to create a data matrix that also follows the following <strong>observation x observation</strong> correlation matrix.</p>
+
+<p><img src=""http://i.stack.imgur.com/XkDuZ.jpg"" alt=""enter image description here""></p>
+
+<pre><code>OCRMt &lt;- matrix(NA, nrow = n, ncol = n)
+diag(OCRMt) &lt;- 1
+OCRMt[upper.tri (OCRMt, diag = FALSE)] &lt;- 0.3
+OCRMt[lower.tri (OCRMt, diag = FALSE)] &lt;- 0.3
+</code></pre>
+
+<p>How can I do this ? </p>
+"
+"0.333333333333333","0.316227766016838","128664","<p>I have a community assembly dataset with 299 species at 15 sites. Im interested in correcting for the effect of spatial autocorrelation on beta-diversity (or species turnover). <a href=""https://www.dropbox.com/s/s65k8xx9bj8q0pl/Spatial%20Autocorrelation.csv?dl=0"" rel=""nofollow"">Dataset here.</a></p>
+
+<p>There is an obvious effect of spatial distance between the sites and community dissimilarity. I have a completed a mantel correlogram to show this effect but now Iâ€™m a bit stuck on how to account for this effect or correct for beta diversity analyzes.  And more importantly how does the effect of distance between sites compare to my environmental effect (<code>precip</code>)</p>
+
+<pre><code>#load libraries 
+library (vegan)
+library (fossil)
+#load datasets
+spp.list&lt;-read.csv('Spatial Autocorrelation.csv', header=T)
+rownames(spp.list)=spp.list$Site
+sites.xy= spp.list[,(2:3)]
+precip= spp.list[,(4)]
+spp.list&lt;-spp.list[,(5:303)]
+
+#check for spatial autocorrelation and environmental correlation using Mantel Test
+
+#build a species dissimilarity matrix 
+dist.mat=vegdist (spp.list)
+
+#build a geographic distance matrix for sites
+geo.dist.mat=earth.dist(sites.xy)
+
+#build a distance matrix for precip values
+precip.dist &lt;-dist (precip)
+#identify the correlations between two matrices Matel Correlelogram
+correlog&lt;-mantel.correlog( dist.mat, geo.dist.mat, nperm=999 )
+summary(correlog)
+correlog
+plot (correlog)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/YiwPv.png"" alt=""enter image description here""></p>
+
+<pre><code>#partial Mantel Test including both distance and precipitation differences 
+library (ecodist)
+natt.pmgram&lt;-pmgram (dist.mat, geo.dist.mat, precip.dist, nperm=999)
+plot (natt.pmgram)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/x9Hqv.png"" alt=""enter image description here""></p>
+
+<p>Im not sure how to interpret these correlograms. Does anyone have any suggestions/explanations? and can these analyses be used to correct for the obvious spatial auto-correlation issues in my dataset?</p>
+"
+"NaN","NaN","207727","<p>I carried out a factor analysis of 5 variables using a single factor. How do I estimate the correlation matrix assuming the one factor model holds? The R output is: <a href=http://i.stack.imgur.com/gANRp.png rel=nofollow><img src=http://i.stack.imgur.com/gANRp.png alt=The r output></a></p>"
+"NaN","NaN","","<r><self-study><factor-analysis><correlation-matrix><community-wiki>"
+"0.471404520791032","0.447213595499958","208217","<p>I'd like to improve a big correlation matrix output <code>correla</code>, because I want to see significante values (p&lt;0.05) but with my code is very dificult to find desirable pairs of correlation with 52 variables. I try to convert non significante values in NA, but the output  <code>cr</code> looks confusing yet. Can anyone help me to improve my correlation matrix output, please. My code:</p>
+
+<pre><code>#Data set
+DF&lt;-NULL
+DF$tr1&lt;-1:600
+    DF$tr2&lt;-600:1
+DF2&lt;-matrix(rnorm(30000), ncol=50)
+tr&lt;-gl(50, 1, labels = paste(""tr"", 3:52, sep=""""))
+colnames(DF2)&lt;-tr
+DF&lt;-as.data.frame(DF)
+DF&lt;-cbind(DF,DF2)
+
+#Person correlation matrix
+pn &lt;- function(X){crossprod(!is.na(X))}
+
+cor.prob &lt;- function(X){
+     pair.SampSize &lt;- pn(X)
+     above1 &lt;- row(pair.SampSize) &lt; col(pair.SampSize)
+     pair.df &lt;- pair.SampSize[above1] - 2
+
+     R &lt;- cor(X, use=""pair"")
+     above2 &lt;- row(R) &lt; col(R)
+     r2 &lt;- R[above2]^2
+     Fstat &lt;- (r2 * pair.df)/(1 - r2)
+     R[above2] &lt;- 1 - pf(Fstat, 1, pair.df)
+     R
+     }
+correla &lt;- round(cor.prob(DF),4)
+correla
+#
+
+#Significance (p&lt;0.05) and correlation more than 30% 
+sig&lt;-0.05## Significance
+
+rP&lt;-0.30 ## Positive correlation
+rN&lt;--0.30## Negative correlation
+
+cor.probC &lt;- function(x){
+
+    results &lt;- x
+    ifelse(row(x)&lt; col(x),ifelse(x&lt;=sig,NA,x),ifelse(x&lt;=rP&amp;x&gt;=rN,NA,x))
+}
+cr &lt;- cor.probC(correla)
+colnames(cr)  &lt;- names(DF)
+rownames(cr) &lt;- names(DF)
+cr
+#
+</code></pre>
+"
+"0.577350269189626","0.547722557505166","209402","<p>I've tried to contact William Revelle (the package creator) about this but he isn't responding.</p>
+
+<p>In the <em>psych</em> package there is a function called cor.smoother, which determines whether or not a correlation matrix is positive definite. Its explanation is as follows:</p>
+
+<blockquote>
+  <p><strong>cor.smoother examines all of nvar minors of rank nvar-1 by systematically dropping one variable at a time and finding the eigen
+  value decomposition.</strong> It reports those variables, which, when
+  dropped, produce a positive definite matrix. It also reports the
+  number of negative eigenvalues when each variable is dropped. Finally,
+  it compares the original correlation matrix to the smoothed
+  correlation matrix and reports those items with absolute deviations
+  great than cut. These are all hints as to what might be wrong with a
+  correlation matrix.</p>
+</blockquote>
+
+<p>It is the really the statement in bold that I am hoping someone can interpret in a more understandable way for me? I know nothing of linear algebra so I'm just wanting an explanation for what's going on here in as simple/practical terms as possible.</p>
+"
+"0.5","0.474341649025257","149827","<p>From my <a href=""http://stackoverflow.com/questions/30010410/filtering-correlation-data-from-psyche-package-in-r"">previous post</a>, I got the idea of generating correlation matrix and subsequent filtering the values for an input matrix. </p>
+
+<p>A problem arise is :I have a list of 8000 genes and would like to compare its correlation with only 200 other genes. If I include those 200 genes with 8000 and run the following code, an 8200*8200 correlation matrix will be generated and very difficult to extract my choice of pairs.</p>
+
+<pre><code>library(psych)
+myData &lt;- read.clipboard.tab(header = TRUE)
+myData1 &lt;- myData[-1]
+rownames(myData1) &lt;- myData[,1]
+Corrt &lt;- corr.test(t(myData1))
+</code></pre>
+
+<p>According to the help files, user can input 2 matrix, but <strong>should be having same no of rows</strong>. So it is impossible in my case.</p>
+
+<p>So my doubt is, what method should I follow (or any other packages in R)if I need to calculate correlation values between 2 different  gene set of different size?</p>
+
+<p>edit:</p>
+
+<p>File 1</p>
+
+<pre><code>genes     exp1   exp2   exp3 ...   exp 400
+
+gene1     val1   val2   val3 ...   val 400
+.
+.
+gene 8000 val1   val2   val3 ......val 400
+</code></pre>
+
+<p>File 2</p>
+
+<pre><code>genes     exp1   exp2   exp3 ...   exp 400
+
+gene1     val1   val2   val3 ...   val 400
+.
+.
+gene 200  val1   val2   val3 ......val 400
+</code></pre>
+"
+"0.5","0.632455532033676","192130","<p>I have some data <em>with more variables than observations</em>, that I'd like to subject to a principal components analysis.
+For didactic reasons (to give an intuition for factor retention criteria under parallel analysis), I am here interested in the <em>distribution</em> of the residual correlations.</p>
+
+<p>Let this be my data (sampled from real data):
+</p>
+
+<pre><code>data &lt;- c(1,-1,-3,-1,1,1,-2,-2,1,3,-3,0,2,4,0,0,-1,0,-1,-4,-2,3,-2,2,0,4,-3,-1,0,2,2,-4,0,3,0,1,-2,-1,-3,2,-1,4,-4,0,3,2,-3,-2,4,-1,3,0,1,0,-3,2,1,-2,1,-1,1,1,-4,3,2,0,-2,0,0,0,-1,0,-3,3,-4,2,0,-1,0,0,1,1,0,-3,1,-3,4,-2,0,-1,-4,-1,-2,2,2,-2,0,1,0,2,-1,3,3,-1,4,0,-2,1,-4,0,-3,-2,-2,-1,-1,-3,1,3,1,-3,2,-2,2,3,0,-1,-4,4,-1,1,0,0,3,2,-1,0,0,0,2,-2,4,1,0,1,-1,-2,-3,-1,1,-2,-2,-1,0,-1,-4,1,2,2,0,0,1,3,4,0,-4,-1,4,0,-2,3,0,3,-3,0,2,1,2,-3,1,0,-3,0,-4,1,1,2,0,3,0,-1,1,-1,2,-2,1,3,0,0,-3,-3,-4,-1,4,-2,3,2,-2,-1,-1,2,0,1,0,0,-2,4,1,4,0,0,1,-1,-4,-1,2,0,-3,0,3,-1,1,-1,-4,4,-3,-2,1,-2,0,-3,3,-1,-2,2,0,0,-2,3,2,0,1,2,1,-2,-2,1,-3,1,-4,0,3,3,-1,-1,3,1,0,2,2,-2,-4,-3,0,-1,2,0,2,0,-2,-1,0,-1,1,0,0,4,-3,4,0,4,-1,-2,3,-4,0,1,-2,-2,0,-1,1,0,-4,-2,-3,0,-1,1,-3,2,0,0,-1,3,0,2,2,-3,3,2,4,-1,1,1,-1,3,-2,-2,1,0,-3,-2,0,-1,0,-4,4,-3,3,1,2,2,-2,0,0,0,-1,0,1,-1,-4,3,-3,2,1,1,4,0,-1,2,-2,-1,0,2,0,3,-3,-4,0,-1,0,-3,2,2,-1,-1,0,2,-4,0,0,1,-2,1,3,0,-3,4,-2,4,-1,1,3,-2,1,1,-1,1,-4,-1,-2,1,-3,-3,2,2,-4,-3,-1,-2,0,2,2,1,0,1,3,0,0,-2,4,1,-2,-1,0,0,4,3,0,0,-1,3,2,2,1,4,1,3,-3,3,-2,-1,0,0,0,-1,1,0,2,-1,-4,-2,-4,1,-1,4,0,-2,-3,3,0,1,-2,-1,0,2,-3,0,2,2,-4,-2,-2,2,-1,0,1,1,-3,-3,4,1,1,3,3,0,-4,-1,-3,-2,3,1,4,2,-2,0,0,0,0,0,0,-1,-1,-1,0,0,-1,4,-1,2,-2,-2,3,-1,-4,-2,1,-3,-2,2,2,4,-4,-1,0,-1,1,3,1,1,-3,0,-3,2,0,0,1,0,0,3,4,2,0,1,1,0,-4,1,4,0,0,-3,2,-3,-1,3,0,0,3,-1,-4,-1,-1,2,3,-1,-2,-2,0,2,-3,-2,1,0,-2,1,4,0,-1,-2,0,0,-3,-1,0,-3,-2,0,3,-4,0,1,0,3,1,-2,-1,1,-1,3,4,-2,-4,2,-3,2,2,-1,1,1,0,2,-3,0,-2,-2,0,0,-3,0,1,3,-1,-1,2,0,1,0,-1,3,-4,-3,-2,3,-2,2,4,0,-4,4,-1,2,1,2,0,1,-1,1,3,3,-2,3,0,1,-3,4,2,-2,0,-4,1,-1,0,2,-1,2,0,0,-4,0,4,-1,-2,1,-3,1,0,2,-1,-1,-3,0,-2,1,-1,0,-1,0,0,3,-4,-3,0,1,-3,-2,4,-4,1,2,4,0,-2,-2,-1,0,-1,1,3,0,-3,0,-1,1,2,2,1,2,-2,3,-4,1,0,-3,-1,-2,-1,-2,4,1,0,2,3,-2,-3,0,-1,3,0,0,1,4,-4,0,2,-3,0,0,-2,-1,1,-1,3,2,2,1,-2,1,-2,0,-3,1,-4,0,1,3,-1,-3,0,-2,0,-1,1,0,-2,0,0,-1,-1,-4,0,4,-3,1,-1,2,2,3,4,2,3,2,4,3,-2,4,0,3,-4,-3,3,-1,-1,-3,2,-2,1,2,1,2,-4,-1,-2,-1,-3,2,1,1,-2,0,-1,1,0,0,0,0,0,0,-3,4,-4,3,-1,0,-3)
+data &lt;- c(data, 2,3,-1,0,-2,3,1,-1,1,1,2,-1,1,-4,0,-1,0,2,2,-3,1,-2,0,-2,0,4,0,-2,0,-2,4,-3,0,-2,0,-1,-4,0,3,-1,-3,1,2,4,0,1,0,-1,-2,-1,3,-3,0,1,3,-4,2,-2,0,1,-1,2,2,0,1,-4,0,-3,0,4,-2,-3,-1,3,-2,-2,3,2,2,2,3,1,1,-4,1,-2,2,0,1,1,0,-3,0,0,-1,-1,-1,-1,0,0,4,-1,-2,-2,-1,-2,0,-3,-1,4,-1,-2,0,4,-3,0,0,-1,3,-4,1,0,0,1,0,2,1,-4,3,3,2,2,2,1,0,-3,1,-1,3,-2,0,0,2,-4,0,0,2,2,0,0,-1,-1,1,-2,3,-4,-1,1,-1,-3,2,-2,4,-3,0,1,3,0,4,1,1,-3,-2,-2,2,-2,0,-2,1,-3,-3,0,2,-4,0,4,1,0,0,4,3,-4,3,0,-1,2,-1,1,1,-3,0,-2,0,-1,2,1,-1,3,-1,0,2,-4,1,0,3,-2,-1,0,2,1,-3,0,-4,3,-1,0,0,-3,-2,-2,1,3,-1,0,2,-3,2,0,4,-1,-2,4,1,-1,1,0,3,0,-1,-1,2,-3,-1,-2,0,-2,-2,0,-3,3,0,0,3,-4,-1,0,2,1,-2,-1,1,-4,4,-3,2,1,0,4,1,2,1,1,-2,-1,-3,-1,1,0,3,4,0,-2,-4,-2,-2,0,0,1,4,-4,0,2,3,-3,2,2,-1,0,-1,2,1,-1,3,0,1,-3,0,-2,4,-1,-1,-2,-2,-3,1,3,0,-1,-4,4,0,0,3,-1,2,-2,-1,0,-3,2,-3,3,1,-4,1,0,1,0,1,2,0,0,2,2,0,-3,-2,1,1,-3,-1,-1,2,0,-1,2,0,0,0,2,4,-4,-2,0,-2,0,1,3,3,-4,1,-1,3,-3,0,1,-1,-2,4,-4,-3,-3,2,1,-1,-1,-2,4,1,0,-2,-2,1,3,-1,0,4,-4,0,0,0,3,3,-1,0,-3,2,0,-1,1,-2,2,2,0,1,3,3,-3,-2,-1,0,-3,-1,-2,2,-4,-2,3,-2,4,0,0,2,-1,-1,0,2,0,0,2,1,-4,4,-1,1,0,1,1,0,-3,1,-2,1,-3,-1,-1,1,-2,1,-1,2,-2,-3,2,-4,-1,0,3,3,3,0,-4,0,4,-3,0,4,-2,2,2,0,0,0,0,1,-1,1,-2,1,-3,-1,-1,1,-3,-1,2,-1,-2,-2,2,-4,-1,1,2,1,-3,3,0,0,4,-2,0,1,-4,0,3,0,4,2,3,0,0,0,3,4,-3,4,-3,-2,-3,3,-2,2,0,2,3,0,0,2,2,1,-4,0,0,0,1,-1,1,1,-4,-1,-2,1,0,0,-1,-1,-2,-1,-3,1,0,3,-3,1,-1,3,2,-1,-4,-2,3,4,-1,0,-2,4,0,0,-1,1,2,1,2,2,-4,-1,-2,1,0,0,0,-2,-3,0,4,3,0,-1,0,3,-4,1,1,-1,0,-3,2,4,2,3,0,2,-2,-3,-1,1,2,-4,0,1,-3,1,-2,-1,-2,0,-1,0,-2,0,-2,2,-2,-3,0,2,-4,0,-1,1,0,-3,1,-3,1,0,2,4,-4,-2,-1,1,-2,0,1,3,0,3,0,0,-1,-1,3,4,-1,2,-1,1,-1,-3,0,2,-1,-2,2,4,-1,-4,3,-2,3,0,3,-1,-3,-2,0,2,0,-4,-3,4,-2,2,1,1,1,0,1,0,0,0,0,3,-3,-2,-1,1,-1,1,3,-1,-1,-4,1,0,0,2,-2,-3,-4,0,-3,4,1,0,1,0,-1,3,-2,0,-2,0,4,2,2,2,0,1,-2,-4,1,0,-4,0,4,-1,-3,-3,2,-3,0,1,2,2,-2,-1,4,-1,3,-1,3,0,-2,0,0,1,-2,1,2,-1,0,3,-2,-1,-1,0,0,3,0,0,1,2,-2,-2,2,0,1,3,2,4,-3,0,-1,1,-3,-4,0,3,-4,-2,0,2,-3,1,-1,1,-1,4,-4,-3,-3,-1,0,-1,-2,0,1,-1,1)
+data &lt;- c(data, -2,0,0,1,3,2,4,-2,-3,-1,0,0,3,0,2,-1,-2,2,2,0,1,-4,4,3,1,0,2,-4,0,0,-2,-3,-1,1,0,-2,-1,3,1,-2,-1,3,2,-4,-1,-1,2,4,0,3,0,-3,2,-2,1,1,1,4,0,-3,0,0,4,-2,-2,0,1,-4,4,0,0,-4,-2,1,-2,2,2,3,-1,-3,-1,0,0,3,0,2,-1,-3,1,-3,1,-1,2,3,-1,0,1,0,4,-2,-2,0,0,-2,3,-1,-1,3,2,0,-2,4,-1,-1,0,-4,-1,0,1,0,-3,1,1,-4,2,-3,0,-3,1,3,2,2,1)
+data &lt;- matrix(data = data, nrow = 36)
+</code></pre>
+
+<p>(sorry about the clunky input).</p>
+
+<p>Now, let's look at the <em>initial</em> correlation and then the residual correlations.
+(I'm doing this here with <code>psych::principal</code> for the sake of convenience, but I've also calculated the residuals by hand with <code>prcomp</code>, with same results).</p>
+
+<pre class=""lang-r prettyprint-override""><code>cor &lt;- cor(data, method=""pearson"")  # figure out initial cors
+library(psych)
+pca &lt;- principal(r = data, nfactors = 8, residuals = TRUE, rotate = ""none"")  # I know 8 factors is ridiculous, but that's the didactiv point I'm trying to make.
+#&gt; Warning in cor.smooth(r): Matrix was not positive definite, smoothing was
+#&gt; done
+#&gt; In factor.scores, the correlation matrix is singular, an approximation is used
+#&gt; Warning in cor.smooth(r): Matrix was not positive definite, smoothing was
+#&gt; done
+
+# Calculate residuals ===
+cor &lt;- as.matrix(cor)  # just to be sure
+loa &lt;- pca$loadings  # take just the loas
+res &lt;- NULL
+res &lt;- array(data = NA, dim = c(nrow(cor), ncol(cor), ncol(loa)), dimnames = list(cor = NULL, cor = NULL, PC = 1:ncol(loa)))  # this is what the residuals array should look lile
+for (i in 1:ncol(loa)) {
+  if (i == 1) {
+    res[,, i] &lt;- cor - loa[, i] %*% t(loa[, i])
+  } else {
+    res[,, i] &lt;- res[,, i-1] - loa[, i] %*% t(loa[, i])
+  }
+}
+# we now have an array with var, var, PC as dimensions
+
+# Take only upper triangle (without diagonal)
+take.tri &lt;- function(cors) {  # make this little helper function
+  cors &lt;- cors[upper.tri(x = cors, diag = FALSE)]
+  return(cors)
+}
+res.df &lt;- apply(X = res, MARGIN = 3, FUN = take.tri)
+
+# add the original correlation as 0th PC =======
+res.df &lt;- cbind(`0` = take.tri(cor), res.df)
+
+# make plot =====
+library(reshape2)
+library(ggplot2)
+res.df &lt;- melt(data = res.df)
+colnames(res.df) &lt;- c(""Obs"", ""PC"", ""Cor"")
+g &lt;- NULL
+g &lt;- ggplot(data = res.df, mapping = aes(x = Cor, color = PC, group = PC))
+g &lt;- g + geom_freqpoly(binwidth = 0.05) 
+g &lt;- g + xlim(-1,1)
+g
+#&gt; Warning: Removed 18 rows containing missing values (geom_path).
+</code></pre>
+
+<p></p>
+
+<p><a href=""http://i.stack.imgur.com/Jh3zS.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Jh3zS.png"" alt=""above output residuals""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/KwjBe.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/KwjBe.png"" alt=""real deal residuals""></a></p>
+
+<p>The above plots shows the distribution of correlation coefficients (denoted as PC 0), as well as the residual correlations from the first 8 principal component, all in one frequency polygon plot.</p>
+
+<p>The smoother plot uses the full dataset, the rough one just the above sample (can't share the full dataset).</p>
+
+<p>I get why the distribution becomes more <em>leptopkurtic</em> (aka: steep) as more components are extracted; that's the whole point of PCA (and this illustration): the remaining correlation matrices approximate a singular matrix with all zeros (and 1s on the diagonal).</p>
+
+<p>I also understand why the original correlations are <em>asymmetric</em> -- given my kind of data (<a href=""https://en.wikipedia.org/wiki/Q_methodology"" rel=""nofollow"">Q-sorts</a>), that frequently happens.</p>
+
+<p><strong>What I don't understand is why the asymmetry seems to disappear <em>completely</em> after the first PC is extracted</strong>.
+Shouldn't the asymmetry dissipate slowly as more PCs are extracted?</p>
+
+<p>My questions are:</p>
+
+<ul>
+<li>Is this to be expected?</li>
+<li>Is this in the logic of PCA, or a computational artefact?</li>
+<li>Is this approach meaningful to illustrate parallel analysis / why you <em>shouldn't overretain</em> components?</li>
+</ul>
+
+<p>Also, as a <strong>bonus</strong>, I'd be really curious what the <em>expected</em> distribution of correlation coefficients from random data would be, but that's <a href=""http://stats.stackexchange.com/questions/191937/what-is-the-probability-distribution-for-pearsons-r-correlation-coefficient-fro"">another question</a>.</p>
+"
+"NaN","NaN","214810","<p>The DCC model is defined through the proxy $Q_t$ as
+$$Q_t=(1-\alpha-\beta) \overline{Q} +\alpha\epsilon_{t-1}\epsilon_{t-1}' + \beta Q_{t-1}$$which is then normalized to find the correlation matrix $R_t$
+$$R_t=\frac{q_{ij,t}}{\sqrt{q_{ii,t}q_{jj,t}}}$$</p>
+
+<p>I've been using the <code>rmgarch</code> package and its copula-garch commands (<code>cgarchspec</code> and <code>cgarchfit</code>) to couple time series with either a normal or Student-t copula and a DCC dependence structure.</p>
+
+<p>All results are nice and everything, but my question is on a problem which is present also at the univariate GARCH level: how is $Q_0$ chosen for the first estimation of $Q_1$? I've been going through the <code>rmgarch</code> document and other references on the Internet but haven't found any relevant info. </p>
+"
+"0.471404520791032","0.447213595499958","31231","<p>I'm using R, and I need to find the correlation between every row and column of matrix A and B (ex: the correlation between the 1st row of matrix A and 1st column of matrix B, 2nd row of matrix A and 1st column of matrix B, 2nd row of matrix A and 2nd column of matrix B, etc.)</p>
+
+<p>I realized I can do this by doing</p>
+
+<p>cor(matrixA[1,],matrixB)</p>
+
+<p>cor(matrixA[1,],matrixB)</p>
+
+<p>cor(matrixA[1,],matrixB)</p>
+
+<p>... until I get to the very last row of matrixA (matrixA has 17000 rows)</p>
+
+<p>My question is, how do I do this faster without having to type in each command?
+In addition, the most important part, is how do I get the max and min correlation values of ALL the correlation values I will have calculated in this way?</p>
+
+<p>Many thanks!
+T</p>
+"
+"0.471404520791032","0.447213595499958","72750","<p>How to estimate maximum observable correlation between two correlation matrices? </p>
+
+<p>I need this in order to correct the observed correlation coefficient between two correlation matrices I have calculated based on different sample sizes.</p>
+
+<p>This is the methodology I need and the way I tried to solve this. </p>
+
+<p>In order to find this value I use the notion of matrix repeatability where this quantity is calculated as</p>
+
+<pre><code>t = (Vo - Ve)/Vo
+</code></pre>
+
+<p>where Vo is the variance in the observed correlation values, and Ve is the error variance. Then I use this to calculate Rmax (maximum achievable correlation) as $\sqrt{t1*t2}$ where t1 and t2 are matrix repeatabilites. </p>
+
+<p>This is my solution in R</p>
+
+<pre><code>repeatCor &lt;- function(mat1, mat2)
+{
+mmc1 &lt;- cor(mat1)
+mmc2 &lt;- cor(mat2)
+
+a &lt;- cor(mat1)[lower.tri(cor(mat1))]
+b &lt;- cor(mat2)[lower.tri(cor(mat2))]
+
+statObs &lt;- cor(a,b)
+
+mmce1 &lt;- numeric(length(a))
+mmce2 &lt;- numeric(length(a))
+for(i in 1:length(a)) {
+    mmce1[i] &lt;- sqrt((1-a[i]^2)/(length(a)-1))  #errors for every correlation coefficient
+    mmce2[i] &lt;- sqrt((1-b[i]^2)/(length(b)-1))
+}
+
+Vt1 &lt;- var(a) - var(mmce1)
+Vt2 &lt;- var(b) - var(mmce2)
+
+t1 &lt;- Vt1/var(a)
+t2 &lt;- Vt2/var(b)
+
+Rmax &lt;- sqrt(t1*t2)
+
+corCor &lt;- statObs/Rmax
+
+list(rep1 = t1, rep2 = t2, Rmax = Rmax, corRaw = statObs, corCor = corCor, m1 = var(mmce1), m2 = mean(mmce2))
+}
+</code></pre>
+
+<p>but the values I obtain for Rmax are very near 1 and they should be lower. Maybe I am doing something obviously wrong? </p>
+"

@@ -1,0 +1,65 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 13469","<p>Tools such as random forests or adaboost are powerful at solving cross-sectional binary logistic problems or prediction problems where there are many weak learners. But can these tools be adapted to solve panel regression problems? </p>
+
+<p>One could naively introduce a time index as an independent variable but all this does is to provide an additional degree of freedom to the fitting algorithm. What we would like is a solution that allows information from period T-1 to have bearing on period T. </p>
+
+<p>If there is not a straightforward way to do this using these algorithms, is there an alternative algorithm that can perform a panel regression making use of the information in both the cross-section and time-series?</p>
+"
+"1","1"," 65740","<p>I have binomial data infected/not-infected on individuals of a sample from different years for two different infections.
+I have used <code>prop.trend.test</code> to test for trend for each infection.</p>
+
+<p>I want to test if there is a trend in the ratio of infected/not-infected between the two infections. Since a ratio could vary between 0 and &infin;, what test is appropriate? </p>
+
+<p>For testing trends in proportins, some have suggested <code>glm</code> with family <code>binomial</code>. Can i use <code>glm</code> with a different family?</p>
+
+<p><a href=""http://stats.stackexchange.com/questions/29502/what-test-can-i-use-to-prove-there-is-an-upward-trend-in-time-series-of-ratios-a"">What test can I use to prove there is an upward trend in time series of ratios assesment in R?</a> suggests using the <code>Cochran-Armitage test</code> (which I think is the same as <code>prop.trend.test</code>) or logistic regression. Not sure if it is suitable in the case of ratios, though.</p>
+"
+"NaN","NaN"," 92935","<p>I'm making a project connected with identifying the dynamics of sales. My database concerns 26 weeks (so equally in 26 time-series observations) after launching the product.</p>
+
+<p>This is what my database looks like: <a href=""https://imageshack.com/i/0yyh6ij"" rel=""nofollow"">https://imageshack.com/i/0yyh6ij</a> </p>
+
+<p>I want to make forecast based on S-curve for clusters of time-series. The main aim was to compare two methods of forecasting:</p>
+
+<ol>
+<li>based on parameters of logistic curve</li>
+<li>based on ARIMA</li>
+</ol>
+
+<p>However, I do not know how to compare these two methods = measure their performance.</p>
+
+<p>That's a plot with prediction based on S-curve</p>
+
+<p><a href=""http://imageshack.com/a/img850/6600/rzkp.jpg"" rel=""nofollow"">http://imageshack.com/a/img850/6600/rzkp.jpg</a></p>
+
+<p>So my questions are:</p>
+
+<ol>
+<li>How to measure performance=forecast errors based on logistic curve?</li>
+<li>How to compare forecasting based on logistic curve and ARIMA - what is the main difference between these two approaches if I base on one variable - units_sold_that_week?</li>
+</ol>
+
+<p>I would be grateful for any explanation.</p>
+"
+"1","1","186265","<p>I am currently working on some research and we are trying to do some Time-Series prediction using neural networks. To get started, I was using the paper published by G. Peter Zhang (<a href=""http://cs.uni-muenster.de/Professoren/Lippe/diplomarbeiten/html/eisenbach/Untersuchte%20Artikel/Zhan03.pdf"" rel=""nofollow"">Time Series forcasting using a hybrid ARIMA and NN model</a>) since I am no expert in either R or statistics, I could really do with some help. </p>
+
+<p>I got R and the neuralnet lib setup and then took the Lynx dataset, then created a data-frame with the data long with the lags to set as input. My data now looks something like this (this is only for t, t-1, and t-2 lags) </p>
+
+<pre><code>     x     x1    x2
+1   269    NA    NA
+2   321   269    NA
+3   585   321    269
+</code></pre>
+
+<p>Now I want to train a NN with input x1 and x2 and get output at x.</p>
+
+<p>I do the training with the following code </p>
+
+<pre><code>nn &lt;- neuralnet(x~x1+x2, data=dat, hidden = 2, linear.output = T) # I am using t-1 ... t-4 so using hidden layer of 2
+</code></pre>
+
+<p>This does train the model, but the error is really high, and when I use it to do any computation the results of the second layer neuron is alway 1. I was discussing with some freinds and they said that its because I am maybe using the wrong activation function. I looked in the help for the act.fct and tried with both <code>logistic</code> and <code>tanh</code> but the results remain the same. </p>
+
+<p>I have been stuck on this for a few days now, so could really use some help. May I am doing something wrong? Or missing something? </p>
+
+<p>Thanks</p>
+"

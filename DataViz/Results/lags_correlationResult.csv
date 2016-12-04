@@ -1,0 +1,1597 @@
+"V1","V2","V3","V4"
+"NaN","NaN","  3115","<p>How do you tell if the correlations at different lags obtained from the cross-correlation (ccf function) of two time series are significant. </p>
+"
+"0.079555728417573","0.142857142857143"," 29239","<p>We are trying to create auto-correlated random values which will be used as timeseries. We have no existing data we refer to and just want to create the vector from scratch.</p>
+
+<p>On the one hand we need of course a random process with distribution and its SD.</p>
+
+<p>On the other hand the autocorrelation influencing the random process has to be described. The values of the vector are autocorrelated with decreasing strength over several timelags. e.g. lag1 has 0.5, lag2 0.3, lag1 0.1 etc.</p>
+
+<p>So in the end the vector should look something that:
+2, 4, 7, 11, 10 , 8 , 5, 4, 2, -1, 2, 5, 9, 12, 13, 10, 8, 4, 3, 1, -2, -5 </p>
+
+<p>and so on.</p>
+"
+"0.194870940738489","0.174963553055941"," 32363","<p>So I have this data set of 56 users with 52 weeks worth of weekly average data for blood pressure and exercise level recordings. I would like to use change point analysis (https://sites.google.com/site/changepointanalysis/) in R to understand where changes are occurring. However to make CPA usable, the observations need to be independent (at least have no strong autocorrelation). </p>
+
+<p>I performed ACF and the Ljung-box test for lags up to 20, and there is autocorrletion in many of the time series. </p>
+
+<p>So my question is, what is an appropriate way to remove this? </p>
+
+<p>I've looked around and have found some possibilities, but nothing has made it overtly clear why I would choose one over another, or what is a lowest risk approach. </p>
+
+<p>Various possibilities I have seen (some from this site):</p>
+
+<ul>
+<li>Low pass filter, inverse subtraction </li>
+<li>First differences</li>
+<li>Detrending</li>
+<li>Seasonal adjustment </li>
+<li>Data transformation (e.g. convert difference operator into ratio)</li>
+<li>Exploratory data analysis (EDA) smoothing techniques  </li>
+</ul>
+
+<p>One of the people at work said something about using a low pass filter, using inverse subtraction to remove correlation, and then finding the frequency through fast fourier transform or spectrogram analysis. I'm not sure about all that.</p>
+
+<p>I really appreciate any comments, I'm kind of lost at a crossroads right now. Thanks!</p>
+"
+"0.318222913670292","0.285714285714286"," 38491","<p>If we have a spatial autoregressive process, we can estimate a model to control for the autoregression with a spatial lag,
+$$y=\rho W y + X\beta + \epsilon$$
+Where $\rho$ is the strength of the spatial correlation, and $W$ is a matrix of spatial weights. The <code>spdep</code> package for R contains the <code>lagsarlm</code> command which is designed to estimate precisely this model. The package contains methods for creating the weights. But there seems to be some discrepancy between the model fit between <code>lagsarlm()</code> and <code>lm()</code> fitted to what should be a similar model.</p>
+
+<p>As an example, consider the example given with <code>?lagsarlm</code> in R. </p>
+
+<pre><code>library(spdep)
+data(oldcol)
+COL.lag &lt;- lagsarlm(CRIME ~ INC + HOVAL, data=COL.OLD,
+                nb2listw(COL.nb, style=""W""), method=""eigen"", quiet=TRUE)
+summary(COL.lag)
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-37.68585  -5.35636   0.05421   6.02013  23.20555 
+
+Type: lag 
+Coefficients: (asymptotic standard errors) 
+             Estimate Std. Error z value  Pr(&gt;|z|)
+(Intercept) 45.079251   7.177347  6.2808 3.369e-10
+INC         -1.031616   0.305143 -3.3808 0.0007229
+HOVAL       -0.265926   0.088499 -3.0049 0.0026570
+
+Rho: 0.43102, LR test value: 9.9736, p-value: 0.001588
+Asymptotic standard error: 0.11768
+    z-value: 3.6626, p-value: 0.00024962
+Wald statistic: 13.415, p-value: 0.00024962
+</code></pre>
+
+<p>We can estimate what (I think) should be the same model by computing the actual spatial lag variable,</p>
+
+<pre><code>crime.lag &lt;- lag.listw(nb2listw(COL.nb, style=""W""), COL.OLD$CRIME)
+linearlag &lt;- lm(CRIME ~ crime.lag + INC + HOVAL, data=COL.OLD)
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-38.644  -6.103   0.266   6.563  21.610 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) 38.18099    9.21531   4.143 0.000149 ***
+crime.lag    0.55733    0.15029   3.709 0.000570 ***
+INC         -0.86584    0.35541  -2.436 0.018864 *  
+HOVAL       -0.26358    0.09136  -2.885 0.005986 ** 
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+
+Residual standard error: 10.12 on 45 degrees of freedom
+Multiple R-squared: 0.6572, Adjusted R-squared: 0.6343 
+F-statistic: 28.75 on 3 and 45 DF,  p-value: 1.543e-10 
+</code></pre>
+
+<p>The two models, which I think should be identical, are in fact significantly different from each other in every parameter and in model fit (with the <code>linearlag</code> model providing significantly lower AIC). Are there reasons why this should be? Why should I just not use the second model and abandon the special methods?</p>
+"
+"0.251577302713314","0.225876975726313"," 55961","<p>I am analyzing some tree physiology data (transpiration) in relation to a number of environmental variables (many of which are predictors such as temperature, PAR and vapour pressure deficit). </p>
+
+<p>I have fine-scale (30 min intervals) data of these various measurements, and there are two objectives I am trying to achieve:</p>
+
+<ol>
+<li>Use the various predictors (glm?) to see which among these explain the most amount of variation in transpiration. However, since there is clear autocorrelation at this scale (i.e., trans at time $t$ is highly correlated with trans at $t+1$ etc.), I am looking to use ARIMA models with regressors. </li>
+<li>I would like to construct a final predictive ARIMA model that explains the highest variation in trans, from all the different candidate models.</li>
+</ol>
+
+<p>So far, I have noticed that ccf plots show -ve lags between trans and a number of variables (rightly so, e.g., as you expect temp at time $t$ to influence transpiration at $t+1$).</p>
+
+<p>My questions are:</p>
+
+<ol>
+<li>How do you perform an ARIMA with transpiration as the response variable and several regressors? </li>
+<li>How do you know which one of the regressors to leave out? Does this have to be done manually in R (as in, add each regressor to the model, and inspect the resulting AIC)? </li>
+<li>Is <code>auto.arima</code> the best way to determine the differencing term (etc.)?
+(E.g., <code>auto.arima(trans, xreg=temp+vpd+......)</code>.)</li>
+<li>How do you account for the lag between response variable at time $t$ and predictors at $t-1$?</li>
+</ol>
+"
+"0.339226765776379","0.304572451936586"," 56374","<p>as I am stepping into forecasting with ARIMA models, I am trying to understand how I can improve a forecast based on ARIMA fit with seasonality and drift. </p>
+
+<p>My data is the following time series ( over 3 years, with clear trend upwards and visible seasonality, which seems to be not supported by autocorrelation at lags 12, 24, 36??). </p>
+
+<pre><code>    &gt; bal2sum3years.ts
+             Jan     Feb     Mar     Apr     May     Jun     Jul     Aug          
+    2010 2540346 2139440 2218652 2176167 2287778 1861061 2000102 2560729 
+    2011 3119573 2704986 2594432 2362869 2509506 2434504 2680088 2689888 
+    2012 3619060 3204588 2800260 2973428 2737696 2744716 3043868 2867416 
+             Sep     Oct     Nov     Dec
+    2010 2232261 2394644 2468479 2816287
+    2011 2480940 2699780 2760268 3206372
+    2012 2951516 3119176 3032960 3738256
+</code></pre>
+
+<p>The model that was suggested by <code>auto.arima(bal2sum3years.ts)</code> gave me the following model:</p>
+
+<pre><code>    Series: bal2sum3years.ts 
+    ARIMA(0,0,0)(0,1,0)[12] with drift         
+
+    Coefficients:
+              drift
+          31725.567
+    s.e.   2651.693
+
+    sigma^2 estimated as 2.43e+10:  log likelihood=-321.02
+    AIC=646.04   AICc=646.61   BIC=648.39
+</code></pre>
+
+<p>However, the <code>acf(bal2sum3years.ts,max.lag=35)</code> does not show acf coefficients higher than 0.3. The seasonality of the data is, however, pretty obvious - spike at the beginning of every year. This is what the series looks like on the graph:
+<img src=""http://i.stack.imgur.com/kQi5N.png"" alt=""Original Time Series""></p>
+
+<p>The forecast using <code>fit=Arima(bal2sum3years.ts,seasonal=list(order=c(0,1,0),period=12),include.drift=TRUE)</code> , called by function <code>forecast(fit)</code>, results in the next 12months's means being equal to the last 12 months of the data plus constant. This can be seen by calling <code>plot(forecast(fit))</code>, </p>
+
+<p><img src=""http://i.stack.imgur.com/GJqcG.png"" alt=""Actual and Forecasted Data""></p>
+
+<p>I have also checked the residuals, which are not autocorrelated but have positive mean ( non zero). </p>
+
+<p>The fit does not model the original time series precisely, in my opinion ( blue the original time series, red is the <code>fitted(fit)</code>:</p>
+
+<p><img src=""http://i.stack.imgur.com/ux3i7.png"" alt=""Original vs fit""></p>
+
+<p>The guestion is, is the model incorrect? Am I missing something? How can I improve the model? It seems that the model literally takes the last 12 months and adds a constant to achieve the next 12 months. </p>
+
+<p>I am a relative beginner in time series forecasting models and statistics. </p>
+
+<p>Thank you very much for your answers!</p>
+"
+"0.365653567800958","0.404061017820884"," 64711","<p>I have a time series I am trying to forecast, for which I have used the seasonal ARIMA(0,0,0)(0,1,0)[12] model (=fit2). It is different from what R suggested with auto.arima (R calculated ARIMA(0,1,1)(0,1,0)[12] would be a better fit, I named it fit1). However, in the last 12 months of my time series my model (fit2) seems to be a better fit when adjusted (it was chronically biased, I have added the residual mean and the new fit seems to sit more snugly around the original time series. Here is the example of the last 12 months and MAPE for 12 most recent months for both fits:</p>
+
+<p><img src=""http://i.stack.imgur.com/kkUOb.png"" alt=""fit1, fit2 and original data""></p>
+
+<p>The time series looks like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/twNkT.png"" alt=""original time series""></p>
+
+<p>So far so good. I have performed residual analysis for both models, and here is the confusion. </p>
+
+<p>The acf(resid(fit1)) looks great, very white-noisey:</p>
+
+<p><img src=""http://i.stack.imgur.com/gyIv3.png"" alt=""acf of fit1""></p>
+
+<p>However, Ljung-Box test doesn't look good for , for instance, 20 lags: </p>
+
+<pre><code>    Box.test(resid(fit1),type=""Ljung"",lag=20,fitdf=1)
+</code></pre>
+
+<p>I get the following results:</p>
+
+<pre><code>    X-squared = 26.8511, df = 19, p-value = 0.1082
+</code></pre>
+
+<p>To my understanding, this is the confirmation that the residuals are not independent ( p-value is too big to stay with the Independence Hypothesis). </p>
+
+<p>However, for lag 1 everything is great:</p>
+
+<pre><code>    Box.test(resid(fit1),type=""Ljung"",lag=1,fitdf=1)
+</code></pre>
+
+<p>gives me the result: </p>
+
+<pre><code>    X-squared = 0.3512, df = 0, p-value &lt; 2.2e-16
+</code></pre>
+
+<p>Either I am not understanding the test, or it is slightly contradicting to what I see on the acf plot. The autocorrelation is laughably low. </p>
+
+<p>Then I checked fit2. The autocorrelation function looks like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/JZ7Sc.png"" alt=""acf fit2""></p>
+
+<p>Despite such obvious autocorrelation at several first lags, the Ljung-Box test gave me much better results at 20 lags, than fit1:</p>
+
+<pre><code>    Box.test(resid(fit2),type=""Ljung"",lag=20,fitdf=0)
+</code></pre>
+
+<p>results in :</p>
+
+<pre><code>    X-squared = 147.4062, df = 20, p-value &lt; 2.2e-16
+</code></pre>
+
+<p>whereas just checking autocorrelation at lag1, also gives me the confirmation of the null-hypothesis! </p>
+
+<pre><code>    Box.test(resid(arima2.fit),type=""Ljung"",lag=1,fitdf=0)
+    X-squared = 30.8958, df = 1, p-value = 2.723e-08 
+</code></pre>
+
+<p>Am I understanding the test correctly? The p-value should be preferrably smaller than 0.05 in order to confirm the null hypothesis of residuals independence. Which fit is better to use for forecasting, fit1 or fit2? </p>
+
+<p>Additional info: residuals of fit1 display normal distribution, those of fit2 do not.  </p>
+"
+"0.129913960492326","0.174963553055941"," 71764","<p>Can someone please explain the difference behind <strong>WHY</strong> the cross correlation function <code>ccf()</code> chooses to keep the same denominator for all lags and chooses to ignore the reduction in observations?  Here's an example of the two methods not matching:</p>
+
+<pre><code>x = c(1,2,3,4,5,6,7,8,9,10)
+y = c(3,3,3,5,5,5,5,7,7,11)
+round(cor(x,y),3)
+[1] 0.896
+
+# Think ""Lag -1""  
+# x[-10] = 1,2,3,4,5,6,7,8,9
+# y[-1] = 3,3,5,5,5,5,7,7,11
+round(cor(x[-10],y[-1]),3)
+[1] 0.894
+
+# Think ""Lag -2"" 
+# x[-10:-9] = 1,2,3,4,5,6,7,8
+# y[-1:-2] = 3,5,5,5,5,7,7,11
+round(cor(x[-10:-9],y[-1:-2]),3)
+[1] 0.878
+
+print(ccf(x,y,lag.max=3))
+Autocorrelations of series â€˜Xâ€™, by lag
+
+    -3     -2     -1      0      1      2      3 
+ 0.197  0.466  0.699  0.896  0.436  0.221 -0.018 
+</code></pre>
+
+<p>Notice how the Lag-0 cases matches the output of ccf(), but the negative ""manual"" lags do not.  This is because (to my understanding) the cross correlation function will construct the ""covariance"" (numerator) by comparing the lagged items to the ""full"" 10-item mean(x) and mean(y); in addition, I believe the denominator will keep the ""full"" series as well.</p>
+
+<p>At the end of the day, I can prove why the above <code>Lag -1 of 0.894</code> does NOT match the <code>ccf() -1 of 0.699</code> but I'm struggling to understand <strong>WHY</strong> the <code>ccf()</code> functions chooses to do what it does?</p>
+
+<p>I'm guessing it has something to do with adjusting for some sort of bias...?</p>
+"
+"0.129913960492326","0.174963553055941"," 72133","<p>I read in many books or notes online that (1)volatile series do not differ significantly from white noise and that (2)their squared values will exhibit correlation.
+Although I agree with (2), I can't seem to agree with (1). I used the tsdisplay function from forecast package to plot the acf of SP500(MASS) and bmw(evir) data and found that there are a few significant autocorrelation. This isn't so obvious when plotting the acf using the built in acf function as the correlation at lag 0 mask the correlation at subsequent lags.</p>
+
+<p>I also generated a white noise series and although the acf seem the same there were not really any significant autocorrelation.</p>
+
+<p>Can anyone explain this to me?</p>
+
+<p>Thanks</p>
+"
+"0.330761628628345","0.350967010651425"," 79216","<p><strong>Problem</strong>: When trying to calculate the variance of timeseries sums I get a negative variance, mostly due to autocovariances at large lag steps. Does not seem realistic.</p>
+
+<p>I have a timeseries which is calculated from another timeseries using a regression equation.
+I would like to propagate the uncertainty in the regression to the final timeseries. Then I want to sum (or take mean values) different segments of the timeseries over different timeperiods, and get the uncertainty of the sums. The timeseries is originally in 1 hour frequency and I want to sum over periods of 1 day (resampling to daily frequency) up to several years. The timeseries is strongly autocorrelated at short lag times.</p>
+
+<p>For getting the variance of the sum (in the case of 3 elements being summed):
+$$Var(a+b+c)= \\ Var(a)+Var(b)+Var(c) + 2 \times (Cov(a,b) + Cov(a,c)+Cov(b,c))$$</p>
+
+<p>I use <code>r</code> for the calculations. I get the variances for each timeseries element as $SE^2$, where $SE$ is the standard error (<code>se.fit</code>) returned from r's <code>predict()</code> function using the regression model. The covariances I get from the autocovariance function <code>acf()</code>.</p>
+
+<p>Here is some code and a selection of the data (excuse clumsy R code, I'm very new to R):</p>
+
+<pre><code>#tsY is the predicted timeseries from the regression
+tsY=c(81.4,  79.0,  83.4,   81.7,   75.7,   68.3,   62.3,   57.2,   52.6,   48.8,   45.4,   42.6,   39.9,   37.6,   35.6,   33.8,   32.2,   30.8,   29.6,   28.4,   27.3,   26.2,   25.0,   23.9)
+#tsSE is the standard error from the prediction (se.fit)
+tsSE=c(1.55,  1.49, 1.60,   1.56,   1.41,   1.23,   1.09,   0.97,   0.87,   0.78,   0.71,   0.65,   0.60,   0.55,   0.51,   0.48,   0.45,   0.42,   0.40,   0.38,   0.36,   0.34,   0.32,   0.30)
+
+tsVar=tsSE^2
+
+#create a matrix of the autocovariances at different lag times, diagonal is lag=0
+#rows and columns are indicies in timeseries
+covmat&lt;-matrix(numeric(0), length(tsY),length(tsY)) 
+for ( i in (1:(length(tsY)) ) ) {
+  if (i == 1) {
+    autocov&lt;-acf(tsY, type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }  else {
+    autocov&lt;-acf(tsY[-(1:i-1)], type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }
+
+}
+
+# sum the matrix columns, but not the diagonal
+sumofColumns &lt;- rep(NA, ncol(covmat))
+for (i in (1:ncol(covmat))) {
+  if (i == 1) {
+    sumofColumns[i]=sum(covmat[-(1),i])  
+  } else{ 
+    sumofColumns[i]=sum(covmat[-(1:i),i])  
+  }
+}
+
+sumofCov=sum(sumofColumns) # sum of the covariance (Cov(a,b) + Cov(a,c)+...)
+sumofVar=sum(tsVar) # sum of the variances of each timeseries element
+varofSum=sumofVar+2*sumofCov # variance of the sum of the timeseries
+
+# from the covmat the negative variance occurs at larger lag times.
+acf(tsY, type='covariance', lag.max= length(tsY))
+
+&gt; sumofCov
+[1] -1151.529
+&gt; varofSum
+[1] -2283.246
+</code></pre>
+
+<p><strong>So I have the following questions:</strong></p>
+
+<blockquote>
+  <ol>
+  <li><p>Did I completely misunderstand how to calculate variance of sums?</p></li>
+  <li><p>Is it better to use a cutoff from the max lags to be considered in the autocovariance? If so how would one determine this? This would especially be important with the complete data where the length is several thousand. </p></li>
+  </ol>
+  
+  <p><strike>3. Why is the covariance negative in this sample data at large? When plotting tsY  <code>plot(tsY)</code> it looks like the covariance/correlation should remain positive.</strike> Because it is the variation in direction from their means.</p>
+</blockquote>
+
+<p><strong>EDIT:</strong></p>
+
+<blockquote>
+  <p>Comment on <strong>question 2</strong> above:
+  I have realized that using n-1 lags, as above in the code, does not make a lot of sense. There appear to be few different ways to determine the maximum lags to consider.  Box &amp; Jenkins (1970) suggest n/4 and R by default 10*log10(n). This does not answer the question however, of how to determine an appropriate cutoff for summing the covariances.</p>
+  
+  <p>Does it make sense to look at the partial autocorrelation (function pacf()), in order not to overestimate the effect of the auto covariance in the summation term? The partial autocorrelation for my data is significantly different from zero only at 1 or 2 lags. Similarly, fitting an AR model using ar() function, I also get an order of 1 or 2.</p>
+</blockquote>
+
+<p>Cheers</p>
+
+<p>Related post <a href=""http://stats.stackexchange.com/questions/10943/variance-on-the-sum-of-predicted-values-from-a-mixed-effect-model-on-a-timeserie"">Variance on the sum of predicted values from a mixed effect model on a timeseries</a></p>
+"
+"0.271381412621103","0.335029697130245","103288","<p>I'm working on a time series problem where the spacing between observations is usually 12 or 24 hours, but this is not guaranteed.  I'd really like to estimate the auto-correlation function, and I've coded up a solution in R (shown at the bottom of this question).  Basically, I'm looping through all the observations in the dataset and for each observation I'm looking for other observations 1,2,3,... days in the past.  If that observation exists, then I use this pair in my computation of the acf, otherwise I don't.  </p>
+
+<p>To verify my function works, I've been comparing it with R's base acf() on a simulated dataset where the spacing is equal.  The agreement is close but not perfect (for n=10000 there's hardly any difference in the estimated acf's, but at n=100 I'm seeing differences as large as 0.05).</p>
+
+<p>My question is: how is the acf computed, exactly?  I realize it's a correlation between lagged observations, but what estimates do we use?  For example, I'm using:</p>
+
+<p>$$S_{X,Y} = \frac{\sum X_{i+t} X_i - (\sum X_{i+t}) (\sum X_i)/n}{n-1}$$
+$$S_{X,X} = \frac{\sum X_i^2 - (\sum X_i)^2/n}{n-1}$$
+$$\widehat{AR(1)} = S_{X,Y}/S_{X,X}$$</p>
+
+<p>where $X_i$ is the current observation, $X_{i+t}$ is the observation that is exactly 1 day (or 2,3,...) in the past, and all summations are over pairs that have exactly that difference.  So, I'm guessing that one of my $n$'s should be $n-1$ or vice versa, as asymptotically my estimator agrees with R's, but I can't figure it out.  Any suggestions?</p>
+
+<pre><code>acfUnequal = function( data, data.col=5, maxLags=10 )
+{
+  lags = 1:maxLags
+  data = data[!is.na(data[,data.col]),] #Can't use for acf anyways, and causes problems in calcs
+  reqCols = c(""Date"", ""Hour"")
+  test = reqCols %in% colnames(data)
+  if( any(!test) )
+    stop(paste0(""Missing the following columns: "", paste(reqCols[!test],collapse="", "")))
+  if(ncol(data)&lt;data.col)
+    stop(""data.col is larger than ncol(data)"")
+
+  diffT = as.numeric(diff(data$Date)) + diff(data$Hour)/2400
+  Exy = rep(0,length(lags)) #E(XY), computed by adding up all X*Y then dividing by count
+  Exx = rep(0,length(lags)) #E(X^2), computed by adding up all X^2 then dividing by count
+  Eyy = rep(0,length(lags)) #E(Y^2), computed by adding up all Y^2 then dividing by count
+  Ex = rep(0,length(lags)) #E(X), computed by adding up all X then dividing by count
+  cnt = rep(0,length(lags)) #Count, used to compute E(XY), E(X), E(Y)
+  for(i in 2:nrow(data))
+  {
+    diffCurr = 0
+    j = i
+    for(lag in lags)
+    {
+      while(diffCurr&lt;lag-0.05 &amp; j&gt;=2)
+      {
+        j = j-1
+        diffCurr = diffCurr + diffT[j]
+      }
+      if(!diffCurr&gt;lag+.05) #time lag within 0.05 days detected, use data to compute acf
+      {
+        Exy[lag] = Exy[lag] + data[i,data.col]*data[j,data.col]
+        Exx[lag] = Exx[lag] + data[i,data.col]*data[i,data.col]
+        Eyy[lag] = Eyy[lag] + data[j,data.col]*data[j,data.col]
+        Ex[lag] = Ex[lag] + data[i,data.col]
+        Ey[lag] = Ey[lag] + data[j,data.col]
+        cnt[lag] = cnt[lag] + 1
+      }
+    }
+  }
+  sxy = (Exy - Ex*Ey/cnt)/(cnt-1)
+  sxx = (Exx - Ex^2/cnt)/(cnt-1)
+  acf = sxy/sxx
+  return(acf)
+}
+</code></pre>
+"
+"0.229657606087313","0.247435829652697","104365","<p>I am running some Poisson (or Neg.Binomial depending on overdispersion) models and i want to check for residual autocorrelation due to the nature of the data (monthly cases).</p>
+
+<p>I am using R and i am producing correlograms with the use of the ""acf"" command, where i can check if the autocorrelation for the different lags falls outside the produced confidence intervals. 
+On the other hand based on published papers that have done similar studies to mine i see that they have used the Durbin-Watson test to check for presense of first or second order autocorrelation which is of interest here.
+In R i have found two commands for this test: the ""dwtest"" in package lmtest (based on what is called the pan algorithm) and ""durbinWatsonTest"" in package car which uses bootstrap.
+In both these tests the documentation suggests they are used for lm objects which is not the case for my models (nor the published ones).</p>
+
+<p>My question is: Is the D-W test valid to use for residual autocorrelation in Poisson (Neg.Bin) models? Is there some other test for these models?
+If the results between the ""acf"" and the two D-W tests matched i would feel more comfortable but they don't and to my understanding the ""acf"" is more reliable. </p>
+"
+"0.390900106560771","0.377964473009227","104558","<p>I am really new to R and to time series. My field of studies is in the field of Networks and Telecommunication, but my summer internship is about trying to find a statistical model for some sets of data.</p>
+
+<p>The data consists of what is called ""10-minutes-points"", recorded over a year and which represent power consuption of a source substation. It means I have 6 * 24 * 365 = 52 560 points of data to process, one set for each source substation.</p>
+
+<p>It's been about a week I'm trying to found information about ARIMA models. <a href=""https://www.otexts.org/fpp/8/9"" rel=""nofollow"">This website</a> and the report of my predecessor quite helped me getting in the subject, by I still encountered many problems.</p>
+
+<p>I found one might be due to the large size of the data set <a href=""http://stats.stackexchange.com/questions/27313/how-would-you-fit-arima-model-with-lots-of-autocorrelations"">as explained here</a>, the second one to the existence of exogenous data as <a href=""http://stats.stackexchange.com/questions/25780/what-is-the-purpose-of-and-how-to-use-the-xreg-argument-when-fitting-arima-model"">mentioned there</a>.</p>
+
+<p>My predecessor found the ARIMA model to be effective for short term predictions (up to 20-ish hours), and the SARIMAX for mid-term predictions (around a dozen days). I guess it is cause exogeneous data doesn't affect as much the core data on such short periods of time.</p>
+
+<p>I found <a href=""http://stats.stackexchange.com/questions/18375/how-to-fit-an-arimax-model-with-r"">this thread</a> to be very interesting but I'm not sure I understand everything.</p>
+
+<p>In a first time I would like to know if my understanding of the general method to evaluate a model is correct :</p>
+
+<ol>
+<li><p>first you plot your data and try to look for any trend/seasonality (the data I have showed to have a daily seasonality and a yearly one)</p></li>
+<li><p>you use log in order to reduce the trend, and maybe differentiate to eliminate the seasonality (so I should use something like : <code>diff(data.ts, 144)</code> in my case to get rid of the daily seasonality (6*24 points a day) ?)</p></li>
+<li><p>plot the acf/pcf of the differentiated time series and try to estimate a model from there</p></li>
+<li><p>try to fit the model to my data with <code>fit &lt;- Arima(data, order=c(p,d,q), seasonal=c(P,D,Q))</code> but I don't where the seasonality (144) would appear in this function ?</p></li>
+<li><p>study the residuals of fit to see if the model is correct (looking at the acf/pacf)</p></li>
+<li><p>use fitted or forecast (I don't know which one is better) to predict future values</p></li>
+</ol>
+
+<p>Thing is, since the data set is huge, I always get significant spikes at many lags in the acf/pacf and I don't feel I can judge if a model is correct or not.</p>
+
+<p>Here is an example :</p>
+
+<p><code>data = scan(""auch.txt"", skip=1)
+plot.ts(data)</code></p>
+
+<p><img src=""http://i.stack.imgur.com/weVCX.png"" alt=""Data""></p>
+
+<p><code>data.ts = ts(log(data)
+data.diff = diff(data.ts, 144)
+plot.ts(data.diff)</code></p>
+
+<p><img src=""http://i.stack.imgur.com/Ck7mu.png"" alt=""Datadiff""></p>
+
+<p>Which seems somehow stationary to me. I then proceed to look at the acf/pacf, and had to differentiate once more because it wasn't stationary in fact :</p>
+
+<p><code>tsdisplay(data.diff, lag.max=150)
+tsdisplay(diff(data.diff), lag.max=150)</code></p>
+
+<p><img src=""http://i.stack.imgur.com/dgqG6.png"" alt=""Tsdisplay"">
+<img src=""http://i.stack.imgur.com/P7Kj7.png"" alt=""Tsdisplaydiff""></p>
+
+<p>And I really don't know how to handle these results, so I hoped I could find some help here, because I came across the website a lot during my researchs.</p>
+
+<p>Thanks in advance, and I apologies for any grammatical mistakes or vocabulary error ; English is not my native language.</p>
+
+<p><strong>Edit :</strong> does anyone know why my pictures won't appear ?</p>
+
+<p><strong>Edit bis :</strong> nvm in fact it might be me, because imgur is blocked on my work computer</p>
+"
+"0.407778228948779","0.430730492253948","123576","<p>I am trying to test the effect on the heat flux between indoors and outdoors before and after removing insulation.</p>
+
+<p>Briefly, I have 26 sensors on a wall, measuring heat flow between indoors and outdoors over a number of days. The wall was part of a real world experimental setup so that the insulation on the wall was removed halfway through the experiment. Â What I care about is to have a measure of the effect of the removal of the insulation (I am not interested in any form of forecasting). Â I am exploring the use of a SARIMA/ARIMAX models with one regressor because, aside from the removal of the insulation, the heat flow between indoors and outdoors was affected by daily cyclical and random environmental effects (heating on or off, daily temperature changes, wind, etc).  Here I will present that data and analysis of one sensor.  My data has been collected hourly, and I have transformed the variable â€˜insulatedâ€™ â€˜not insulatedâ€™ as a factor of 0s and 1s as indicator.</p>
+
+<pre><code>heat.flux = c(8.677048,6.558642,5.920314,5.583614,5.373176,5.253928,4.938272,7.358305,9.743266,10.46577,11.06201,10.90067,11.49691,13.15236,12.10017,10.60606,10.45875,10.03788,9.588945,9.287318,8.578844,8.024691,10.26936,11.8757,10.20623,8.634961,8.305275,8.101852,8.12991,7.947531,7.814254,10.40264,13.08221,14.3729,14.94809,15.08838,15.20763,15.75477,14.57632,12.79461,11.97391,10.97082,10.33249,9.701178,9.715208,9.083895,10.63412,12.07912,9.736251,7.638889,6.453423,5.983446,5.499439,5.099607,4.70679,6.972503,9.259259,9.981762,10.24832,10.17116,10.27637,10.27637,9.546857,7.568743,7.168911,6.867284,6.705948,6.916386,8.319304,8.424523,11.41274,13.52413,11.70034,9.532828,8.957632,9.07688,9.694164,9.301347,9.048822,12.28255,14.95511,15.22868,15.24972,15.12346,15.08838,15.17256,13.68547,12.18434,12.1633,12.13524,11.81257,11.58109,11.44781,11.27946,13.87486,15.92312,14.07828,11.90376,10.46577,9.518799,8.978676,8.803311,8.684063,11.65123,14.39394,15.69865,16.61756,16.828,16.83502,16.16863,14.23962,12.19837,12.09315,11.5881,11.20932,10.50786,10.59203,10.64815,13.51712,15.71268,13.92396,12.10718,12.2615,11.65123,11.05499,10.31846,9.834456,12.9349,15.41807,15.78283,15.8179,16.11953,15.95118,15.63552,13.1243,11.22334,10.21324,8.705107,7.526655,6.15881,5.30303,5.597643,8.599888,11.17424,9.631033,8.038721,7.638889,7.203984,7.161897,6.76908,6.888328,9.518799,12.40881,13.21549,14.28872,14.43603,14.8078,14.81481,13.60129,12.59119,11.86167,11.91779,11.73541,12.04405,11.51796,11.74242,13.7486,15.85999,14.84989,12.63328,10.68322,9.343434,8.592873,8.333333,8.445567,10.97783,13.82576,15.12346,16.58249,17.61364,18.30808,19.10774,17.97138,16.62458,15.867,16.07744,15.63552,16.0073,15.42508,15.01122,17.10157,18.94641,22.44669,18.94641,16.01431,14.55527,13.88889,12.77357,11.66526,12.46493,15.41807,16.75786,17.27694,17.03143,16.84905,16.828,16.02834,16.35802,16.04237,15.03928,14.00112,14.1344,13.86785,13.99411,15.30584,18.20286,19.49355,16.16162,14.05022,12.05107,12.27553,13.01207,12.5491,13.72054,16.91218,18.62374,18.79209,20.80527,19.50758,20.18799,20.63692,18.49747,17.25589,17.38215,18.40629,18.60269,19.12177,18.66582,21.09989,24.45286,26.71156,23.54798,20.01964,17.98541,14.83586,14.31678,15.15152,15.30584,17.95735,19.71801,20.30724,20.19501,20.2862,20.1459,20.10382,18.20988,16.54742,15.22868,13.96605,12.71044,11.61616,10.71829,12.12121,14.77273,14.04321,12.44388,10.94978,10.2413,9.708193,9.638047,9.322391,11.27245,14.24663,14.77273,14.75168,14.92705,15.47419,15.48822,14.73765,13.68547,12.65432,12.35269,12.34568,12.32464,12.7385,12.84371,14.16947,17.34007,17.09456,15.0954,13.40488,11.70735,10.8165,10.64815,12.01599,13.55219,16.7298,17.45932,17.61364,19.58474,20.02666,19.79517,19.38833,17.32604,16.11953,15.62851,15.01122,14.70258,14.5693,14.35887,16.28086,18.69388,18.92536,16.56846,15.97222,13.34877,12.81566,12.04405,13.23653,14.1835,16.75786,17.55752,17.98541,18.85522,18.8482,19.02357,18.96044,17.31201,15.42508,14.38692,13.57323,12.36672,12.03002,11.41274,13.15236,15.88103,14.66049,12.8858,11.67228,11.03395,9.399551,8.375421,8.073793,10.6271,13.57323,13.61532,14.31678,14.73765,15.08838,15.62149,16.6807,15.28479,14.07127,13.14534,12.61223,12.57015,12.02301,12.17031,14.33782,18.83418,20.45455,18.67985,18.40629,16.51235,14.45006,14.61841,15.20763,15.57941,18.06958,19.88636,20.51066,21.633,23.24635,24.28451,24.70539,24.19332,22.81145,21.97671,21.58389,21.3945,21.21212,20.89646,21.1069,23.86364)
+
+insulation = c(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+</code></pre>
+
+<p>First off, the time series plot of the heat flux is this (the red line is when the insulation is removed):</p>
+
+<p><img src=""http://i.stack.imgur.com/SYSQj.jpg"" alt=""Time series plot of heat flux""></p>
+
+<p>Than this are the ACF and PACF plots of the same data:</p>
+
+<p><img src=""http://i.stack.imgur.com/7keT7.jpg"" alt=""ACF and PACF of the data""></p>
+
+<p>For my data, an <code>stl()</code> decomposition, run as <code>stl(ts(heat.flux, frequency = 24), 'period')</code></p>
+
+<p>shows a strong â€˜seasonalâ€™ (i.e daily) component and a trend in the series. Â </p>
+
+<p><img src=""http://i.stack.imgur.com/CUsta.jpg"" alt=""STL of the data""></p>
+
+<p>Firs off I am trying to determine the best parameters for a SARIMA or ARIMAX model so that I can get an estimation of the effect removing the insulation. Despite the fact I can produce the ACF and PACF plots there is no way I can figure out the proper orders, so I load the library <code>forecast</code> and I run:</p>
+
+<pre><code>library(forecast)
+auto.arima(ts(heat.flux, frequency = 24), xreg = insulation, max.p = 10, max.q = 10, max.P = 10, max.Q = 10, stationary = F)Â 
+</code></pre>
+
+<p>The reason why I do not specify a stationary model is because of the trend I see with <code>stl()</code> and because I assume an effect of removing the insulation.</p>
+
+<p>from <code>auto.arima()</code> I get:</p>
+
+<pre><code>Series: ts(heat.flux, frequency = 24) 
+ARIMA(2,0,2)(1,0,1)[24] with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept  carp.hour$interv
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449            4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075            0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood=-411.28
+AIC=840.55   AICc=841.03   BIC=876.11
+</code></pre>
+
+<p>If I try to use the <code>TSA</code> package and use <code>arimax()</code> with those orders I get basically the same stuff:</p>
+
+<pre><code>library(TSA)
+arimax(ts(heat.flux, frequency = 24), xreg = insulation, order = c(2,0,2), seasonal = list(order = c(1,0,1), frequency = 24))
+Series: x 
+ARIMA(2,0,2)(1,0,1)[24] with non-zero mean 
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept    xreg
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449  4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075  0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood=-411.28
+AIC=838.55   AICc=839.03   BIC=874.11
+</code></pre>
+
+<p>And all is apparently well (Irrespective of the function I choose I get an estimate of the effect of the removal of the insulation and a se with it with is what I want). Â Unfortunately, when I test the fit of this model with the function <code>sarima()</code> from the <code>astsa</code>package I get significant Ljung-Box p-values for all my sensors and for all the lags:</p>
+
+<pre><code>library(astsa)
+sarima(ts(heat.flux, frequency = 24), p = 2, d = 0, q = 2, P =1, D = 0, Q = 1, S = 24, xreg = insulation)
+$fit
+
+Call:
+stats::arima(x = xdata, order = c(p, d, q), seasonal = list(order = c(P, D, 
+Q), period = S), xreg = xreg, optim.control = list(trace = trc, REPORT = 1, 
+reltol = tol))
+
+Coefficients:
+         ar1      ar2      ma1      ma2    sar1     sma1  intercept    xreg
+      1.9414  -0.9495  -0.7423  -0.1793  0.9717  -0.6009    11.2449  4.3338
+s.e.  0.0231   0.0221   0.0570   0.0544  0.0104   0.0544     2.1075  0.5548
+
+sigma^2 estimated as 0.4484:  log likelihood = -411.28,  aic = 840.55
+</code></pre>
+
+<p>but the plot that comes with is shows that at every single lag the Ljung-Box statistics is significant:</p>
+
+<p><img src=""http://i.stack.imgur.com/ZMGKN.jpg"" alt=""SARIMA""></p>
+
+<p>What is going on?  To sum it up:</p>
+
+<ol>
+<li>which of these models is the most correct to estimate the effect of insulation?</li>
+<li>why are the Ljung-Box p-values all significant?  I would have though that the ARIMA/ARIMAX/SARIMA would have sorted that issue</li>
+<li>If the orders calculated by <code>auto.arima()</code> are the problem, how could I find them in a different way (which is computationally feasible and does not take days).</li>
+</ol>
+
+<p>Finally, two notes.  I also have collected variables such as internal and external temperatures, windspeed, etc, but I would have though that integrating these in the model would be superfluous given the fact it is already an ARIMA model to start with.  Second, I am not at all wedded to this kind of analysis, but I am aware that a straightforward linear model would not be acceptable given the autocorrelation between the data points.</p>
+"
+"0.194870940738489","0.174963553055941","129825","<p>I've been learning about time series analysis because I want to understand how much groundwater level changes in an aquifer affect land subsidence (land sinking). I have two time series: (1) measurements of aquifer water levels and (2) measurements of relative land surface movement. Both series are regularly sampled; monthly measurements for 40 years (480 observations). </p>
+
+<p>First, I decomposed each of the time series for exploratory purposes (the series seemed like ""trend stationary""). Then conducted ADF tests to check for stationarity, for which I found they're not. Proceeded to run ADF tests on the 1st differences for each time series and found that the differences are stationary. Finally, I ran a cross-correlation on the differences and got that the series are correlated at different lags. </p>
+
+<p>From the literature, I know that groundwater levels influence land surface elevation. Just by looking at the plots, I can see that the rate at which the land was sinking has slowed down and reversed as the aquifer water levels recovered over time.</p>
+
+<p><img src=""http://i.stack.imgur.com/dSTz1.png"" alt=""enter image description here"">
+<img src=""http://i.stack.imgur.com/eVd1k.png"" alt=""enter image description here""></p>
+
+<p>After all the time series analysis research I've done, I still cannot grasp <strong>how  to get at an estimate of the percent of the variation in land surface movement explained by groundwater level.</strong></p>
+
+<p>Any insights are greatly appreciated.</p>
+"
+"0.357263391353897","0.320766513935892","145251","<p>Sorry in advance if this is too basic of a question - I've been struggling with this data set for almost a month and feel like I'm going in circles, and the more I Google the more confused I get.</p>
+
+<p>I have a time series of hourly activity levels (mean of 7 persons) for a period of about 2 months (1704 observations). There is obviously a strong ""seasonal"" component (freq=24) to this time series, with activity showing regular fluctuations between night and day. I am ultimately hoping to compare my activity time series to three other time series of environmental variables, to see how weather, temperature, etc affect people's activity on an hourly scale, following the methods in <a href=""http://cid.oxfordjournals.org/content/early/2012/05/21/cid.cis509.full"" rel=""nofollow"">this paper</a>. I'm not planning on doing forecasting, just wanting to know if these explanatory variables are affecting activity, and if so, how.</p>
+
+<p>The paper linked above did their analysis in a few steps, if I understand correctly:</p>
+
+<ol>
+<li>Use stl to assess trend and seasonality.</li>
+<li>Fit time series to ARIMA model.</li>
+<li>Transform data into series of independent, identically distributed random variables</li>
+<li>Choose best-fitting model by AIC</li>
+<li>Use residuals for cross-correlating variables.</li>
+</ol>
+
+<p>Okay. Here are my questions:</p>
+
+<ol>
+<li><p>I can do step 1, but don't know how to relate that to step 2. Am I using the remainder from stl analysis for ARIMA modeling? If not, what's the point of step 1?</p></li>
+<li><p>I understand how to choose some candidate models for ARIMA based on ACF, PACF, and auto.arima. But I can't get past the diagnostics. My Ljung-Box values are ALWAYS significant for ALL lags. Okay, so that means my residuals are correlated (I think). And since I want to use the residuals for cross-correlation, I assume that's bad. But no matter which models I try (I've tried maybe 6-10, is that enough?) I can't get good Ljung-Box p-values. The best fitting ARIMA so far (by AIC) is (1,0,2)x(1,1,2)24.</p></li>
+</ol>
+
+<p>Does this mean my time series doesn't fit an ARIMA model? How can I get iid residuals if I can't even get it to fit a model? Arrrghh.</p>
+
+<p>So to be more succinct, my main question is: why do I always have these significant Ljung-Box values, and what can I do to fit a better model to get iid residuals?</p>
+
+<p>Subsample of data (full set <a href=""https://www.dropbox.com/s/lhd9zu0x8r4o8pe/fitbit%20data.txt?dl=0"" rel=""nofollow"">here</a>):</p>
+
+<pre><code>[1] 24 16 40 48 50 38 24  4  4  5  3  6  4  4  4  3 12 63 55 42 56 20 10 26 45 47 66 64 59
+[30] 54 24  5  6  2  4  3  6 10  6  2 13 39 26 17 24 13 19 26 17 32 54 68 58 39 20  0  3  2
+[59]  8  2  4  1  5 11  5 60 57 54 40 40 53 74 40 42 57 46 46 26  9  8  4  6 14  8  5  3  2
+[88]  7 19 47 53 43 53 51 55 64 48 64 57 56 52 34 22  8  5  6  4  6  3  4  7  6 27 40 48 41
+[117] 43 51 50 44 56 64 68 46 49 35 16  2 14  3  7  3 13  3  3  2 14 49 62 42 41 57 52 63 32
+[146] 54 59 60 68 24 12  2  2  2  2  7  6  5  9 10 26 53 50 59 28 45 47 44 48 55 59 77 86 33
+[175] 18 16 10  6  9  9 14  7  9  7  9 46 57 41 33 32 34 29 39 39 27 26  4 10  9  6  6  2  4
+[204]  1  2  2  4  4 17 50 47 24 27 34 26 38 20  6 20 15 25  8  2  2  3  6  4  3  3  4  4  2
+[233] 18 41 63 52 37 32 32 28 48 20  6 10  9  7  5 10  4  3  4  7  4  3  4 10  8 56 47 50 27
+[262] 30 22 38 38 28 33 24 18 12 14  2 10  4 21  4  5  6  4  4 20 41 46 16  8 20 24 21 16 27
+[291] 10  6 14  5  6  6 12  2 10  7  6  2  2  3 16 47 56 43 30 35 32 41 20 20 11 34 16  6 10
+[320]  2  5 10  3 11  6  5  7  5 14 50 30 26 19 16 10  5 12 12 22 16 16 10  4  5  4  4  8 14
+[349]  4  6  4  5 21 47 28 15  8 12 18 18 16 10  5  8 12  3  6  4  5 12 11  8  2  4  6 10 25
+[378] 42 20 15  8 18 10 10  6 18 12  4  7  6  6  4  8 14  3 10 11  5 10  9 26 54 41 36 44  9
+[407]  4  5  3  8 12 16 11 12 13 26  5 13 13  1  1  5 18  7 39 64 64 65 44 34 42 63 62 54 26
+[436] 30 34 25 15  7  1  0  2  1  0  9 13 10 33 65 59 48 44 60 65 44 55 65 67 76 85 63 48  8
+[465]  2  0  3  1  1  1  8 12 19 72 67 42 46 70 54 37 41 66 62 54 80 52 22  3  2  2  1  1  5
+[494]  2  2  5 37 48 32 29 27 25 21  2 17  3 24  2  7  1  1  4  7  8  7  4  3  6  2  4 26 28
+[523] 15  6  2  4  1 12  4  2  4 14 11  2  5  1 13 16 10  5 14  1  2  3 13 24 29 20 12  8  4
+[552]  8  1 11  8 10  6  4  6  1  6  8  4  7 18 17 12  3 18 50 25 27 20 14 14  9 14 14 15  5
+[581]  8  3  4  3  3 11 12 12  4 19 25  8 33 53 61 49 50 34 38 45 76 65 72 53 84 65 51 19  4
+[610]  2 11  7  5  3  6  3 38 85 83 72 58 77 78 63 73 64 56 22  3 10 13 10  2  1  1  0  8  6
+[639]  5  2 34 54 56 54 14  5 17 18 21  3 14 14  6  4  1  2  4 10  7  3  3  4 12 17 54 68 49
+[668] 51 38 11 29 17  1  2  4  8  9  6  4  3 14  0  1 10  8  4  3  3 25 31  9  9 10  6  8  9
+[697]  4 11  4  6  3  9  0  2  4  1 10 20 11  2  8  4 28 35 40 34 36 19 19 15 23 14  6  4  2
+[726]  6  5  4  2  4  4  2  8 13 17  4 44 30 23 22 11  5 10 12  6  8 11  1 12 10  1  2  0  6
+[755]  6  3  4  9  1  9 13 41  8  6  9 13 28  7  2  8  7  2  3  6  1  2  5  4  4  4  2  5  9
+[784]  9 28 53 40 28  6  8  1  7  2 13 20  7  3  8  4  2  2  6  3  5 16  8  2 14 16 41 20 22
+[813]  7  8 10 24 23 24 19 14  5  1  1  2  9  0  6  2 15  8  4  5 26 28  9  9 16 30 11 12  7
+</code></pre>
+
+<p>ACF/PACF after taking 24th difference: </p>
+
+<p><img src=""http://i.stack.imgur.com/1SWHy.png"" alt=""ACF/PACF of time series after taking 24th difference""></p>
+
+<p>Diagnostics of SARIMA(1,0,2)x(1,1,2)24 model (best model by AIC and as suggested by auto.arima):</p>
+
+<p><img src=""http://i.stack.imgur.com/Tp70f.png"" alt=""enter image description here""></p>
+"
+"0.275589127304775","0.247435829652697","147530","<p>I'm trying to perform a lagged linear regression on time series data sourced from ~10,000 hospital patients, for the purpose of estimating causal relationships between administration of a drug and a certain physiological response. For example: Do non-steroidal anti inflammatory drugs cause hypertension?</p>
+
+<p>Basically, the linear model I'm trying to fit is like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/qukXs.png"" alt=""AR/cross-correlation model""></p>
+
+<p>This assumes a maximum of 30 lags. $y$ represents hypertension, $x$ is taking the drug, and $h$ is whether the patient is admitted or not (a covariate). </p>
+
+<p><strong>My question is this</strong>: Given a unique time series for <em>each patient</em> (all truncated to the same length of 30 time points), how can I pool all of the time series data together to estimate things like the cross-correlation (e.g., using <code>ccf</code>) and auto-correlation (<code>acf</code>) over the entire data set? If I were just trying to fit a linear model, this can be done relatively easily using something like the <code>plm</code> library, but I haven't been able to find anything similar for single functions.</p>
+
+<p>For reference, here is a very small example of what my data set looks like (note that I only retained 6 of the 30 total time points for each patient, for brevity):</p>
+
+<pre><code>   patient_id            time     nsaid hypertension admission
+1           1               1 0.4427955    0.0000000 0.0000000
+2           1               2 1.0000000    0.2097246 0.0000000
+3           1               3 0.0000000    0.4916697 0.0000000
+4           1               4 0.0000000    1.0000000 0.0000000
+5           1               5 0.0000000    0.7902754 0.0000000
+6           1               6 0.0000000    0.0000000 0.0000000
+7           2               1 0.0000000    0.0000000 0.0000000
+8           2               2 0.4104132    0.0000000 0.0000000
+9           2               3 0.8236088    0.0000000 1.0000000
+10          2               4 1.0000000    0.0000000 0.6994038
+11          2               5 0.5895868    0.0000000 0.0000000
+12          2               6 0.1763912    0.0000000 0.0000000
+</code></pre>
+"
+"0.212621627781281","0.229081064496364","147619","<p>I'm trying to build a model that can predict streamflow for an alpine (snowmelt-fed) watershed using snow albedo (roughly, the energy reflectance of the snow) data. Albedo controls the melt of the snowpack, and higher albedo means slower melt, and vice versa. I have daily time-series data for both the snow albedo and streamflow, for 12 years from 2002-2013. The albedo time-series was obtained by spatially-averaging albedo data (raster files) from NASA's MODIS satellite.</p>
+
+<p>I have tried various methods (simple regression, GLMs, GAMs, decision trees and random forests) to build the flow prediction model, but all of them fail because of the autocorrelated relationship between albedo and flow. Since the albedo is a snowpack property, there is a lag between it and the flow (related to snowmelt).</p>
+
+<p>The Cross correlation function (CCF) between albedo and flow is shown below:</p>
+
+<p><a href=""http://imgur.com/PpW1Kpy"" rel=""nofollow""><img src=""http://i.imgur.com/PpW1Kpy.png"" title=""source: imgur.com"" /></a></p>
+
+<p>I have tried to include albedo lags of various days into the models, but I'm not able to mimic the distributed lag relationship between albedo and flow. I have tried to add precipitation, temperature and other climatic data to the predictors, but they don't seem to help. There are similar lagged and cross-correlation problems between these other predictors and flow.</p>
+
+<p>The albedo, flow, precipitation and air temperature time-series are shown below:</p>
+
+<p><a href=""http://imgur.com/Kb8Ta6q"" rel=""nofollow""><img src=""http://i.imgur.com/Kb8Ta6q.png"" title=""source: imgur.com"" /></a></p>
+
+<p>Is there a statistical or machine learning technique in R that I can explore to build the albedo-streamflow model?</p>
+
+<p>Thank you.</p>
+"
+"0.251577302713314","0.225876975726313","149415","<p>I've run <code>lagsarlm</code> on my dataset, using a mixed model and using a row-standardized adjacency matrix. I have results that I think are good, but would am not sure how to interpret them.</p>
+
+<ul>
+<li>Does the p-value of 0.12 on rho mean I cannot count on spatial autocorrelation of the response?</li>
+<li>Does the low p-value for the LM test mean that the error term is not spatially correlated to the response?</li>
+<li>What about the various p-values of the coefficients: Should I remove predictors that have high p-values and run it again?</li>
+</ul>
+
+<p>.</p>
+
+<pre><code>&gt; summary(lm.lag)
+
+Call:lagsarlm(formula = Y.scaled ~ Narcotics.Crime.Rate + Assault..Homicide. + 
+    Infant.Mortality.Rate + Below.Poverty.Level + Per.Capita.Income, 
+    data = X.scaled, listw = W.mat, type = ""mixed"")
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.96641 -0.33183 -0.13579  0.15113  3.00270 
+
+Type: mixed 
+Coefficients: (asymptotic standard errors) 
+                           Estimate Std. Error z value  Pr(&gt;|z|)
+(Intercept)                0.007063   0.069365  0.1018 0.9188960
+Narcotics.Crime.Rate       0.465759   0.176160  2.6439 0.0081945
+Assault..Homicide.         0.202034   0.156141  1.2939 0.1956925
+Infant.Mortality.Rate      0.121582   0.130806  0.9295 0.3526420
+Below.Poverty.Level        0.051494   0.129330  0.3982 0.6905098
+Per.Capita.Income         -0.119833   0.171509 -0.6987 0.4847382
+lag.Narcotics.Crime.Rate  -0.673492   0.284876 -2.3642 0.0180710
+lag.Assault..Homicide.     0.366021   0.295266  1.2396 0.2151117
+lag.Infant.Mortality.Rate  0.010755   0.240319  0.0448 0.9643038
+lag.Below.Poverty.Level    0.232895   0.202924  1.1477 0.2510930
+lag.Per.Capita.Income      0.885463   0.256441  3.4529 0.0005546
+
+Rho: 0.26724, LR test value: 2.3413, p-value: 0.12598
+Asymptotic standard error: 0.14187
+    z-value: 1.8838, p-value: 0.059597
+Wald statistic: 3.5486, p-value: 0.059597
+
+Log likelihood: -70.92512 for mixed model
+ML residual variance (sigma squared): 0.36337, (sigma: 0.6028)
+Number of observations: 77 
+Number of parameters estimated: 13 
+AIC: 167.85, (AIC for lm: 168.19)
+LM test for residual autocorrelation
+test value: 14.516, p-value: 0.00013896
+</code></pre>
+"
+"0.255145953337537","0.229081064496364","161981","<p>I recently fit a VAR model to two time series and I was trying to check for serial correlation in my model.  My main question is, when i use a function called serial.test in the R package, there are two options.  One of Portmanteau test and the other is Breusch Godfrey test.  I have had situations where in my serial.test function, when i specify 10 lags, the Portmanteau test leads in rejection, but increasing it to 16 lags, leads it to acceptance of null with a p value of 0.056.  How is this possible?  Isn't the null in portmanteau test that serial correlation of all lags in the residuals are 0?  if this gets rejected from lags 1-10, why would it lead to acceptance from lag 1-16?  </p>
+
+<p>Also, It seems Breusch Godfrey test results have been more inline with verifying someo of the findings that I have expected.  For instance, I found co-integration in a particular time span.  So, i would expect granger casuality.  Using Portmantaeu test, at lag 3 (recommended lag for VAR model), it says there is correlation in residuals (specified from lags 1-10), but no correlation in residuals in lags (1-16).  So, I decided to increase the lag p to 6 until Portmantaeu test led to acceptance of no serial correlation.  Ok, all is good.  But then, when testing for granger, it seems the test fails for granger casuality (a contradiction to a theorem that says if there is co-integration, there exists granger casual flows into the system).  </p>
+
+<p>Now, when I use the original lag 3 and the Breusch Godfrey test, it confirms no correlation for the lag 3 model.  Hence, when testing for granger casuality at lag 3, it passes.  Meaning, I have casual flows.  </p>
+
+<p>Does this mean that the Breusch Godfrey test is preferred in my situation when compared to Portmanteau test?</p>
+
+<p>Thanks</p>
+
+<p>raj</p>
+"
+"0.371260065948674","0.404761904761905","162204","<p>I've got two time series (parameters of a model for males and females) and aim to identify an appropriate ARIMA model in order to make forecasts. My time series looks like:</p>
+
+<p><img src=""http://i.stack.imgur.com/t8JkR.jpg"" alt=""enter image description here""></p>
+
+<p>The plot and the ACF show non-stationary (the spikes of the ACF cut off very slowly). Thus, I use differencing and obtain:</p>
+
+<p><img src=""http://i.stack.imgur.com/Zy1kC.jpg"" alt=""enter image description here""></p>
+
+<p>This plot indicate that the series might now be stationary and the application of the kpss test and the adf test support this hypothesis.</p>
+
+<p>Starting with the Male series, we make the following observations:</p>
+
+<ul>
+<li>The empirical autocorrelations at Lags 1,4,5,26 and 27 are significant different from zero.</li>
+<li>The ACF cuts off (?), but I'm concerned about the relatively big spikes at lag 26 and 27.</li>
+<li>Only the empirical partial autocorrelations at Lags 1 and 2 are significant different from zero.</li>
+</ul>
+
+<p>On ground of these observations alone, if I had to choose a pure AR or MA model for the differenced time series, I would tend to choose either an AR(2) model by arguing that:</p>
+
+<ul>
+<li>We have no significant partial autocorrelations for lag greater than 2 </li>
+<li>The ACF cuts off except for the region around lag 27. (Are these few outliers alone an indicator, that a mixed ARMA model would be appropriate?)</li>
+</ul>
+
+<p>or an MA(1) model by arguing that:</p>
+
+<ul>
+<li>The PACF clearly cuts off</li>
+<li>We have for lags greater 1 only 4 spikes exceeding the critical value in magnitude. This is ""only"" one more than the 3 spikes (95% out of 60) which would be allowed to lie outside the dotted area.</li>
+</ul>
+
+<p>There are no characteristica of an ARIMA(1,1,1) model and choosing orders of p and q of an ARIMA model on grounds of ACF and PACF for p+q > 2 gets difficult.</p>
+
+<p>Using auto.arima() with the AIC criterion (Should I use AIC or AICC?) gives:</p>
+
+<ol>
+<li>ARIMA(2,1,1) with Drift; AIC=280.2783</li>
+<li>ARIMA(0,1,1) with Drift; AIC=280.2784</li>
+<li>ARIMA(2,1,0) with Drift; AIC=281.437</li>
+</ol>
+
+<p>All three considered models show white noise residuals:</p>
+
+<p><img src=""http://i.stack.imgur.com/WM0By.jpg"" alt=""enter image description here""></p>
+
+<p>My summed up questions are:</p>
+
+<ol>
+<li>Can you still describe the ACF of the time series as cutting of despite the spikes around lag 26?</li>
+<li>Are these outliers an indicator that a mixed ARMA model might be more appropriate?</li>
+<li>Which Information Criterion should I choose? AIC? AICC?</li>
+<li>The residuals of the three models with the highest AIC do all show white noise behavior, but the difference in the AIC is only very small. Should I use the one with the fewest parameters, i.e. an ARIMA(0,1,1)?</li>
+<li>Is my argumentation in general plausible?</li>
+<li>Are their further possibilities to determine which model might be better or should I for example, the two with the highest AIC and perform backtests to test the plausibility of forecasts?</li>
+</ol>
+
+<p>Thanks!</p>
+
+<p><strong>EDIT:</strong> Here is my data:</p>
+
+<pre><code>-5.9112948202 -5.3429985122 -4.7382340534 -3.1129015623 -3.0350910288 -2.3218904871 -1.7926701792 -1.1417358384 -0.6665592055 -0.2907748318 0.2899480865 0.4637205370  0.5826312749  0.3869227286  0.6268379174  0.7439125292 0.7641139207  0.7613140511  3.0143912244 -0.7339255839  2.0109976796 0.8282394650 -2.5668367983  5.9826406394  1.9569198553  2.3860893476 2.0883339390  1.9761894580  2.2601997245  2.2464027995  2.5131158613 3.4564765529  4.2307335557  4.0298688374  3.7626317439  3.1026407174 2.1690168737  1.5617407254  2.6790460788  0.4652054768 -0.0501046517 -1.0157683791 -0.5113698054 -0.0180401353 -1.9471272198 -0.2550365250 -1.1269988523  0.5152074134  0.2362626753 -2.9978337017  1.4924705528 -1.4907767844 -0.5492041416 -0.7313021018 -0.6531515868 -0.4094159299 -0.5525401626 -0.0611454515 -0.5256272882 -1.1235247363 -1.7299848758 -1.3807763611 -1.6999054476 -4.3155973110 -4.7843298990
+</code></pre>
+"
+"0.213470420089446","0.255550625999976","175578","<p>I followed this excellent tutorial on the implementation of Granger causality: <a href=""http://davegiles.blogspot.de/2011/04/testing-for-granger-causality.html"" rel=""nofollow"">http://davegiles.blogspot.de/2011/04/testing-for-granger-causality.html</a> and applied the method with an R script.</p>
+
+<p>My date is monthly data with 48 observations. The time series can be identified as constant and trend. The information criteria of my VAR model suggest:</p>
+
+<pre><code>VARselect(data,lag.max=12, type=""both"")
+
+AIC(n)  HQ(n)  SC(n) FPE(n) 
+    12     12     12     12 
+</code></pre>
+
+<p>When testing for <strong>residuals</strong>, it appears lag=12 is actually not a good idea. All lags from 8-12 seem to be serial correlated:</p>
+
+<p>Portmanteau Test (asymptotic)</p>
+
+<pre><code>Vlag.1&lt;-VAR(dara,p=1, type=""both"")
+serial.test(V.1)
+
+data:  Residuals of VAR object Vlag.1
+Chi-squared = 39.668501, df = 60, p-value = 0.980
+...
+
+data:  Residuals of VAR object Vlag.2
+Chi-squared = 37.818541, df = 56, p-value = 0.970
+
+data:  Residuals of VAR object Vlag.3
+Chi-squared = 35.150102, df = 52, p-value = 0.964
+
+data:  Residuals of VAR object Vlag.4
+Chi-squared = 33.71279, df = 48, p-value = 0.941
+
+data:  Residuals of VAR object Vlag.5
+Chi-squared = 35.475514, df = 44, p-value = 0.816
+
+data:  Residuals of VAR object Vlag.6
+Chi-squared = 30.101814, df = 40, p-value = 0.872
+
+data:  Residuals of VAR object Vlag.7
+Chi-squared = 34.133994, df = 36, p-value = 0.557
+
+data:  Residuals of VAR object Vlag.8
+Chi-squared = 44.646799, df = 32, p-value = 0.067
+
+data:  Residuals of VAR object Vlag.9
+Chi-squared = 46.735289, df = 28, p-value = 0.014
+
+data:  Residuals of VAR object Vlag.10
+Chi-squared = 40.488608, df = 24, p-value = 0.018
+
+data:  Residuals of VAR object Vlag.11
+Chi-squared = 73.879557, df = 20, p-value = 0.000
+
+data:  Residuals of VAR object Vlag.12
+Chi-squared = 75.586448, df = 16, p-value = 0.000
+</code></pre>
+
+<p>As I understand the results, lag = 7 (p-value = 0.557), is different enough from the critical 5% level to avoid serial correlation problems.</p>
+
+<p>Now, we have a look at <strong>dynamic stability</strong> with Inverse Roots of AR characteristic polynomial (if &lt; 1, then stable):</p>
+
+<pre><code>roots(Vlag.1)[[1]]
+[1] 0.3436322
+roots(Vlag.1)[[2]]
+[1] 0.08627817
+
+roots(Vlag.2)[[1]]
+[1] 0.5973787
+roots(Vlag.2)[[2]]
+[1] 0.5973787
+
+roots(Vlag.3)[[1]]
+[1] 0.6117323
+roots(Vlag.3)[[2]]
+[1] 0.6117323
+
+roots(Vlag.4)[[1]]
+[1] 0.8245237
+roots(Vlag.4)[[2]]
+[1] 0.8245237
+
+roots(Vlag.5)[[1]]
+[1] 0.9154875
+roots(Vlag.5)[[2]]
+[1] 0.9154875
+
+roots(Vlag.6)[[1]]
+[1] 0.972209
+roots(Vlag.6)[[2]]
+[1] 0.972209
+
+roots(Vlag.7)[[1]]
+[1] 0.9501737
+roots(Vlag.7)[[2]]
+[1] 0.9501737
+
+roots(Vlag.8)[[1]]
+[1] 1.018177
+roots(Vlag.8)[[2]]
+[1] 1.018177
+
+roots(Vlag.9)[[1]]
+[1] 1.039217
+roots(Vlag.9)[[2]]
+[1] 1.039217
+
+roots(Vlag.10)[[1]]
+[1] 1.039219
+roots(Vlag.10)[[2]]
+[1] 1.039219
+
+roots(Vlag.11)[[1]]
+[1] 1.072194
+roots(Vlag.11)[[2]]
+[1] 1.072194
+
+roots(Vlag.12)[[1]]
+[1] 1.261509
+roots(Vlag.12)[[2]]
+[1] 1.261509
+</code></pre>
+
+<p>It seems that lag = 7 is the first stable value.
+Is it okay to go with lag 7 then or do I have to choose a lower lag?</p>
+
+<p>I do know that the lag order selection will have consequences for my following Granger causality analysis and will either make or break the model.</p>
+"
+"0.417374323719201","0.462910049886276","189933","<p>I am seeking advice on how to effectively eliminate autocorrelation from a linear mixed model. My experimental design and explanation of fixed and random factors can be found here from an earlier question I asked: </p>
+
+<p><a href=""http://stats.stackexchange.com/questions/188929/crossed-fixed-effects-model-specification-including-nesting-and-repeated-measure"">Crossed fixed effects model specification including nesting and repeated measures using glmm in R</a></p>
+
+<p>I have treated day as numeric even though I only have four sampling time points (so I could treat it as a categorical predictor as well). Aside: Although four sample points is very few, I donâ€™t think that this is the root of the problem as this same dataset is giving me this residual autocorrelation issues using a different response variable that has 24 time points.</p>
+
+<p>My issue is that I have tried a number of different autocorrelation structures and canâ€™t seem to achieve the random, non-significant residuals needed to confirm a lack of autocorrelation. I am using the function <code>lme</code> in the R package <code>nlme</code> to deal with autocorrelation. </p>
+
+<p>I have tried the various autocorrelation classes  with variations to form</p>
+
+<p>1) <code>corAR1</code> (autoregressive process of order 1).</p>
+
+<p>2) <code>corARMA</code> (autoregressive moving average process)</p>
+
+<p>3) <code>corCAR1</code> (continuous autoregressive process)</p>
+
+<p>4) <code>corGaus</code> (Gaussian spatial correlation)</p>
+
+<p>With form varying in the following ways with these different autocorrelation classes:</p>
+
+<pre><code>form=~1
+form=~1| TankNumb/RecruitID2
+form=~Day| TankNumb/RecruitID2
+</code></pre>
+
+<p>If we look at a model without the time factor ""Day"" added, the ACF and PACF plots look like this. </p>
+
+<pre><code>lme4_lognormal_notime&lt;-lmer(Arealog~Temperature*Culture+(1|TankNumb/RecruitID2), data=growthSR_noNA)
+
+acf(residuals(lme4_lognormal_notime, retype=""normalized""))
+pacf(residuals(lme4_lognormal_notime, retype=""normalized""))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/xVdrb.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/xVdrb.jpg"" alt=""enter image description here""></a></p>
+
+<p>Also, if I look at the residuals of the model without â€œDayâ€ included, I do not see any strong pattern in the residuals that would make me think there is a temporal autocorrelation problem.</p>
+
+<pre><code>plot(residuals(lme4_lognormal_Ben_notime, retype=""normalized"")~growthSR_noNA$Day)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/wU1ZC.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/wU1ZC.jpg"" alt=""enter image description here""></a></p>
+
+<p>Now for two different models with autocorrelation structure to hopefully eliminate autocorrelation:</p>
+
+<pre><code>nlme_lognormal_mult_cor&lt;-lme(Arealog~Temperature*Culture*Day, random=~1|TankNumb/RecruitID2,correlation=corAR1(form=~1), data=growthSR_noNA)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Oe3et.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Oe3et.jpg"" alt=""enter image description here""></a></p>
+
+<pre><code>nlme_lognormal_mult_cortime&lt;-lme(Arealog~Temperature*Culture*Day, random=~1|TankNumb/RecruitID2,correlation=corAR1(form=~Day|TankNumb/RecruitID2), data=growthSR_noNA)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/pUgA1.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/pUgA1.jpg"" alt=""enter image description here""></a></p>
+
+<pre><code>ARMA_nlme_lognormal_mult_cor&lt;-lme(Arealog~Temperature*Culture*Day, random=~1|TankNumb/RecruitID2,correlation=corARMA(form=~1, p=0, q=1), data=growthSR_noNA)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/6TMeL.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/6TMeL.jpg"" alt=""enter image description here""></a></p>
+
+<p>The AIC suggests that the simplest correlation structure is the best. </p>
+
+<pre><code>AIC(nlme_lognormal_mult,nlme_lognormal_mult_cor, nlme_lognormal_mult_cortime,ARMA_nlme_lognormal_Ben_mult_cor)
+
+                               df      AIC
+nlme_lognormal_mult              15 1233.997
+nlme_lognormal_mult_cor          16 1184.389
+nlme_lognormal_mult_cortime      16 1235.997
+ARMA_nlme_lognormal_Ben_mult_cor 16 1198.451
+</code></pre>
+
+<p>As I mentioned above, I have tried a number of different <code>cor</code> functions (the four listed above) and different <code>form</code> specifications. They all end up with ACF/PCF plots like the last two models with a first lag at below 0.2 in the ACF plot and a PCF plot with the first three lags around 0.10.</p>
+
+<p>I have also read a number of sites describing how to specify corARMA models based on diagnosing the ACF plots and have tried a number of variations of p and q parameters. </p>
+
+<p>Questions: </p>
+
+<ol>
+<li>Does anyone have some advice on which type of correlation structure that might elimate this autocorrelation problem based on the patterns in my ACF/PCF plots? Should I be diagnosing based on a model with or without Day included?</li>
+</ol>
+
+<p>2.Is there ever an acceptable level of autocorrelation? 
+This post (<a href=""http://stats.stackexchange.com/questions/80823/do-autocorrelated-residual-patterns-remain-even-in-models-with-appropriate-corre"">Do autocorrelated residual patterns remain even in models with appropriate correlation structures, &amp; how to select the best models?</a>) states that small amounts of autocorrelation probably won't impact the model coefficients very much. ""The estimate is slightly larger than zero so will have negligible effect on the model fit and hence you might wish to leave it in the model if there is a strong a priori reason to assume residual autocorrelation."" Potentially there is some autocorrelation that is not being caused by temporal autocorrelation, like outliers? Is there a cut-off, for example, autocorrelation below 0.1? I have extremely small 95% confidence intervals, so it doesn't take a lot of autocorrelation in my models to be significantly too much.</p>
+
+<p>Any advice is appreciated! </p>
+"
+"0.275589127304775","0.206196524710581","191851","<p>I am building a VAR model to forecast the price of an asset and would like to know whether my method is statistically sound, whether the tests I have included are relevant and if more are needed to ensure a reliable forecast based on my input variables. </p>
+
+<p>Below is my current process to check for Granger causality and forecast the selected VAR model.</p>
+
+<pre><code>require(""forecast"")
+require(""vars"")
+
+#Read Data
+da=read.table(""VARdata.txt"", header=T)
+dac &lt;- c(2,3) # Select variables
+x=da[,dac]
+
+plot.ts(x)
+summary(x)
+
+#Run Augmented Dickey-Fuller tests to determine stationarity and differences to achieve stationarity.
+ndiffs(x[, ""VAR1""], alpha = 0.05, test = c(""adf""))
+ndiffs(x[, ""VAR2""], alpha = 0.05, test = c(""adf""))
+
+#Difference to achieve stationarity
+d.x1 = diff(x[, ""VAR1""], differences = 2)
+d.x2 = diff(x[, ""VAR2""], differences = 2)
+
+dx = cbind(d.x1, d.x2)
+plot.ts(dx)
+
+#Lag optimisation
+VARselect(dx, lag.max = 10, type = ""both"")
+
+#Vector autoregression with lags set according to results of lag optimisation. 
+var = VAR(dx, p=2)
+
+#Test for serial autocorrelation using the Portmanteau test
+#Rerun var model with other suggested lags if H0 can be rejected at 0.05
+serial.test(var, lags.pt = 10, type = ""PT.asymptotic"")
+
+#ARCH test (Autoregressive conditional heteroscedasdicity)
+arch.test(var, lags.multi = 10)
+
+summary(var)
+
+#Granger Causality test
+#Does x1 granger cause x2?
+grangertest(d.x2 ~ d.x1, order = 2)
+
+#Does x2 granger cause x1?
+grangertest(d.x1 ~ d.x2, order = 2)
+
+#Forecasting
+prd &lt;- predict(var, n.ahead = 10, ci = 0.95, dumvar = NULL)
+print(prd)
+plot(prd, ""single"")
+</code></pre>
+
+<p>Is this method sound?</p>
+"
+"0.389741881476979","0.349927106111883","195443","<p>I am looking at two time series, from 01/01/2000 to the present: <br></p>
+
+<ul>
+<li>The <a href=""https://research.stlouisfed.org/fred2/series/NAPMNOI/"" rel=""nofollow"" title=""ISM Manufacturing: New Orders Index"">ISM Manufacturing: New Orders Index</a>, only available seasonally adjusted</li>
+<li>The manufacturing industry unemployment rate, only available unadjusted (<a href=""https://research.stlouisfed.org/fred2/series/LNU04032232"" rel=""nofollow"">https://research.stlouisfed.org/fred2/series/LNU04032232</a>)</li>
+</ul>
+
+<p>I was <em>hoping</em> to construct a multivariate ts model, and use the <strong>New Orders Index</strong> to forecast the <strong>manufacturing industry unemployment rate</strong>. However, am I correct in assuming it is not 'ideal' to use seasonally adjusted data to predict another time series? Because doesn't SA cause (ideally) all the seasonal time series structure to be removed from the data?</p>
+
+<h3>EDIT:</h3>
+
+<p>Sorry, it just now hit me to link to the data I was using by putting it on Google Drive. It's in .csv files, for easy viewing with any program.</p>
+
+<ul>
+<li>Manufacturing new orders index data, in <strong>OrdersIndex.csv</strong><br><a href=""https://drive.google.com/file/d/0B2Y54SySHrVwZXczR1N4LXZMdXc/view?usp=sharing"" rel=""nofollow"">https://drive.google.com/file/d/0B2Y54SySHrVwZXczR1N4LXZMdXc/view?usp=sharing</a></li>
+<li>Manufacturing industry unemployment rate, in <strong>Unem.csv</strong>
+<br><a href=""https://drive.google.com/file/d/0B2Y54SySHrVweFVpRjJFanAwQmc/view?usp=sharing"" rel=""nofollow"">https://drive.google.com/file/d/0B2Y54SySHrVweFVpRjJFanAwQmc/view?usp=sharing</a></li>
+</ul>
+
+<p>Below is the New Orders Index time series, with the dashed line indicating the mean of 54.61. It looks fairly stationary to me; a decent spike in 2008, but definitely reverts to the mean.</p>
+
+<pre><code>&gt; plot.ts(OrdersIndex[,2])
+&gt; mean(OrdersIndex[,2])
+[1] 54.60829
+&gt; abline(h=c(54.61), lty=2)
+&gt; 
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/C61sm.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/C61sm.png"" alt=""New Orders Index""></a></p>
+
+<p>The ACF and PACF of the series are below. ACF displays dampened sine-wave behavior, PACF has a sharp cut-off after lag 1. This suggests an AR(1) model, as the ACF's slow dying off (at lags > 1) is due to the auto correlation at lag 1.</p>
+
+<pre><code>&gt; Acf(OrdersIndex[,2], plot=T)   #the Acf() function is part of 'forecast' package
+&gt; Acf(OrdersIndex[,2], plot=T, type=c('partial'))
+&gt;
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Dg2Es.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Dg2Es.png"" alt=""ACF plot""></a>
+<a href=""http://i.stack.imgur.com/0PqBR.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/0PqBR.png"" alt=""PACF plot""></a></p>
+
+<p>After running an arima(1,0,0) model with a mean, the ACF and PACF of the residuals do not show significant spikes at any lags.</p>
+
+<pre><code>&gt; OrdersIndex100 &lt;- arima(OrdersIndex[,2], order=c(1,0,0))
+&gt; OrdersIndex100
+
+Call:
+arima(x = OrdersIndex[, 2], order = c(1, 0, 0))
+
+Coefficients:
+         ar1  intercept
+      0.8738    54.6979
+s.e.  0.0341     1.9399
+
+sigma^2 estimated as 12.39:  log likelihood = -517.44,  aic = 1040.88
+&gt;
+</code></pre>
+
+<p>Running an Ljung-Box test on the residuals indicates there is not any time series structure left in the data.</p>
+
+<pre><code>&gt; LBQPlot(OrdersIndex100$residuals, k=1)   # LBQPlot() is part of 'FitAR' package
+&gt;
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/xXQKc.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/xXQKc.png"" alt=""Ljung-Box Test""></a></p>
+
+<h3>Conclusion</h3>
+
+<p>The conclusion I arrive at is that the seasonally adjusting done to the data by the ISM (Institute of Supply Management) effectively removed all the seasonality from the data. So, this SA data would be less useful in modeling than non-SA data (this is assuming that I would be using this data series as the Input, and the unemployment data series as the Output). Is this a valid conclusion? You all see any glaring problems with my analysis?</p>
+"
+"0.3674521697397","0.474252006834335","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"
+"0.168763185138904","0.151522881682832","199313","<p>I am working on some exchange rates data. I have two series: </p>
+
+<ul>
+<li>$X_t$ with the official exchange rate (e.g. forex)</li>
+<li>$Y_t$ with the exchange rate on the ""black market"" (e.g. currency exchange houses at airports).</li>
+</ul>
+
+<p>I am interested in modelling the relationship between these two series. It is reasonable to model $Y_t$ as a function of $X_t$ and lagged values of this series (because the black market kinda follows the official market). I would like to get insight on two questions:</p>
+
+<ul>
+<li>Average lag in the response of the black market (how long does it take for currency exchange houses to react to changes in the official market).</li>
+<li>The magnitude of the reaction (do currency exchange houses overreact?, or they kind of smooth the movements in the official market?)</li>
+</ul>
+
+<p>Here's how the data looks like:</p>
+
+<p><a href=""http://i.stack.imgur.com/CBAg1.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/CBAg1.png"" alt=""enter image description here""></a></p>
+
+<p>I've read that the ""cross correlation function (CCF) is helpful for identifying lags of the $X$-variable that might be useful predictors of $Y_t$"". (link)</p>
+
+<p>So I produced such plots for 20, 50 and 150 lags (I have in total 520 obs) with the following code in R .</p>
+
+<pre><code>ccf(x = toy$xa, y = toy$ya, lag.max = 20)
+ccf(x = toy$xa, y = toy$ya, lag.max = 50)
+ccf(x = toy$xa, y = toy$ya, lag.max = 250)
+</code></pre>
+
+<p>And here's how they look:</p>
+
+<p><a href=""http://i.stack.imgur.com/Mquko.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Mquko.png"" alt=""enter image description here""></a></p>
+
+<p>Does it mean that up to 170 lags might be useful predictors?, or am I doing something wrong?</p>
+"
+"0.455752138236871","0.452267016866645","200598","<p>This is a follow up question <a href=""http://stats.stackexchange.com/questions/191851/var-forecasting-methodology"">the question that can be found here</a>, and is a result of me having implemented (after as careful evaluation as I'm capable of) the alterations and changes suggested.</p>
+
+<p>Below is my method and should be replicable. </p>
+
+<p>My question relates to the implementation of k-fold cross validation and whether the code produces a mean average error value that is reliable and whether there are some aspects of k-fold cross validation I may have neglected, thus skewing any results.</p>
+
+<p>Otherwise any comments, both as to the method as it stands or the logic behind their inclusion (see above link) is welcome.</p>
+
+<pre><code>library(plyr)
+library(forecast)
+library(vars)
+
+#Read Data
+da=read.table(""VARdata.txt"", header=T)
+dac &lt;- c(2,3) # Select variables
+x=da[,dac]
+
+plot.ts(x)
+summary(x)
+
+#Run Augmented Dickey-Fuller tests to determine stationarity and
+#differences to achieve stationarity.
+adf1 &lt;- ur.df(x[,""VAR1""], type = ""drift"", lags = 10, selectlags = ""AIC"")
+adf2 &lt;- ur.df(x[,""VAR2""], type = ""drift"", lags = 10, selectlags = ""AIC"")
+
+summary(adf1)
+summary(adf2)
+
+#Difference to achieve stationarity
+d.x1 = diff(x[, ""VAR1""], differences = 1)
+d.x2 = diff(x[, ""VAR2""], differences = 1)
+
+
+#Check if differenced variables are stationary
+adf1b &lt;- ur.df(d.x1, type = ""drift"", lags = 10, selectlags = ""AIC"")
+adf2b &lt;- ur.df(d.x2, type = ""drift"", lags = 10, selectlags = ""AIC"")
+
+summary(adf1b)
+summary(adf2b)
+
+#If variable is stationary I(0), do not difference
+#Shorten undifferenced variable by n, so as to make all variables same length
+# d.x2 = (x[, ""VAR2""])
+# d.x2 = d.x2[-c(1:1)]
+
+#Bind variables in time series
+dx = cbind(d.x1, d.x2)
+dx = as.ts(dx)
+plot.ts(dx)
+
+summary(dx)
+
+#Lag optimisation
+VARselect(dx, lag.max = 10, type = ""both"")
+
+#Run VAR 
+var = VAR(dx, p=2)
+
+#Test for serial autocorrelation using the Portmanteau test
+#Rerun var model with other suggested lags if H0 can be rejected at 0.05
+serial.test(var, lags.pt = 10, type = ""PT.asymptotic"")
+
+#ARCH test (Autoregressive conditional heteroscedasdicity)
+arch.test(var, lags.multi = 10)
+
+summary(var)
+
+#Forecasting
+prd &lt;- forecast(var, h = 12)
+
+print(prd)
+plot(prd)
+
+# Forecast Accuracy
+data &lt;- as.data.frame(dx)
+
+k = 10 #Folds
+
+# sample from 1 to k, nrow times (the number of observations in the data)
+data$id &lt;- sample(1:k, nrow(data), replace = TRUE)
+list &lt;- 1:k
+
+# prediction and testset data frames that we add to with each iteration over
+# the folds
+
+prediction &lt;- data.frame()
+testsetCopy &lt;- data.frame()
+
+#Creating a progress bar to know the status of CV
+progress.bar &lt;- create_progress_bar(""text"")
+progress.bar$init(k)
+
+for (i in 1:k){
+  # remove rows with id i from dataframe to create training set
+  # select rows with id i to create test set
+  trainingset &lt;- subset(data, id %in% list[-i])
+  trainingset &lt;- as.ts(trainingset)
+  testset &lt;- subset(data, id %in% c(i))
+
+  # run a VAR model
+  mymodel &lt;- VAR(trainingset, p = 2)
+
+  # remove response column 1
+  temp &lt;- forecast(mymodel, h = nrow(testset))
+  temp &lt;- do.call('cbind', temp[['mean']])
+  temp &lt;- as.data.frame(temp)
+
+  # append this iteration's predictions to the end of the prediction data frame
+  prediction &lt;- rbind(prediction, temp)
+
+  # append this iteration's test set to the test set copy data frame
+  # keep only the desired Column
+  testsetCopy &lt;- rbind(testsetCopy, as.data.frame(testset[,1]))
+
+  progress.bar$step()
+}
+
+# add predictions and actual values
+result &lt;- cbind(prediction, testsetCopy[, 1])
+names(result) &lt;- c(""Predicted"", ""Actual"")
+result$Difference &lt;- abs(result$Actual - result$Predicted)
+
+# As an example use Mean Absolute Error as Evalution 
+summary(result$Difference)
+result
+</code></pre>
+
+<p><strong>Edit based on answer below:</strong></p>
+
+<p>As per the answer below I have changed the code for the cross validation to this (full test code included for ease):</p>
+
+<pre><code>library(forecast)
+library(vars)
+library(plyr)
+
+x &lt;- rnorm(70)
+y &lt;- rnorm(70)
+
+dx &lt;- cbind(x,y)
+dx &lt;- as.ts(dx)
+
+j = 12  #Forecast horizon
+k = nrow(dx)-j #length of minimum training set
+
+prediction &lt;- data.frame()
+actual &lt;- data.frame()
+
+for (i in j) { 
+  trainingset &lt;- window(dx, end = k+i-1)
+  testset &lt;- window(dx, start = k-j+i+1, end = k+j)
+  fit &lt;- VAR(trainingset, p = 2)                       
+  fcast &lt;- forecast(fit, h = j)
+  fcastmean &lt;- do.call('cbind', fcast[['mean']])
+  fcastmean &lt;- as.data.frame(fcastmean)
+
+  prediction &lt;- rbind(prediction, fcastmean)
+  actual &lt;- rbind(actual, as.data.frame(testset[,1]))
+}
+
+# add predictions and actual values
+result &lt;- cbind(prediction, actual[, 1])
+names(result) &lt;- c(""Predicted"", ""Actual"")
+result$Difference &lt;- abs(result$Actual - result$Predicted)
+
+# Use Mean Absolute Error as Evalution 
+summary(result$Difference)
+</code></pre>
+
+<p>Would this be a better application of cross validation? I realize that it is no longer k-fold, but is based on the link provided in the answer.</p>
+"
+"0.198889321043933","0.25","203806","<p>Let $\left\{X_t\right\}$ be a stochastic process formed by concatenating iid draws from an AR(1) process, where each draw is a vector of length 10. In other words, $\left\{X_1, X_2, \ldots, X_{10}\right\}$ are realizations of an AR(1) process; $\left\{X_{11}, X_{12}, \ldots, X_{20}\right\}$ are drawn from the same process, but are independent from the first 10 observations; et cetera.</p>
+
+<p>What will the ACF of $X$ -- call it $\rho\left(l\right)$ -- look like?  I was expecting $\rho\left(l\right)$ to be zero for lags of length $l \geq 10$ since, by assumption, each block of 10 observations is independent from all other blocks.</p>
+
+<p>However, when I simulate data, I get this:</p>
+
+<pre><code>simulate_ar1 &lt;- function(n, burn_in=NA) {
+    return(as.vector(arima.sim(list(ar=0.9), n, n.start=burn_in)))
+}
+
+simulate_sequence_of_independent_ar1 &lt;- function(k, n, burn_in=NA) {
+    return(c(replicate(k, simulate_ar1(n, burn_in), simplify=FALSE), recursive=TRUE))
+}
+
+set.seed(987)
+x &lt;- simulate_sequence_of_independent_ar1(1000, 10)
+png(""concatenated_ar1.png"")
+acf(x, lag.max=100)  # Significant autocorrelations beyond lag 10 -- why?
+dev.off()
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/r1luW.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/r1luW.png"" alt=""sample autocorrelation function for x""></a></p>
+
+<p>Why are there autocorrelations so far from zero after lag 10?</p>
+
+<p>My initial guess was that the burn-in in arima.sim was too short, but I get a similar pattern when I explicitly set e.g. burn_in=500.</p>
+
+<p>What am I missing?</p>
+
+<hr>
+
+<p><strong>Edit</strong>: Maybe the focus on concatenating AR(1)s is a distraction -- an even simpler example is this:</p>
+
+<pre><code>set.seed(9123)
+n_obs &lt;- 10000
+x &lt;- arima.sim(model=list(ar=0.9), n_obs, n.start=500)
+png(""ar1.png"")
+acf(x, lag.max=100)
+dev.off()
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/GA8sD.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/GA8sD.png"" alt=""acf of plain vanilla ar1""></a></p>
+
+<p>I'm surprised by the big blocks of significantly nonzero autocorrelations at such long lags (where the true ACF $\rho(l) = 0.9^l$ is essentially zero).  Should I be?</p>
+
+<hr>
+
+<p><strong>Another Edit</strong>: maybe all that's going on here is that $\hat{\rho}$, the estimated ACF, is itself extremely autocorrelated.  For example, here's the joint distribution of $\left(\hat{\rho}(60), \hat{\rho}(61)\right)$, whose true values are essentially zero:</p>
+
+<pre><code>## Look at joint sampling distribution of (acf(60), acf(61)) estimated from AR(1)
+get_estimated_acf &lt;- function(lags, n_obs=10000) {
+    stopifnot(all(lags &gt;= 1) &amp;&amp; all(lags &lt;= 100))
+    x &lt;- arima.sim(model=list(ar=0.9), n_obs, n.start=500)
+    return(acf(x, lag.max=100, plot=FALSE)$acf[lags + 1])
+}
+lags &lt;- c(60, 61)
+acf_replications &lt;- t(replicate(1000, get_estimated_acf(lags)))
+colnames(acf_replications) &lt;- sprintf(""acf_%s"", lags)
+colMeans(acf_replications)  # Essentially zero
+plot(acf_replications)
+abline(h=0, v=0, lty=2)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/iIvCJ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iIvCJ.png"" alt=""sampling distribution of estimated acf""></a></p>
+"
+"0.229657606087313","0.247435829652697","222727","<p>I would like to create a linear distributed lag model in order to do some forecast and also being able to interpret the results.</p>
+
+<p>Unfortunately I'm a bit confused with the process I should follow.Concept of time series is quite new for me so I'm looking for something simple.</p>
+
+<p>I have a variable Y that I want to express by the lags of several other variables X1,...X4. It seems that the R-package <code>dynlm</code> is well adapted for this kind of model.</p>
+
+<p>At the end, I would like to have this kind of relation :</p>
+
+<p><a href=""http://i.stack.imgur.com/LYhXV.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LYhXV.png"" alt=""what I want""></a></p>
+
+<p>So I would like to ascertain which lags of my exogeneous variables are significant for modeling Y. I first thought using cross-correlation (<code>ccf()</code> in R) but after browsing on CrossValidated, it seems that this is not that simple.</p>
+
+<p>Indeed, all of my variables except one(X3) are not stationary. I could difference all of them but how can I then interpret the results ?</p>
+
+<p>Furthermore, should I also prewhiten my data? (I know there is a function <code>prewhithen()</code> included in <code>TSA</code> package).</p>
+
+<p>Here are my time series :</p>
+
+<pre><code>    ############################################## CROSS VALIDATED ##################################################################
+    library(dynlm)
+    library(tseries)
+
+    Y&lt;-c(2.39,2.29,2.54,2.53,2.57,2.59,2.58,2.64,2.79,2.78,2.81,2.79,2.38,3.09,2.94,2.91,3.15,2.93,2.83,2.92,3.18,3.08,3.10,3.13,0.91,3.28,3.72,3.89,3.97,6.00,5.84,5.66,6.35,6.26,6.14,6.04,4.28,4.55,7.78,7.12,6.43,5.93,5.32,5.26,5.77,5.65,5.52,5.05,4.56,5.21,3.66,4.01,4.11,4.19,3.87,4.06,4.14,4.12,4.15,4.37,4.58,4.32,4.11,3.83,3.66,3.58,3.34,3.41,3.61,3.55,3.51,3.25,3.09,3.14,2.80,2.92,3.09,3.07,2.89,2.93,2.97,2.92,2.83,3.01,2.75,2.60,1.17,1.52,1.80,1.69,1.76,2.30,2.13)
+    X1&lt;-c(3.8,4.0,4.3,4.4,4.7,4.4,5.0,5.2,5.2,5.2,5.4,5.5,5.8,6.3,6.3,6.7,6.9,6.5,5.8,5.5,5.0,5.0,4.9,4.8,5.0,5.0,4.9,5.0,4.8,4.7,4.7,4.7,4.6,4.8,3.6,3.6,3.5,3.3,3.2,3.3,3.4,3.2,3.1,3.0,3.1,3.1,3.0,3.0,3.0,3.2,3.1,3.2,3.1,2.9,2.7,2.8,3.0,2.9,3.0,3.0,3.0,2.9,3.0,2.9,2.8,2.6,2.5,2.5,2.6,2.5,2.6,2.6,2.5,2.5,2.6,2.6,2.7,2.5,2.3,2.4,2.4,2.3,2.3,2.3,2.3,2.3,2.2,2.2,2.2,2.2,2.0,2.1,2.2)
+    X2&lt;-c(NA,6.6,6.9,7.4,6.2,7.3,7.1,7.3,8.1,8.1,8.7,8.3,8.7,9.7,10.1,10.4,9.8,9.4,9.1,9.3,9.8,9.8,9.6,9.0,8.8,8.7,8.1,8.0,8.0,7.7,6.7,6.9,7.9,7.8,7.2,6.8,6.8,7.1,6.7,6.9,6.5,6.5,5.8,6.2,6.1,6.3,7.0,6.1,6.3,6.8,6.1,6.5,6.3,6.0,5.5,6.1,5.6,5.7,5.7,5.7,5.8,5.8,5.8,5.4,5.2,5.0,4.7,4.9,4.9,4.9,4.7,4.5,4.7,4.9,5.0,5.1,5.0,4.5,4.3,4.5,4.3,4.4,4.4,4.1,4.0,4.1,3.9,4.0,3.9,4.2,3.8,4.1,4.1)
+    X3&lt;-c(NA, NA, NA, 9.7, 10.3, 9.8, 10.8, 12.0, 10.7, 12.0, 10.2, 10.7, 10.0, 10.4, 10.3, 10.9, 11.4, 12.5, 11.7, 10.9, 10.4, 9.6, 8.9, 8.2, 8.3, 8.8, 9.3, 14.1, 10.7, 10.3, 9.4, 8.8, 8.8, 10.1, 10.4, 10.0, 11.0, 11.2, 10.4, 10.3, 11.0, 11.3, 10.9, 10.6, 10.2, 12.3, 11.9, 11.1, 10.8, 10.8, 12.1, 11.6, 11.3, 11.8, 11.4, 9.8, 10.2, 12.1, 10.9, 11.4, 12.2, 11.8, 12.0, 11.3, 11.6, 10.4, 10.9, 10.4, 10.2, 11.4, 11.4, 10.6, 11.2, 11.2, 12.1, 12.2, 11.5, 10.7, 10.4, 9.8, 10.6, 11.7, 10.6, 11.0, 10.7, 11.0, 11.2, 10.2, 11.1, 12.1, 10.4, 9.9, 9.5)
+    X4&lt;-c(2.4,2.2,3.0,2.5,2.7,2.7,2.5,3.1,4.0,2.7,3.1,2.5,2.4,3.8,2.7,2.8,4.1,1.8,2.2,3.6,5.3,2.1,3.3,3.5,0.9,5.6,7.8,5.7,4.9,30.9,3.8,3.1,16.9,4.8,4.0,4.2,4.3,4.8,14.2,5.2,3.7,3.4,1.7,4.9,9.8,4.6,4.2,0.0,4.6,5.9,0.6,5.1,4.5,4.6,1.9,5.4,4.8,4.0,4.4,6.8,4.6,4.1,3.7,3.0,3.0,3.2,1.9,3.9,5.3,3.0,3.2,0.2,3.1,3.2,2.1,3.3,3.8,2.9,1.8,3.2,3.3,2.5,1.9,5.0,2.7,2.5,-1.7,2.6,2.9,1.2,2.2,5.9,0.8)
+
+    ## Time series Creation
+    Yts&lt;-ts(Y, start=c(1998,1), end=c(2005,9), frequency = 12)
+    X1ts&lt;-ts(X1,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X2ts&lt;-ts(X2,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X3ts&lt;-ts(X3,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X4ts&lt;-ts(X4,start = c(1998,1),end = c(2005,9), frequency = 12)
+</code></pre>
+
+<p>And this is a plot of my time series :
+<a href=""http://i.stack.imgur.com/iQ8TZ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iQ8TZ.png"" alt=""enter image description here""></a></p>
+
+<p>Tell me if something is unclear, and sorry for my english.</p>
+
+<p>Any help would be much appreciated!</p>
+
+<p><strong>edit</strong> : I reduced a bit my message to make it more concise :) </p>
+"
+"NaN","NaN","231560","<p>I think the title is fairly self-explanatory. I want to compute the cross-correlation between two time series controlled for the values at other lags. I can't find any existing code to do this, either in R or any other language, and I'm not at all confident enough in my knowledge of statistics (or R) to try to write something myself. It would be analogous to the partial autocorrelation function, just for the cross-correlation instead of the autocorrelation.</p>
+
+<p>If it helps at all, my larger objective is to look for lagged correlations between different measurements of a physical system (to start with, flux and photon index from gamma ray measurements of blazars), with the goal of building a general linear model to try to predict flaring events.</p>
+"

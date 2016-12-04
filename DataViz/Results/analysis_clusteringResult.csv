@@ -1,0 +1,2823 @@
+"V1","V2","V3","V4"
+"0.0928476690885259","0.0969003166223018","  3048","<p>I have a matrix where a(i,j) tells me how many times individual i viewed page j. There are 27K individuals and 95K pages. I would like to have a handful of ""dimensions"" or ""aspects"" in the space of pages which would correspond to sets of pages which are often viewed together. My ultimate goal is to then be able to compute how often individual i has viewed pages that fall in dimension 1, dimension 2, etc.</p>
+
+<p>I have read the R documentation on <a href=""http://en.wikibooks.org/wiki/Data_Mining_Algorithms_In_R/Dimensionality_Reduction/Principal_Component_Analysis"">principal component analysis</a> and <a href=""http://en.wikibooks.org/wiki/Data_Mining_Algorithms_In_R/Dimensionality_Reduction/Singular_Value_Decomposition"">single value decomposition</a> and have executed these commands, but I am unsure how to proceed.</p>
+
+<p>How can I use dimensionality reduction to do this? Or is this really a clustering problem and I should instead look into clustering algorithms?</p>
+
+<p>Many thanks for any insight
+~l</p>
+"
+"0.197951895616224","0.206592169189602","  3271","<p>I have seen a few queries on clustering in time series and specifically on clustering, but I don't think they answer my question. </p>
+
+<p><strong>Background:</strong> I want to cluster genes in a time course experiment in yeast. There are four time points say: <em>t1</em>  <em>t2</em>  <em>t3</em>  and  <em>t4</em> and total number of genes <em>G</em>. I have the data in form a matrix <em>M</em> in which the columns represent the treatments (or time points)  <em>t1</em>  <em>t2</em>  <em>t3</em>  and  <em>t4</em>  and the rows represent the genes. Therefore, <em>M</em> is a Gx4 matrix. </p>
+
+<p><strong>Problem:</strong> I want to cluster the genes which behave the same across all time points <em>t1</em>  <em>t2</em>  <em>t3</em>  and  <em>t4</em>  as well as within a particular time point <em>ti</em> , where i is in {1, 2, 3, 4} (In case we cannot do both the clusterings together, the clustering within a time point is more important than clustering across time points). In addition to this, I also want to draw a heatmap.</p>
+
+<p><strong>My Solution:</strong> 
+I use the R code below to obtain a heatmap as well as the clusters using <code>hclust</code> function in R (performs hierarchical clustering with euclidean distance)</p>
+
+<pre><code>    row.scaled.expr &lt;- (expr.diff - rowMeans(expr.diff)) / rowSds(expr.diff)
+
+    breaks.expr &lt;- c(quantile(row.scaled.expr[row.scaled.expr &lt; 0],
+                               seq(0,1,length=10)[-9]), 0,
+                               quantile(row.scaled.expr[row.scaled.expr &gt; 0],
+                               seq(0,1,length=10))[-1] )
+
+
+    blue.red.expr &lt;- maPalette(low = ""blue"", high = ""red"", mid = ""white"",
+                     k=length(breaks.expr) - 1)
+
+    pdf(""images/clust.pdf"",
+         height=30,width=20,pointsize=20)
+    ht1 &lt;- heatmap.2(row.scaled.expr, col = blue.red.expr, Colv = FALSE, key = FALSE, 
+      dendrogram = ""row"", scale = ""none"", trace = ""none"",
+      cex=1.5, cexRow=1, cexCol=2,
+      density.info = ""none"", breaks = breaks.expr, 
+      labCol = colnames(row.scaled.expr),
+      labRow="""",
+      lmat=rbind( c(0, 3), c(2,1), c(0,4) ), lhei=c(0.25, 4, 0.25 ),
+      main=expression(""Heat Map""),
+      ylab=""Genes in the Microarray"",
+      xlab=""Treatments""
+      )
+    dev.off()
+</code></pre>
+
+<p>I recently discovered <code>hopach</code> package in <em>Bioconductor</em> which can be used to estimate the number of clusters. Previously, I was randomly assigning the number of bins for the heatmap and cutting the tree at an appropriate height to get a pre-specified number of clusters. </p>
+
+<p><strong>Possible Problems in my solution:</strong></p>
+
+<ol>
+<li>I may be not clustering the genes within a particular treatment and clustering genes only across treatments or vice versa.</li>
+<li>There may be better ways of obtaining a heatmap for the pattern I want to see (similar genes within a treatment and across treatments).</li>
+<li>There may be better visualization methods which I am not aware of.</li>
+</ol>
+
+<p><strong>Note:</strong></p>
+
+<ol>
+<li><p><em>csgillespie</em> (moderator) has a more general document on his website in which he discusses all the aspects of time course analysis (including heatmaps and clustering). I would appreciate if you can point me to an articles which describe heatmaps and clustering in detail.</p></li>
+<li><p>I have tried the <code>pvclust</code> package, but it complains that <em>M</em> is singular and then it crashes.</p></li>
+</ol>
+"
+"NaN","NaN","  5160","<p>I am looking for a good tutorial on clustering data in <code>R</code> using hierarchical dirichlet process (HDP) (one of the recent and popular nonparametric Bayesian methods). </p>
+
+<p>There is <code>DPpackage</code> (IMHO, the most comprehensive of all the available ones) in <code>R</code> for nonparametric Bayesian analysis. But I am unable to understand the examples provided in <code>R News</code> or in the package reference manual well enough to code HDP.</p>
+
+<p>Any help or pointer is appreciated.</p>
+
+<p>A C++ implementation of HDP for topic modeling is available <a href=""http://www.cs.princeton.edu/~blei/topicmodeling.html"">here</a> (please look at the bottom for C++ code)</p>
+"
+"0.217747085177846","0.227251386108562","  7175","<p>I'm experimenting with classifying data into groups. I'm quite new to this topic, and trying to understand the output of some of the analysis.</p>
+
+<p>Using examples from <a href=""http://www.statmethods.net/advstats/cluster.html"">Quick-R</a>, several <code>R</code> packages are suggested. I have tried using two of these packages (<code>fpc</code> using the <code>kmeans</code> function,  and <code>mclust</code>). One aspect of this analysis that I do not understand is the comparison of the results.</p>
+
+<pre><code># comparing 2 cluster solutions
+library(fpc)
+cluster.stats(d, fit1$cluster, fit2$cluster)
+</code></pre>
+
+<p>I've read through the relevant parts of the <code>fpc</code> <a href=""http://cran.r-project.org/web/packages/fpc/fpc.pdf"">manual</a> and am still not clear on what I should be aiming for. For example, this is the output of comparing two different clustering approaches:</p>
+
+<pre><code>$n
+[1] 521
+
+$cluster.number
+[1] 4
+
+$cluster.size
+[1] 250 119  78  74
+
+$diameter
+[1]  5.278162  9.773658 16.460074  7.328020
+
+$average.distance
+[1] 1.632656 2.106422 3.461598 2.622574
+
+$median.distance
+[1] 1.562625 1.788113 2.763217 2.463826
+
+$separation
+[1] 0.2797048 0.3754188 0.2797048 0.3557264
+
+$average.toother
+[1] 3.442575 3.929158 4.068230 4.425910
+
+$separation.matrix
+          [,1]      [,2]      [,3]      [,4]
+[1,] 0.0000000 0.3754188 0.2797048 0.3557264
+[2,] 0.3754188 0.0000000 0.6299734 2.9020383
+[3,] 0.2797048 0.6299734 0.0000000 0.6803704
+[4,] 0.3557264 2.9020383 0.6803704 0.0000000
+
+$average.between
+[1] 3.865142
+
+$average.within
+[1] 1.894740
+
+$n.between
+[1] 91610
+
+$n.within
+[1] 43850
+
+$within.cluster.ss
+[1] 1785.935
+
+$clus.avg.silwidths
+         1          2          3          4 
+0.42072895 0.31672350 0.01810699 0.23728253 
+
+$avg.silwidth
+[1] 0.3106403
+
+$g2
+NULL
+
+$g3
+NULL
+
+$pearsongamma
+[1] 0.4869491
+
+$dunn
+[1] 0.01699292
+
+$entropy
+[1] 1.251134
+
+$wb.ratio
+[1] 0.4902123
+
+$ch
+[1] 178.9074
+
+$corrected.rand
+[1] 0.2046704
+
+$vi
+[1] 1.56189
+</code></pre>
+
+<hr>
+
+<p>My primary question here is to better understand how to interpret the results of this cluster comparison.</p>
+
+<hr>
+
+<p>Previously, I had asked more about the effect of scaling data, and calculating a distance matrix. However that was answered clearly by mariana soffer, and I'm just reorganizing my question to emphasize that I am interested in the intrepretation of my output which is a comparison of two different clustering algorithms.</p>
+
+<p><em>Previous part of question</em>: 
+If I am doing any type of clustering, should I always scale data? For example, I am using the function <code>dist()</code> on my scaled dataset as input to the <code>cluster.stats()</code> function, however I don't fully understand what is going on. I read about <code>dist()</code> <a href=""http://stat.ethz.ch/R-manual/R-patched/library/stats/html/dist.html"">here</a> and it states that:</p>
+
+<blockquote>
+  <p>this function computes and returns the distance matrix computed by using the specified distance measure to compute the distances between the rows of a data matrix.</p>
+</blockquote>
+"
+"0.20761369963435","0.173340556006976","  7250","<p>I'm having difficulty understanding one or two aspects of the cluster package. I'm following the example from <a href=""http://www.statmethods.net/advstats/cluster.html"">Quick-R</a> closely, but don't understand one or two aspects of the analysis. I've included the code that I am using for this particular example.</p>
+
+<pre><code>## Libraries
+library(stats)
+library(fpc) 
+
+## Data
+mydata = structure(list(a = c(461.4210925, 1549.524107, 936.42856, 0, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 131.4349206, 0, 762.6110846, 
+3837.850406), b = c(19578.64174, 2233.308842, 4714.514274, 0, 
+2760.510002, 1225.392118, 3706.428246, 2693.353714, 2674.126613, 
+592.7384164, 1820.976961, 1318.654162, 1075.854792, 1211.248996, 
+1851.363623, 3245.540062, 1711.817955, 2127.285272, 2186.671242
+), c = c(1101.899095, 3.166506463, 0, 0, 0, 1130.890295, 0, 654.5054857, 
+100.9491289, 0, 0, 0, 0, 0, 789.091922, 0, 0, 0, 0), d = c(33184.53871, 
+11777.47447, 15961.71874, 10951.32402, 12840.14983, 13305.26424, 
+12193.16597, 14873.26461, 11129.10269, 11642.93146, 9684.238583, 
+15946.48195, 11025.08607, 11686.32213, 10608.82649, 8635.844964, 
+10837.96219, 10772.53223, 14844.76478), e = c(13252.50358, 2509.5037, 
+1418.364947, 2217.952853, 166.92007, 3585.488983, 1776.410835, 
+3445.14319, 1675.722506, 1902.396338, 945.5376228, 1205.456943, 
+2048.880329, 2883.497101, 1253.020175, 1507.442736, 0, 1686.548559, 
+5662.704559), f = c(44.24828759, 0, 485.9617601, 372.108855, 
+0, 509.4916263, 0, 0, 0, 212.9541122, 80.62920455, 0, 0, 30.16525587, 
+135.0501384, 68.38023073, 0, 21.9317122, 65.09052886), g = c(415.8909649, 
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 637.2629479, 0, 0, 
+0), h = c(583.2213618, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 0, 0, 0), i = c(68206.47387, 18072.97762, 23516.98828, 
+13541.38572, 15767.5799, 19756.52726, 17676.00505, 21666.267, 
+15579.90094, 14351.02033, 12531.38237, 18470.59306, 14149.82119, 
+15811.23348, 14637.35235, 13588.64291, 12549.78014, 15370.90886, 
+26597.08152)), .Names = c(""a"", ""b"", ""c"", ""d"", ""e"", ""f"", ""g"", 
+""h"", ""i""), row.names = c(NA, -19L), class = ""data.frame"")
+</code></pre>
+
+<p>Then I standardize the variables:</p>
+
+<pre><code># standardize variables
+mydata &lt;- scale(mydata) 
+
+## K-means Clustering 
+
+# Determine number of clusters
+wss &lt;- (nrow(mydata)-1)*sum(apply(mydata,2,var))
+for (i in 2:15) wss[i] &lt;- sum(kmeans(mydata, centers=i)$withinss)
+# Q1
+plot(1:15, wss, type=""b"", xlab=""Number of Clusters"",  ylab=""Within groups sum of squares"") 
+
+# K-Means Cluster Analysis
+fit &lt;- kmeans(mydata, 3) # number of values in cluster solution
+
+# get cluster means 
+aggregate(mydata,by=list(fit$cluster),FUN=mean)
+
+# append cluster assignment
+mydata &lt;- data.frame(mydata, cluster = fit$cluster)
+
+# Cluster Plot against 1st 2 principal components - vary parameters for most readable graph
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, labels=0, lines=0) # Q2
+
+# Centroid Plot against 1st 2 discriminant functions
+plotcluster(mydata, fit$cluster)
+</code></pre>
+
+<p>My question is, how can the plot which shows the number of clusters (marked <code>Q1</code> in my code) be related to the actual values (cluster number and variable name) ? </p>
+
+<p>Update: I now understand that the <code>clusplot()</code> function is a bivariate plot, with PCA1 and PCA2. However, I don't understand the link between the PCA components and the cluster groups. What is the relationship between the PCA values and the clustering groups? I've read elsewhere about the link between kmeans and PCA, but I still don't understand how they can be displayed on the same bivariate graph. </p>
+"
+"0.146805054878676","0.122570282607179","  8152","<p>I have a few questions regarding multiple imputation for nested data. 
+Context: I have repeated measures (4 times) from a survey and these are clustered in workplaces (205 workplaces). There are about 180 items on this survey.</p>
+
+<p>q1. Is it possible to take both the repeated measures and the workplace clustering into consideration or do i have to decide for one of the two?</p>
+
+<p>q2. If i can only take into consideration one of the two clusterings (repeated measures vs workplace) which one would you recommend</p>
+
+<p>q3. I have about 10000 observations and about 400 of them have missing values for the workplace. What would you recommend to do in this case? (also i should mention that the 205 workplaces are nested in 17 Organizations - For the moment i use general categories based on the organization: e.g. Organization1-Unclassified). Is there a meaningful way to actually impute these categories? </p>
+
+<p>q4. Would you recommend to use all 180 items for imputation or the items that i intend to use in each of my models? </p>
+
+<p>I use R for analysis and it would be greatly appreciated if you can recommend any packages for multiple imputation for clustered data.</p>
+
+<p>Thanks in advance</p>
+"
+"NaN","NaN","  9074","<p>I'm wondering how to implement two-way clustering, as explained in <a href=""http://www.statsoft.com/textbook/cluster-analysis/#twotwo"" rel=""nofollow"">Statistica documentation</a> in R. Any help in this regard will be highly appreciated. Thanks</p>
+"
+"0.0656532164298613","0.0685188709827532","  9581","<p>I have a huge dataset which contains 20 columns and many rows.
+I have done clustering in SAS, Knime and SPSS, but I am new to R.
+I have to do clustering on my dataset. 
+I have imported my data into R.</p>
+
+<ul>
+<li>What are some suggestions for getting started with cluster analysis in R?</li>
+</ul>
+"
+"0.0928476690885259","0.0969003166223018"," 14588","<p>Please I am about to cluster some data based  which have about 15 different columns all of which are numbers(Some categorical while some are measurements) also some of my values are missing in some columns . Please can you give me pointer on how to go about it.</p>
+
+<p>I have previously explored the clustering with weka but I am not sure about the way weka implements so I am going the R route.</p>
+
+<p>What I know : I already know about Principal components analysis at least in theory. But is this necessary in all clustering of multiple columns . It will go a long way if anyone could provide me a link to a tutorial on this because Quick-R has for just 2 variables.</p>
+
+<p>A sample of my dataset is listed below</p>
+
+<pre><code>1,64,9,30,33,2,3,1,6,1,5,-3.62,-3.71,-2.73,1
+2,61,4,30,33,2,3,2,7,4,4,-3.62,-3.71,-2.00,1
+3,49,4,18,21,2,3,2,8,17,18,-3.68,-3.88,-2.00,1
+4,40,4,10,12,2,2,2,24,20,23,-3.32,-3.42,-2.00,1
+5,43,9,10,12,2,2,1,2,1,29,-3.12,-3.19,-2.73,1
+6,52,9,16,19,2,3,2,35,34,35,-3.33,-3.26,-2.95,1
+7,46,4,15,18,2,3,2,8,40,42,-3.59,-3.50,-2.00,1
+8,40,4,10,12,2,2,2,24,20,46,-2.45,-2.69,-2.00,1
+</code></pre>
+"
+"0.0928476690885259","0.0484501583111509"," 16855","<p>I am conducting a simulation study, which involves several clustering methods such as model-based clustering method (MBCM). However, there is a big problem I find that MBCM runs so slowly (might be due to the EM algorithm).  I have tried my best to avoid for loop in my simulation setting but it still takes me forever. For example, I simulate 100 datasets and each data set contains 1000 subjects. This tiny simulation took me around <strong>879</strong> minutes to complete. I can't image how much time will take me to complete 1000 simulated datasets. Does anyone have a better idea to speed up the clustering analysis in R? </p>
+
+<p>many many thanks
+Tu</p>
+"
+"0.0656532164298613","0.0685188709827532"," 18493","<p>I'm working on improving a random forest model.  I've done some clustering of the data using the <code>pvclust</code> package in R.  I use ward and euclidean distances.  My question is how do I go from the results of the clustering analysis to a better random forest.  Do I need to run multiple <code>rf</code> objects with data split along the edges defined in the clustering results or is it something else.  Any suggestions would be appreciated.  Most of my work is in R.</p>
+"
+"0.113714706536836","0.0395593886064618"," 18616","<p>I am going to be using R for text analysis (mostly clustering, classification and some visualization) and was wondering what mechanisms R provides for handling high dimensional, sparse data sets. If I understand correctly, R does provide some packages (e.g., <a href=""http://cran.r-project.org/web/packages/Matrix/"">matrix library</a>) for handling large and sparse matrices - which brings me to my question. </p>
+
+<p>Specifically, I would like to know:</p>
+
+<ol>
+<li><p>Which R libraries are most appropriate for storing and processing high dimensional sparse data? Just FYI, my data will fit into memory. </p></li>
+<li><p>Do such libraries inter-operate with existing text analysis (clustering/classification) packages? Would I need to convert these sparse data structures to and from data frames if I need to text analysis? Wouldn't that add additional time overhead to the computations?  </p></li>
+</ol>
+
+<p>I am fairly new to R, so please excuse me if this sounds vague (or too general). </p>
+"
+"0.0656532164298613","0"," 21421","<p>I have a set of about ten questions that I would like to use to create groupings from. The responses are all dichotomous (responses are in the form of 1 or 2 where 1 and 2 represent differences in preference discovered through qualitative research).  </p>
+
+<p>The questions, were provided in the form: </p>
+
+<pre><code>Which describes you best:
+1. I prefer apples
+2. I prefer pears
+</code></pre>
+
+<p>So far, I've looked at latent class analysis (challenging to interpret and not consistently reproducible), linear discriminant analysis, kmeans clustering (not consistently reproducible), and multiple correspondence analysis (MCA provided the most interpret-able results, but I'm unclear IF or how one could classify respondents using the results). </p>
+
+<p>What would be the most reasonable clustering method to use?</p>
+
+<p>If you want to play around with my data feel free to do so (n=799): </p>
+
+<pre><code>dat &lt;- read.csv(""http://www.bertelsen.ca/media/stackoverflow/cluster.csv"")
+</code></pre>
+"
+"0.131306432859723","0.137037741965506"," 21791","<p>I wrote a script to do some analysis and it was working fine until I tried to impliment a while loop to find the number clusters appropriate for k-means. For some reason it keeps saying that an argument is of length zero, but there shouldn't be any. I'm running this remotely, and it works fine locally.</p>
+
+<pre><code>freq_1 &lt;- NULL
+freq_alignment &lt;- NULL
+for (res in point_reference) {
+    point &lt;- paste(as.character(res), ""_output.txt"", sep = """")
+    point_file &lt;- file(point, ""r"")
+    point2 &lt;- read.table(point_file)
+    point2 &lt;- as.data.frame(point2)
+    k &lt;- 2
+    check &lt;- 0.5
+    while (check &lt; 0.75) {
+            k &lt;- k + 1
+            kcluster &lt;- kmeans(point2, k)
+            check &lt;- kcluster$betweenss/(kcluster$tot.withins+kcluster$betweenss)
+}
+    config &lt;- kcluster$cluster
+    frames &lt;- length(config)
+    freq &lt;- as.data.frame(table(conformations))
+    freq_1 &lt;- cbind(freq_1, freq)))
+    freq_alignment &lt;- cbind(freq_alignment, kcluster$cluster)
+    close(residue_file)
+} 
+</code></pre>
+
+<p>point_reference is a list of numbers (2, 3, 4, etc.) corresponding to which file to load and the files themselves load fine. My goal is to find the k that corresponds to 75% of the total SS coming from between clusters. Only the loops is wrong...if I replace it with just clustering with k = 5, it works fine. The exact error is:</p>
+
+<p>Error in while (check &lt; 0.75) { : argument is of length zero</p>
+
+<p>Again, I'm doing this remotely on a cluster, and it works on my desktop R64. All files were produced on the cluster. I hope you guys can help! Thank in advance.</p>
+"
+"0.160816880225669","0.167836271659338"," 21955","<p>I am doing an unsupervised clustering analysis for a genomics project. This means that I do not know when a particular clustering analysis is good or not.</p>
+
+<p>I am running different clustering algorithms and different 'sets of features'. What I mean with different 'sets of features' is that given a data frame, I choose different combination of columns depending on its biological importance. For instance, some variables measure things at the sequence level, while others are measuring a particular cellular process or some other feature that cannot be measured at the sequence level. I am playing around with the different outputs of these sets of features, running the algorithms with <em>all</em> the features, or ignoring some, etc .</p>
+
+<p>What I want is to compare the different clusters of these different runs and see if some of my objects are being clustered similarly despite lacking some sets of features. Does this make sense?</p>
+
+<p>Is there any recommendation on how can I do this?</p>
+"
+"0.0656532164298613","0.0685188709827532"," 25468","<p>I want to know how to to input a self-defined distance in R, in hierarchical clustering analysis. R implements only some default distance metrics, for example ""Euclidean"", ""Manhattan"" etc. Suppose I want to input a self-defined distance '1-cos(x-y)'. Then what should I do?</p>
+
+<p>Writing a function is obviously a solution. But, it will be quite complicated, and also difficult to write. Please help me. I am unable to write the code.</p>
+"
+"0.160816880225669","0.167836271659338"," 26769","<p>I'm attempting to perform hierarchical agglomerative cluster analysis in R. </p>
+
+<p>However, when I use particular clustering methods, I get reversals (upward branching) in the resulting tree, which violates the ultrametric property.</p>
+
+<p><img src=""http://i.stack.imgur.com/WSPo2.jpg"" alt=""enter image description here""></p>
+
+<p>The two methods are: UPGMC and WPGMC (methods=""median"" and ""centroid"" in <code>hclust</code>).  Legendre &amp; Legendre in their Numerical Ecology book suggest some reasons why this may occur (Section 8.6).  However, they provide no solutions to rectify the issue and convert the trees to ultrametric.</p>
+
+<p>I'm curious: is this an unavoidable consequence of the data and the clustering method, or is there a way that I can produce a tree that satisfies the ultrametric property using these two methods?</p>
+
+<p>Here is an example data set and R code to play with:</p>
+
+<pre><code>#Generate data frame with mixed continuous and categorical trait data for 10 species
+set.seed(91)
+(df=data.frame(trait1=runif(10,0,10),trait2=runif(10,0,10),
+               trait3=sample(letters[1:3],10,replace=T),row.names=paste(""sp"",1:10,sep="""")))
+
+#Generate Gower dissimilarity matrix from trait data
+library(cluster)
+(dist.gower=daisy(df,metric=""gower""))
+
+#Create a vector of clustering methods
+tree.methods=c(""ward"",""single"",""complete"",""average"",""mcquitty"",""median"",""centroid"")  
+#Build the trees using each method
+trees=lapply(tree.methods,function(i) hclust(dist.gower,method=i))  
+#Plot the trees
+par(mfrow=c(4,2))
+for(i in 1:length(trees)) {plot(trees[[i]])}
+#The last two trees have reversals...cannot be converted to ultrametric!
+</code></pre>
+"
+"0.0928476690885259","0.0969003166223018"," 27323","<p>I have 114 vectors with 6 boolean attributes. I saw that might be several distinct clusters in a simple visualization. K-means clustering on the transformed vectors (true = 1, false = 0) results in roughly the clusters that I had seen in the visualization.</p>
+
+<p>However, I am not sure what the most appropriate clustering method for this kind of data is, and how to determine the confidence in those factors (the k-means results change every time due to randomization). Should I treat the data as nominal or as numerical data?</p>
+
+<p>What would be the best way to do a cluster analysis on this kind of data in R?</p>
+"
+"0.0656532164298613","0.0685188709827532"," 28620","<p>I recently read a <a href=""http://blog.echen.me/2012/03/20/infinite-mixture-models-with-nonparametric-bayes-and-the-dirichlet-process/"" rel=""nofollow"">fascinating article</a> describing methods for clustering data without assuming a fixed number of clusters.</p>
+
+<p>The article even includes some sample code, in a mix of Ruby, Python, and R.  However, the meat of the analysis is performed using <a href=""http://scikit-learn.sourceforge.net/dev/index.html"" rel=""nofollow"">scikit-learn</a>'s <a href=""http://scikit-learn.sourceforge.net/dev/modules/mixture.html"" rel=""nofollow"">Dirichlet Process Gaussian Mixture Model</a> to actually find clusters in some sample data taken from McDonald's menu.</p>
+
+<p>Obviously, this a a great excuse to learn some more python, but I'm lazy and would like to find a ready-made R package that can take a dataframe and return clusters, in a manner similar to the <a href=""http://stat.ethz.ch/R-manual/R-devel/library/stats/html/kmeans.html"" rel=""nofollow"">kmeans</a> function.  <a href=""http://cran.r-project.org/web/views/Cluster.html"" rel=""nofollow"">A quick search on CRAN</a> reveals the packages <a href=""http://cran.r-project.org/web/packages/dpmixsim/index.html"" rel=""nofollow"">dpmixsim</a> and <a href=""http://cran.r-project.org/web/packages/profdpm/index.html"" rel=""nofollow"">profdpm</a>.  Any suggestions for the best place to start?</p>
+"
+"0.046423834544263","0.0969003166223018"," 44957","<p>A colleague and I have been clustering some data in SPSS (v19) and R (2.15), respectively. Using the same distance metric and agglomeration method, we get identical merge orders/agglomeration schedules in both programs, and the dendrograms have very similar shapes, but the actual height values are quite different. On this particular data set, the R dendrogram is about 150 units tall, but the SPSS dendrogram is only 25 units tall. This is somewhat $\ldots$ unsettling, obviously.</p>
+
+<p>While thumbing through some manuscripts and webpages, I noticed that all but one of the SPSS-derived dendrograms were also exactly 25 units tall (example <a href=""http://cw.psypress.com/multivariate-analysis/medical-examples/chapter10/med_cluster_analysis.pdf"" rel=""nofollow"">1</a>, <a href=""http://www.cs.uu.nl/docs/vakken/arm/SPSS/spss8.pdf"" rel=""nofollow"">2</a>, <a href=""http://www.statisticshell.com/docs/cluster.pdf"" rel=""nofollow"">3</a>; we also have a pretty hefty pile of papers that are unfortunately all pay-walled, including the single counter-example).</p>
+
+<p>The caption on the SPSS output says something about rescaling, but the documentation is oddly silent about if, how, and why SPSS might be rescaling the dendrograms.</p>
+
+<p>Could someone please confirm that SPSS does rescales dendrograms (and rescales them onto [0,25])? For extra credit, is there a way to turn this rescaling off? It seems to cause SPSS to cut our dendrogram a few levels above the leaves.</p>
+"
+"0.113714706536836","0.118678165819385"," 50011","<p>I'm looking for some assistance in statistical analysis with R, but also some general stats advice.</p>
+
+<p>I am analysing cardiac phenotype data by comparing 2 groups. The 2 groups are unmatched individuals, but within each group, they are clustered in family subgroups (of between 1 and ~6).</p>
+
+<p>I want to report the difference in prevalence of a specific ECG appearance (binary - i.e. either present or absent in each individual) between the 2 groups.</p>
+
+<p>For example:</p>
+
+<blockquote>
+  <p>Group 1 consists of 157 individuals comprised of 41 family clusters. 
+  Group 2 consists of 463 individuals comprised of 163 family clusters. 
+  Prevalence of x in Group 1 = 22.9% Prevalence of x in Group 2 = 24.6%. 
+  Group 1 are cases and Group 2 controls (i.e. not randomized and defined by phenotype in an observational study). </p>
+</blockquote>
+
+<p>What test is most appropriate in this circumstance, and which package in R provides the easiest way to account for the clustering of relatives within families?</p>
+
+<p>Having looked around, I have found:</p>
+
+<ul>
+<li>Ratio estimate chi-square test</li>
+<li>Generalized estimating equation</li>
+</ul>
+
+<p>But I have no experience of either of these techniques, and can't find any examples of their use in R.</p>
+
+<p>Any advice on how best to proceed?</p>
+
+<p>EDIT: See comment below for update.
+I believe the Donner (1989) chi-square correction may be the most appropriate (provided by R function donner).  Second opinions and correct use of R command appreciated. Thanks.</p>
+"
+"0.160816880225669","0.167836271659338"," 51856","<p>I performed and plotted a kmeans analysis in R with the following commands:</p>
+
+<pre><code> km = kmeans(t(mat2), centers = 4)
+ plotcluster(t(mat2), km$cluster)      #from library(fpc)
+</code></pre>
+
+<p>Here is the result from the plot: <img src=""http://i.stack.imgur.com/p3ds0.png"" alt=""kmeans clustering""></p>
+
+<p>This question is related to a previous question: <a href=""http://stats.stackexchange.com/questions/51707/reading-kmeans-data-and-chart-from-r"">Previous Question</a></p>
+
+<p>My data matrix has dimensions $291 \times 31$ (after taking the transpose by <code>t(mat2)</code>)
+What I want to know, is <strong>how can I create a mapping from each row in the matrix to a 2D point in the plot?</strong> My idea is to get the $31$ dimensional coordinates for each point in the plot and then map and compute the 2D coordinates with <code>discrproj()</code>.For example, I see that I should be able to find the 2D center points of all clusters by calling <code>discrproj()</code> on the matrix given by <code>km$centers</code> (which has dimensions $4 \times 31$ and hence contains the coordinates for each cluster in $31$ dimensional space). </p>
+
+<p>However, where is the data for the coordinates in $31$ dimensional space for every 2D point in the plot? Is this data just my $291 \times 31$ data matrix? In summary:</p>
+
+<ol>
+<li>How can I create a mapping from each row in the $291 \times 31$ data matrix to a 2D point in the plot?</li>
+<li>Where/what is the data for the coordinates in $31$ dimensional space for every 2D point in the plot</li>
+</ol>
+"
+"0.113714706536836","0.118678165819385"," 54522","<p>I am working for a big company with a restrictive internet policy and Excel-addicted colleagues. I am currently working on evolution of market correlations which implies some statistics, data analysis, clustering, data visualization ... From what I have seen on the internet it's not a good idea to do it in Excel. (see here a general study: <a href=""http://stats.stackexchange.com/questions/3392/excel-as-a-statistics-workbench/3398#3398"">Excel as a statistics workbench</a>)</p>
+
+<p>After a struggle of 2 weeks, I have finally got from IT a working version of R and some interesting packages. My market data are stocked in a .txt file, I work on it with R and create a results.txt file, then I load the results.txt file in Excel and I plot what my boss wants. </p>
+
+<p>I admit that Excel is useful for manipulating a lot of data sets and graphs at the same place. It's the only good point compared to R for what I want to do. I think my cheap .txt solution to do calculations in R is correct and simple ... (for the anecdote things like Rexcel to connect R and Excel are forbidden where I work - don't ask why - so I have tried a macro which create a .bat to launch R and do the calculation; too complex for my colleagues)</p>
+
+<p>But for data visualization Excel is very poor; I really miss some graphs I have in R.
+Dendograms, boxplots, histograms, correlation circles, summarized correlations, and heatmaps are very interesting for me, but not available. So my question is how to get them in Excel ? (Remember the strict internet policy; I can't download any add-ins). Is there a (easy) way to plot complex things with macro or workbooks ? Do you have some sources?</p>
+"
+"0.217747085177846","0.206592169189602"," 55232","<p>I am trying to fit a finite mixture model to a dependent variable which is bounded (practically) between -0.594 and 1 (theoretically, the latent variable is bounded between -Inf - 1). The data are also bimodal, with a large number of values at '1'. The objective of the analysis is prediction of the dependent variable.</p>
+
+<p>My current approach has been to fit a mixture of normal distributions using the <code>flexmix</code> package in R, but I'd really like to account for the bounded nature of the data, as a recent study found this to be important (I also choose k=3 components based on this study). Using <code>flexmix</code> for truncated data appears non-trivial, as suggested <a href=""http://r.789695.n4.nabble.com/model-based-clustering-with-flexmix-td908418.html"" rel=""nofollow"">here</a>.</p>
+
+<p>Is there an R package that will permit mixture models with bounded data? I've noticed that actually predicted values do not seem to fall outside the bounded range; i.e. predicted values are not in practice greater than 1. Is this just a fluke of my data, or is it a feature of the methods I've used? Is the bounding even a problem in this context?</p>
+
+<p>As an alternative, I've tried transforming the data by simply taking 1-the dependent variable, thereby giving me a (zero-inflated) variable bounded by 0 and Inf which I have tried to model as a mixture of zero-inflated poisson models but I get the error:    </p>
+
+<pre><code>Error in FLXfit(model = model, concomitant = concomitant, control = control,  
+: 1 Log-    likelihood: NaN
+</code></pre>
+
+<p>Is it possible to model non-integers with the poisson family in this context? Any suggestions or thoughts would be greatly appreciated, I'm very new to mixture modelling and indeed GLMs etc.</p>
+
+<p>Here's some simulated data: <a href=""https://dl.dropbox.com/u/65336009/mydata.csv"" rel=""nofollow"">https://dl.dropbox.com/u/65336009/mydata.csv</a></p>
+
+<p>Here's my code:</p>
+
+<pre><code>require(flexmix)
+require(ggplot2)
+mydata &lt;- data.frame(read.csv(""mydata.csv"", head=T))
+attach(mydata)
+
+#Plot of y var
+summary(y)
+ggplot(mydata, aes(y)) + geom_histogram(binwidth = .1)
+
+#Simplified example of my current 'best' approach####
+m1 &lt;- flexmix(y ~ x1 + x2 + x3,
+              data = mydata,
+              k = 3)
+
+#Predict cluster membership
+clusters &lt;- data.frame(clusters(m1, newdata = mydata))
+
+#Predict y
+a &lt;- data.frame(predict(m1, newdata = mydata))
+
+#Select prediction based on predicted cluster membership
+mydata$flexmix.norm &lt;- ifelse(clusters[,1]==1, a[,1],
+                                   ifelse(clusters[,1] == 2,
+                                          a[,2], a[,3]))
+    print(max(mydata$flexmix.norm))
+
+#Plot predicted values
+ggplot(mydata, aes(flexmix.norm)) + geom_histogram(binwidth = .1)
+
+#Maybe it's more natural to model as 1 - y, which is bounded (0,Inf) ####
+y.d &lt;- 1 - y
+ggplot(mydata, aes(y.d)) + geom_histogram(binwidth = .1)
+
+#Error here ***
+m2 &lt;- flexmix(y.d ~ x1 + x2 + x3,
+              data = mydata,
+              k = 3,
+              model=FLXMRziglm(family=""poisson""))
+rm2 = refit(m2)
+
+#Predict cluster membership
+clusters &lt;- NULL
+clusters &lt;- data.frame(clusters(m2, newdata = mydata))
+
+#Predict y (note back on original scale of y)
+b &lt;- 1 - data.frame(predict(m2, newdata = mydata))
+
+#Select prediction based on predicted cluster membership
+preds$flexmix.pois &lt;- ifelse(clusters[,1]==1, b[,1],
+                              ifelse(clusters[,1] == 2,
+                                     b[,2], b[,3]))
+
+ggplot(mydata, aes(flexmix.pois)) + geom_histogram(binwidth = .1)
+</code></pre>
+
+<p>Thanks</p>
+"
+"0.113714706536836","0.118678165819385"," 58725","<p>I am experimenting with creating a distance matrix between time series for clustering and similarity searching. The main reference I am using is for the Similarity procedure in SAS (<a href=""http://support.sas.com/rnd/app/ets/papers/similarityanalysis.pdf%E2%80%8E"" rel=""nofollow"">Paper</a>). I would like to conduct the analysis in R using the <code>dtw</code> <a href=""http://dtw.r-forge.r-project.org/"" rel=""nofollow"">package</a>.</p>
+
+<p>What I am confused about it the application of DTW to series of different lengths.</p>
+
+<p>1) Is this possible?
+2) Any hints on how to do it with the R package?</p>
+
+<p>Regarding question #2, trying to calculate a distance matrix on a matrix of series that differ in length immediately fails:</p>
+
+<pre><code>dist_mat&lt;-dist(appliances_t,method=""DTW"")
+
+Error in dtw(distance.only = TRUE, ...) : 
+  No warping paths exists that is allowed by costraints
+</code></pre>
+
+<blockquote>
+  <p>dput(appliances_t)</p>
+</blockquote>
+
+<pre><code>structure(c(1L, 14L, 1L, 1L, 2L, 1L, 1L, 7L, 1L, 33L, 20L, 1L, 
+1L, 8L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 14L, 
+0L, 1L, 0L, 1L, 1L, 6L, 1L, 32L, 20L, 1L, 2L, 8L, 0L, 0L, 2L, 
+1L, 1L, 1L, 1L, 1L, 1L, 0L, 1L, 0L, 19L, 0L, 3L, 6L, 1L, 1L, 
+7L, 1L, 42L, 27L, 1L, 3L, 10L, 0L, 1L, 3L, 1L, 3L, 1L, 1L, 1L, 
+0L, 0L, 1L, 1L, 22L, 1L, 7L, 4L, 1L, 5L, 7L, 1L, 51L, 32L, 5L, 
+4L, 12L, 1L, 1L, 9L, 5L, 7L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 33L, 
+1L, 6L, 4L, 3L, 5L, 5L, 1L, 80L, 49L, 5L, 5L, 19L, 1L, 1L, 9L, 
+5L, 7L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 28L, 1L, 7L, 8L, 3L, 5L, 
+6L, 3L, 63L, 41L, 5L, 6L, 15L, 1L, 1L, 9L, 5L, 8L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 30L, 1L, 10L, 22L, 10L, 8L, 7L, 5L, 70L, 44L, 
+8L, 7L, 16L, 1L, 1L, 12L, 8L, 11L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 
+32L, 2L, 13L, 30L, 10L, 10L, 11L, 12L, 74L, 47L, 10L, 8L, 18L, 
+2L, 1L, 16L, 10L, 14L, 1L, 1L, 1L, 1L, 2L, 1L, 5L, 23L, 4L, 6L, 
+30L, 10L, 5L, 9L, 12L, 53L, 33L, 5L, 9L, 12L, 5L, 1L, 9L, 5L, 
+8L, 5L, 5L, 5L, 3L, 5L, 5L, 7L, 27L, 7L, 9L, 22L, 14L, 7L, 11L, 
+12L, 61L, 36L, 7L, 10L, 14L, 7L, 1L, 11L, 7L, 11L, 8L, 8L, 8L, 
+6L, 7L, 8L, 14L, 27L, 14L, 13L, 38L, 19L, 10L, 7L, 15L, 61L, 
+37L, 10L, 11L, 14L, 14L, 1L, 14L, 10L, 14L, 12L, 12L, 12L, 9L, 
+14L, 12L, 14L, 38L, 14L, 14L, 44L, 10L, 11L, 9L, 20L, 86L, 54L, 
+11L, 12L, 20L, 14L, 1L, 16L, 11L, 14L, 22L, 22L, 22L, 16L, 14L, 
+22L, 14L, 27L, 14L, 16L, 42L, 13L, 13L, 12L, 11L, 61L, 39L, 13L, 
+13L, 14L, 14L, 1L, 19L, 13L, 18L, 22L, 22L, 22L, 16L, 14L, 22L, 
+20L, 28L, 19L, 10L, 40L, 16L, 9L, 12L, 14L, 66L, 41L, 9L, 14L, 
+16L, 20L, 1L, 13L, 9L, 12L, 23L, 23L, 23L, 18L, 20L, 23L, 27L, 
+16L, 27L, 10L, 60L, 19L, 8L, 11L, 20L, 39L, 23L, 8L, 15L, 9L, 
+27L, 4L, 12L, 8L, 11L, 30L, 30L, 30L, 22L, 27L, 30L, 14L, 24L, 
+14L, 14L, 136L, 21L, 11L, 4L, 21L, 56L, 33L, 11L, 16L, 12L, 14L, 
+3L, 16L, 11L, 14L, 42L, 42L, 42L, 31L, 14L, 42L, 18L, 23L, 18L, 
+16L, 206L, 14L, 14L, 3L, 25L, 54L, 33L, 14L, 17L, 12L, 18L, 2L, 
+20L, 14L, 18L, 22L, 22L, 22L, 16L, 18L, 22L, 24L, 28L, 23L, 25L, 
+398L, 14L, 20L, 6L, 16L, 65L, 40L, 20L, 18L, 16L, 24L, 4L, 29L, 
+20L, 28L, 28L, 28L, 28L, 21L, 24L, 28L, 27L, 18L, 27L, 20L, 380L, 
+19L, 16L, 5L, 16L, 40L, 25L, 16L, 19L, 10L, 27L, 3L, 25L, 16L, 
+21L, 39L, 39L, 39L, 28L, 27L, 39L, 32L, 19L, 30L, 21L, 406L, 
+22L, 18L, 3L, 20L, 42L, 27L, 18L, 20L, 10L, 32L, 3L, 27L, 18L, 
+24L, 43L, 43L, 43L, 32L, 32L, 43L, 20L, 21L, 20L, 22L, 504L, 
+33L, 19L, 7L, 27L, 49L, 31L, 19L, 21L, 12L, 20L, 2L, 28L, 19L, 
+27L, 49L, 49L, 49L, 37L, 20L, 49L, 20L, 20L, 20L, 16L, 682L, 
+28L, 14L, 7L, 41L, 48L, 30L, 14L, 22L, 12L, 20L, 2L, 20L, 14L, 
+18L, 33L, 33L, 33L, 25L, 20L, 33L, 27L, 13L, 27L, 19L, 374L, 
+30L, 14L, 8L, 32L, 29L, 19L, 14L, 23L, 6L, 27L, 3L, 21L, 14L, 
+20L, 32L, 32L, 32L, 23L, 27L, 32L, 32L, 20L, 32L, 19L, 489L, 
+32L, 14L, 7L, 33L, 47L, 28L, 14L, 24L, 11L, 32L, 3L, 21L, 14L, 
+20L, 42L, 42L, 42L, 32L, 32L, 42L, 49L, 16L, 49L, 27L, 628L, 
+23L, 21L, 13L, 36L, 35L, 21L, 21L, 25L, 8L, 49L, 4L, 32L, 21L, 
+30L, 51L, 51L, 51L, 40L, 49L, 51L, 41L, 27L, 41L, 19L, 791L, 
+27L, 15L, 14L, 27L, 62L, 39L, 15L, 26L, 14L, 41L, 1L, 22L, 15L, 
+20L, 80L, 80L, 80L, 61L, 41L, 80L, 44L, 33L, 44L, 20L, 898L, 
+27L, 16L, 16L, 29L, 77L, 48L, 16L, 27L, 18L, 44L, 1L, 25L, 16L, 
+21L, 63L, 63L, 63L, 48L, 44L, 63L, 47L, 21L, 46L, 13L, 439L, 
+38L, 10L, 21L, 30L, 51L, 32L, 10L, 28L, 12L, 47L, 2L, 14L, 10L, 
+14L, 70L, 70L, 70L, 51L, 47L, 70L, 33L, 32L, 33L, 18L, 515L, 
+27L, 14L, 22L, 43L, 75L, 47L, 14L, 29L, 18L, 33L, 2L, 20L, 14L, 
+20L, 74L, 74L, 74L, 54L, 33L, 74L, 36L, 33L, 36L, 16L, 450L, 
+28L, 14L, 17L, 30L, 76L, 48L, 14L, 30L, 18L, 36L, 3L, 20L, 14L, 
+18L, 53L, 53L, 53L, 40L, 36L, 53L, 37L, 33L, 37L, 20L, 726L, 
+16L, 16L, 14L, 32L, 78L, 48L, 16L, 31L, 19L, 37L, 3L, 24L, 16L, 
+21L, 61L, 61L, 61L, 45L, 37L, 61L, 54L, 48L, 53L, 13L, 1069L, 
+24L, 10L, 17L, 19L, 109L, 68L, 10L, 32L, 27L, 54L, 3L, 14L, 10L, 
+14L, 61L, 61L, 61L, 45L, 54L, 61L, 39L, 51L, 37L, 13L, 889L, 
+23L, 11L, 19L, 28L, 120L, 76L, 11L, 33L, 28L, 39L, 3L, 16L, 11L, 
+14L, 86L, 86L, 86L, 63L, 39L, 86L, 41L, 43L, 40L, 16L, 1083L, 
+28L, 13L, 22L, 28L, 97L, 62L, 13L, 34L, 22L, 41L, 3L, 19L, 13L, 
+18L, 61L, 61L, 61L, 46L, 41L, 61L, 23L, 50L, 23L, 15L, 1110L, 
+18L, 13L, 25L, 32L, 118L, 73L, 12L, 35L, 28L, 23L, 2L, 19L, 13L, 
+17L, 66L, 66L, 66L, 49L, 23L, 66L, 33L, 80L, 33L, 10L, 803L, 
+19L, 7L, 32L, 20L, 185L, 116L, 7L, 36L, 43L, 33L, 7L, 11L, 7L, 
+11L, 39L, 39L, 39L, 28L, 33L, 39L, 33L, 63L, 33L, 14L, 828L, 
+21L, 12L, 33L, 20L, 146L, 91L, 12L, 37L, 34L, 33L, 9L, 18L, 12L, 
+16L, 56L, 56L, 56L, 42L, 33L, 56L, 40L, 68L, 40L, 11L, 1001L, 
+20L, 9L, 29L, 25L, 157L, 97L, 9L, 38L, 35L, 40L, 11L, 14L, 9L, 
+13L, 54L, 54L, 54L, 41L, 40L, 54L, 25L, 80L, 24L, 20L, 1281L, 
+13L, 16L, 32L, 23L, 181L, 113L, 16L, 39L, 43L, 25L, 3L, 22L, 
+16L, 21L, 65L, 65L, 65L, 48L, 25L, 65L, 27L, 68L, 27L, 24L, 918L, 
+20L, 20L, 32L, 14L, 155L, 96L, 20L, 40L, 35L, 27L, 1L, 29L, 20L, 
+27L, 40L, 40L, 40L, 29L, 27L, 40L, 31L, 85L, 30L, 16L, 974L, 
+16L, 14L, 45L, 23L, 194L, 120L, 13L, 41L, 47L, 31L, 4L, 20L, 
+14L, 18L, 42L, 42L, 42L, 31L, 31L, 42L, 30L, 76L, 29L, 23L, 524L, 
+27L, 19L, 51L, 18L, 172L, 109L, 19L, 42L, 40L, 30L, 7L, 28L, 
+19L, 27L, 49L, 49L, 49L, 36L, 30L, 49L, 19L, 74L, 19L, 23L, 486L, 
+33L, 20L, 40L, 30L, 168L, 105L, 19L, 43L, 39L, 19L, 3L, 28L, 
+20L, 27L, 48L, 48L, 48L, 36L, 19L, 48L, 28L, 80L, 28L, 24L, 380L, 
+21L, 20L, 51L, 39L, 185L, 115L, 20L, 44L, 43L, 28L, 3L, 29L, 
+20L, 28L, 29L, 29L, 29L, 21L, 28L, 29L, 21L, 131L, 21L, 33L, 
+456L, 32L, 27L, 54L, 27L, 300L, 188L, 27L, 45L, 70L, 21L, 3L, 
+40L, 27L, 38L, 47L, 47L, 47L, 34L, 21L, 47L, 39L, 139L, 38L, 
+37L, 360L, 33L, 30L, 63L, 37L, 315L, 198L, 30L, 46L, 74L, 39L, 
+3L, 47L, 30L, 41L, 35L, 35L, 35L, 27L, 39L, 35L, 48L, 197L, 48L, 
+30L, 488L, 33L, 24L, 90L, 38L, 449L, 280L, 24L, 47L, 104L, 48L, 
+8L, 36L, 24L, 33L, 62L, 62L, 62L, 47L, 48L, 62L, 32L, 175L, 32L, 
+36L, 622L, 48L, 29L, 86L, 39L, 401L, 249L, 29L, 48L, 95L, 32L, 
+3L, 44L, 29L, 40L, 77L, 77L, 77L, 58L, 32L, 77L, 47L, 147L, 47L, 
+58L, 522L, 51L, 47L, 63L, 53L, 336L, 211L, 47L, 49L, 79L, 47L, 
+3L, 69L, 47L, 64L, 51L, 51L, 51L, 40L, 47L, 51L, 48L, 212L, 48L, 
+47L, 306L, 43L, 36L, 76L, 60L, 483L, 304L, 35L, 50L, 114L, 48L, 
+3L, 54L, 36L, 50L, 75L, 75L, 75L, 56L, 48L, 75L, 48L, 175L, 48L, 
+48L, 628L, 50L, 39L, 106L, 48L, 401L, 249L, 39L, 51L, 95L, 48L, 
+0L, 58L, 39L, 52L, 76L, 76L, 76L, 57L, 48L, 76L, 68L, 186L, 67L, 
+56L, 320L, 80L, 47L, 85L, 59L, 426L, 266L, 47L, 52L, 100L, 68L, 
+1L, 68L, 47L, 63L, 78L, 78L, 78L, 59L, 68L, 78L, 76L, 144L, 75L, 
+48L, 646L, 63L, 39L, 69L, 92L, 332L, 207L, 39L, 53L, 77L, 76L, 
+2L, 58L, 39L, 52L, 109L, 109L, 109L, 80L, 76L, 109L, 62L, 140L, 
+61L, 61L, 790L, 68L, 48L, 83L, 72L, 323L, 200L, 48L, 54L, 76L, 
+62L, 3L, 72L, 48L, 66L, 120L, 120L, 120L, 91L, 62L, 120L, 73L, 
+170L, 72L, 54L, 556L, 80L, 43L, 96L, 78L, 390L, 244L, 43L, 55L, 
+91L, 73L, 6L, 63L, 43L, 60L, 97L, 97L, 97L, 73L, 73L, 97L, 116L, 
+157L, 114L, 51L, 552L, 68L, 43L, 113L, 91L, 357L, 224L, 43L, 
+56L, 84L, 116L, 7L, 63L, 43L, 58L, 118L, 118L, 118L, 88L, 116L, 
+118L, 91L, 225L, 91L, 58L, 806L, 85L, 47L, 96L, 78L, 512L, 321L, 
+47L, 57L, 119L, 91L, 5L, 68L, 47L, 65L, 185L, 185L, 185L, 138L, 
+91L, 185L, 97L, 103L, 96L, 95L, 855L, 76L, 75L, 108L, 96L, 236L, 
+148L, 75L, 58L, 56L, 97L, NA, 112L, 76L, 104L, 146L, 146L, 146L, 
+109L, 97L, 146L, 113L, 128L, 112L, 97L, 1050L, 74L, 78L, 116L, 
+86L, 294L, 184L, 78L, 59L, 69L, 113L, NA, 118L, 78L, 110L, 157L, 
+157L, 157L, 117L, 113L, 157L, 96L, 140L, 96L, 140L, 1120L, 80L, 
+112L, 123L, 83L, 321L, 199L, 112L, 60L, 75L, 96L, NA, 167L, 112L, 
+155L, 181L, 181L, 181L, 137L, 96L, 181L, 120L, 146L, 119L, 126L, 
+908L, 131L, 99L, 192L, 92L, 334L, 209L, 99L, 61L, 78L, 120L, 
+NA, 150L, 99L, 138L, 155L, 155L, 155L, 117L, 120L, 155L, 109L, 
+150L, 107L, 105L, 1068L, 139L, 84L, 373L, 150L, 343L, 214L, 83L, 
+62L, 80L, 109L, NA, 126L, 84L, 117L, 194L, 194L, 194L, 146L, 
+109L, 194L, 105L, 158L, 104L, 151L, 1696L, 197L, 120L, 195L, 
+158L, 363L, 227L, 120L, 63L, 84L, 105L, NA, 181L, 121L, 168L, 
+172L, 172L, 172L, 129L, 105L, 172L, 115L, 160L, 115L, 125L, 1658L, 
+175L, 99L, 213L, 224L, 366L, 228L, 99L, 64L, 86L, 115L, NA, 150L, 
+100L, 138L, 168L, 168L, 168L, 126L, 115L, 168L, 188L, 179L, 186L, 
+132L, 1872L, 147L, 106L, 215L, 199L, 408L, 256L, 106L, 65L, 96L, 
+188L, NA, 160L, 106L, 149L, 185L, 185L, 185L, 138L, 188L, 185L, 
+198L, 148L, 195L, 103L, 2262L, 212L, 81L, 232L, 167L, 338L, 212L, 
+81L, 66L, 80L, 198L, NA, 125L, 81L, 115L, 300L, 300L, 300L, 226L, 
+198L, 300L, 280L, 145L, 278L, 100L, 2120L, 175L, 80L, 318L, 242L, 
+332L, 209L, 80L, 67L, 138L, 280L, NA, 120L, 80L, 112L, 315L, 
+315L, 315L, 236L, 280L, 315L, 249L, 151L, 248L, 122L, 2215L, 
+186L, 97L, 184L, 199L, 348L, 226L, 97L, 68L, 137L, 249L, NA, 
+146L, 97L, 137L, 449L, 449L, 449L, 337L, 249L, 449L, 211L, 166L, 
+208L, 111L, 1756L, 144L, 91L, 195L, 213L, 402L, 434L, 91L, 69L, 
+190L, 211L, NA, 134L, 91L, 124L, 401L, 401L, 401L, 299L, 211L, 
+401L, 304L, 159L, 299L, 160L, 2010L, 140L, 128L, 243L, 165L, 
+422L, 380L, 128L, 70L, 149L, 304L, NA, 192L, 128L, 177L, 336L, 
+336L, 336L, 253L, 304L, 336L, 249L, 188L, 248L, 74L, 2278L, 170L, 
+60L, 242L, 160L, 492L, 501L, 59L, 71L, 127L, 249L, NA, 89L, 60L, 
+81L, 483L, 483L, 483L, 364L, 249L, 483L, 266L, 119L, 263L, 92L, 
+3064L, 157L, 74L, 264L, 195L, 403L, 359L, 74L, 72L, 128L, 266L, 
+NA, 110L, 74L, 102L, 401L, 401L, 401L, 300L, 266L, 401L, 207L, 
+237L, 206L, 99L, 3001L, 225L, 80L, 199L, 177L, 892L, 719L, 80L, 
+73L, 291L, 207L, NA, 119L, 80L, 112L, 426L, 426L, 426L, 319L, 
+207L, 426L, 200L, 383L, 199L, 104L, 4429L, 103L, 83L, 173L, 256L, 
+1418L, 710L, 82L, 74L, 342L, 200L, NA, 126L, 83L, 117L, 332L, 
+332L, 332L, 247L, 200L, 332L, 244L, 163L, 242L, 109L, 4118L, 
+128L, 86L, 207L, 118L, 1011L, 541L, 86L, 75L, 223L, 244L, NA, 
+128L, 86L, 118L, 323L, 323L, 323L, 241L, 244L, 323L, 224L, 463L, 
+221L, 113L, 3112L, 140L, 91L, 152L, 145L, 1268L, 436L, 91L, 76L, 
+276L, 224L, NA, 137L, 91L, 125L, 390L, 390L, 390L, 293L, 224L, 
+390L, 321L, 325L, 318L, 115L, 3968L, 146L, 92L, 173L, 160L, 1112L, 
+286L, 92L, 77L, 278L, 321L, NA, 138L, 92L, 125L, 357L, 357L, 
+357L, 268L, 321L, 357L, 148L, 579L, 145L, 127L, 3395L, 150L, 
+102L, 146L, 166L, 1606L, 382L, 102L, 78L, 253L, 148L, NA, 151L, 
+102L, 141L, 512L, 512L, 512L, 385L, 148L, 512L, 184L, 431L, 181L, 
+106L, 3693L, 158L, 84L, 158L, 171L, 1221L, 432L, 83L, 79L, 324L, 
+184L, NA, 126L, 85L, 118L, 236L, 236L, 236L, 178L, 184L, 236L, 
+199L, 833L, 198L, 103L, 3038L, 160L, 82L, 145L, 179L, 814L, 210L, 
+81L, 80L, 243L, 199L, NA, 125L, 82L, 115L, 294L, 294L, 294L, 
+220L, 199L, 294L, 209L, 580L, 207L, 109L, 2303L, 179L, 87L, 156L, 
+182L, 952L, 280L, 87L, 81L, 244L, 209L, NA, 131L, 88L, 120L, 
+321L, 321L, 321L, 240L, 209L, 321L, 1063L, 654L, 212L, 118L, 
+2959L, 148L, 95L, 162L, 202L, 920L, 332L, 95L, 82L, 202L, 214L, 
+NA, 142L, 95L, 130L, 334L, 334L, 334L, 249L, 214L, 334L, 1535L, 
+950L, 225L, 113L, 2509L, 306L, 91L, 297L, 167L, 907L, 393L, 91L, 
+83L, 201L, 227L, NA, 137L, 91L, 125L, 343L, 343L, 343L, 258L, 
+227L, 343L, 1705L, 1252L, 227L, 135L, 2718L, 397L, 109L, 332L, 
+166L, 804L, 320L, 108L, 84L, 121L, 228L, NA, 162L, 109L, 150L, 
+363L, 363L, 363L, 271L, 228L, 363L, 1203L, 1192L, 253L, 95L, 
+1813L, 481L, 76L, 451L, 174L, 869L, 308L, 75L, 85L, 91L, 256L, 
+NA, 113L, 76L, 104L, 366L, 366L, 366L, 275L, 256L, 366L, 1176L, 
+1127L, 210L, 140L, 2103L, 441L, 111L, 425L, 188L, 872L, 447L, 
+111L, 86L, 160L, 212L, NA, 167L, 111L, 154L, 408L, 408L, 408L, 
+306L, 212L, 408L, 943L, 1168L, 206L, 176L, 2156L, 600L, 141L, 
+346L, 179L, 980L, 478L, 141L, 87L, 169L, 209L, NA, 213L, 141L, 
+197L, 338L, 338L, 338L, 256L, 209L, 338L, 685L, 1469L, 215L, 
+129L, 2212L, 414L, 104L, 373L, 214L, 1195L, 764L, 104L, 88L, 
+234L, 217L, NA, 157L, 104L, 143L, 332L, 332L, 332L, 248L, 217L, 
+332L, 951L, 690L, 234L, 164L, 1995L, 358L, 130L, 522L, 150L, 
+849L, 441L, 129L, 89L, 145L, 236L, NA, 196L, 130L, 182L, 348L, 
+348L, 348L, 261L, 236L, 348L, 779L, NA, 227L, 147L, 1995L, 648L, 
+118L, 398L, 222L, NA, NA, 118L, 90L, NA, 228L, NA, 178L, 118L, 
+165L, 378L, 378L, 378L, 283L, 228L, 378L, 853L, NA, 266L, 167L, 
+2252L, 352L, 133L, 437L, 282L, NA, NA, 135L, 91L, NA, 270L, NA, 
+202L, 136L, 188L, 364L, 364L, 364L, 274L, 270L, 364L, 593L, NA, 
+186L, 213L, 2142L, 415L, 160L, 346L, 208L, NA, NA, 170L, 92L, 
+NA, 188L, NA, 257L, 170L, 236L, 430L, 430L, 430L, 324L, 188L, 
+430L, 844L, NA, 276L, 129L, 1933L, 584L, 135L, 423L, 261L, NA, 
+NA, 104L, 93L, NA, 280L, NA, 157L, 104L, 143L, 301L, 301L, 301L, 
+227L, 280L, 301L, 1055L, NA, 352L, 150L, 1973L, 606L, 177L, 507L, 
+236L, NA, NA, 119L, 94L, NA, 354L, NA, 180L, 119L, 167L, 447L, 
+447L, 447L, 334L, 354L, 447L, 773L, NA, 258L, 159L, 1656L, 1012L, 
+281L, 399L, 269L, NA, NA, 126L, 95L, NA, 261L, NA, 191L, 127L, 
+175L, 567L, 567L, 567L, 424L, 261L, 567L, 722L, NA, 324L, 167L, 
+1883L, 617L, 267L, 430L, 340L, NA, NA, 134L, 96L, NA, 326L, NA, 
+202L, 134L, 187L, 417L, 417L, 417L, 311L, 326L, 417L, 687L, NA, 
+293L, 169L, 1788L, 530L, 275L, 444L, 206L, NA, NA, 136L, 97L, 
+NA, 295L, NA, 205L, 136L, 189L, 521L, 521L, 521L, 392L, 295L, 
+521L, 711L, NA, 334L, 186L, 1763L, 597L, 234L, 460L, 240L, NA, 
+NA, 147L, 98L, NA, 338L, NA, 222L, 147L, 205L, 473L, 473L, 473L, 
+354L, 338L, 473L, 889L, NA, 422L, 198L, 1337L, 446L, 303L, 584L, 
+253L, NA, NA, 166L, 99L, NA, 427L, NA, 237L, 158L, 220L, 540L, 
+540L, 540L, 405L, 427L, 540L, 635L, NA, 258L, 310L, 1749L, 558L, 
+396L, 600L, 269L, NA, NA, 239L, 100L, NA, 261L, NA, 373L, 247L, 
+345L, 683L, 683L, 683L, 512L, 261L, 683L, 669L, NA, 298L, 359L, 
+1960L, 590L, 608L, 588L, 271L, NA, NA, 372L, 101L, NA, 303L, 
+NA, 431L, 288L, 398L, 416L, 416L, 416L, 311L, 303L, 416L, 712L, 
+NA, 315L, 214L, 1383L, 576L, 355L, 893L, 295L, NA, NA, 256L, 
+102L, NA, 319L, NA, 257L, 170L, 236L, 482L, 482L, 482L, 361L, 
+319L, 482L, 727L, NA, 334L, NA, 1631L, 730L, NA, 864L, 316L, 
+NA, NA, NA, 103L, NA, 336L, NA, NA, NA, NA, 509L, 509L, 509L, 
+382L, 336L, 509L, 887L, NA, 339L, NA, 1513L, 736L, NA, 580L, 
+496L, NA, NA, NA, 104L, NA, 340L, NA, NA, NA, NA, 539L, 539L, 
+539L, 403L, 340L, 539L, 794L, NA, 369L, NA, 1687L, 647L, NA, 
+632L, 572L, NA, NA, NA, 105L, NA, 264L, NA, NA, NA, NA, 546L, 
+546L, 546L, 408L, 325L, 546L, 838L, NA, 392L, NA, 2145L, NA, 
+NA, 712L, 340L, NA, NA, NA, 106L, NA, 357L, NA, NA, NA, NA, 594L, 
+594L, 382L, 443L, 462L, 594L, 880L, NA, 616L, NA, 1522L, NA, 
+NA, 700L, NA, NA, NA, NA, 107L, NA, 456L, NA, NA, NA, NA, 634L, 
+634L, 424L, 476L, 447L, 634L, 1030L, NA, 712L, NA, 1578L, NA, 
+NA, 703L, NA, NA, NA, NA, 108L, NA, 873L, NA, NA, NA, NA, 996L, 
+996L, 497L, 746L, 518L, 996L, 842L, NA, 256L, NA, 1546L, NA, 
+NA, 753L, NA, NA, NA, NA, 109L, NA, 337L, NA, NA, NA, NA, 1151L, 
+1151L, 515L, 862L, 465L, 1151L, NA, NA, NA, NA, 1685L, NA, NA, 
+699L, NA, NA, NA, NA, 110L, NA, NA, NA, NA, NA, NA, 685L, 685L, 
+310L, 512L, NA, 685L, NA, NA, NA, NA, 1726L, NA, NA, 857L, NA, 
+NA, NA, NA, 111L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, 1561L, NA, NA, 1099L, NA, NA, NA, NA, 112L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+1411L, NA, NA, 1156L, NA, NA, NA, NA, 113L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1714L, NA, NA, 3876L, 
+NA, NA, NA, NA, 114L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, 2258L, NA, NA, 1507L, NA, NA, NA, NA, 
+115L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, 1442L, NA, NA, 1524L, NA, NA, NA, NA, 116L, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+2073L, NA, NA, NA, NA, 117L, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 2725L, NA, NA, NA, 
+NA, 118L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, 2255L, NA, NA, NA, NA, 119L, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, 1634L, NA, NA, NA, NA, 120L, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1360L, NA, NA, 
+NA, NA, 121L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, 1270L, NA, NA, NA, NA, 122L, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, 1328L, NA, NA, NA, NA, 123L, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1470L, NA, 
+NA, NA, NA, 124L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, 1040L, NA, NA, NA, NA, 125L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1095L, NA, NA, NA, NA, 126L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1823L, 
+NA, NA, NA, NA, 127L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 3221L, NA, NA, NA, NA, 128L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 3986L, NA, NA, NA, NA, 129L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 3632L, 
+NA, NA, NA, NA, 130L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 3760L, NA, NA, NA, NA, 131L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 3225L, NA, NA, NA, NA, 132L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 3473L, 
+NA, NA, NA, NA, 133L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 3359L, NA, NA, NA, NA, 134L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 2032L, NA, NA, NA, NA, 135L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 3337L, 
+NA, NA, NA, NA, 136L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 2474L, NA, NA, NA, NA, 137L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1748L, NA, NA, NA, NA, 138L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1581L, 
+NA, NA, NA, NA, 139L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 2590L, NA, NA, NA, NA, 140L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 2769L, NA, NA, NA, NA, 141L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 2134L, 
+NA, NA, NA, NA, 142L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 2312L, NA, NA, NA, NA, 143L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1822L, NA, NA, NA, NA, 144L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1890L, 
+NA, NA, NA, NA, 145L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 1770L, NA, NA, NA, NA, 146L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1664L, NA, NA, NA, NA, 147L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1533L, 
+NA, NA, NA, NA, 148L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 1628L, NA, NA, NA, NA, 149L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1682L, NA, NA, NA, NA, 150L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1416L, 
+NA, NA, NA, NA, 151L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 1721L, NA, NA, NA, NA, 152L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1732L, NA, NA, NA, NA, 153L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 1748L, 
+NA, NA, NA, NA, 154L, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, 1312L, NA, NA, NA, NA, 155L, 
+NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 
+NA, NA, NA, 1659L, NA, NA, NA, NA, 156L, NA, NA, NA, NA, NA, 
+NA, NA, NA, NA, NA, NA, NA), .Dim = c(25L, 156L), .Dimnames = list(
+    c(""units_1"", ""units_2"", ""units_3"", ""units_4"", ""units_5"", 
+    ""units_6"", ""units_7"", ""units_8"", ""units_9"", ""units_10"", ""units_11"", 
+    ""units_12"", ""units_13"", ""units_14"", ""units_15"", ""units_16"", 
+    ""units_17"", ""units_18"", ""units_19"", ""units_20"", ""units_21"", 
+    ""units_22"", ""units_23"", ""units_24"", ""units_25""), NULL))
+</code></pre>
+"
+"0.0656532164298613","0.0685188709827532"," 59467","<p>I am trying to learn the difference between the three approaches and their applications.</p>
+
+<p>a) As I understand,</p>
+
+<pre><code>AIC = -LL+K 
+
+BIC = -LL+(K*logN)/2
+</code></pre>
+
+<p>Unless I am missing something, shouldn't the K that minimizes the AIC minimize BIC as well since N is constant. </p>
+
+<p>I looked at this <a href=""http://stats.stackexchange.com/questions/577/is-there-any-reason-to-prefer-the-aic-or-bic-over-the-other/767#767"">thread</a> but couldn't find a satisfactory answer. </p>
+
+<p>b) According to Witten's book on Data Mining (pg 267) the definition of MDL for evaluating the quality of network is the same as BIC. Is there a difference between BIC and MDL?</p>
+
+<p>c) What are the different approaches to compute MDL? I am looking for its application in Clustering, Time Series Analysis (ARIMA and Regime Switching) and Attribute Selection. While almost all commonly used packages in R report AIC and BIC, I couldn't find any that implements MDL and I wanted to see if I can write it myself.</p>
+
+<p>Thank you.</p>
+"
+"0.131306432859723","0.137037741965506"," 59554","<p>I'm running an analysis on a few data sets that each typically have 100-200 cases measured across 120-160 variables - something similar to looking at gene expressions. Each variable is a non-centered score for expression of a particular attribute frequency for each case. In many cases though, any given attribute is likely to be 0 (i.e. very sparse for most). </p>
+
+<p>The cases typically fall into 2-4 natural groups, and I'm trying to figure out how to find out which high-expression attributes are most representative for each group and/or which ones are driving the distinctions between group memberships. </p>
+
+<p>I've been experimenting with using correlation clustering and the resulting groups <em>do</em> appear to match the natural groups assigned by other means, so now I'm just looking for a way to ""unpack"" those clusters in terms of their attribute expressions to find out which attributes/variables are the most influential ones in each of my samples. </p>
+
+<p>Given the number of variables involved, it seems like the usual approaches like PCA or discriminate or factor analysis would be very cumbersome. So far, I haven't really found much information on how to deal with variable influence that would fit situations when there are scores or hundreds of variables.</p>
+
+<p>Any suggestions?</p>
+"
+"0.146805054878676","0.153212853258974"," 64723","<p>I have run a sequence analaysis using the Optimal Matching algorithm. Afterwards, I have clustered the resulting distance matrice using the Ward algorithm and calculated silhouettes as measures of cluster quality and to identify representative sequences. </p>
+
+<p>Now, I am curious whether it is possible to estimate the sequences of the cluster centroids which, to my knowledege, must not be an original data point. How can I estimate the sequence of a centroid?</p>
+
+<p>To get an idea of the different steps of the analysis, consider this manual example[1]:</p>
+
+<pre><code>library(TraMineR) 
+library(WeightedCluster) 
+data(mvad) 
+mvad.alphabet &lt;- c(""employment"", ""FE"", ""HE"", ""joblessness"", ""school"", ""training"") 
+mvad.labels &lt;- c(""Employment"", ""Further Education"", ""Higher Education"", ""Joblessness"", ""School"", ""Training"") 
+mvad.scodes &lt;- c(""EM"", ""FE"", ""HE"", ""JL"", ""SC"", ""TR"") 
+
+## Define sequence objects
+mvad.seq &lt;- seqdef(mvad[, 17:86], alphabet = mvad.alphabet, states = mvad.scodes, labels = mvad.labels, weights = mvad$weight, xtstep = 6)
+
+## Computing OM dissimilarities
+mvad.dist &lt;- seqdist(mvad.seq, method=""HAM"", sm=""CONSTANT"")
+
+## Clustering
+wardCluster &lt;- hclust(as.dist(mvad.dist), method = ""ward"", members = mvad$weight)
+clust4 &lt;- cutree(wardCluster, k = 4)
+
+## Silhouettes
+sil &lt;- wcSilhouetteObs(mvad.dist, clust4, weights = mvad$weight, measure = ""ASWw"")
+
+## Sequence index plots ordered by representativeness
+seqIplot(mvad.seq, group = clust4, sortv = sil)
+</code></pre>
+
+<p>In this example, it would be for example interesting to see whether the sequence of third cluster's centroid differes from the most representative, original sequences in the cluster which are printed at the very top of the sequence index plot. In other cases, the centroid sequence may even have a more idealtype character which does not exist in the original dataset but reflects certain typical structures.</p>
+
+<p><sub>[1] See for the example Studer, Matthias (2013). WeightedCluster Library Manual: A practical guide to creating typologies of trajectories in the social sciences with R. LIVES Working Papers, 24.</sub></p>
+"
+"0.20761369963435","0.173340556006976"," 73162","<p>I'm attempting to estimate the effect of 2 drugs (<code>drug1</code>, <code>drug2</code>) on the likelihood of a patient falling (<code>event</code>).  The patients can fall more than once and can be put on or taken off of the the drugs at any point.  </p>
+
+<p>My question is how the data should be structured with regard to the time period (days), specifically whether there needs to be overlap between the days.  There are two reasons why I think my structure is wrong, the first being a seemingly incorrect <code>N</code>.  I am also getting some errors where the time period is a single day (i.e. <code>time1=4</code>, <code>time2=4</code>) and am unsure how these should be coded.  Should the start time of subsequent entries be the stop time of the previous entry?  I've tried it both ways (with and without overlap), and while having overlap gets rid of the warning, the <code>N</code> is still incorrect. </p>
+
+<pre><code>Warning message:
+In Surv(time = c(0, 2, 7, 15, 20, 0, 18, 27, 32, 35, 39, 46, 53,  :
+  Stop time must be &gt; start time, NA created
+</code></pre>
+
+<p>Right now I have the data set up where the beginning of the next entry is the next day.  Unique patients are identified by their <code>chart numbers</code>.  </p>
+
+<pre><code>Time1    Time2    Drug1    Drug2   Event    ChartNo
+    0        2        1        0       0        123
+    3       10        1        1       1        123
+   11       14        1        1       1        123
+    0       11        0        1       0        345
+    0       19        1        0       1        678
+    0        4        0        1       0        900
+    5       18        1        1       0        900
+</code></pre>
+
+<p>Patient 123 was on drug1 at the start to day 2, after which point they had drug2 added.  They went from day 3 to day 10 on both drugs before falling the first time, then fell a second time on day 14 while still on both drugs.  Patient 345 went 11 days on drug2 without falling (then was censored), etc.</p>
+
+<p>The actual estimation looks like this:</p>
+
+<pre><code>S &lt;- Srv(time=time1, time2=time2, event=event)
+cox.rms &lt;- cph(S ~ Drug1 + Drug2 + cluster(ChartNo), surv=T)
+</code></pre>
+
+<p>My main concern is that the <code>n</code> for my analysis is reported to be <code>2017</code> (the number of rows in the data), when in actuality I only have <code>314</code> unique patients.  I am unsure if this is normal or the result of some error I've made along the way.</p>
+
+<pre><code>&gt; cox.rms$n
+Status
+No Event    Event 
+    1884      133 
+</code></pre>
+
+<p>The same is true when using <code>coxph()</code> from the survival package.</p>
+
+<pre><code> n= 2017, number of events= 133
+</code></pre>
+
+<p>The number of events is correct however.  </p>
+
+<p><a href=""http://stats.stackexchange.com/questions/58079/extended-cox-model-with-continuous-time-dependent-covariate-how-to-structure-d"">This Post</a> seems to have it set up with the 'overlap' I described, but I am unsure about the <code>N</code>, and they don't seem to be clustering by <code>ID</code>.  </p>
+"
+"0.185695338177052","0.193800633244604"," 77027","<p>For non-statisticians like me, it is very difficult to capture the idea of <code>VI</code> metric (variation of information) even after reading the relevant paper by Marina Melia ""<a href=""http://www.sciencedirect.com/science/article/pii/S0047259X06002016"">Comparing clusterings - An information based distance</a>"" (Journal of Multivariate Analysis, 2007). In fact, I am not familiar with many of the clusterings' terms out there.  </p>
+
+<p>Below is a MWE and I would like to know what does the output mean in the different metrics used.  I have these two clusters in R and in the same order of id:  </p>
+
+<pre><code>&gt; dput(a)
+structure(c(4L, 3L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 3L, 3L, 
+4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 4L, 
+1L, 1L, 4L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 2L, 2L, 
+4L, 3L, 3L, 2L, 2L, 2L, 4L, 3L, 4L, 4L, 3L, 1L, 4L, 3L, 4L, 4L, 
+4L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 4L, 3L, 4L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 
+4L, 3L, 4L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 4L
+), .Label = c(""1"", ""2"", ""3"", ""4""), class = ""factor"")
+&gt; dput(b)
+structure(c(4L, 3L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 3L, 3L, 
+4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 4L, 
+1L, 1L, 4L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 2L, 2L, 
+4L, 3L, 3L, 2L, 2L, 2L, 4L, 3L, 4L, 4L, 3L, 1L, 4L, 3L, 4L, 4L, 
+3L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 2L, 4L, 3L, 3L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 3L, 4L, 4L, 3L, 4L, 4L, 4L, 4L, 4L, 4L, 3L, 4L, 
+4L, 3L, 4L, 4L, 4L, 4L, 4L, 3L, 3L, 4L, 4L, 4L, 4L, 2L, 2L, 4L
+), .Label = c(""1"", ""2"", ""3"", ""4""), class = ""factor"")
+</code></pre>
+
+<p>Now doing comparisons based on the <code>VI</code> as well as other metrics / indices and in chronological order of their appearance in literature.  </p>
+
+<pre><code>library(igraph)
+  # Normalized Mutual Information (NMI) measure 2005:
+compare(a, b, method = c(""nmi"")) 
+[1] 0.8673525
+  # Variation of Information (VI) metric 2003:
+compare(a, b, method = c(""vi"")) 
+[1] 0.2451685
+  # Jaccard Index 2002:
+clusteval::cluster_similarity(a, b, similarity = c(""jaccard""), method = ""independence"") 
+[1] 0.8800522
+  # van Dongen S metric 2000:
+compare(a, b, method = c(""split.join"")) 
+[1] 8
+  # Adjusted Rand Index 1985:
+compare(a, b, method = c(""adjusted.rand"")) 
+[1] 0.8750403
+  # Rand Index 1971:
+compare(a, b, method = c(""rand"")) 
+[1] 0.9374788
+</code></pre>
+
+<p>As you can see, the <code>VI</code> value was different from all the others.  </p>
+
+<ul>
+<li>What does this value tell (and how is it related to the figure below)? </li>
+<li>What are the guidelines for considering this value low or high? </li>
+<li>Are there any guidelines defined?  </li>
+</ul>
+
+<p>Maybe experts in the field can provide some sensible descriptions for laymen like me when trying to report such results. I would really appreciate if someone would provide also guidelines for other metrics as well (when to consider the value is large or small, i.e., in relation to a similarity between two clusters).  </p>
+
+<p>I have read related CV threads <a href=""http://stats.stackexchange.com/questions/24961/comparing-clusterings-rand-index-vs-variation-of-information"">here</a> and <a href=""http://stats.stackexchange.com/questions/15548/validation-of-clustering-results/15600?noredirect=1#comment150263_15600"">here</a>, but still couldn't grasp the intuition behind <code>VI</code>. Can someone explain this in plain English?  </p>
+
+<p>The below figure is figure 2 from the above mentioned paper about <code>VI</code>.  </p>
+
+<p><img src=""http://i.stack.imgur.com/OnCzM.png"" alt=""enter image description here""></p>
+"
+"0.160816880225669","0.111890847772892"," 77660","<p>I have 11 scale parameters for each of 218 observations belonging to subjects, I did standardized PCA to reduce dimensionality of the data and found two meaningful components. Using Euclidean distances this was followed by cluster analysis of these two components (explaining about 75% of the variance) with bottom-up approach using the hierarchical agglomerative clustering (HAC) by <code>FactoMineR</code> R package and Ward's linkage method.
+The optimal number of clusters was 4 as suggested by the package based on minimizing the ratio of two successive partition inter-clusters inertia gains.<br>
+This is just the number of observations per cluster:  </p>
+
+<pre><code>&gt; table(df$clust)
+
+  1   2   3   4 
+  6  21  46 145
+</code></pre>
+
+<p>These 4 clusters turned out to be clinically important and subjects with cluster 1 were severely affected by disease. Cluster 4 were non-reactive subjects, Cluster 3 showed some reaction, and finally cluster 2 was like a special entity protected from disease. I don't know if these clusters can assume some kind of ordinal ranking or not. It is difficult to judge from the theoretical point of view related to the field, but I can say that cluster 4->3->1 is somehow showing some direction, and hence could be regarded as ordinal, on the other hand, cluster 2 is a little bit different but very important as subjects with this clusters were protected from disease. So, I am really confused as whether to consider these 4 clusters ordinal or not.  </p>
+
+<p>Suppose that I have another set of 11 new readings of the scale parameters for one subject as new data, what statistical analysis would be useful to predict the membership of this subject to those 4 clusters? Could you please refer to a similar example with R code if possible? that would be greatly appreciated.  </p>
+
+<p>Providing a professional answer would be highly esteemed, but also recommending some books using R code would also be encouraged, as I am searching for such a book that covers this topic thoroughly, many books are out there but it is difficult to judge which one would do the job. May be someone, has more experience with this kind of problems and can give a word of advise here.  </p>
+"
+"0.160816880225669","0.139863559716115"," 77672","<p>Suppose I have 50 scale parameters, these are all genes measured for one sample from a subject at the clinic, after data reduction by PCA, two meaningful components were extracted. This was followed by cluster analysis and turned out to be 4 meaningful clusters of subjects based on the two components of these 50 genes.  </p>
+
+<p>Since investigating 50 genes for one subject would be costy, one would like to reduce that number so that the same clustering pattern can still be obtained but with minimal costs possible ( there should be some measures here to say acceptable clustering or not, I wonder what kind of measures would fit this case though).  </p>
+
+<p>Of course, the more genes investigated, the more information gained, but there should be some measure to tell when to stop wasting more money when the same result is <em>satisfactorily</em> achievable will less number of genes.  </p>
+
+<p>Is there any R package that already implemented this approach? what would be the statistical approach in this case to select the most important genes that would preserve the clustering pattern? what criteria to be used in order to reach the minimum clustering pattern?  </p>
+"
+"0.20761369963435","0.173340556006976"," 78148","<p>I have biological time series (9 years long) of the biomass of species which logically exhibit a seasonal pattern. I would like to cluster them into a few groups based on their typical seasonal evolution (e.g. spring vs. summer species). 
+To do so, I was advised to use Fourier transform in order to decompose their signal into <code>N</code> harmonics (e.g. 3: annual, bi-annual and tri-annual seasonal cycles) and use the amplitudes and phases of these in a Principal Components Analysis (PCA; which would work as the harmonics are orthogonal/uncorrelated).</p>
+
+<p>I know there are already some similar subjects in this Forum, yet some aspects remain unclear to me. My questions are:</p>
+
+<p>(1) When I reconstruct the time evolution from the <code>N</code> first harmonics computed from the Discrete Fourier Transform (DFT), the explained variability of the original signal (the RÂ² of the linear model between recomposed signal and the original data) is sometimes only 0.40 (<code>N=3</code>) or 0.60 (<code>N=5</code>). In your experience, does it mean the data are not suited for this approach, does that invalidate the approach? Is there more pre-processing I could do to fix that (e.g., smoothing the signals, â€¦)? Some species exhibit sudden increases spaced by total absence, and I wonder if this doesnâ€™t call for the need of higher frequency harmonics; should I expect difficulties there and how to tackle them?</p>
+
+<p>(2) Beside DFT which appears limited here, I considered using continuous Fourier Transform through a Fast Fourier Transform (FFT) algorithm and working on the power spectrum of each time series. I wonder if this could allow me to select <code>N'</code> so-called â€œharmonicsâ€ by selecting the <code>N'</code> highest peaks in the periodogram and then calculating the corresponding amplitude and phase to be used in a following PCA... Does that make sense? 
+How to concretely use the info given by a FFT algorithm in R (such as <code>fft()</code> or <code>spec.pgram()</code>) in order to run a subsequent PCA (or any other clustering method)? [any R code snippet would be very welcome]</p>
+
+<p>(3) How to reconstruct the signal from selected harmonics in the continuous case (FFT)? I can easily do this in the DFT case, but I am stupidly blocked in the continuous caseâ€¦ Any R code snippet is of course very welcome.</p>
+
+<p>Any help regarding these questions would be very appreciated.
+Links toward concrete examples, especially with associated R code, would be very helpful too (as well as method name or keywords).
+Thank you. </p>
+
+<p>PS: in case it is useful: The time series are of equal length and pre-processed to have uniform sampling intervals; stationarity may be assumed; no long-term trend is in the way.
+I divided the time series in 52 equally-spaced observations per year (i.e., 468 observations over the 9 years).</p>
+"
+"0.0928476690885259","0.0969003166223018"," 80004","<p>I'm trying to assess the uncertainty in hierarchical cluster analysis. It is a dataset composed of 409 observations and 27 variables (with a value ranging form 0 to 100). The dataset represents immunohistochemical scores in a gastrointestinal cancers.</p>
+
+<p>A meaninful clustering of observations and markers is observed with Pearson uncentered distance and average linkage.</p>
+
+<pre><code>hc &lt;- hclust(Dist(t(imputedMatrix), method=""pearson""), method=""average"")
+hr &lt;- hclust(Dist(imputedMatrix, method=""pearson""), method=""average"")
+heatmap.2(imputedMatrix, Rowv=as.dendrogram(hr), Colv=as.dendrogram(hc),   col=greenred(100), scale=""none"", ColSideColors=patientcolors, density.info=""none"", trace=""none"")
+
+pv2 &lt;- pvclust(imputedMatrix, method.dist=""uncentered"", method.hclust=""average"", nboot=10000)
+plot(pv2, hang=-1)
+pvrect(pv2, alpha=0.95)
+
+clsig &lt;- unlist(pvpick(pv2, alpha=0.90, pv=""au"", type=""geq"", max.only=TRUE)$clusters) 
+    dend_colored &lt;- dendrapply(as.dendrogram(pv2$hclust), dendroCol, keys=clsig,     xPar=""edgePar"", bgr=""black"", fgr=""red"", pch=20)
+heatmap.2(imputedMatrix, Rowv=as.dendrogram(hr), Colv=dend_colored, col=greenred(1
+</code></pre>
+
+<p>However, when using pvclust to assess their uncertainty, many small low-levels subclusters are highlighted as significant, but not any higher level one. Also, a group of tumours (to the right in the plots) is indeed a control group that should be clearly distinguished at the highest level from the other ones. pvclust shows even there the same kind of pattern. </p>
+
+<p>Indeed the clusters of interest are the magenta, green and red in the color bar. Does this pvclust results support their existance (versus a clustering artefact by chance)? </p>
+
+<p>How could these pvclust results be interpreted? Maybe I am using the tool in a wrong way? Or the wrong tool for this kind of data?</p>
+
+<p>Thank you very much in advance.</p>
+
+<p><img src=""http://i.stack.imgur.com/nedQr.png"" alt=""pvclust dendrogram"">
+<img src=""http://i.stack.imgur.com/KoaHW.png"" alt=""hclust and pvclust, the latter in red in the dendrogram""></p>
+"
+"0.420504909018218","0.397063134895614"," 81727","<p>I have 4 clusters (see plot below) extracted from data of medical samples <code>N=218</code> measured for 11 genes/predictors <code>P=11</code> by this method: first PCA analysis validated to have 2 important PCs that explained 75% of the data, then different clustering algorithms, distances, linkages (in hierarchical approach only) were compared: the majority support the presence of 4 distinct clusters. Taking the scientific hypothesis into consideration, clusters out of $K$-means algorithm were found the most plausible and were the most balanced clusters too: class #1 <code>n=12</code>, class #2 <code>n=21</code>, class #3 <code>n=79</code>, and class #4 <code>n=106</code>.  </p>
+
+<p>Projecting the observations on plane 1-2 component scores, revealed the below scatter plot with each cluster color coded.
+<img src=""http://i.stack.imgur.com/09sTF.png"" alt=""enter image description here""></p>
+
+<p><strong>The aim is to find a global optimum classifier using R after doing PLS to the data.</strong>  </p>
+
+<p>Knowing that these 4 clusters were actually the product of latent PCA components, it was natural to think of PCR as a next step to predict classes, but that approach turned out to be sub-optimal for two reasons: first, results do not related to probibilities (0-1), second, it does not relate well with the classes as the outcome variable. As many know, this would be better solved with PLS-DA method + softmax to find probabilities of class (0-1).  </p>
+
+<p>However, many reports confirm the superiority of using LDA as a second step using the <em>scores</em> of PLS, given that same standardization parameters (mean, sd) be used of the training set on the holdout-test set, even using the PLS projections out of the training set on the test set in order to get the <em>scores</em> which would be the <em>actual</em> holdout-test set to validate the classifier in question.  </p>
+
+<p>From the methodology point of view, this path is potentially encompassed with many dangers and subtle errors when one is un/misinformed about the tools used in context.  </p>
+
+<p>The <code>caret</code> package which is unique of its kind given the consistent infrastructure it provides to train and validate an array of different models making use of <em>de facto</em> standard respective R-packages, and hence <code>caret</code> promotes itself as a road map to a validated modeling leveraging off R rich libraries. As heart to blood vessels, so <code>caret</code> to other packages in my opinion. That being said, unwatchful playing with the heart could cost you dearly, and might lead also to a stand-still or a <em>model-arrest</em> of your data. R is free, many free books out there, but buying <code>caret</code> only book paid off, i.e. <code>Applied Predictive Modeling</code>. The help files, companion website (very appealing btw), are great resources but they won't substitute the text inside the book IMHO. However, in the book, I couldn't find a direct answer to the PLS-Classifier two step method amid others. The potential with <code>caret</code> is immense, thanks to Max Kuhn and his colleagues, that primarily encouraged me to post this question.  </p>
+
+<p>Back to the example above and the methodology of wish:<br>
+<strong>Data splitting:</strong>  </p>
+
+<p>Training set (77% <code>n=168</code>) for 10K-cross-validation: tuning (model-specific parameters, feature selection <code>P=11</code>, and cost to deal with imbalanced clusters). For CV this would be roughly <code>n=150</code> for fitting the model using differnt parameters of wish and 'n=17<code>for evaluation of parameters (I would call the</code>n=17' the CV-test to avoid confusion later on). Repetition = 5, so this will make 10 folds x 5 times = 50 training folds (<code>n=150</code> each) and 50 CV-test folds (<code>n=17</code> each). Holdout-test set (23% <code>n=50</code>).  </p>
+
+<p><strong>Q1</strong> I know that one can do parameters' tuning along with feature selection at the same time (i.e., parallel), but how to evaluate the cost/weights if one would like to evaluate cost-sensitive models (SVM, CART, C5.0) using the PLS scores to counteract class imbalance?    </p>
+
+<p><strong>Q2</strong> What is the alternative approach when reserving a separate data set for cost evaluation (i.e., <code>evaluation set</code>), as recommended, is not possible given the small sample size in this case? can one do tuning of model parameter, feature selection, and cost for imbalance all three at the same time? if not what is the best practice in this case?  </p>
+
+<p><strong>Q3</strong> Given the small sample size, is bootstrapping preferred to CV? if yes how would it be implemented to do exhaustive tuning like above for the PLS scores?    </p>
+
+<p><strong>Q4</strong> Given the imbalance above, is there a way to ensure that each CV training fold would include the minimum number of <code>hard</code> class(es) in order to have good estimation on the CV-test fold? is there any argument to pass to ensure presence of the small classes each time fold would be generated?  </p>
+
+<p><strong>PLS special notes</strong>  </p>
+
+<p>This is the approach in my mind (please correct me if I am missing something somewhere during the course):  </p>
+
+<p>In each CV iteration on the many CV-traning folds, there should be a unique PLS projection matrix for each iteration that would be used in the next second step of getting PLS scores for the the respective CV-test set inheriting the same standardization parameters (<code>mean</code>, <code>sd</code>), this means that two things would be inherited; the PLS projection and the standardization parameters (mean and sd) in order to apply them to the CV-test folds, this way, given the example here, 50 values would be returned hoping to reach the best parameter in question. One complication though, there should be an argument to specify the desired number of PLS components to retain and to be used in calculation of scores out of each CV-test fold (better to be pre-defined in a previous tuning step may be). My expectation, is that after deciding on the best model, there should be a way to get the PLS projection matrix for the whole training set (i.e.<code>n=168</code>) along with (<code>mean</code>, <code>sd</code>) to apply them on the holdout-test to validate the best model. So in total, there would be 50 different PLS projection matrices, means, sds from CV step and 1 extra frothe whole training set, am I right?<br>
+Feature selection in this method would entail two things: predictors space and the PLS components space.</p>
+
+<p><strong>Q5</strong> How to perform these two selections (predictor and PLS component) in <code>caret</code>? this is because feature selection here is different than otherwise since here we deal with scores rather than the observations themselves to determine best predictors that to construct the PLS components.</p>
+
+<p><strong>Note:</strong> When one is happy with the best final model, it would be recommended to fit the model on the whole data set <code>n=218</code> to get the correct estimates withe the least uncertainty.  </p>
+
+<p>A similar procedure is implemented in <code>caret::train()</code> function that can be fed with <code>preProc</code> argument to specify the type of desired pre-processing of data (most are mentioned in the help system but I couldn't find <strong>PLS</strong> among them, better if with an argument to specify the desired components similar to PCA pre-processing). I am aware of the fact, that inheriting pre-processing parameters to holdout test set and to CV-test, can only be performed using the <code>predict.train()</code> function, as opposed to calling the generic <code>predict()</code> function to the <code>$finalModel</code> that won't inherit pre-processing parameters.     </p>
+
+<p><strong>Q6</strong> How to implement this strategy (if correctly described) to train and validate the two-step PLS-[classifier] methodology using PLS scores subspace instead of observations making use of <code>caret</code> infrastructure?  </p>
+
+<p>Thanks in advance.</p>
+"
+"0.300860833907158","0.269136782409754"," 89204","<p>I'm looking for advice on how to analyze complex survey data with multilevel models in R. I've used the <code>survey</code> package to weight for unequal probabilities of selection in one-level models, but this package does not have functions for multilevel modeling. The <code>lme4</code> package is great for multilevel modeling, but there is not a way that I know to include weights at different levels of clustering. <a href=""http://www.statmodel.com/download/asparouhovgmms.pdf"">Asparouhov (2006)</a> sets up the problem:</p>
+
+<blockquote>
+  <p>Multilevel models are frequently used to analyze data from cluster sampling designs. Such sampling designs however often use unequal probability of selection at the cluster level and at the individual level. Sampling weights are assigned at one or both levels to reflect these probabilities. If the sampling weights are ignored at either level the parameter estimates can be substantially biased.</p>
+</blockquote>
+
+<p>One approach for two-level models is the multilevel pseudo maximum likelihood (MPML) estimator that is implemented in MPLUS (<a href=""http://www.statmodel.com/download/SurveyJSM1.pdf"">Asparouhov et al, ?</a>). <a href=""http://www.biomedcentral.com/1471-2288/9/49"">Carle (2009)</a> reviews major software packages and makes a few recommendations about how to proceed: </p>
+
+<blockquote>
+  <p>To properly conduct MLM with complex survey data and design weights, analysts need software that can include weights scaled outside of the program and include the ""new"" scaled weights without automatic program modification. Currently, three of the major MLM software programs allow this: Mplus (5.2), MLwiN (2.02), and GLLAMM. Unfortunately, neither HLM nor SAS can do this.</p>
+</blockquote>
+
+<p><a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3630376/"">West and Galecki (2013)</a> give a more updated review, and I'll quote the relevant passage at length:</p>
+
+<blockquote>
+  <p>Occasionally, analysts wish to fit LMMs to survey data sets collected from samples with complex designs (see Heeringa et al, 2010, Chapter 12). Complex sample designs are generally characterized by division of the population into strata, multi-stage selection of clusters of individuals from within the strata, and unequal probabilities of selection for both clusters and the ultimate individuals sampled. These unequal probabilities of selection generally lead to the construction of sampling weights for individuals, which ensure unbiased estimation of descriptive parameters when incorporated into an analysis. These weights might be further adjusted for survey nonresponse and calibrated to known population totals. Traditionally, analysts might consider a design-based approach to incorporating these complex sampling features when estimating regression models (Heeringa et al., 2010). More recently, statisticians have started to explore model-based approaches to analyzing these data, using LMMs to incorporate fixed effects of sampling strata and random effects of sampled clusters.</p>
+  
+  <p>The primary difficulty with the development of model-based approaches to analyzing these data has been choosing appropriate methods for incorporating the sampling weights (see Gelman, 2007 for a summary of the issues). Pfeffermann et al. (1998), Asparouhov and Muthen (2006), and Rabe-Hesketh and Skrondal (2006) have developed theory for estimating multilevel models in a way that incorporates the survey weights, and Rabe-Hesketh and Skrondal (2006), Carle (2009) and Heeringa et al. (2010, Chapter 12) have presented applications using current software procedures, but this continues to be an active area of statistical research. Software procedures capable of fitting LMMs are at various stages of implementing the approaches that have been proposed in the literature thus far for incorporating complex design features, and analysts need to consider this when fitting LMMs to complex sample survey data. Analysts interested in fitting LMMs to data collected from complex sample surveys will be attracted to procedures that are capable of correctly incorporating the survey weights into the estimation procedures (HLM, MLwiN, Mplus, xtmixed, and gllamm), consistent with the present literature in this area.</p>
+</blockquote>
+
+<p>This brings me to my question: does anyone have best practice recommendations for fitting LMMs to complex survey data in R?</p>
+"
+"0.20761369963435","0.195008125507848"," 91134","<p>consider the following example data:</p>
+
+<pre><code>df1 &lt;- data.frame(customer=c(rep(""customer1"",5),rep(""customer2"",10),rep(""customer3"",7)),
+                  money_spent=sample(22))
+
+df2 &lt;- data.frame(customer=c(""customer1"",""customer2"",""customer3""),
+                  origin=c(""US"",""US"",""UK""),
+                  industry_sector=c(""IS1"",""IS2"",""IS3""),
+                  currency=c(""USD"",""USD"",""GBP""))
+</code></pre>
+
+<p>My actual data consists of about 200000 rows and I would like to examine it in terms of, for instance, do customers from the US spent more money compared to customers from other countries. I would also like to see whether the amount of money spent depends on the industry sector and so on. I have some more explanatory variables apart from origin, industry sector and currency which I would like to look into. Also the number of records for the customers differ so that it might make sense to average the money spent for each customer.</p>
+
+<p>I am not sure about how to best analyse this data. I first thought of cluster analysis, in particular, hierarchical clustering but am not sure whether it can be applied to such data and, in particular, how to structure the data to be put into the function. The R function <code>hclust</code> takes a matrix as the input but how would I structure such a matrix in terms of my data? Could k-means clustering be a better alternative? </p>
+
+<p>Another approach would probably to analyse this data using boxplots and an one-way ANOVA approach to see whether ""money spent"" differs between different countries or industry sectors. However, this approach does not test whether the variables are dependend on each other. To look into this, I have been advised to apply a decision tree first and then do some statistical significance analysis. However, from what I have read so far I cannot see how decision trees can help me to detect variable dependencies.</p>
+
+<p>So, I am wondering whether there any other/better techniques/functions out there which are more suitable for such data? Maybe a time series analysis is more appropriate since we have also recorded the dates when customers spent money.</p>
+"
+"0.197951895616224","0.165273735351682"," 91348","<p>I am working on data analysis.</p>
+
+<p>Given a group of data vectors, each of them has the same dimension. Each element in a vector is a floating point number. </p>
+
+<pre><code>V1 [  ,   ,   , â€¦ ] 
+V2[  ,   ,   , â€¦ ] 
+...
+Vn [  ,   ,   , â€¦ ] 
+</code></pre>
+
+<p>Suppose that each vector has M numbers. M can be 10000.</p>
+
+<p>n can be 200. </p>
+
+<p>I need to find out how to partition the n vectors into sub-groups such that each vector in one subgroup can be represented by a basic vector in the subgroup. </p>
+
+<p>For example, </p>
+
+<p>W = union of V1, V2, V3 â€¦ Vn</p>
+
+<p>Find subgroup i, j, â€¦ t :</p>
+
+<pre><code>Gi = [  V1, V6, V3, V5, â€¦ , Vx ]
+Gj = [V22, V11, V56, V45, â€¦ , Vy]
+â€¦
+Gt = [V78, V90, V9, V12, â€¦ , Vz]
+</code></pre>
+
+<p>Such that :</p>
+
+<p>Union of Gi , Gj, â€¦ , Gt is equal to W and there is no overlap among  all Gi , Gj, â€¦ , Gt. </p>
+
+<p>Also , each subgroup has a basic vector that has strong correlation with all other element vector in the subgroup. For example, in Gi, we may have vector Vx as the basic vector such that all other vectors have <strong>strong (linear) correlation</strong>  with Vx. <strong>Here, we measure the linear correlation betwwen two vectors not two data points.</strong> </p>
+
+<p>Moreover, we need to minimize the number of the subgroups, here, it is  "" t "" . It means that given 200 vectors ( n = 200), we prefer a subgroup G1, G2, â€¦, Gt, and t is minimized. For example, we prefer t = 5 over t = 6. if t is more than 10, it may not be useful. </p>
+
+<p>My questions:
+What kind of knowledge domain this problem belongs to ? </p>
+
+<p>Is it a clustering analysis ? But, in cluster analysis, one data point is a number, but, here one data point  is a vector.</p>
+
+<p>Are there some statistics models or algorithm can be used to do this kind of analysis ?  Are there some software tools or packages that solve this problem ? </p>
+
+<p>If my questions are not a good fit for this forum, please tell me where I should post it. </p>
+
+<p>R packages do the clustering for data points not for data vector by correlation.</p>
+
+<p>Any help would be appreciated. </p>
+"
+"0.113714706536836","0.118678165819385"," 92177","<p>I'm doing a project related to identifying sales dynamics. My database contains 26 weeks after launching the product (so 26 time-series observations equally spaced in time). </p>
+
+<p><img src=""http://i.stack.imgur.com/Dquwy.jpg"" alt=""http://imageshack.com/a/img18/5628/l5qg.jpg""></p>
+
+<p><img src=""http://i.stack.imgur.com/8Dh2C.jpg"" alt=""http://imageshack.com/a/img34/8953/yh6i.jpg""></p>
+
+<p>I used two methods of time-series clustering to see which patterns dominate in different groups (clustering by <code>units_sold_that_week</code>). The first method is based on k-medoids and the second one connected with clustering by parameters of growth models.</p>
+
+<p>My next step is to make forecasts based on these clusters. Is there any special method for forecasting based on time-series clusters? In my project, I have to combine the topic of clustering and forecasting on clusters.</p>
+
+<p>I am running my analyses in R, so I would be grateful for any suggestions regarding R procedures.</p>
+
+<p>Please note that I am relatively new to time series analysis so any clarity you could provide, on R or any package you could recommend that would help accomplish this task efficiently, would be appreciated.</p>
+"
+"0.146805054878676","0.122570282607179"," 92985","<p>Recently I have come across usage of cluster plot, which combines k-mean clustering along with PCA. The plot shows different clusters plotted using first two PCs. I have checked some of the threads (<a href=""http://stats.stackexchange.com/questions/31083/how-to-produce-a-pretty-plot-of-the-results-of-k-means-cluster-analysis"">here</a> and <a href=""http://www.dataminingblog.com/combining-pca-and-k-means/"" rel=""nofollow"">here</a>) regarding the usage. </p>
+
+<p><strong>I want to know, during generating a cluster plot, does the data is clustered first and then PCA is done, or the reverse way (PCA followed by k-mean clustering)?</strong></p>
+
+<p>Because the second link says PCA is done followed clustering. But in the first link where an example is shown to generate a cluster plot, data is clustered first and then the cluster plot is generated. </p>
+
+<p>Regarding interpretation, does the plot has to be interpreted as the number of clusters generated or are there any extra points to interpret?</p>
+"
+"0.185695338177052","0.193800633244604"," 95844","<p>Given the following data frame:</p>
+
+<pre><code>df &lt;- data.frame(x1 = c(26, 28, 19, 27, 23, 31, 22, 1, 2, 1, 1, 1),
+                 x2 = c(5, 5, 7, 5, 7, 4, 2, 0, 0, 0, 0, 1),
+                 x3 = c(8, 6, 5, 7, 5, 9, 5, 1, 0, 1, 0, 1),
+                 x4 = c(8, 5, 3, 8, 1, 3, 4, 0, 0, 1, 0, 0),
+                 x5 = c(1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0),
+                 x6 = c(2, 3, 1, 0, 1, 1, 3, 37, 49, 39, 28, 30))
+</code></pre>
+
+<p>Such that</p>
+
+<pre><code>&gt; df
+   x1 x2 x3 x4 x5 x6
+1  26  5  8  8  1  2
+2  28  5  6  5  1  3
+3  19  7  5  3  1  1
+4  27  5  7  8  1  0
+5  23  7  5  1  1  1
+6  31  4  9  3  0  1
+7  22  2  5  4  1  3
+8   1  0  1  0  0 37
+9   2  0  0  0  0 49
+10  1  0  1  1  0 39
+11  1  0  0  0  0 28
+12  1  1  1  0  0 30
+</code></pre>
+
+<p>I would like to group these 12 individuals using hierarchical clusters, and using the correlation as the distance measure. So this is what I did:</p>
+
+<pre><code>clus &lt;- hcluster(df, method = 'corr')
+</code></pre>
+
+<p>And this is the plot of <code>clus</code>:</p>
+
+<p><img src=""http://i.stack.imgur.com/ALfbr.png"" alt=""dendogram""></p>
+
+<p>This <code>df</code> is actually one of 69 cases I'm doing cluster analysis on. To come up with a cutoff point, I have looked at several dendograms and played around with the <code>h</code> parameter in <code>cutree</code> until I was satisfied with a result that made sense for most cases. That number was <code>k = .5</code>. So this is the grouping we've ended up with afterwards:</p>
+
+<pre><code>&gt; data.frame(df, cluster = cutree(clus, h = .5))
+   x1 x2 x3 x4 x5 x6 cluster
+1  26  5  8  8  1  2       1
+2  28  5  6  5  1  3       1
+3  19  7  5  3  1  1       1
+4  27  5  7  8  1  0       1
+5  23  7  5  1  1  1       1
+6  31  4  9  3  0  1       1
+7  22  2  5  4  1  3       1
+8   1  0  1  0  0 37       2
+9   2  0  0  0  0 49       2
+10  1  0  1  1  0 39       2
+11  1  0  0  0  0 28       2
+12  1  1  1  0  0 30       2
+</code></pre>
+
+<p>However, I am having trouble interpreting the .5 cutoff in this case. I've taken a look around the Internet, including the help pages <code>?hcluster</code>, <code>?hclust</code> and <code>?cutree</code>, but with no success. The farthest I've become to understanding the process is by doing this:</p>
+
+<p>First, I take a look at how the merging was made:</p>
+
+<pre><code>&gt; clus$merge
+      [,1] [,2]
+ [1,]   -9  -11
+ [2,]   -8  -10
+ [3,]    1    2
+ [4,]  -12    3
+ [5,]   -1   -4
+ [6,]   -3   -5
+ [7,]   -2   -7
+ [8,]   -6    7
+ [9,]    5    8
+[10,]    6    9
+[11,]    4   10
+</code></pre>
+
+<p>Which means everything started by joining observations 9 and 11, then observations 8 and 10, then steps 1 and 2 (i.e., joining 9, 11, 8 and 10), etc. Reading about the <code>merge</code> value of <code>hcluster</code> helps understand the matrix above.</p>
+
+<p>Now I take a look at each step's height:</p>
+
+<pre><code>&gt; clus$height
+[1] 1.284794e-05 3.423587e-04 7.856873e-04 1.107160e-03 3.186764e-03 6.463286e-03 
+    6.746793e-03 1.539053e-02 3.060367e-02 6.125852e-02 1.381041e+00
+&gt; clus$height &gt; .5
+[1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE
+</code></pre>
+
+<p>Which means that clustering stopped only in the final step, when the height finally goes above .5 (as the Dendogram had already pointed, BTW).</p>
+
+<p>Now, here is my question: <strong>how do I interpret the heights?</strong> Is it the ""remainder of the correlation coefficient"" (please don't have a heart attack)? I can reproduce the height of the first step (joining of observations 9 and 11) like so:</p>
+
+<pre><code>&gt; 1 - cor(as.numeric(df[9, ]), as.numeric(df[11, ]))
+[1] 1.284794e-05
+</code></pre>
+
+<p>And also for the following step, that joins observations 8 and 10:</p>
+
+<pre><code>&gt; 1 - cor(as.numeric(df[8, ]), as.numeric(df[10, ]))
+[1] 0.0003423587
+</code></pre>
+
+<p>But the next step involves joining those 4 observations, and I don't know:</p>
+
+<ol>
+<li>The correct way of calculating this step's height</li>
+<li>What each of those heights actually means.</li>
+</ol>
+"
+"0.185695338177052","0.145350474933453"," 99881","<p>My ultimate goal is to run a cluster analysis on a data set with > 1 million records. The input variables for the cluster analysis will be the results of a Principal Component Analysis, as well as other variables not included in the PCA, for a total of maybe 10 variables input into the clustering (the variables I input into the PCA were all very highly correlated with one another while the other variables are not so I chose not to include them in the PCA).   </p>
+
+<pre><code>#read data
+mydata &lt;- read.csv('mydata.csv') 
+
+#import library for robust methods because my data contained outliers
+library(rrcov) 
+
+#run robust PCA method called PcaCov
+pcaR &lt;- PcaCov(~., mydata, na.action=na.omit, center=TRUE, scale = TRUE, k=8)
+
+#look at results
+summary(pcaR)
+screeplot(pcaR)
+pcaR@loadings
+</code></pre>
+
+<p>From the results, I have decided I would like to retain the first three components, which capture ~87% of the total variance in the dataset. </p>
+
+<p>Now I want to extract/save/export these first three components for use in the cluster analysis with my other variables. How do I do this? </p>
+"
+"0.314861764961201","0.285743444696422","101077","<p>I have very big data and low number of observations. So I decided to use PCA to reduce dimension of the data. The following is R example (just an dummy example - for workout):</p>
+
+<pre><code>xmat &lt;- matrix(sample(-1:1, 100000, replace = TRUE), ncol = 1000)
+colnames(xmat) &lt;- paste (""V"", 1:1000, sep ="""")
+rownames(xmat) &lt;- paste(""S"", 1:100, sep = """")
+</code></pre>
+
+<p>In this example dataset I have <code>1000</code> variables and <code>100</code> observations / subjects. </p>
+
+<p>I am doing PCA. Lets say.</p>
+
+<pre><code>out &lt;- princomp(xmat)
+Error in princomp.default(xmat) : 
+  'princomp' can only be used with more units than variables
+</code></pre>
+
+<p>Q1: is there a way to reduce dimensionality with <code>p &gt; n</code> ? I would like to use all variables information as opposed to representative ones. Without having proper solution I went anyway to use cluster analysis of variables to categorize the variables and pick the randomly from the clusters. </p>
+
+<p>To create a list of representative variables I tried to cluster the variables.</p>
+
+<pre><code># cluster variables 
+d &lt;- dist(t(xmat), method = ""euclidean"") # distance matrix
+fit &lt;- hclust(d, method=""ward"")
+plot(fit)
+groups = cutree(fit,40)
+groupd &lt;- data.frame(var = names(groups), group = groups)
+</code></pre>
+
+<p>What I am thinking is randomly pick one variable from each group above and use this in PCA. Assume that I have the following y variable.</p>
+
+<pre><code>set.seed(1234)
+yvar.d &lt;- data.frame (subject = c(paste(""S"", 1:100, sep = """")), yvar = rnorm (100, 50,10))
+</code></pre>
+
+<p><strong>Here is my question</strong>: </p>
+
+<ol>
+<li>What could be statistical challenge of using cluster analysis ?</li>
+<li><p>Can we use PCA scores in predictions of y. How ? Just multiple
+regression or we can introduce something such as variance explained
+by each components in the model ?</p>
+
+<p><strong>Edits:</strong></p>
+
+<p>Based on the discussions (see the comments below), I am using different function to do PC analysis.</p></li>
+</ol>
+
+<p>""The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. The print method for these objects prints the results in a nice format and the plot method produces a scree plot."" - from function help. </p>
+
+<pre><code>     out1 &lt;- prcomp(xmat)
+      out1$x[1:3,1:3]
+                      PC1        PC2       PC3
+S1  2.940862 -2.7379835  6.527103
+S2 -1.081124 -0.5294796 -0.276591
+S3  2.375710  0.4505205 -4.236289
+
+   out1$sdev
+ screeplot(out1,npcs=30, type=""lines"",col=3) # 30 PCA plotted
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/gMJys.jpg"" alt=""enter image description here""></p>
+
+<pre><code> out1$rotation
+</code></pre>
+
+<p>I also come to see an example in SO <a href=""http://stackoverflow.com/questions/10876040/principal-component-analysis-in-r"">how to use PCA in prediction</a>. Here is my workout: </p>
+
+<pre><code>## take our training and test sets
+YY &lt;-  yvar.d$yvar 
+prop &lt;- 0.5
+train = sample(1:length(YY), round(length(YY)*prop,0))
+
+
+# data for testing model purpose 
+testid = setdiff (1:length(YY), train)
+YY1 &lt;- YY
+newXPCA &lt;- data.frame(out1$x)
+test.data &lt;- data.frame (y = YY1[testid],newXPCA[testid,]) 
+test.data[1:10,1:10]
+
+train.data &lt;- data.frame(y= YY1[train],newXPCA [train,])
+train.data[1:10,1:10]
+
+## fit the PCA
+pc &lt;- prcomp(train.data[, -1])
+trainwPC &lt;- data.frame (y = train.data$y, pc$x)
+
+model1 &lt;- lm(y ~ ., data = trainwPC)
+
+#predict() method for class ""prcomp""
+test.p &lt;- predict(pc, newdata = test.data)
+pred &lt;- predict(model1, newdata = data.frame(test.p), type = ""response"")
+pred 
+Warning message:
+In predict.lm(model1, newdata = data.frame(test.p), type = ""response"") :
+  prediction from a rank-deficient fit may be misleading
+</code></pre>
+
+<p>I just adopted this script from the SO link, I am not sure about accuracy of the script. </p>
+
+<p>I still have technical questions remaining such as clarification to <strong>remaining question 2</strong> above: </p>
+
+<p>(1) If I want to split data into training and test set by sampling <code>50% of data</code> (as show in the script). Should I do just multiple regression with y and the <code>out1$x</code> ? how many components to use ? is variance of each component play role in good model selection such as avoid over-fitting ? How ? </p>
+
+<p>(2) Clustering (using x clusters) vs PCA analysis (with subset of x components vs all ) what would be statistically favorite for predictions in the situations where have <code>p &gt; n</code> ? As I said to my mind the PCA analysis can use all information but I do not know if there is downside of such information such as <code>over-fitting</code> and ""error consumption"". </p>
+
+<p>Worked example appreciated.   </p>
+"
+"0.113714706536836","0.118678165819385","103244","<p>I'm running a hierarchical clustering on a sample of data using the steps below:</p>
+
+<pre><code>library(RODBC)
+
+setwd('D:/r/cluster2')
+channel &lt;- odbcConnectExcel('cluster.xls')
+data &lt;- sqlFetch(channel, 'clust9')
+
+y9 &lt;- data.frame(inf=data$infest, faible=data$faible, moyen=data$moyen, fort=data$fort, lon=data$Lon, lat=data$Lat)
+
+y9 &lt;- na.omit(y9) # listwise deletion of missing
+y9.use &lt;- y9
+y9 &lt;- scale(y9) # standardize variables
+
+wss &lt;- (nrow(y9)-1)*sum(apply(y9,2,var))
+for (i in 2:15) wss[i] &lt;- sum(kmeans(y9, centers=i)$withinss)
+
+plot(1:15, wss, type=""b"", xlab=""Number of Clusters"", ylab=""Within groups sum of squares"")
+
+# K-Means Cluster Analysis
+fit &lt;- kmeans(y9, 5) # 5 cluster solution
+
+aggregate(y9,by=list(fit$cluster),FUN=mean)
+
+y9 &lt;- data.frame(y9, fit$cluster)
+
+# Ward Hierarchical Clustering
+
+d &lt;- dist(y9, method = ""euclidean"") # distance matrix
+
+fit &lt;- hclust(d, method=""ward"") 
+
+plot(fit) # display dendogram
+
+rect.hclust(fit, k=5, border=""red"")
+</code></pre>
+
+<p>and i got this results:</p>
+
+<p><img src=""http://i.stack.imgur.com/65YdS.png"" alt=""enter image description here""></p>
+
+<p>But when I did the same steps the next day I got different results: 
+<img src=""http://i.stack.imgur.com/clS5h.png"" alt=""enter image description here""></p>
+
+<p>They are not different in everything, but there are individual that they now belong to another cluster!</p>
+
+<p>so I don't know why  this behavior? i'm interested in interpreting and explaning the results, so when i get different results each time, that will make my previous interpretation wrong, what can I do for now ?</p>
+"
+"0.160816880225669","0.167836271659338","107530","<p>i need to impute a dataset all categorical variables before doing analysis. I can just simply <strong>impute</strong> with mode of all data or a variable. </p>
+
+<p>I belief that better option will be to <strong>classify</strong> the subjects (observations) using some short of <strong>clustering algorithm</strong> and then use this information to <strong>impute</strong> the data. The following is small data (though the real data is really big) and the idea.</p>
+
+<pre><code>md &lt;- data.frame(V1 = c(""AA"", ""AA"", ""AA"", NA, ""AB""), V2 = c(""AB"", ""AB"", ""BB"", ""BB"", ""BB""), V3 = c(""BB"", NA, ""BB"", ""BB"", ""BB""), V4 = c(""AA"", ""AA"", ""AA"", ""AA"", ""AA""), 
+ V5=c(rep(""AB"", 5)), V6 = c(""BB"", ""BB"", ""AB"", ""AB"", NA), V7 = c(""AB"", ""AB"", ""BB"", ""BB"", ""BB""))
+
+ md
+    V1 V2   V3 V4 V5   V6   V7
+1   AA AB   BB AA   AB   BB AB
+2   AA AB &lt;NA&gt; AA   AB   BB AB
+3   AA BB   BB AA   AB   AB BB
+4 &lt;NA&gt; BB   BB AA   AB   AB BB
+5   AB BB   BB AA   AB &lt;NA&gt; BB
+</code></pre>
+
+<p>In visual observation, the sample 1 and 2 are more similar in one cluster while 3,4,5 are in second cluster. The side is hand drawn dendogram (I could not due HC because of missing values). </p>
+
+<p>Now I would like to impute all missing values based on the similarity. For example, missing value in column 1 is most likely to be AA as sample 4 is more similar to 3 than 1, 2, or 5. Similarly the 5 column missing value is BB as the <strong>neighbor</strong> in the cluster is also BB. Similarly column 6 value should be AB as the closest similar has AB. and so on.</p>
+
+<p><img src=""http://i.stack.imgur.com/DIcPA.jpg"" alt=""enter image description here""></p>
+
+<p>Thus completed data would look like:</p>
+
+<p><img src=""http://i.stack.imgur.com/xa5j3.png"" alt=""enter image description here""></p>
+
+<p>How can we perform this ? </p>
+"
+"0.0656532164298613","0.137037741965506","109266","<p>I have a table of similarities expressed through cosines and am trying to do some cluster analysis in R, using <code>hclust</code> and <code>method=ward</code>.</p>
+
+<p>First I need to turn cosines into squared Euclidean distances, knowing that $d=2(1-\cos)$. No problem. I turned <code>myData</code> into <code>myDataDist</code>.</p>
+
+<p>But then when I use <code>hclust (myDataDist, method=ward)</code> it gives me an error:</p>
+
+<pre><code>must have n &gt;= 2 objects to cluster
+</code></pre>
+
+<p>The craziest thing is that if I turn the table of cosines into Euclidean distances with the <code>dist</code> function: <code>myDataDist &lt;- dist(myData, method = ""euclidean"")</code> it works just fine, but then the dendrogram plotted by <code>hclust</code> is wrong. (I know because I tried with another clustering program.)</p>
+
+<p>Has anybody checked the code of <code>dist</code> or <code>ward</code> methods in R? Why doesn't <code>hclust</code> work as it should, with Euclidean squared distances computed manually as $d=2(1-\cos)$?</p>
+"
+"0.113714706536836","0.118678165819385","109273","<p>I am working on creating a cluster analysis for some very basic data in r for Windows [Version 6.1.76]. The groups themselves are countries and then I have 2 column with continuous numerical variables. I have applied a Ward Hierachical Method to the data </p>
+
+<pre><code># Applying Ward Hierarchical Clustering
+d = dist(conversion_set, method=""euclidean"")
+fit = hclust(d, method=""ward"")
+</code></pre>
+
+<p>But I don't feel this represents what I am really trying to get to as it is just taking into account the first variable and disregarding the second. Is there a way to include both variables into the clustering calculations?</p>
+
+<p>My data looks similar to this</p>
+
+<p>Country - Var 1 - Var 2</p>
+
+<p>US - 10 - 20</p>
+
+<p>Canada - 5 - 30</p>
+
+<p>....</p>
+"
+"0.113714706536836","0.118678165819385","110622","<p>I have some prior knowledge of grouping, but this may be incorrect or is not sufficient as I need larger number of groups (i.e. subgroups). For example in the following data I have 3 groups in addition to two variables. I would like to use the group information (as prior knowledge) (here 3 groups) to create meaningful groups (here 9 groups/clusters). Is there a correct way to perform such analysis.</p>
+
+<pre><code># Dummy data 
+group &lt;- rep(1:3, each =3000)
+X &lt;- c(rnorm(1000, 0.1, 0.04), rnorm(1000,0.2, 0.04), rnorm(1000, 0.4, 0.02),
+       rnorm(1000, 0.4, 0.04), rnorm(1000,0.5, 0.08), rnorm(1000, 0.6, 0.12), 
+       rnorm(1000, 0.7, 0.08), rnorm(1000,0.8, 0.1), rnorm(1000, 0.9, 0.06)
+)
+
+Y &lt;-  c(rnorm(1000, 0.5, 0.04), rnorm(1000,0.6, 0.04), rnorm(1000, 0.7, 0.04),
+       rnorm(1000, 0.35, 0.12), rnorm(1000,0.45, 0.04), rnorm(1000, 0.3, 0.02), 
+       rnorm(1000, 0.55, 0.09), rnorm(1000,0.65, 0.12), rnorm(1000, 0.65, 0.04)
+)
+</code></pre>
+
+<p>Prior information of 3 clusters:</p>
+
+<pre><code>col = c(""red"", ""cyan"", ""green"")
+plot(cbind(X,Y), col = col[group], pch = ""."")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/v5xUI.jpg"" alt=""enter image description here""></p>
+
+<p>Clustering analysis assuming 9 clusters.</p>
+
+<pre><code>cl &lt;- kmeans(cbind(X,Y), 9)
+
+colrs &lt;- c(""red"",""purple"", ""yellow"", ""tan"", ""pink"", ""cyan"", ""blue"", ""green"", ""black"")
+plot(cbind(X,Y), col = colrs[cl$cluster], pch = ""."")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/tecHn.jpg"" alt=""enter image description here""></p>
+"
+"0.113714706536836","0.0791187772129236","113232","<p>I'm trying to run a discrete-time multilevel hazard analysis comparable to the model proposed by Barber et al. I am attempting to model the hazard of migrating internationally using predictors at the individual, household, community, and regional levels.
+(Most of the variables of interest are at the individual, community, and regional levels--I just need to account for clustering by household)</p>
+
+<p>Is there a package that will allow me to do this in R?  I've used lme4 for regular multilevel modeling, but can it also be used for multilevel survival models?  How would I go about coding such a model? (And if this can't be done in R, can it be done in Stata, or do I have to bite the bullet and buy and learn HLM or MLwiN?)  </p>
+
+<p>Please let me know if you need any additional information.  Thanks!</p>
+
+<p>ETA: Barber et al. refers to:
+<a href=""http://onlinelibrary.wiley.com/doi/10.1111/0081-1750.00079/abstract"" rel=""nofollow"">Barber, Jennifer S., Susan A. Murphy, William Axinn, and Jerry Maples. 2000. ""Discrete-Time Multilevel Hazard Analysis."" Sociological Methodology, 30: 201-235.</a></p>
+"
+"0.20761369963435","0.21667569500872","113462","<p>I am performing the hierarchical clustering analysis on a dataset of 25 viral populations using 3 viral components (variables) to construct a dendrogram with average method and correlation distance calculation. We firstly used the <code>hclust()</code> method generate a plot, but we still need to support the dendrogram by statistical analysis. So after transposing the data, we choose <code>pvclust()</code> to generate the dendrogramm. However, the plots constructed by <code>pvclust</code> and the one generated by <code>hclust</code> are totally different. We used the same data and same parameters (average method and correlation distance), but the results are so different. Why might this be?
+Here is the dataset <a href=""https://github.com/yingfengisu/RSHOP/blob/master/TVA1.csv"" rel=""nofollow"">https://github.com/yingfengisu/RSHOP/blob/master/TVA1.csv</a></p>
+
+<h1>hclust</h1>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/PaHfr.png"" alt=""enter image description here""></p>
+</blockquote>
+
+<pre><code>######### hclust method #############
+sd.data=scale(tav.data)
+dd=as.dist(1-cor(t(sd.data)))  # correlation-based distance
+plot(hclust(dd, method=""average""), main=""Average Linkage with Correlation-Based Distance"",xlab="""", sub="""", labels=tav.labs)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/i02XB.png"" alt=""enter image description here""></p>
+</blockquote>
+
+<hr>
+
+<h1>pvclust</h1>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/EDRjX.png"" alt=""enter image description here""> </p>
+</blockquote>
+
+<pre><code>######### pvclust method ################
+tav.data0 = tav.data[,c(1,2,3)]
+rownames(tav.data0)&lt;-tav.labs
+tav.data0 = as.data.frame(t(tav.data0))
+sd.data0 = scale(tav.data0)
+library(pvclust)
+result=pvclust(sd.data0,method.hclust=""average"", method.dist=""correlation"",nboot=100,r=seq(0.7,1.4,by=.1))
+plot(result)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/CH3Fl.png"" alt=""enter image description here""></p>
+</blockquote>
+"
+"0.0928476690885259","0.0969003166223018","113680","<p>My problem is the very idea of how to start the analysis of 2D point patterns, specifically how to find linear trends within their spatial pattern. </p>
+
+<p>I have XY data points which are organized like in the plot, which I have manually marked with red lines in order to highlight what should be determined:</p>
+
+<p><img src=""http://i.stack.imgur.com/pbHhA.png"" alt=""enter image description here""></p>
+
+<p><a href=""http://stats.stackexchange.com/questions/82598/clustering-2d-data-using-kernel-density-methods"">This post</a> suggests the use of kernel density estimation (which is the usual method I guess), but I would like to find out if there is any simpler way of doing this, avoiding the use of spatial statistics. R solution is preferred.</p>
+
+<p><strong>UPDATE:</strong></p>
+
+<p>When using the solution suggested by whuber (Hough transform) I get these lines as the most frequent ones in my scatterplot:</p>
+
+<p><img src=""http://i.stack.imgur.com/yMSNz.png"" alt=""enter image description here""></p>
+
+<p>Obviously these are not the lines I was searching for, but nevertheless it would be interesting to determine the very points that lie on the red line, for example.  </p>
+"
+"0.160816880225669","0.111890847772892","119922","<p>We have a longitudinal panel of X users with their online spending patterns and are trying to measure certain metrics within the panel. We have time series information about the users such as their total online spending, browsing habits, spending per online merchant etc. We also have cross sectional fixed data about the user like their geolocation, some demographic info etc. We are trying to look at a certain time series metric across the population of say X users. </p>
+
+<p>Examples of what we are trying to measure</p>
+
+<ol>
+<li>Total growth rate of spending month over month </li>
+<li>Spend per transaction month over month </li>
+<li>Spend per merchant per month  </li>
+<li>Other monthly (or period of choice) metrics</li>
+</ol>
+
+<p>If all X users were reporting in the panel the entire time the exercise is easy, we simply calculate metric we need. </p>
+
+<p>However only a small percent (15%) of the panel is reporting the entire length of the panel. Most users come into the panel late or drop out early. For each individual in the panel, the exact lifespan in the panel is fairly random. Moreover, some month, their usage is not complete, its partial and thus should not count, but this is a secondary concern.</p>
+
+<p>The primary challenge is how to accurately calculate the metrics in question given this setup. One solution would be to construct a panel of users who are only present in the panel the entire length of the panel (lets call it Full Life User Panel). This would be a small % of users and assume that the users that are not in that panel behave in the same way as the users who are.  </p>
+
+<p>We are not aiming to measure the effect of one set of parameters on another. I.e. we are not trying to predict the spending at a specific merchant given information about the usersâ€™ other spending patterns and fixed attributed.</p>
+
+<p>We can try to cluster the users using longitudinal clustering or some kind of latent growth curve analysis to â€œimputeâ€ the missing data. I havenâ€™t found any landmark canonical material on this topic and would appreciate any help in addressing the question or references.  </p>
+"
+"0.236716038237","0.209040871485954","123040","<p>I have a matrix of 336x256 floating point numbers (336 bacterial genomes (columns) x 256 normalized tetranucleotide frequencies (rows), e.g. every column adds up to 1).</p>
+
+<p>I get nice results when I run my analysis using principle component analysis. First I calculate the kmeans clusters on the data, then run a PCA and colorize the data points based on the initial kmeans clustering in 2D and 3D:</p>
+
+<pre><code>library(tsne)
+library(rgl)
+library(FactoMineR)
+library(vegan)
+# read input data
+mydata &lt;-t(read.csv(""freq.out"", header = T, stringsAsFactors = F, sep = ""\t"", row.names = 1))
+# Kmeans Cluster with 5 centers and iterations =10000
+km &lt;- kmeans(mydata,5,10000)
+# run principle component analysis
+pc&lt;-prcomp(mydata)
+# plot dots
+plot(pc$x[,1], pc$x[,2],col=km$cluster,pch=16)
+    # plot spiderweb and connect outliners with dotted line
+    pc&lt;-cbind(pc$x[,1], pc$x[,2])
+    ordispider(pc, factor(km$cluster), label = TRUE)
+ordihull(pc, factor(km$cluster), lty = ""dotted"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/QviDR.png"" alt=""enter image description here""></p>
+
+<pre><code># plot the third dimension
+pc3d&lt;-cbind(pc$x[,1], pc$x[,2], pc$x[,3])
+    plot3d(pc3d, col = km$cluster,type=""s"",size=1,scale=0.2)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/fNiri.png"" alt=""enter image description here""></p>
+
+<p>But when I try to swap the PCA with the t-SNE method, the results look very unexpected:</p>
+
+<pre><code>tsne_data &lt;- tsne(mydata, k=3, max_iter=500, epoch=500)
+plot(tsne_data[,1], tsne_data[,2], col=km$cluster, pch=16)
+    ordispider(tsne_data, factor(km$cluster), label = TRUE)
+ordihull(tsne_data, factor(km$cluster), lty = ""dotted"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/6WKYl.png"" alt=""enter image description here""></p>
+
+<pre><code>plot3d(tsne_data, main=""T-SNE"", col = km$cluster,type=""s"",size=1,scale=0.2)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/Hqqpf.png"" alt=""enter image description here""></p>
+
+<p>My question here is why the kmeans clustering is so different from what t-SNE calculates. I would have expected an even better separation between the clusters than what the PCA does but it looks almost random to me. Do you know why this is? Am I missing a scaling step or some sort of normalization?</p>
+
+<p>Thanks for your advice.</p>
+"
+"NaN","NaN","123706","<p>I am performing a cluster analysis with a 4K by 200+ table and my data mostly looks like this:    </p>
+
+<pre><code>item1   item2 item3 item4
+ 21      35    0     17
+  0      0     0     0
+  0      0     23    0
+  0      32    0     0
+  0      0     0     0
+ 34      0     0     0
+</code></pre>
+
+<p>Majority are zero's, and because of that I can't create a proper clustering. Should I remove some data or perform factor analysis. I am using R. </p>
+"
+"0.173702083444913","0.129488494810918","127536","<p>Sampling weights, the inverse probability of a unit's selection into the sample, and other more complex and adjusted weights are very often used in the social sciences. There is statistical software that allows weighting of observations/cases, like the <code>hclust</code> function from the <code>R</code>-package <code>cluster</code>. </p>
+
+<p>In regression analysis, there is an ongoing debate when the usage of observation weights is appropriate (see e.g. Winship/Radbill 1994). I could not find anything concerning observation weights in textbooks about cluster analysis, if weighting is discussed, it is mostly about variable weighting. One exemption is the manual of the <code>R</code>-package <code>WeightedCluster</code>, which discusses observation weighting in more detail. The documentation of the <code>cluster</code> package is not very helpful, as it only shows a trivial example using the weighting option <code>hclust(..., members=""..."")</code> where the number or weight of cases is untouched.</p>
+
+<ol>
+<li>Therefore, I am looking for references and recommendations with observation/case weighting in cluster analysis, especially hierarchical cluster analysis. </li>
+<li>As I could not find the actual formula for the <code>hclust(..., members=""..."")</code> function : Which parameters changes in the hierarchical cluster algorithm if one uses observation weights? How does that affect the algorithm?</li>
+</ol>
+
+<p>In order to get an idea of the difference between clustering with and without case weights, here is an example using weights from survey data and the R-code:
+<img src=""http://i.stack.imgur.com/BYiLY.png"" alt=""Reweighting of clustering by using membership""></p>
+
+<pre><code>require(survey)
+data(api)
+whc &lt;- hclust(dist(apiclus2[, c(""pct.resp"", ""meals"")]), method=""ward.D2"", 
+              members=apiclus2$pw)
+uwhc &lt;- hclust(dist(apiclus2[, c(""pct.resp"", ""meals"")]), method=""ward.D2"")
+opar &lt;- par(mfrow = c(1, 2))
+plot(whc,  labels = FALSE, hang = -1, main = ""Weighted survey data"")
+plot(uwhc, labels = FALSE, hang = -1, main = ""Unweighted survey data"")
+</code></pre>
+
+<h3>References</h3>
+
+<ul>
+<li>Studer, M., 2013: WeightedCluster Library Manual. A practical guide to creating typologies of trajectories in the social sciences with R. LIVES Working Papers 24. Lausanne.</li>
+<li>Winship, C. &amp; L. Radbill, 1994: Sampling Weights and Regression Analysis. Sociological Methods &amp; Research 23: 230â€“257.</li>
+</ul>
+"
+"0.146805054878676","0.153212853258974","133682","<p>So, I'm relatively new to using Gower's distance to do cluster analysis. I've done some research on this for a little while and like the fact it can incorporate categorical variables. To get a better understanding of how it works in practice, I tried simulating data and playing around with the PAM function in R. I simulated my data as such:</p>
+
+<pre><code>let &lt;- LETTERS[1:5]
+dich &lt;- c(1L,0L)
+a &lt;- as.data.frame(cbind(rnorm(50, 100, 25), sample(let, 50, replace=T), sample(dich, 50, replace=T)))
+colnames(a) &lt;- c(""iq"",""let"",""dich"")
+rownames(a) &lt;- 1:50
+</code></pre>
+
+<p>I then ran it through PAM with various values for number of clusters (k). When I generate the silhouette plots to check how well the observations fit the assigned cluster, it always seems to be at it's best at k=10, with an average silhouette width of .49 (one observation was put into its own cluster).</p>
+
+<p>Obviously this is no coincidence (5 letters times 2 values of dichotomous variable = 10). My assumption is that the algorithm makes the cuts at the categorical level before evaluating the continuous. Is this correct? Or is it the way I'm generating the data that is creating this? I also made sure there wasn't balanced amounts of observations across the categorical variables.</p>
+
+<p>If my assumption is accurate, I don't know if I want cluster assignments made that way. I'll be using demographic data, and I don't want one cluster to be completely males and one cluster completely females. Any insight would be most helpful!</p>
+
+<p>Here's my clustering code:</p>
+
+<pre><code>dist &lt;- daisy(a, metric=""gower"")
+clust &lt;- pam(dist, k=10, diss=T)
+plot(clust)
+</code></pre>
+"
+"0.113714706536836","0.118678165819385","134538","<p>I have multiple dataframes each representing traffic speed for each day of the year (366 dataframes for 366 days of the year). The raws of the dataframe are timestamp from 00:00 to 23:55 at 5 minute intervals and the columns are mileposts at 0.5 mile intervals and the entries are speed of traffic corresponding to the specific time and milepost. </p>
+
+<p>I want to group days of similar traffic conditions to examine daily traffic patterns/variations, which is standard for traffic analysis at a macro level, e.g., examining traffic patterns during weekdays and weekends.</p>
+
+<p>To do this, I will have to measure similarity of the dataframes and apply clustering algorithms. Any idea on how to calculate similarity of dataframes and cluster them? Any R package that can do this?</p>
+
+<p>Thanks</p>
+"
+"0.146805054878676","0.153212853258974","149707","<p>I have data that refer to the number of occurrences of specific variable in samples:</p>
+
+<pre><code>       V1  V2  V3 ...
+sample1 0   2   1
+sample2 7   1   0
+sample3 1   4   1  
+....
+</code></pre>
+
+<p>The data refers to the occurrence of genes(V1...) in different genomes (sample1..).</p>
+
+<p>I want to perform a cluster analysis combined with an heat map.
+I used the function <code>heatmap.2</code> in the <code>gplot</code> package in R.
+I used Euclidian distances for calculating the distance among the samples. 
+The clustering algorithm is the default one for the function <code>hclust</code> in R (<code>hclust(d, method = ""complete"", members = NULL)</code>).
+However, I am not completely sure it is the right method. 
+Any suggestion on how to choose the right method to calculate the distances among my samples?</p>
+
+<p><strong>EDIT</strong>
+The aim is to describe the distribution of the variables (genes) among the samples (genome), and cluster the samples(genomes) according with the values that each variables assume (meaning, how many specific genes are present)</p>
+"
+"0.0656532164298613","0.0685188709827532","152129","<p>I am working on a <code>data.frame</code> with <strong>both categorical and metric</strong> variables</p>
+
+<pre><code># example data
+a &lt;- as.factor(c(""A"",""A"",""B"",""C"",""D"",""A"",""C"",""A"",""C"",""C""))
+b &lt;- rep(1:5,2)
+c &lt;- as.factor(c(""elephant"",""elephant"",""cat"",""dog"",""cat"",""elephant"",
+                 ""cat"",""elephant"",""dog"",""dog""))
+df &lt;- data.frame(a,b,c)
+</code></pre>
+
+<p>I run a cluster analysis on this example data</p>
+
+<pre><code># Dissimilarity Matrix Calculation
+
+library(cluster)
+
+x &lt;- daisy(df, metric = c(""gower""),
+    stand = FALSE, type = list())
+
+# Hierarchical Clustering
+
+z &lt;- agnes(x, diss = inherits(x, ""dist""), metric = ""euclidean"",
+      stand = FALSE, method = ""single"", par.method,
+      trace.lev = 0, keep.diss = TRUE)
+</code></pre>
+
+<p>and receive this dendrogram</p>
+
+<pre><code>plot(z,  main=""plotit"", which.plot = 2)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/ZTJNP.png"" alt=""dendrogram""></p>
+
+<ul>
+<li>How do I know where to cut the tree?</li>
+</ul>
+
+<p>I could do something like </p>
+
+<pre><code>cutree(z, k = 2, h=0.3)
+</code></pre>
+
+<p>but the values chosen for <code>k</code> and <code>h</code>would be entirely arbitrary. I work on a large data set where I can't rely on information I see in the plot in this example?</p>
+
+<ul>
+<li>Is there a heuristic to determine the number of clusters?</li>
+<li>Is there a heuristic to determine the cutting height of the tree?</li>
+</ul>
+"
+"0.146805054878676","0.153212853258974","154871","<p>I have always heard that I can reduce dimensionality of a matrix using SVD. So, I'd like to ask something hypothetically. Suppose that the following matrix A has a high dimensionality and I want to reduce it for applying, let's say, a clustering analysis.</p>
+
+<pre><code>2 0 8 6 0
+1 6 0 1 7
+5 0 7 4 0
+7 0 8 5 0
+0 10 0 0 7
+</code></pre>
+
+<p>Using software R, I could do something like this:</p>
+
+<pre><code>s&lt;-svd(A,2)
+u&lt;-as.matrix(r$u)                         #$
+v&lt;-as.matrix(r$v[,1:2])                   #$
+d&lt;-as.matrix(diag(r$d)[1:2,1:2])
+newdata &lt;- u%*%d%*%t(v)
+</code></pre>
+
+<p>The variable <code>s</code> would contain the factorized matrices $A = UDV$. And then I could remultiply them to get back the values. For example, R generated the following ones for me: </p>
+
+<p><img src=""http://i.stack.imgur.com/YzUx8.png"" alt=""From top down matrices A, D, V""></p>
+
+<p>However, how can I use those matrices for my clustering problem? I know that I need to multiply them for getting my data back, but, even removing rows in D and V, I still get the same number of dimensions. As I want to reduce dimensionality for another task(like the clustering), I'd need less dimensions(columns). That doesn't seem the case. </p>
+
+<p>Am I doing something wrong? Could anybody help to understand this better? Or provide a tutorial to see the process happening? Is PCA a better solution to my problem by using the most representative principal components as the input for my clustering algorithm?</p>
+"
+"0.185695338177052","0.169575554089028","155989","<p>I'm a Software Engineer trying to learn how to do a <a href=""http://en.wikipedia.org/wiki/Principal_component_analysis"" rel=""nofollow"">Principal Components Analysis</a> in Python or R.</p>
+
+<p>I've found a few <a href=""https://georgemdallas.wordpress.com/2013/10/30/principal-component-analysis-4-dummies-eigenvectors-eigenvalues-and-dimension-reduction/"" rel=""nofollow"">links</a> which do a good job of explaining the concept from a high-level.  However, I haven't seen any examples which walk you through all of the steps from start to finish.</p>
+
+<p>For example, letâ€™s say you have a 50-dimensioned dataset, which has 50 columns of varying data types (boolean, float, integer, varchar etc.)â€¦ Do those values need to be scaled or normalized to something like 0.0..1.0? Or can the PCA algorithm handle those disparate data types?</p>
+
+<p>Ideally, I want to see something which does a walkthrough of each step and explains it on the way. <strong>Especially starting with disparate data which needs to be scaled or normalized.</strong> All examples I've seen online, including ones which use well-known example data sets (such as the <a href=""http://archive.ics.uci.edu/ml/datasets/Iris"" rel=""nofollow"">Iris dataset</a>), start with pristine data where all of the columns are the same data type. I'm starting with a large dataset with many columns of varying data types.  What do I do?</p>
+
+<p>Incidentally, after applying PCA to my dataset, I plan on running it through clustering (k-means probably).</p>
+
+<p><strong>Update 9/10/2015</strong></p>
+
+<p>Since this question has been marked as off-topic, I'm not able to submit or select an answer.  In any case, I found two links from Sebastian Raschka to be very helpful:</p>
+
+<ul>
+<li><a href=""http://sebastianraschka.com/Articles/2014_pca_step_by_step.html"" rel=""nofollow"">Implementing a Principal Component Analysis (PCA) in Python step by step</a></li>
+<li><a href=""http://nbviewer.ipython.org/github/rasbt/pattern_classification/blob/master/preprocessing/feature_encoding.ipynb"" rel=""nofollow"">Tips and Tricks for Encoding Categorical Features in Classification Tasks</a></li>
+</ul>
+"
+"0.0928476690885259","0.0969003166223018","161675","<p>I am trying to perform a clustering analysis for a csv file with 50k+ rows, 10 columns. I tried k-mean, hierarchical and model based clustering methods. Only k-mean works because of the large data set. However, k-mean does not show obvious differentiations between clusters. So I am wondering is there any other way to better perform clustering analysis? Thanks in advanced!</p>
+
+<p>The data looks like this</p>
+
+<pre><code>Revenue  Employee  Longitude Latitude  LocalEmployee BooleanQuestions ...
+1000     100       xxxx      xxxx      10
+...                                                                   ...
+</code></pre>
+
+<p>Here is part of my code:</p>
+
+<pre><code>mydata &lt;- scale(mydata)
+wss &lt;- (nrow(mydata)-1)*sum(apply(mydata,2,var))
+for(i in 2:15)wss[i]&lt;- sum(fit=kmeans(mydata,centers=i,15)$withinss)
+plot(1:15,wss,type=""b"",main=""15 clusters"",xlab=""no. of cluster"",ylab=""with clsuter sum of squares"")
+
+fit &lt;- kmeans(mydata,7)
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, labels=2, lines=0)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/YWUTR.png"" alt=""enter image description here""></p>
+"
+"0.0928476690885259","0.0969003166223018","162018","<p>I am trying to perform a clustering analysis for a csv file with 50k+ rows, 10 columns. I tried k-mean, hierarchical and model based clustering methods. Only k-mean works because of the large data set. However, k-mean does not show obvious differentiations between clusters. So I am wondering is there any other way to better perform clustering analysis?</p>
+
+<p>The data looks like this</p>
+
+<pre><code>Revenue  Employee  Longitude Latitude  LocalEmployee BooleanQuestions ...
+1000     100       xxxx      xxxx      10
+...                                                                   ...
+</code></pre>
+
+<p>Here is part of my code:</p>
+
+<pre><code>mydata &lt;- scale(mydata)
+wss &lt;- (nrow(mydata)-1)*sum(apply(mydata,2,var))
+for(i in 2:15)wss[i]&lt;- sum(fit=kmeans(mydata,centers=i,15)$withinss)
+plot(1:15,wss,type=""b"",main=""15 clusters"",xlab=""no. of cluster"",ylab=""with clsuter sum of squares"")
+
+fit &lt;- kmeans(mydata,7)
+clusplot(mydata, fit$cluster, color=TRUE, shade=TRUE, labels=2, lines=0)
+</code></pre>
+"
+"0.131306432859723","0.10277830647413","168922","<p>My research buddy and I are conducting cluster analysis on survey data using a 7-point relevance scale (1=Not relevant, 7=Extremely Relevant). </p>
+
+<p>We have 58 variables, arranged in 10 groups of variables (like marketing channel as a variable group, consisting of variables asking respondents to classify the relevance of a type of marketing channel to their business).</p>
+
+<p>The individual variables have very varying distributions of responses, and the overall distribution across all responses is bimodal at 1 and 7, but still with a significant share of responses in the middle values. </p>
+
+<p>We aim to find underlying constructs (in this instance, business models), by clustering (N=635) on their responses to these 58 variables. The research is highly exploratory, and we only have intuition for the variable relationships, both in and between variable groups. We have also conducted a PCA analysis giving 16 factors, which seem to make intuitive sense, but where we thereafter have some trouble applying and interpreting factor scores to a cluster context.</p>
+
+<p>We would greatly appreciate any pointers to what clustering method would be appropriate for this type of dataset? If so, what would be the R package for this approach?</p>
+"
+"0.196959649289584","0.205556612948259","172617","<p><strong>Problem:</strong></p>
+
+<p>I am figuring out the best way to find clusters for a dataset with observations that are densely packed together. The dataset is retail stores with three numeric variables based on operations metrics.</p>
+
+<p>I do not know how to create a simulated dataset for an example like this. I have densely clustered data and outliers, but under 4k observations. </p>
+
+<p><strong>Business objective:</strong></p>
+
+<p>We need to separate the dataset into groups based on several variables.</p>
+
+<p>The goal is to narrow down the stores with greater priority. Later on, we will use inference statistics for determining the cause of the operation metrics stated. Segmenting the stores based on priority makes sense through the three operations variables included.</p>
+
+<p>I tried two different types of partitioning clustering methods, k-values, and different variables, but all yeilded poor validation results. Hereâ€™s the steps I took:</p>
+
+<p><strong>Clustering with 2/3 variables:</strong></p>
+
+<ol>
+<li><p>Standardize in daisy dissimilarity matrix with euclidean distance <code>daisy()</code> function from <code>cluster</code> package in CRAN.</p></li>
+<li><p>Chose k for k-means by looking at SSE chart <code>kmeans()</code> function.</p></li>
+<li><p>Chose k for k-medoid by <code>pamk()</code> function in <code>fpc</code> package in CRAN for highest average silhouette width among clusters - resulted in a 0.23 average silhouette width. K-medoid was used with the <code>pam()</code> function from <code>cluster</code> package in CRAN.</p></li>
+<li><p>Choose clustering algorithm by dunn-index - highest clustering result was k-medoids with 0.002. I used the <code>cluster-stats()</code> function in <code>fpc</code>.</p></li>
+</ol>
+
+<p><strong>Clustering with all three variables:</strong>
+-same procedure as above.</p>
+
+<p><strong>Result:</strong>
+K-medoids with 2 clusters using two variables represented the algorithm with the highest dunn-indes. </p>
+
+<p><strong>Overview:</strong>
+After selecting the optimal number of clusters for each clustering method and comparing the best one using dunn-index, the results have overlap. </p>
+
+<p>What is the recommended method for performing cluster analysis on densely clustered datasets? Do I need to perform clustering multiple times in order to segment the data further? </p>
+
+<p><strong>EDIT: Added scatterplot showing clustering with 3 variables</strong></p>
+
+<p><a href=""http://i.stack.imgur.com/ZoVyj.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ZoVyj.png"" alt=""Scatterplot with cluster labels color-coded""></a></p>
+"
+"0.0928476690885259","0.0969003166223018","174570","<p>I have some data that should be randomly assigned to treatment $T$, and am running some tests on observables to give evidence that this is indeed the case.</p>
+
+<p>Let's focus on an outcome I'll call $X$, which is discrete, so the most natural test of if $X \perp T$ is Pearson's $\chi^2$. The Pearson test (via <code>chisq.test</code> in R) gives a $p$-value of .008, which at first glance indicates a fair amount of correlation between $X$ and $T$. Code was specifically:</p>
+
+<pre><code>library(data.table)
+analysis_data[ , chisq.test(x, treatment)$p.value]
+</code></pre>
+
+<p>However, there is a fair amount of meaningful clustering in the data, which is correlated with $X$ (e.g., as cluster size increases, average $X$ decreases).</p>
+
+<p>To deal with this, I tried to implement a blocked bootstrap as follows:</p>
+
+<ol>
+<li><p>Assign cluster ID number</p></li>
+<li><p>For each iteration $b=1,\ldots,B$:</p>
+
+<p>a. draw $n$ cluster IDs at random (with replacement, where $n$ is the total number of clusters and create a sample consisting of those $n$ clusters of observations.</p>
+
+<p>b. Calculate the Pearson's $\chi^2$ statistic (via <a href=""https://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test#Test_of_independence"" rel=""nofollow"">Wikipedia</a>) within each sample via <code>chisq.test(x, treatment)$statistic</code></p></li>
+<li><p>Calculate $\tau_0$, the $\chi^2$ value in the original sample.</p></li>
+<li><p>Calculate the $p$-value as the proportion of $\tau_b$ which exceed $\tau_0$, i.e.</p></li>
+</ol>
+
+<p>$$p = \frac{1}{B}\sum_{b=1}^B \mathbb{1}[\tau_b &gt; \tau_0]$$</p>
+
+<p>(in code:</p>
+
+<pre><code>analysis_data[ , cluster_id := .GRP, by = cluster_vars]
+setkey(analysis_data, cluster_id)
+test_dist &lt;- replicate(BB, analysis_data[
+  .(sample(unique(cluster_id), rep = TRUE)),
+  chisq.test(x, treatment)$statistic])
+    t0 &lt;- analysis_data[, chisq.test(x, treatment)$statistic]
+mean(test_dist &gt; t0)
+</code></pre>
+
+<p>)</p>
+
+<p>When I do this, the $p$ value I get out (with <code>BB</code> = 10000) is .81. That strikes me as an almost unbelievably large change.</p>
+
+<p>What's more, when I restrict attention to the subsample of size-1 clusters, I am met again with a large (though partially mediated) difference between the bootstrapped and the parametric result-- .28 from <code>chisq.test</code> vs. .88 from my bootstrap procedure.</p>
+
+<p>Am I doing something wrong? What might be causing such large-magnitude changes in $p$-value between the procedures?</p>
+"
+"0.146805054878676","0.153212853258974","176578","<p>I have multiple images from a 3D-Scanner in point cloud form. Part of the image is a fixture to hold the object to be scanned. I want to extract the object itself by classifying the fixture and the object in two separate classes = estimating a discriminant hyperplane, that cuts the cloud exactly at the points where the fixture touches the object. </p>
+
+<p>2D Image of an SVM estimation (via the excellent klaR package) as an example:
+<a href=""http://i.stack.imgur.com/vsohB.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vsohB.png"" alt=""enter image description here""></a> 
+Some bullet points about the external conditions:</p>
+
+<ul>
+<li>The objects vary in shape and size. </li>
+<li>The position of the fixture varies a bit between images, since it is flexible</li>
+<li>The origin of the images varies, since the calibration is sometimes off (due to temparature changes etc.)</li>
+</ul>
+
+<p><strong>The problem resulting from this</strong>: </p>
+
+<p>The absolute position of an estimated hyperplane is the same, independent of the data. The point, where the point cloud of the object ends and the point cloud of the fixture begins, varies,  but this is the point where the hyperplane is needed in every picture. Optimally, they would change position dependent on the data. </p>
+
+<p>Some bullet points about what i have tried so far:</p>
+
+<ul>
+<li>Despite knowing I exclude myself from excellent libraries such as PCL, I use R</li>
+<li>Clustering works rather badly, since the point where the fixture touches the object is too large so it separates them not very well.</li>
+<li>LDA, QDA, RPart, KNN and SVMLight give me between 70-90% accuracy when comparing to a manual classification, when centering and standardizing the images by themselves</li>
+</ul>
+
+<p><strong>My Question(s):</strong></p>
+
+<p>What would you propose could be done about the fix hyperplanes? Do you think one could derive some sort of parameter from the image so the planes will be moved accordingly? </p>
+
+<p>Is there maybe another Discriminant analysis method, that would be better suited here, preferrably with an R implementation? </p>
+
+<p>Is there a feature that i should calculate, that could help me in the separation when added as a discriminating variable?</p>
+"
+"0.185695338177052","0.193800633244604","177796","<p>I am trying to make group together different datasets using unsupervised algorithms (clustering). The problem is that I have many features (~500) and a small amount of cases (200-300).</p>
+
+<p>So far I used to do only classification problems for which I always had labeled data as training sets. There I used some criterion (i.e. random.forest.importance or information.gain) for preselection of the features and then I used a sequential forward selection for different learners to find the relevant features.</p>
+
+<p>Now I see that in case of unsupervised learning I have neither any criterion for preselection nor can I use the sequential forward selection (at least not in the mlr package).</p>
+
+<p>I was wondering if I could do a principal component analysis before to find a small number of features to fead to my clustering algorithm. Or do you have any other idea?</p>
+
+<p>Thanks</p>
+
+<p>edit:</p>
+
+<p>Ok, so after some research online I can update my question a bit:
+First of all I have read some articles that discourage the use of PCA before clustering algorithms, due to two reasons:</p>
+
+<ul>
+<li><p>The PCs are functions of all features so it is hard to relate the result to the inital data set and thus it is harder to interpret</p></li>
+<li><p>Moreover, if you have the problem that in truth only a very small fraction of your features are helpful to do the clustering, it is not said that these features are also describing the largest variance among the samples (which is what the PCs do)</p></li>
+</ul>
+
+<p>So PCA is off the table...</p>
+
+<p>Now I am back to my initial idea to do a sequential forward selection for clustering.</p>
+
+<p>What performance measure would you recommend? (I thought about the Dunn-Index)
+Which clustering algorithm would lead to clusters of more or less the same size? (for hierarchical clustering I usually get one cluster with a single outlier and another with all the rest -> so I would need something that somehow protects against outliers)</p>
+
+<p>Hope you guys can help me...</p>
+"
+"0.236716038237","0.247048302665218","182988","<p>I've run a fully within-subjects repeated-measures ANOVA using the <code>aov()</code> function. My dependent variable is not normally distributed, so I'm very interested in running assumption tests on my analysis. It seems that just calling <code>plot()</code> on the output doesn't work for repeated-measures, so I've manually taken the residuals and the fitted values for a model of interest, and have plotted them against each other. I'm assuming that this is how I would plot to test for the assumption of Homoskedasticity.</p>
+
+<p>The plot comes out with 2 vertical bands (please see the image below). It turns out the fitted values are all centred around 2 values (although according to <code>==</code> they are not exactly equal), where one is the negative of the other.</p>
+
+<p>I have 2 questions:</p>
+
+<p>1) Is this the correct way to manually test the assumption homoskedasticity? If not, how would I go about it from repeated-measures designs (since just calling <code>plot()</code> doesn't work)?</p>
+
+<p>2) If it is correct, what is this plot telling me? Why are the fitted values so clustered? What can I conclude from it?</p>
+
+<p>Thanks heaps for any input here. Also, if you know of better ways to check (preferably plot) for assumptions in rm-ANOVAs, that would be useful information as well.</p>
+
+<p>I've included some mock data here to replicate the scenario:</p>
+
+<pre><code>#Create mock data (there's probably a more efficient way to do this.. would also be nice to know! :) )
+p &lt;- sort(rep(1:20,8))
+y &lt;- rep(rep(1:2,4),20)
+z &lt;- rep(rep(c(1,1,2,2),2),20)
+w &lt;- rep(c(1,1,1,1,2,2,2,2),20)
+x &lt;- rnorm(160,10,2)
+
+d &lt;- data.frame(x,p=factor(p),y=factor(y),z=factor(z),w=factor(w))
+
+#Run repeated-measures ANOVA
+ex.aov &lt;- aov(x ~ y*z*w + Error(p/(y*z*w)), d)
+
+#Try to plot full object (doesn't work)
+plot(ex.aov)
+
+#Try to plot section of object (doesn't work)
+plot(ex.aov[[""p:y:z""]])
+
+#Plot residuals against fitted (custom ""skedasticity"" plot - works)
+plot(residuals(ex.aov[[""p:y:z""]])~fitted(ex.aov[[""p:y:z""]]))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/pBexJ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/pBexJ.png"" alt=""enter image description here""></a></p>
+
+<p><strong>Begin Edit</strong></p>
+
+<p>In light of the information provided by @Stefan , I've added some additional details below, using the improved data structure he proposed:</p>
+
+<pre><code># Set seed to make it reproducible
+set.seed(12)
+
+#New variable names and generation
+subj &lt;- sort(factor(rep(1:20,8)))
+x1 &lt;- rep(c('A','B'),80)
+x2 &lt;- rep(c('A','B'),20,each=2)
+x3 &lt;- rep(c('A','B'),10, each=4)
+outcome &lt;- rnorm(80,10,2)
+
+d3 &lt;- data.frame(outcome,subj,x1,x2,x3)
+
+#Repeated measures ANOVA
+ex.aov &lt;- aov(outcome ~ x1*x2*x3 + Error(subj/(x1*x2*x3)), d3)
+
+#proj function
+ex.aov.proj &lt;- proj(ex.aov)
+
+# Check for normality by using last error stratum
+qqnorm(ex.aov.proj[[9]][, ""Residuals""])
+# Check for heteroscedasticity by using last error stratum
+plot(ex.aov.proj[[9]][, ""Residuals""])
+</code></pre>
+
+<p>The resulting plots are below:</p>
+
+<p><a href=""http://i.stack.imgur.com/wFiYy.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/wFiYy.png"" alt=""Repeated measures normality check?""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/siHVi.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/siHVi.png"" alt=""Repeated measures homoskedasticity check?""></a></p>
+
+<p>Can anyone interpret the images above (especially the last one)? It looks like there is clustering and pattern structure. Can it be used to infer the presence of heteroskedasticity?</p>
+"
+"0.185695338177052","0.193800633244604","189490","<p>The basic idea of the problem is that I need to cluster a set of points for which I have a dissimilarity matrix.</p>
+
+<p>I have a dataset of around 4600 points (latitudes and longitudes). I have also precomputed the dissimilarity matrix which is nothing but a <code>timeMatrix</code> (travel time between all pair of points).</p>
+
+<p>In the time matrix if a point is not reachable to another within a certain time, say 5 minutes, then the value in the matrix corresponding to those points is marked as Long.MAX_VALUE. Otherwise, the time is calculated by querying a Trip Planner API. (So this is just to reduce the number of queries to the API)</p>
+
+<p>I am using <code>pam</code> (Partitioning Around Mediods) method in R. </p>
+
+<p>The code that I am using is:</p>
+
+<pre><code>kmed &lt;- pam(timeMatrix, 100, diss = TRUE)
+</code></pre>
+
+<p>When I try to visualize this using <code>clusplot</code>, I get really weird plots.</p>
+
+<pre><code>clusplot(timeMatrix, kmed$cluster, diss=TRUE)
+</code></pre>
+
+<p>The image for this plot is:<a href=""http://i.stack.imgur.com/CrNZu.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/CrNZu.jpg"" alt=""clusplot output when using timeMatrix""></a></p>
+
+<p>I also tried passing the dataset of points (<code>lmks</code>) into the clusplot function, but I got a similar plot for it as well.</p>
+
+<pre><code>clusplot(lmks, kmed$cluster, diss=FALSE)
+</code></pre>
+
+<p>The image for the plot is: <a href=""http://i.stack.imgur.com/F5i0S.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/F5i0S.jpg"" alt=""clusplot output when using lmks dataset(latitudes and longitudes of the points)""></a></p>
+
+<p>I request you to please help me understand what is happening and how to deal with it. There are <code>ellipses</code> on the points describing the clusters, but I don't know about the <code>pink colored noise</code> on the top.</p>
+
+<p>Also, it would be great if you can suggest me about some other clustering method in which I can pass in the <code>timeMatrix</code>.</p>
+
+<p>Thanks. Sorry, if this question is trivial, as I am a beginner in cluster analysis and R.</p>
+"
+"0.0928476690885259","0.0969003166223018","191033","<p>I've just started reading about clustering and classification. It's a djungle, a fascinating one. Currently, however I have a rather urgent task, i.e to perform a sort of cluster analysis in the sense that I'd like to cluster my patients according to their phenotypes (biomarkers - continuous and categorical variables) and examine whether survival differs according to cluster. I'm not interested in any specific predictor, the purpose is merely to examine whether there are specific clusters of patients and whether the phenotypes associate with outcomes.</p>
+
+<p>I'm looking for general advice on what type of <strong>method</strong> to use as well as recommended <strong>R package</strong>. I have 10 variables that are relevant for the phenotype. I could attach some data but I doubt it would contribute to the question, which is of more general character.</p>
+
+<p>Thanks in advance.</p>
+
+<p><strong>Update</strong>:
+I'm looking for pros and cons of various techniques, with application to these kind of data. And I humbly understand that clustering may not be that straight forward.</p>
+"
+"0.131306432859723","0.10277830647413","200285","<p>I am hoping someone could offer me some wisdom and a few R tricks.</p>
+
+<p>I was lucky enough to get a pretty interesting data set for a study that I am doing. There is approximately 5000+ rows of data spanning 5 years for 100 different sales people. The data is structured per below.</p>
+
+<blockquote>
+  <p>User || Month || NumberOfClientsSeen || AverageSatisfactionScore ||
+  Sales || Leads</p>
+</blockquote>
+
+<p>I want to see if there are correlations between the NumberOfClientsSeen, AverageSatisfactionScore, Sales and/or Leads. My first inclination would be to load up a Matrix into R, and run RCORR from the Hmisc libary. </p>
+
+<pre><code>&gt; library(Hmisc)
+&gt; cordata &lt;- data[NumberOfClientsSeen, AverageSatisfactionScore, Sales, Leads]
+&gt; results &lt;- rcorr(as.matrix(cordata), type=""pearson"")
+## hourray for R, N and P-values! ##
+</code></pre>
+
+<p>I realize that this probably isn't correct. I know my users have a ton of variability and that there is seasonality in my data from month to month. The correlation values I'm seeing could be representations of my months or my weird users, since these groupings / clusterings aren't being taken into consideration in my correlation analysis; the way I am analyzing my data right now, I am effectively saying that all months are equal (which they aren't) and that all users are pretty much the same (which they aren't). I need to take users and months into consideration in my analysis. </p>
+
+<p>My hypothesis / goals still relates to investigating interactions / correlations between the NumberOfClientsSeen, AverageScore, Sales and/or Leads. </p>
+
+<p>Is there an way to do a correlation for my measures that take the clustering/variances of users / months into consideration? </p>
+
+<p>Should I be adjusting my data before running rcorr, and removing monthly / user variances? </p>
+
+<p>Perhaps I should be averaging my data somehow to group my data points?</p>
+
+<p>Any insights are welcome, and appreciated.</p>
+
+<p>Thanks!</p>
+
+<ul>
+<li>JSM</li>
+</ul>
+"
+"0.236716038237","0.247048302665218","204760","<p>I would like to know how I can use clustering methods in R (in this case, Kmeans) if I have an ""unkind"" input matrix (I get this error log: </p>
+
+<blockquote>
+  <p>The TSS matrix is indefinite. There must be too many missing values. The index cannot be calculated.)</p>
+</blockquote>
+
+<p>I could see that I might get this error if my matrix produces negative eigenvalues (like, here: <a href=""http://stackoverflow.com/questions/20669596/nbclust-package-error"">http://stackoverflow.com/questions/20669596/nbclust-package-error</a>), but what I'm missing is the ""next step"" part. I could see a suggestion was to ""go back to the Data"", but what should I do then? Is there any transformation or something that might help? (I'm pretty new to R and clustering in general...)</p>
+
+<p>The Data I'm using are the result of a survey (which I briefly transformed and scaled via the <code>scale</code> function in R) so I was wondering if there were some algorithms or methods I could use in order to go on with my analysis (from literature I couldn't find great help). Or, if you think this is unfixable or simply non the best solution, do you have any other suggestion for clustering my data? What I'm willing to do is to identify some clusters of possible users/customers of some services, depending on their usual habits (e.g.: if they use many social networks they will be more likely to use chat/whatsapp/app to ask for bank account information - I have both the information of their social network usage and their ways of communicating with a ""bank assistant"").</p>
+
+<p>The Dataset consists of 994 rows and 103 columns. Don't know if it may help, but the code is simply this:</p>
+
+<pre><code>Data2&lt;- read.csv(...)
+bDataScale &lt;- scale(Data2)
+nc &lt;- NbClust(bDataScale, min.nc=2, max.nc=993, method=""kmeans"")
+</code></pre>
+
+<p>And I get:</p>
+
+<blockquote>
+  <p>Error in NbClust(bDataScale, min.nc = 2, max.nc = 993, method = ""kmeans"") : 
+    The TSS matrix is indefinite. There must be too many missing values. The index cannot be calculated.</p>
+</blockquote>
+
+<p>Thank you in advance for your help or any corrections,</p>
+
+<p>Julia</p>
+
+<p>P.S.: as it would be logical to expect, I get the same error also with the unscaled matrix.</p>
+"
+"0.160816880225669","0.167836271659338","204876","<p>This question related to this <a href=""http://stats.stackexchange.com/questions/204455/reducing-number-of-labels-in-a-dataset"">other one</a>, for which I have devised a strategy and now want some feedback on it.</p>
+
+<p>My data consists of 434042 rows, each corresponding to an observation tagged with 1 of 20 labels. The variables for each observation are:</p>
+
+<ul>
+<li>5 are binary (T/F).</li>
+<li>4 are categorical.</li>
+<li>1 is ordinal (ranking).</li>
+<li>3 is continuous.</li>
+<li>1 is the time component.</li>
+<li>1 label, corresponding to one of 20 each observation can take.</li>
+</ul>
+
+<p>My current logic is that to measure similarity, one must calculate the distance between observations, and then the distance between the center (or mean) of each category. Categories that are close together can be then grouped into a broader one.</p>
+
+<p>To compute this, what I am doing is:</p>
+
+<ul>
+<li>Calculate the ratio of T/F observations within each label.</li>
+<li>Calculate the % occurrence of each categorical value per categorical variable, for each label.</li>
+<li>Treat the ordinal value as a continuous one.</li>
+<li>Take the mean and standard deviation of each continuous variable.</li>
+<li>Remove the time component from the analysis.</li>
+</ul>
+
+<p>I then pass on these label-specific summary variables to the <code>hclust</code>function in R, so the clustering algorithm can suggest me which categories I can group together.</p>
+
+<p>Does this approach seem valid? Any recommendation or suggestion would be greatly appreciated.</p>
+"
+"0.173702083444913","0.181283892735285","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"
+"0.173702083444913","0.181283892735285","207404","<p>First of all, I know that this question has been addressed a certain number of times, but I didn't find an answer concerning the <strong>clustering of variables</strong>, instead of observations.</p>
+
+<p>Concretely, I am using the function <code>varclus</code> from the package <code>Hmisc</code> to perform variables clustering.</p>
+
+<p>As an example, I want to perform a cluster analysis on the variables of the dataset <code>ionosphere</code> (available in the package <code>dprep</code>).</p>
+
+<p>My code is as follow :</p>
+
+<pre><code>&gt; library(Hmisc) 
+&gt; library(dprep) 
+&gt; data(ionosphere) 
+&gt; iono_min_l_col &lt;- ionosphere[-length(ionosphere)] 
+&gt; iono_mx_min_l_col &lt;- data.matrix(iono_min_l_col) 
+&gt; iono_clus &lt;- varclus(iono_mx_min_l_col)
+&gt; plot(iono_clus)
+</code></pre>
+
+<p>When using <code>plot()</code> I get the following dendrogram :</p>
+
+<p><a href=""http://i.stack.imgur.com/LSDiI.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LSDiI.png"" alt=""enter image description here""></a></p>
+
+<p>However, I don't know in how many clusters I should group my variables.
+I can used the following code to know in which cluster are my variables (e.g. V1 Cluster 1, V2 Cluster 3, etc...), but I don't know <strong>how to get the optimal number of clusters</strong> ? (i.e. <strong><em>k</em></strong> in the following code)</p>
+
+<pre><code>&gt; groups &lt;- cutree(varclus(iono_mx_min_l_col)$hclust, k= ***???***)
+</code></pre>
+
+<p>Does someone know how to get this optimal number, <strong><em>k</em></strong> ?</p>
+
+<p>Thanks a lot !</p>
+"
+"0.0928476690885259","0.0969003166223018","208570","<p>I have performed differential analysis with DESeq2, edgeR and voom-limma. My goal was to evaluate each methods on my data.
+Now I would like to perform clustering with the genes found differentially expressed (DEG) by each method to see how well these genes discriminat my two conditions. To do so, I have to shoot my counts through some type of variance stabilizing transformation</p>
+
+<p>Should I do all my clusterings with rlog data and the 3 sets of DEG ?</p>
+
+<p>I wonder if it is relevant to do a clustering with DEG from voom on data that have been transform with rlog or with DEG from DESeq2 on data that have been transform by voom ?</p>
+
+<p>Any clues ?
+Thanks</p>
+"
+"NaN","NaN","208621","<p>I am trying to perform a clustering analysis in R according to Spearman correlation coefficient.</p>
+
+<p>Could it happen that the analysis identifies only one big cluster as in the figure attached (the code is below the figure)? How would you interpret that? Please not that the same code generates a more meaningful dendogram if I change the matrix I use (in this case <code>mat_settings_old</code>).</p>
+
+<p><a href=""http://i.stack.imgur.com/XIisq.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/XIisq.png"" alt=""enter image description here""></a></p>
+"
+"0.0928476690885259","0.0969003166223018","209364","<p>I'm working on segmentation/clustering and trying to use Gaussian Mixture Modelling for Model-Based Clustering. I'm using the R package Mclust in order to come up with the best fit for my data.</p>
+
+<p>All data is transformed to a uniform distribution with mean zero, standard deviation one (I know, not Gaussian) and the variables included are chosen based on earlier attempts using k-means, where the given variables seemed to be discriminating. Of course, k-means comes with some drawbacks (lack of statistical foundation, no control of cross-correlation etc,), and that's the reason I want to use Model-Based Clustering (or latent class analysis, with the package poLCA).</p>
+
+<p>When using mclustBIC, many of the possible BICs are actually NA. I tried to reduce the dimension of the data, but this didn't improve the output. For example the VEV is only calculated for nr clusters 1:3, while it looks like it could improve for more clusters (see plot below).</p>
+
+<p>Someone who experienced similar problems? And can someone help me into the right direction for finding the best model, using mclust? I would like to calculate other BICs with a higher number of clusters.</p>
+
+<p>Help would be appreciated!</p>
+
+<p><a href=""http://i.stack.imgur.com/YboGv.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/YboGv.png"" alt=""enter image description here""></a></p>
+"
+"0.196959649289584","0.182716989287342","217467","<p>I'm working on a project that requires some clustering analysis.  In performing the analysis, I noticed something that seemed odd to me.  I understand that in k-means the total sum of squares (total distance of all observations from the global center) equals the between sum of squares (distance between the centroids) plus the total within sum of squares (sum of the distances of each observation to its centroid).  But I also see that total sum of squares is not exactly equal to the total variance of the distribution, which I don't understand.  What I've noticed is that the two numbers (total sum of squares from k-means analysis vs. total variance) get closer to each other as the sample sizes get larger.  Here's a quick simulation in R that shows what I'm talking about:</p>
+
+<pre><code>require(dplyr)
+compare_sd_km &lt;- function(numObs){
+    set.seed(3)
+    x &lt;- rnorm(numObs, 0, 1)
+    y &lt;- rnorm(numObs, 0, 1)
+
+    km &lt;- kmeans(data.frame(x,y), centers = 5)
+
+    kmeansMeasure &lt;- (km$betweenss + km$tot.withinss) / numObs
+    varianceMeasure &lt;- var(x) + var(y)
+    return(c(kmeansMeasure, varianceMeasure))
+}
+
+numObsMultipliers &lt;- c(1:5)
+numObsMultipliers &lt;- sapply(numObsMultipliers, function(x) 10^x)
+comparisons &lt;- lapply(numObsMultipliers, function(x)  compare_sd_km(x))
+comparisons &lt;- as.data.frame(do.call(rbind, comparisons))
+comparisons$observations &lt;- numObsMultipliers
+colnames(comparisons) &lt;- c('kmeansMeasure', 'varianceMeasure', 'observations')
+comparisons &lt;- mutate(comparisons, difference = kmeansMeasure - varianceMeasure)
+comparisons &lt;- comparisons[, c(3,1,2,4)]
+
+#### RESULT ####
+  observations kmeansMeasure varianceMeasure     difference
+1           10      1.142764        1.269738 -0.12697379740
+2          100      1.920365        1.939762 -0.01939762318
+3         1000      1.988562        1.990553 -0.00199055288
+4        10000      2.031035        2.031238 -0.00020312381
+5       100000      2.007437        2.007457 -0.00002007457
+</code></pre>
+
+<p>Any ideas what's going on here?  Rounding issues?  Something having to do with how the algorithms are implemented?  Am I calculating something incorrectly? Or do total sum of squares and total variance actually mean something substantively different?  Thanks for any help anyone can provide.</p>
+"
+"0.348178759081972","0.327038568600269","221144","<p>(This post is a repost of a question I posted yesterday (now deleted), but I've tried to scale back volume of words and simplify what I'm asking)</p>
+
+<p>I'm hoping to get some help interpreting a kmeans script and output I have created. This is in the context of text analysis. I created this script after reading several articles online on text analysis. I have linked to some of them them below.</p>
+
+<p>Sample r script and corpus of text data I will refer to throughout this post:</p>
+
+<pre><code>library(tm) # for text mining
+
+## make a example corpus
+# make a df of documents a to i
+a &lt;- ""dog dog cat carrot""
+b &lt;- ""phone cat dog""
+c &lt;- ""phone book dog""
+d &lt;- ""cat book trees""
+e &lt;- ""phone orange""
+f &lt;- ""phone circles dog""
+g &lt;- ""dog cat square""
+h &lt;- ""dog trees cat""
+i &lt;- ""phone carrot cat""
+j &lt;- c(a,b,c,d,e,f,g,h,i)
+x &lt;- data.frame(j)    
+
+# turn x into a document term matrix (dtm)
+docs &lt;- Corpus(DataframeSource(x))
+dtm &lt;- DocumentTermMatrix(docs)
+
+# create distance matrix for clustering
+m &lt;- as.matrix(dtm)
+d &lt;- dist(m, method = ""euclidean"")
+
+# kmeans clustering
+kfit &lt;- kmeans(d, 2)
+#plot â€“ need library cluster
+library(cluster)
+clusplot(m, kfit$cluster)
+</code></pre>
+
+<p>That's it for the script. Below are the output of some of the variables in the script:</p>
+
+<p>Here's x, the data frame x that was transformed into a corpus:</p>
+
+<pre><code> x
+                       j
+    1 dog dog cat carrot
+    2      phone cat dog
+    3     phone book dog
+    4     cat book trees
+    5       phone orange
+    6  phone circles dog
+    7     dog cat square
+    8      dog trees cat
+    9   phone carrot cat
+</code></pre>
+
+<p>An here's the resulting document term matrix dtm:</p>
+
+<pre><code>    &gt; inspect(dtm)
+&lt;&lt;DocumentTermMatrix (documents: 9, terms: 9)&gt;&gt;
+Non-/sparse entries: 26/55
+Sparsity           : 68%
+Maximal term length: 7
+Weighting          : term frequency (tf)
+
+    Terms
+Docs book carrot cat circles dog orange phone square trees
+   1    0      1   1       0   2      0     0      0     0
+   2    0      0   1       0   1      0     1      0     0
+   3    1      0   0       0   1      0     1      0     0
+   4    1      0   1       0   0      0     0      0     1
+   5    0      0   0       0   0      1     1      0     0
+   6    0      0   0       1   1      0     1      0     0
+   7    0      0   1       0   1      0     0      1     0
+   8    0      0   1       0   1      0     0      0     1
+   9    0      1   1       0   0      0     1      0     0
+</code></pre>
+
+<p>And here is the distance matrix d</p>
+
+<pre><code>&gt; d
+         1        2        3        4        5        6        7        8
+2 1.732051                                                               
+3 2.236068 1.414214                                                      
+4 2.645751 2.000000 2.000000                                             
+5 2.828427 1.732051 1.732051 2.236068                                    
+6 2.236068 1.414214 1.414214 2.449490 1.732051                           
+7 1.732051 1.414214 2.000000 2.000000 2.236068 2.000000                  
+8 1.732051 1.414214 2.000000 1.414214 2.236068 2.000000 1.414214         
+9 2.236068 1.414214 2.000000 2.000000 1.732051 2.000000 2.000000 2.000000
+</code></pre>
+
+<p>Here is the result, kfit:</p>
+
+<pre><code>&gt; kfit
+K-means clustering with 2 clusters of sizes 5, 4
+
+Cluster means:
+         1        2        3        4        5        6        7        8        9
+1 2.253736 1.194938 1.312096 2.137112 1.385641 1.312096 1.930056 1.930056 1.429253
+2 1.527463 1.640119 2.059017 1.514991 2.384158 2.171389 1.286566 1.140119 2.059017
+
+Clustering vector:
+1 2 3 4 5 6 7 8 9 
+2 1 1 2 1 1 2 2 1 
+
+Within cluster sum of squares by cluster:
+[1] 13.3468 12.3932
+ (between_SS / total_SS =  29.5 %)
+
+Available components:
+
+[1] ""cluster""      ""centers""      ""totss""        ""withinss""     ""tot.withinss"" ""betweenss""    ""size""         ""iter""        
+[9] ""ifault""      
+</code></pre>
+
+<p>Here is the resulting plot:
+<a href=""http://i.stack.imgur.com/vBvTa.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vBvTa.png"" alt=""enter image description here""></a></p>
+
+<p>I have several questions about this:</p>
+
+<ol>
+<li>In calculating my distance matrix d (a parameter used in kfit calculation) I did this: <code>d &lt;- dist(m, method = ""euclidean"")</code>. Another article I encountered did this: <code>d &lt;- dist(t(m), method = ""euclidean"")</code>. Then, separately on a <a href=""http://stackoverflow.com/questions/38003622/within-the-context-of-a-document-term-matrix-what-exactly-are-x-and-y-axis-in-k"">SO question</a> I posted recently someone commented ""kmeans should be run on the data matrix, not on the distance matrix!"". Presumably they mean <code>kmeans()</code> should take m instead of d as input. Of these 3 variations which/who is ""right"". Or, assuming all are valid in one way or another, which would be the conventional way to go in setting up an initial baseline model?</li>
+<li>As I understand it, when kmeans function is called on d, what happens is that 2 random centroids are chosen (in this case k=2). Then r will look at each row in d and determine which documents are closest to which centroid. Based on the matrix d above, what would that actually look like? For example if the first random centroid was 1.5 and the second was 2, then how would document 4 be assigned? In the matrix d doc4 is 2.645751 2.000000 2.000000 so (in r) mean(c(2.645751,2.000000,2.000000)) = 2.2 so in the first iteration of kmeans in this example doc4 is assigned to the cluster with value 2 since it's closer to that than to 1.5. After this the mean of the cluster is reclauculated as a new centroid and the docs reassigned where appropriate. Is this right or have I completely missed the point?</li>
+<li>In the kfit output above what is ""cluster means""? E.g., Doc3 cluster 1 has a value of 1.312096. What is this number in this context? [edit, since looking at this again a few days after posting I can see that it's the distance of each document to the final cluster centers. So the lowest number (closest) is what determines which cluster each doc is assigned].</li>
+<li>In the kfit output above, ""clustering vector"" looks like it's just what cluster each doc was assigned to. OK.</li>
+<li>In the kfit output above, ""Within cluster sum of squares by cluster"". What is that? <code>13.3468 12.3932 (between_SS / total_SS =  29.5 %)</code>. A measure of the variance within each cluster, presumably meaning a lower number implies a stronger grouping as opposed to a more sparse one. Is that a fair statement? What about the percentage  given 29.5%. What's that? Is 29.5% ""good"". Would a lower or higher number be preferred in any instance of kmeans? If I experimented with different numbers of k, what would I be looking for to determine if the increasing/decreasing number of clusters has helped or hindered the analysis?</li>
+<li>The screenshot of the plot goes from -1 to 3. What is being measured here? As opposed to education and earnings, height and weight, what is the number 3 at the top of the scale in this context?</li>
+<li>In the plot the message ""These two components explain 50.96% of the point variability"" I already found some detailed info <a href=""http://stats.stackexchange.com/questions/141280/understanding-cluster-plot-and-component-variability"">here</a> (in case anyone else comes across this post - just for completeness of understanding kmeans output wanted to add here.).</li>
+</ol>
+
+<p>Here's some of the articles I read that helped me to create this script: </p>
+
+<ul>
+<li><a href=""https://rstudio-pubs-static.s3.amazonaws.com/31867_8236987cf0a8444e962ccd2aec46d9c3.html"" rel=""nofollow"">Basic Text Mining in R</a></li>
+<li><a href=""https://eight2late.wordpress.com/2015/07/22/a-gentle-introduction-to-cluster-analysis-using-r/"" rel=""nofollow"">A Gentle Introduction into Cluster Analysis using R (text mining based article)</a></li>
+</ul>
+"
+"0.146805054878676","0.122570282607179","221850","<p>I'm reading up on kmeans and following a blog post to do some text analysis.</p>
+
+<p>I watched a <a href=""https://www.youtube.com/watch?v=Ao2vnhelKhI"" rel=""nofollow"">helpful video</a> by Andrew Ng fro Coursera which really helped my understanding of what is going on. Here is a screen shot from the video:</p>
+
+<p><a href=""http://i.stack.imgur.com/XdHhG.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/XdHhG.png"" alt=""kmeans clustering""></a></p>
+
+<p>So far kmeans makes sense, start with K cluster centroids, assign each point to a cluster based on distance (Euclidean?), recalculate mean, repeat. </p>
+
+<p>But I'm also following <a href=""https://rstudio-pubs-static.s3.amazonaws.com/31867_8236987cf0a8444e962ccd2aec46d9c3.html"" rel=""nofollow"">this</a> blog post on text analysis in R. Following the article I make a document term matrix.</p>
+
+<p>Context is online survey results. Let's say there are e.g. 10k survey results and a total of 15k ""tokens"", so a dtm of 10k*15k.</p>
+
+<p>Further down the article we are shown an example of kmeans clustering on the dtm:</p>
+
+<pre><code>library(fpc)   
+d &lt;- dist(t(dtmss), method=""euclidian"")   
+kfit &lt;- kmeans(d, 2)   
+clusplot(as.matrix(d), kfit$cluster, color=T, shade=T, labels=2, lines=0)  
+</code></pre>
+
+<p>And it works.</p>
+
+<p>But I'm trying to understand how. An example in kmeans clustering I found online was weight and height on the x,y axis for determining how to split a population for clothing sizes of small, medium and large. That makes sense.</p>
+
+<p>But in the context of a DTM, what would be on the x and y axis in the screen shot above? It's just not clicking. </p>
+"
+"0.196959649289584","0.182716989287342","223035","<p>I am an ecology graduate with a decent practical familiarity with statistics in R, but limited experience of approaches such as PCA, and Cluster Analysis. 
+I am currently faced with the challenge of trying to apply my skills to an entirely unfamiliar problem:  my dad is writing a book on archaeological finds of blades, has collected data on 176 finds and has tasked me with analysing it.  </p>
+
+<p>The data selected for analysis is structured thus:   </p>
+
+<pre><code> Blade.length     Max.width     Max.thickness     Shape     Broken.back        Type   
+
+ Min.   :165.0   Min.   :20.00   Min.   : 3.500   A   :70   Min.   :0.0000   Cs   :39  
+ 1st Qu.:220.0   1st Qu.:28.75   1st Qu.: 5.000   B   : 8   1st Qu.:0.0000   Hbs  :15  
+ Median :270.0   Median :34.00   Median : 6.000   C   :14   Median :0.0000   Lbs  :17  
+ Mean   :311.5   Mean   :35.20   Mean   : 6.464   D   :14   Mean   :0.2686   Ls   :23  
+ 3rd Qu.:353.0   3rd Qu.:39.00   3rd Qu.: 7.875   E   :30   3rd Qu.:0.5000   Ns   :43  
+ Max.   :760.0   Max.   :62.00   Max.   :11.000   F   :12   Max.   :1.0000   Small:35  
+ NA's   :9       NA's   :4       NA's   :86       NA's:28   NA's   :1        NA's : 4 
+</code></pre>
+
+<p>Shape is a variable of categories pertaining to the shape of the tip of the blades - these categories are in no particular order.  Broken.back is a different way of looking at ""shape"", effectively binary, although some cases are ""in between"" and have been entered as 0.5.   ""Type"" is a supplementary variable referring to what each blade has been identified as, using a pre-existing typology. Part of the exercise is to examine if this pre-existing typology is fit for purpose. </p>
+
+<p>The dataset is, necessarily, incomplete, with NAs in all variables, although blades with lots of missing data have been excluded from the analysis.  Within the sample remaining, the most incomplete column is blade thickness, with 48% NAs.  </p>
+
+<p>So far I have attempted to visualise the data by means of factorial analysis of mixed data, with imputation, using packages MissMDA and FactoMineR.   However I've found myself bewildered by the number of options and what approach is appropriate for the sort of data I have. </p>
+
+<p>More importantly, I am looking to conduct hierarchical cluster analysis of the data to examine the relatedness of different finds and try and statistically define types (<a href=""http://www.r-bloggers.com/hierarchical-clustering-in-r-2/"" rel=""nofollow"">http://www.r-bloggers.com/hierarchical-clustering-in-r-2/</a>), so far using HCLUST, Dist, and vegdist (package: Vegan).   However, I am not clear as to;  </p>
+
+<ul>
+<li>How to manage, prepare or transform the types of data I have for this type of analysis.</li>
+<li>What dissimilarity index method would be most appropriate in this context.</li>
+<li>What type of clustering / linkage method would be most appropriate in this context. </li>
+</ul>
+
+<p>Sorry for the long question. As you can see I am quite bewildered and out of my depth.  Thanks in advance. </p>
+"
+"0.146805054878676","0.153212853258974","224449","<p>I am conducting clustering analysis in which I am using three clustering algorithms <code>K-means</code>, <code>Spectral Clustering</code>, and <code>Hierarchical clustering</code> on 3 datasets in UCI repository. </p>
+
+<p>I have used <code>R</code> packages to conduct clustering analysis and got the results such as Size of clusters, cluster vector, cluster means, Within cluster sum of squares, and grouping of cluster by Class. </p>
+
+<p>Following is an example of my <code>K-means</code> on the Pima Indian diabetes data in UCI repository:</p>
+
+<pre><code>diabetes &lt;- read.csv(url(""http://archive.ics.uci.edu/ml/machine-learning-databases/pima-indians-diabetes/pima-indians-diabetes.data""), header = FALSE)
+
+names(diabetes)&lt;- c(""No.ofTimesPregnant"", ""GlucoseConcentration"", ""BloodPressure"", ""TricepSkinThickness"", ""insulin"", ""BMI"", ""PedigreeFunction"", ""Age"", ""Class"") 
+
+set.seed(20)
+
+KmeansCluster &lt;- kmeans(diabetes[, 1:8], 4, nstart = 20, iter.max=10)
+
+pcol &lt;- as.character(diabetes$Class)
+pairs(diabetes[1:8], pch = pcol, col = c(""green"", ""red"") KmeansCluster$cluster])
+KmeansCluster
+table(KmeansCluster$cluster, diabetes$Class)
+</code></pre>
+
+<p>I wish to know how I can compare the results of each clustering algorithm? So that I can say that particular clustering algorithm is best for this dataset. More specifically to say, what metric should I choose and how I can get that metric in <code>R</code> (For example, it would be helpful if you could tell me how to get those metric on my above <code>R</code> code for <code>K-means</code>)?.  </p>
+
+<p>As I know the diameter of the cluster and average distance of each cluster is used as a measure to compare clustering algorithm in general. </p>
+"
+"0.185695338177052","0.169575554089028","224509","<p>I'm conducting a meta-analysis on standardised mean difference scores. Some studies provide multiple effect sizes, thereby violating the assumption of independence. An example is given below (all effect sizes were calculated with regard to a pre-test). In study A, all participants received the same treatment (watching a video), and were tested repeatedly. In study B, there were two different treatment groups (one group watched a video, the other group listened to an audio book), and everyone was tested once. Study C provided only one effect size.</p>
+
+<pre><code>study        treatment          testing_moment         effect_size
+
+A            video              immediately            0.6
+A            video              delayed                0.5
+B            video              immediately            0.9
+B            audio_book         immediately            0.7
+C            audio_book         delayed                0.4
+</code></pre>
+
+<p>I'm using the <em>metafor</em> package in <em>R</em>, in which you can fit a multilevel model to account for non-independent sampling errors. </p>
+
+<p>What I've done:</p>
+
+<pre><code>rma.mv(effect_size_vector, variance_vector, mods = ~ testing_moment, 
+  random = ~ 1 | treatment/study, data = rev)
+</code></pre>
+
+<p>Could anyone please have a look whether this approach is correct? I'm especially unsure about whether I've correctly indicated the clustering using slash (/) (this decision was based on <a href=""http://conjugateprior.org/2013/01/formulae-in-r-anova/"" rel=""nofollow"">this page</a>), and whether the model as a result indeed takes into account the non-independence of effect sizes. </p>
+
+<p>I'm also wondering whether somehow it should be corrected that the samples in study A are dependent and in study B they are independent. Or is that already accounted for by virtue of the treatment variable being the same for both samples in study A?</p>
+"
+"0.0984798246447919","0.137037741965506","229148","<p>I am trying to get the p-values for hierarchical clustering analysis on the following dataset.The dendrograms generated by pvclust and hclust are completely different.Because the pvclust mentioned they used the same method as hclust, it should be identical.</p>
+
+<pre><code>&gt;test=read.delim(""test1.txt"", header=T)
+&gt; test
+
+  S1 S2 S3 S4 S5 S6 S7 S8 S9 S10
+1  1  1  1  1  1  1  0  1  1   0
+2  0  0  1  0  0  0  0  0  0   0
+3  1  0  0  1  1  0  0  0  1   1
+4  1  0  1  0  1  1  0  1  0   1
+5  0  1  0  1  0  0  0  0  1   0
+6  1  0  1  0  1  1  0  0  0   1
+7  1  1  0  1  0  0  1  0  1   0
+8  1  1  0  1  0  1  1  0  1   0
+9  1  0  1  0  1  1  0  1  0   0
+
+&gt; div.norm=decostand(test,""normalize"")
+&gt; div.ch=vegdist(div.norm,""bray"")
+&gt; div.ch.UPGMA=hclust(div.ch,method = ""average"")
+&gt; plot(div.ch.UPGMA)
+</code></pre>
+
+<p>This generates the following dendrogram:
+<a href=""http://i.stack.imgur.com/WFNKU.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/WFNKU.jpg"" alt=""Dendrogram using hclust""></a></p>
+
+<p>Then I tried to run the same dataset using pvclust.</p>
+
+<pre><code>&gt; test.tr=t(test)
+&gt; result=pvclust(test.tr, method.dist=""cor"", method.hclust=""average"", nboot=1000)
+&gt; plot(result)
+</code></pre>
+
+<p>I get the following dendrogram which is different from the one generated by hclust.
+<a href=""http://i.stack.imgur.com/4Okw4.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/4Okw4.jpg"" alt=""Dendrogram using pvclust""></a>
+Some suggested that I should not transpose the data. But that produces a dendrogram where the columns are clustered (I don't want that).</p>
+
+<p>Any help would be greatly appreciated!</p>
+"

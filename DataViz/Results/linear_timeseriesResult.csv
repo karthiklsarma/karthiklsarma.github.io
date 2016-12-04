@@ -1,0 +1,1108 @@
+"V1","V2","V3","V4"
+"0.136082763487954","0.147441956154897","  1841","<p>Disclaimer: I'm a software engineer, not a statistician, so please forgive any blunt error :-)</p>
+
+<p>I have a set of time-series ""curves"", each measuring the entropy of a given artifact. Now, I'm standing over the following premises (please criticize them as you see fit):</p>
+
+<ol>
+<li>In order to approximate the upper bounds of the Kolmogorov complexity $K(s)$, of a string $s$, one can simply compress the string $s$ with some method, implement the corresponding decompressor in the chosen language, concatenate the decompressor to the compressed string, and measure the resulting string's length.</li>
+<li>For this purpose, I've used the <em>bzip2</em> application, setting its compression level to the supported maximum (-9).</li>
+<li>If one is only interested in a time-series analysis of a set of evolving strings, calculating the compressed <em>deltas</em> is enough to present a relative measure of entropy between any two strings (at least that's my interpretation after reading Cilibrasi05).</li>
+<li>For that, I used the <em>diff</em> unix tool, with the (--minimal) parameter, again followed by a <em>bzip2</em> compression, with the aforementioned settings.</li>
+</ol>
+
+<p>I'm doing this to analyze the evolution of the entropy in a software artifact (code, model, whatever). I'm <em>not</em> worried with the absolute values, but with the <em>relative</em> increase (or decrease) in entropy. Now here comes the problem:</p>
+
+<ol>
+<li>I've done this for a set of 6 artifacts, which ought to belong to the same population, but I don't know how to provide statistical evidence of that (the corresponding of doing a two-tailed t-test of two samples).</li>
+<li>One of the artifacts evolution <em>should</em> be different from all the others. We're talking something like an exponential v.s. sub-linear growth. How do I provide statistical evidence of that?</li>
+</ol>
+
+<p>Again, the disclaimer of being a software engineer. Although I would appreciate every academic reference (papers, books, etc.) you could handle, I'm looking for something pragmatic that I can use in the next few days, like a script in R, or something in SPSS.</p>
+
+<p>P.S. I'm sorry for asking for a <em>recipe</em>, instead of a theoretical explanation.</p>
+"
+"0.369274472937998","0.311187957132071"," 12873","<p>I am trying to tackle a problem which deals with the imputation of missing data from a panel data study(Not sure if I am using 'panel data study' correctly - as I learned it today.) I have total death count data for years 2003 to 2009, all the months, male &amp; female, for 8 different districts and for 4 age groups.</p>
+
+<p>The dataframe looks something like this:</p>
+
+<pre><code>         District  Gender Year Month    AgeGroup TotalDeaths
+         Northern    Male 2006    11        01-4           0
+         Northern    Male 2006    11       05-14           1
+         Northern    Male 2006    11         15+          83
+         Northern    Male 2006    12           0           3
+         Northern    Male 2006    12        01-4           0
+         Northern    Male 2006    12       05-14           0
+         Northern    Male 2006    12         15+         106
+         Southern  Female 2003     1           0           6
+         Southern  Female 2003     1        01-4           0
+         Southern  Female 2003     1       05-14           3
+         Southern  Female 2003     1         15+         136
+         Southern  Female 2003     2           0           6
+         Southern  Female 2003     2        01-4           0
+         Southern  Female 2003     2       05-14           1
+         Southern  Female 2003     2         15+         111
+         Southern  Female 2003     3           0           2
+         Southern  Female 2003     3        01-4           0
+         Southern  Female 2003     3       05-14           1
+         Southern  Female 2003     3         15+         141
+         Southern  Female 2003     4           0           4
+</code></pre>
+
+<p>For the 10 months spread over 2007 and 2008 some of the total deaths from all districts were not recorded. I am trying to estimate these missing value through a multiple imputation method. Either using Generalized Linear Models or SARIMA models.</p>
+
+<p>My biggest issue is the use of software and the coding. I asked a question on Stackoverflow, where I want to extract the data into smaller groups such as this:</p>
+
+<pre><code>         District  Gender Year Month    AgeGroup TotalDeaths
+         Northern    Male 2003     1        01-4           0
+         Northern    Male 2003     2        01-4           1
+         Northern    Male 2003     3        01-4           0
+         Northern    Male 2003     4        01-4           3
+         Northern    Male 2003     5        01-4           4
+         Northern    Male 2003     6        01-4           6
+         Northern    Male 2003     7        01-4           5
+         Northern    Male 2003     8        01-4           0
+         Northern    Male 2003     9        01-4           1
+         Northern    Male 2003    10        01-4           2
+         Northern    Male 2003    11        01-4           0
+         Northern    Male 2003    12        01-4           1
+         Northern    Male 2004     1        01-4           1
+         Northern    Male 2004     2        01-4           0
+</code></pre>
+
+<p>Going to</p>
+
+<pre><code>         Northern    Male 2006    11        01-4           0
+         Northern    Male 2006    12        01-4           0
+</code></pre>
+
+<p>But someone suggested I should rather bring my question here - perhaps ask for a direction? Currently I am unable to enter this data as a proper time-series/panel study into R. My eventual aim is to use this data and the <code>amelia2</code> package with its functions to impute for missing <code>TotalDeaths</code> for certain months in 2007 and 2008, where the data is missing.</p>
+
+<p>Any help, how to do this and perhaps suggestions on how to tackle this problem would be gratefully appreciated.</p>
+
+<p>If this helps, I am trying to follow a similar approach to what Clint Roberts did in his PhD <a href=""http://etd.ohiolink.edu/send-pdf.cgi/Roberts%20Clint.pdf?osu1211910310"">Thesis</a>. </p>
+
+<p><strong>EDIT:</strong></p>
+
+<p>After creating the 'time' and 'group' variable as suggested by @Matt:</p>
+
+<pre><code>&gt; head(dat)
+     District Gender Year Month AgeGroup Unnatural Natural Total time                    group
+1 Khayelitsha Female 2001     1        0         0       6     6    1     Khayelitsha.Female.0
+2 Khayelitsha Female 2001     1     01-4         1       3     4    1  Khayelitsha.Female.01-4
+3 Khayelitsha Female 2001     1    05-14         0       0     0    1 Khayelitsha.Female.05-14
+4 Khayelitsha Female 2001     1     15up         8      73    81    1  Khayelitsha.Female.15up
+5 Khayelitsha Female 2001     2        0         2       9    11    2     Khayelitsha.Female.0
+6 Khayelitsha Female 2001     2     01-4         0       2     2    2  Khayelitsha.Female.01-4
+</code></pre>
+
+<p>As you notice, there's actually further detail 'Natural' and 'Unnatural'.</p>
+"
+"0.136082763487954","0.147441956154897"," 24445","<p>I'm trying to estimate a multiple linear regression in R with an equation like this:</p>
+
+<pre><code>regr &lt;- lm(rate ~ constant + askings + questions + 0)
+</code></pre>
+
+<p>askings and questions are quarterly data time-series, constructed with <code>askings &lt;- ts(...)</code>.</p>
+
+<p>The problem now is that I got autocorrelated residuals. I know that it is possible to fit the regression using the gls function, but I don't know how to identify the correct AR or ARMA error structure which I have to implement in the gls function. </p>
+
+<p>I would try to estimate again now with,</p>
+
+<pre><code>gls(rate ~ constant + askings + questions + 0, correlation=corARMA(p=?,q=?))
+</code></pre>
+
+<p>but I'm unfortunately neither an R expert nor an statistical expert in general to identify p and q.</p>
+
+<p>I would be pleased If someone could give me a useful hint.
+Thank you very much in advance!</p>
+
+<p>Jo</p>
+"
+"0.430331482911935","0.419627163708141"," 33405","<p>I'm working with a time-series of several years and to analyze it, Iâ€™m using GAM smoothers from the package <code>mgcv</code>. Iâ€™m constructing models where zooplankton biomass (<code>bm</code>) is the dependent variable and the continuous explanatory variables are: </p>
+
+<p>-time in Julian days (<code>t</code>), to creat a long-term linear trend</p>
+
+<p>-Julian days of the year (<code>t_year</code>) to create an annual cycle</p>
+
+<p>-Mean temperature of Winter (<code>temp_W</code>), Temperature of September (<code>temp_sept</code>) or Chla. </p>
+
+<p>Questions: </p>
+
+<p>1) To introduce a tensor product modifying the annual cycle in my model, I tried 2 different approaches: </p>
+
+<p>a) <code>gam( bm ~ t + te (t_year, temp_W, temp_sept, k = c( 5,30 ), d = ( 1,2), bs = c(  â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>b) <code>gam( bm ~ t + te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code></p>
+
+<p>Here is my problem: when Iâ€™m using just 2 variables (e.g., <code>t_year</code> and <code>temp_W</code>) for the tensor product, I can understand pretty well how the interpolation works and visualize it with <code>vis.gam()</code> as a 3d plot or a contour one. But with 3 variables it is difficult for me  to understand how it works. Besides, I donâ€™t know which one is the proper way to construct it, a) or b). Finally, when I plot a) or b) as <code>vis.gam (model_name , view= c(â€œt_yearâ€, â€œtemp_Wâ€))</code>, How should I interpret the plot? The effect of <code>temp_W</code> on the annual cycle after considering already the effect of <code>temp_sept</code> or just the individual effect of <code>temp_W</code> on the annual cycle?</p>
+
+<p>2) Iâ€™m trying to do a model selection using AIC criteria. I have several questions about it: </p>
+
+<p>Should I use always the same type of smoothing basis (<code>bs</code>), the same type of smoother ( e.g <code>te</code>) and the same dimension of the basis (<code>k</code>)? Example: </p>
+
+<p>Option 1: </p>
+
+<p>a) <code>mod1 &lt;- gam(bm ~ t, data = data )</code></p>
+
+<p>b)<code>mod2 &lt;- gam( bm ~ te ( t, k = 5, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ te ( t_year, k = 5, bs = â€œccâ€), data = data )</code></p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te ( t_year, temp_W, k = 5, bs = c( â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code>. </p>
+
+<p>Here the limitation for <code>k = 5</code>, is due to <code>mod5</code>, I donâ€™t use <code>s ()</code> because in <code>mod4</code> and <code>mod5</code> <code>te ()</code> is used and finally, I always use â€œ<code>cr</code>â€ and â€œ<code>cc</code>â€. </p>
+
+<p>Option 2: </p>
+
+<p>a) <code>mod1 &lt;- gam( bm ~ t, data = data )</code></p>
+
+<p>b) <code>mod2 &lt;- gam( bm ~ s ( t, k = 13, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ s( t_year, k = 13, bs = â€œccâ€ ), data = data )</code> </p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te( t_year, temp_W, k = 11, bs = c( â€œccâ€,â€crâ€ ) ), data = data)</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>I can get lower AIC for each of the models with Option 2, but are they comparable when I use AIC criteria? Is it therefore the proper way to do it as in Option 1? </p>
+
+<p><code>AIC (mod1, mod2, mod3, mod4, mod5)</code>. </p>
+
+<p>As an example of how the data frame looks like:</p>
+
+<pre><code>&gt; time_series_data
+
+          bm      Chla year month       t t_year temp_W temp_sept
+1  2.1680335 54.718891 1993     1 2449009     20   12.1      19.3
+2  4.6180770 29.372938 1993     2 2449043     54   12.1      19.3
+3  4.6871990 99.198623 1993     3 2449064     75   12.1      19.3
+4  4.9862020 59.835987 1993     4 2449094    105   12.1      19.3
+5  3.4977156 79.990143 1993     5 2449120    131   12.1      19.3
+6  3.1030763 68.018739 1993     6 2449148    159   12.1      19.3
+7  2.0312841 70.850406 1993     7 2449181    192   12.1      19.3
+8  1.2477797 62.381780 1993     8 2449211    222   12.1      19.3
+9  2.1445538 99.094776 1993     9 2449254    265   12.1      19.3
+10 6.7026438 82.397907 1993    10 2449282    293   12.1      19.3
+11 1.6524655 44.977256 1993    11 2449303    314   12.1      19.3
+12 2.1627389 52.624779 1993    12 2449342    353   12.1      19.3
+13 3.0981200 58.274128 1994     1 2449374     20   11.3      18.6
+14 2.4342291 14.733698 1994     2 2449402     48   11.3      18.6
+15 4.8691345 51.508774 1994     3 2449431     77   11.3      18.6
+16 3.7366294 38.206928 1994     4 2449458    104   11.3      18.6
+17 3.3565706 72.763028 1994     5 2449500    146   11.3      18.6
+18 2.7869220 81.265662 1994     6 2449520    166   11.3      18.6
+19 2.6971469 50.692921 1994     7 2449540    186   11.3      18.6
+20 1.3758862 94.396013 1994     8 2449569    215   11.3      18.6
+21 5.7578197 59.357898 1994     9 2449620    266   11.3      18.6
+22 2.8941763 21.974925 1994    10 2449645    291   11.3      18.6
+23 0.9530070  7.781981 1994    11 2449673    319   11.3      18.6
+24 0.3713342 84.950835 1994    12 2449697    343   11.3      18.6  
+</code></pre>
+"
+"0.136082763487954","0.147441956154897"," 40749","<p>I have a linear model (with seasonal dummy variables) that produces monthly
+forecasts. I'm using R together with the 'forecast' package:</p>
+
+<pre><code>require(forecast)
+model = tslm(waterflow ~ rainfall + season, data = model.df, lambda = lambda)
+forec = forecast(model, newdata = rainfall.df, lambda = lambda)
+</code></pre>
+
+<p>I did a cross-validation and it looks great. Now, what i need is to generate
+<em>weekly data points</em> from these month forecasts - in other words, i need to generate a synthetic time-series that have monthly means equal to the forecasts above. So my function would look like:</p>
+
+<pre><code>generate.data = function(monthly.means, start.date, end.date)
+{
+   #code here
+}
+</code></pre>
+
+<p>I'm not sure how to do this (interpolation?), so any help is welcome.
+Thanks!</p>
+"
+"0.192450089729875","0.208514414057075"," 46434","<p>The <code>summary.rq</code> function from the <a href=""http://cran.r-project.org/web/packages/quantreg/quantreg.pdf"">quantreg vignette</a> provides a multitude of choices for standard error estimates of quantile regression coefficients. What are the special scenarios where each of these becomes optimal/desirable?</p>
+
+<ul>
+<li><p>""rank"" which produces confidence intervals for the estimated parameters by inverting a rank test as described in Koenker (1994). The default option assumes that the errors are iid, while the option iid = FALSE implements the proposal of Koenker Machado (1999). See the documentation for rq.fit.br for additional arguments.</p></li>
+<li><p>""iid"" which presumes that the errors are iid and computes an estimate of the asymptotic covariance matrix as in KB(1978).</p></li>
+<li><p>""nid"" which presumes local (in tau) linearity (in x) of the the conditional quantile functions and computes a Huber sandwich estimate using a local estimate of the sparsity.</p></li>
+<li><p>""ker"" which uses a kernel estimate of the sandwich as proposed by Powell(1990).</p></li>
+<li><p>""boot"" which implements one of several possible bootstrapping alternatives for estimating standard errors.</p></li>
+</ul>
+
+<p>I have read at least 20 empirical papers where this is applied either in the time-series or the cross-sectional dimension and haven't seen a mention of standard error choice. </p>
+"
+"0.136082763487954","0.147441956154897"," 52035","<p>I have a weekly time series representing costs for a cohort. I want to tell whether an intervention on the cohort (we can assume it happened in a single week) has decreased costs for the cohort. I happen to know that the trend over this period for the population from which this cohort was taken was -120 per week per week.</p>
+
+<p>My initial thought was simply to do a linear regression <code>lm(Costs~Weeks,offset=-120*Weeks)</code> but (obviously) the significance is not only a function of the effect of the intervention but also how far back I look (if I look back to $-\infty$ it will of course appear non-significant).</p>
+
+<p>I looked at this website: <a href=""http://www.r-bloggers.com/time-series-intervention-analysis-wih-r-and-sas/"" rel=""nofollow"">http://www.r-bloggers.com/time-series-intervention-analysis-wih-r-and-sas/</a> and tried to replicate the R code with my data, but when I enter the arimax() command, I got the error message </p>
+
+<pre><code>Error in stats:::arima(x=x,order=order,seasonal=seasonal,fixed=par[1:narma], : wrong length for 'fixed'
+</code></pre>
+
+<p>Now, I'm not sure what to do. Can anyone give me some guidance?</p>
+"
+"0.360041149911548","0.390094748802747"," 62646","<p>I've got data on mail volume sent by household for seven age groups, with 12 years of data for each age group. I originally ran a simple regression on each age group individually and realized I needed to dig deeper. My aim now is to pool the data (giving me 84 observations) and try to identify some period effects (or year effects, whichever you prefer). My pooled data are currently organized like this (PPHPY stands for Pieces per Household Per Year):</p>
+
+<pre><code>Age Group    Year   PPHPY
+1            2001   127.62
+1            2002   144.47
+1            2003   111.70
+1            2004   95.96
+1            2005   96.46
+1            2006   139.91
+1            2007   85.52
+1            2008   75.43
+1            2009   109.34
+1            2010   53.16
+1            2011   64.09
+1            2012   50.94        
+2            2001   176.48
+2            2002   172.86
+2            2003   137.79
+.              .      .
+.              .      .
+.              .      .
+7            2012   163.39
+</code></pre>
+
+<p>I first regressed PPHPY on year and year dummies (leaving the intercept as 0 to avoid perfect multicollinearity). This gave me period effects for the aggregated data (ie something like a period effect across all age groups, I think). This looked like the following:</p>
+
+<pre><code>&gt; ## Generate YearDummy using factor()
+&gt;
+&gt; YearDummy &lt;- factor(YearVar)
+&gt;
+&gt; ## Check to see that YearDummy is indeed a factor variable
+&gt;
+&gt; is.factor(YearDummy)
+[1] TRUE
+&gt;
+&gt; ## (...+0) ensures intercept is left out and thus YearDummy1 remains in.
+    ## One or the other must be subtracted out to avoid perfect mutlicollinearity
+&gt;
+&gt; LSDVYear &lt;- lm(PPHPY ~ YearVar + YearDummy + 0, data=maildatapooled)
+&gt; summary(LSDVYear)
+Call:
+lm(formula = PPHPY ~ YearVar + YearDummy + 0, data = maildatapooled)
+Residuals:
+Min 1Q Median 3Q Max
+-99.658 -39.038 8.814 43.670 82.300
+Coefficients: (1 not defined because of singularities)
+Estimate Std. Error t value Pr(&gt;|t|)
+YearVar 5.743e-02 9.851e-03 5.830 1.45e-07 ***
+YearDummy2001 1.099e+02 2.795e+01 3.930 0.000193 ***
+YearDummy2002 1.209e+02 2.796e+01 4.324 4.85e-05 ***
+YearDummy2003 7.791e+01 2.797e+01 2.786 0.006819 **
+YearDummy2004 8.053e+01 2.797e+01 2.879 0.005251 **
+YearDummy2005 6.887e+01 2.798e+01 2.461 0.016236 *
+YearDummy2006 6.572e+01 2.799e+01 2.348 0.021618 *
+YearDummy2007 5.975e+01 2.799e+01 2.134 0.036210 *
+YearDummy2008 5.836e+01 2.800e+01 2.084 0.040696 *
+YearDummy2009 4.119e+01 2.801e+01 1.471 0.145745
+YearDummy2010 3.056e+01 2.801e+01 1.091 0.278990
+YearDummy2011 1.472e+01 2.802e+01 0.525 0.600951
+YearDummy2012 NA NA NA NA
+---
+Signif. codes: 0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+Residual standard error: 52.44 on 72 degrees of freedom
+Multiple R-squared: 0.9316, Adjusted R-squared: 0.9202
+F-statistic: 81.71 on 12 and 72 DF, p-value: &lt; 2.2e-16
+</code></pre>
+
+<p>What I want, however, is to tease out period effects for each age group individually. This is what I'm not sure how to set up. I was hoping someone might help me devise some code in R that would kick out those period effects for <em>each</em> of the seven age groups using the pooled data, as well as help me understand the problem conceptually. </p>
+
+<p>EDIT: I forgot to mention that I see I must include an interaction term involving the time dummies to allow the coefficients to vary across age groups. I'm just having difficulty constructing the proper interaction term and resulting regression equation.</p>
+
+<p>EDIT 2: I came up with two models and ran them. I felt like the question had evolved at this point and might merit a new post, which is can be found <a href=""http://stats.stackexchange.com/questions/62755/period-effects-in-pooled-time-series-data-in-r"">here</a>.</p>
+"
+"0.384900179459751","0.312771621085612"," 63796","<p>This is related to a <a href=""http://stats.stackexchange.com/questions/62646/pooled-time-series-regression-in-r"">question</a> I asked a couple weeks ago, but I've got a new question related to the same data. You can find the data and its accompanying explanation in the link provided.</p>
+
+<p>I felt that a regression including year as a covariate along with year dummies would lead to a linear dependence problem, but I was told to try it anyway as </p>
+
+<blockquote>
+  <p>""the year dummies as independent variables [may] pick up year-specific
+  random effects not accounted for by a time trend, e.g. for example the
+  trend over all years could be down by say 2 percent per year which
+  could apply to most years, but a negative macro shock in one
+  particular year could make that year lie way off the regression
+  line--a simple example of why the year dummies are not co-linear with
+  a time trend.""</p>
+</blockquote>
+
+<p>This makes sense, I suppose, so I ran a regression that simply included year and year dummies for each year as the independent variables (including AR(1) corrections). This looked like the following:</p>
+
+<pre><code>&gt; ## Generate YearFactor and AgeGroupFactor using factor()
+&gt; 
+&gt; YearFactor &lt;- factor(YearVar)
+&gt; AgeGroupFactor &lt;- factor(AgeGroup)
+&gt; 
+&gt; ## Check to see that YearFactor and AgeGroupFactor are indeed factor variables
+&gt; 
+&gt; is.factor(YearFactor)
+[1] TRUE
+&gt; is.factor(AgeGroupFactor)
+[1] TRUE
+&gt;
+&gt; ## Run regressions with both time trend and year dummies to determine if a linear dependence problem exists.
+&gt; 
+&gt; TrendDummies &lt;- gls(PPHPY ~ YearVar + YearFactor, correlation=corARMA(p=1))
+Error in glsEstimate(object, control = control) : 
+ computed ""gls"" fit is singular, rank 13
+&gt; summary(TrendDummies)
+Error in summary(TrendDummies) : object 'TrendDummies' not found
+&gt;
+</code></pre>
+
+<p>I interpret the error message ""Error in glsEstimate(object, control = control) : 
+     computed ""gls"" fit is singular, rank 13"" to mean that there indeed is a linear dependence problem in this case. Am I properly interpreting this? </p>
+
+<p>Also, given the advice in quotes above, would my regression as constructed (if there were no linear dependence problems) capture the effects mentioned therein?</p>
+
+<p>And finally, if I run the same regression as OLS with no AR(1) correlation structure, I do indeed get some results (instead of an error message). Any thoughts on that?</p>
+"
+"0.235702260395516","0.255376959227625"," 74545","<p>I have a dataset with columns that represent lagged values of predictors. To illustrate with a simple example, suppose we had car sales data for 3 years and the only predictors available were income and population for a number of car dealers, the dataset could be represented as follows,</p>
+
+<pre><code>ID  IncLag1  PopLag1  SalesLag1  IncLag2  PopLag2 SalesLag2  IncCurrent  PopCurr  SalesCurr
+a       100      1000     200        150      2000    300        500       2500         450
+b       10        300      50         60       900     80         90       1000         100
+</code></pre>
+
+<p>...</p>
+
+<pre><code>k       30        60      10        200      2000     60         80          800         ??
+</code></pre>
+
+<p>My dependent variable is SalesCurr - i.e., given a history of past sales and corresponding Income and Population values (which we can use as the train-test data), predict what the Sales will be in the current year (SalesCurr). </p>
+
+<p>My question is as follows -- Using R or GRETL, how is it possible to create an ARIMA/TimeSeries model with the above data to predict the SalesCurrent variable. Using simple Linear Regression, one could simply have a formula such as say, <code>lm (SalesCurrent ~ ., data=mytable)</code>, but it would not be a time-series model since it does not take into account the relationship between the different variables.</p>
+
+<p>Alternatively, I am quite familiar with Machine Learning models and wanted to get your thoughts on how such a dataset could be modeled using say, randomForest, GBM, etc. </p>
+
+<p>Thanks in advance.</p>
+"
+"0.304290309725092","0.329690236697893"," 82153","<p>I have a multivariate time series dataset including interacting biological and environmental variables (plus possibly some exogenous variables). Beside seasonality, there is no clear long-term trend in the data. My purpose is to see which variables are related to each other. Forecasting is not really looked for. </p>
+
+<p>Being new to time-series analysis, I read several references. As far as I understand, Vector Autoregressive (VAR) model would be appropriate, but I donâ€™t feel comfortable with seasonality and most examples I found concerned economics field (as often with time series analysisâ€¦) without seasonality.</p>
+
+<p>What should I do with my seasonal data?
+I considered deseasonalizing them â€“ for example in R, I would use <code>decompose</code> and then use the <code>$trend + $rand</code> values to obtain a signal which appears pretty stationary (as judged per <code>acf</code>).
+Results of the VAR model are confusing me (a 1-lag model is selected while I would have intuitively expected more, and only coefficients for autoregression â€“ and not for regression with other lagged variables - are significant). 
+Am I doing anything wrong, or should I conclude that my variables are not (linearly) related / my model is not the good one (subsidiary question: is there a non-linear equivalent to VAR?).</p>
+
+<p>[Alternatively, I read I could probably use dummy seasonal variables, though I canâ€™t figure out exactly how to implement it].</p>
+
+<p>Step-by-step suggestions would be very appreciated, since details for experienced users might actually be informative to me (and R code snippets or links towards concrete examples are very welcome, of course). Thank you.</p>
+"
+"0.509175077217316","0.512271764055415","131312","<p>I have some R code (which I did not write) and which performs some state space analysis on some time-series. The data itself is shown as dots (scatter plot) and the Kalman filtered and smoothed state is the solid line.</p>
+
+<p><img src=""http://i.stack.imgur.com/41jaI.png"" alt=""Plot""></p>
+
+<p>My question is regarding the confidence intervals shown in this plot. I calculate <em>my own</em> confidence intervals using the standard method (my C# code is below)</p>
+
+<pre><code>public static double ConfidenceInterval(
+    IEnumerable&lt;double&gt; samples, double interval)
+{
+    Contract.Requires(interval &gt; 0 &amp;&amp; interval &lt; 1.0);
+
+    double theta = (interval + 1.0) / 2;
+    int sampleSize = samples.Count();
+    double alpha = 1.0 - interval;
+    double mean = samples.Mean();
+    double sd = samples.StandardDeviation();
+
+    var student = new StudentT(0, 1, samples.Count() - 1);
+    double T = student.InverseCumulativeDistribution(theta);
+    return T * (sd / Math.Sqrt(samples.Count()));
+}
+</code></pre>
+
+<p>Now this will return a single interval (and it does it correctly) which I will add/subtract from each point on the series I have applied the calculation to to give me my confidence interval. But this is a constant and the R implementation seems to change over the time-series.</p>
+
+<p>My question is why is <strong>the confidence interval changing for the R implementation? Should I be implementing my confidence levels/intervals differently?</strong></p>
+
+<p>Thanks for your time.</p>
+
+<hr>
+
+<p>For reference the R code that produces this plot is below:</p>
+
+<pre><code>install.packages('KFAS')
+require(KFAS)
+
+# Example of local level model for Nile series
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='BFGS',control=list(REPORT=1,trace=1))$model
+
+# Can use different optimisation: 
+# should be one of â€œNelder-Meadâ€, â€œBFGSâ€, â€œCGâ€, â€œL-BFGS-Bâ€, â€œSANNâ€, â€œBrentâ€
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='L-BFGS-B',control=list(REPORT=1,trace=1))$model
+
+# Filtering and state smoothing
+out&lt;-KFS(modelNile,filtering='state',smoothing='state')
+out$model$H
+out$model$Q
+out
+
+# Confidence and prediction intervals for the expected value and the observations.
+# Note that predict uses original model object, not the output from KFS.
+conf&lt;-predict(modelNile,interval='confidence')
+pred&lt;-predict(modelNile,interval='prediction')
+ts.plot(cbind(Nile,pred,conf[,-1]),col=c(1:2,3,3,4,4),
+ylab='Predicted Annual flow', main='River Nile')
+KFAS 13
+
+# Missing observations, using same parameter estimates
+y&lt;-Nile
+y[c(21:40,61:80)]&lt;-NA
+modelNile&lt;-SSModel(y~SSMtrend(1,Q=list(modelNile$Q)),H=modelNile$H)
+out&lt;-KFS(modelNile,filtering='mean',smoothing='mean')
+
+# Filtered and smoothed states
+plot.ts(cbind(y,fitted(out,filtered=TRUE),fitted(out)), plot.type='single',
+col=1:3, ylab='Predicted Annual flow', main='River Nile')
+
+# Example of multivariate local level model with only one state
+# Two series of average global temperature deviations for years 1880-1987
+# See Shumway and Stoffer (2006), p. 327 for details
+data(GlobalTemp)
+model&lt;-SSModel(GlobalTemp~SSMtrend(1,Q=NA,type='common'),H=matrix(NA,2,2))
+
+# Estimating the variance parameters
+inits&lt;-chol(cov(GlobalTemp))[c(1,4,3)]
+inits[1:2]&lt;-log(inits[1:2])
+fit&lt;-fitSSM(inits=c(0.5*log(.1),inits),model=model,method='BFGS')
+out&lt;-KFS(fit$model)
+    ts.plot(cbind(model$y,coef(out)),col=1:3)
+legend('bottomright',legend=c(colnames(GlobalTemp), 'Smoothed signal'), col=1:3, lty=1)
+
+# Seatbelts data
+## Not run:
+model&lt;-SSModel(log(drivers)~SSMtrend(1,Q=list(NA))+
+SSMseasonal(period=12,sea.type='trigonometric',Q=NA)+
+log(PetrolPrice)+law,data=Seatbelts,H=NA)
+
+# As trigonometric seasonal contains several disturbances which are all
+# identically distributed, default behaviour of fitSSM is not enough,
+# as we have constrained Q. We can either provide our own
+# model updating function with fitSSM, or just use optim directly:
+# option 1:
+ownupdatefn&lt;-function(pars,model,...){
+model$H[]&lt;-exp(pars[1])
+    diag(model$Q[,,1])&lt;-exp(c(pars[2],rep(pars[3],11)))
+model #for option 2, replace this with -logLik(model) and call optim directly
+}
+14 KFAS
+fit&lt;-fitSSM(inits=log(c(var(log(Seatbelts[,'drivers'])),0.001,0.0001)),
+model=model,updatefn=ownupdatefn,method='BFGS')
+out&lt;-KFS(fit$model,smoothing=c('state','mean'))
+    out
+    ts.plot(cbind(out$model$y,fitted(out)),lty=1:2,col=1:2,
+    main='Observations and smoothed signal with and without seasonal component')
+    lines(signal(out,states=c(""regression"",""trend""))$signal,col=4,lty=1)
+legend('bottomleft',
+legend=c('Observations', 'Smoothed signal','Smoothed level'),
+col=c(1,2,4), lty=c(1,2,1))
+
+# Multivariate model with constant seasonal pattern,
+# using the the seat belt law dummy only for the front seat passangers,
+# and restricting the rank of the level component by using custom component
+# note the small inconvinience in regression component,
+# you must remove the intercept from the additional regression parts manually
+model&lt;-SSModel(log(cbind(front,rear))~ -1 + log(PetrolPrice) + log(kms)
++ SSMregression(~-1+law,data=Seatbelts,index=1)
++ SSMcustom(Z=diag(2),T=diag(2),R=matrix(1,2,1),
+Q=matrix(1),P1inf=diag(2))
++ SSMseasonal(period=12,sea.type='trigonometric'),
+data=Seatbelts,H=matrix(NA,2,2))
+likfn&lt;-function(pars,model,estimate=TRUE){
+model$H[,,1]&lt;-exp(0.5*pars[1:2])
+    model$H[1,2,1]&lt;-model$H[2,1,1]&lt;-tanh(pars[3])*prod(sqrt(exp(0.5*pars[1:2])))
+    model$R[28:29]&lt;-exp(pars[4:5])
+if(estimate) return(-logLik(model))
+model
+}
+fit&lt;-optim(f=likfn,p=c(-7,-7,1,-1,-3),method='BFGS',model=model)
+model&lt;-likfn(fit$p,model,estimate=FALSE)
+    model$R[28:29,,1]%*%t(model$R[28:29,,1])
+    model$H
+out&lt;-KFS(model)
+out
+ts.plot(cbind(signal(out,states=c('custom','regression'))$signal,model$y),col=1:4)
+
+# For confidence or prediction intervals, use predict on the original model
+pred &lt;- predict(model,states=c('custom','regression'),interval='prediction')
+ts.plot(pred$front,pred$rear,model$y,col=c(1,2,2,3,4,4,5,6),lty=c(1,2,2,1,2,2,1,1))
+
+## End(Not run)
+## Not run:
+# Poisson model
+model&lt;-SSModel(VanKilled~law+SSMtrend(1,Q=list(matrix(NA)))+
+SSMseasonal(period=12,sea.type='dummy',Q=NA),
+KFAS 15
+data=Seatbelts, distribution='poisson')
+
+# Estimate variance parameters
+fit&lt;-fitSSM(inits=c(-4,-7,2), model=model,method='BFGS')
+model&lt;-fit$model
+
+# use approximating model, gives posterior mode of the signal and the linear predictor
+out_nosim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=0)
+
+# State smoothing via importance sampling
+out_sim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=1000)
+out_nosim
+out_sim
+
+## End(Not run)
+# Example of generalized linear modelling with KFS
+# Same example as in ?glm
+counts &lt;- c(18,17,15,20,10,20,25,13,12)
+outcome &lt;- gl(3,1,9)
+treatment &lt;- gl(3,3)
+print(d.AD &lt;- data.frame(treatment, outcome, counts))
+glm.D93 &lt;- glm(counts ~ outcome + treatment, family = poisson())
+model&lt;-SSModel(counts ~ outcome + treatment, data=d.AD,
+distribution = 'poisson')
+out&lt;-KFS(model)
+coef(out,start=1,end=1)
+coef(glm.D93)
+summary(glm.D93)$cov.s
+    out$V[,,1]
+outnosim&lt;-KFS(model,smoothing=c('state','signal','mean'))
+set.seed(1)
+outsim&lt;-KFS(model,smoothing=c('state','signal','mean'),nsim=1000)
+
+## linear
+# GLM
+glm.D93$linear.predictor
+
+# approximate model, this is the posterior mode of p(theta|y)
+c(outnosim$thetahat)
+
+# importance sampling on theta, gives E(theta|y)
+c(outsim$thetahat)
+
+## predictions on response scale
+16 KFAS
+
+# GLM
+fitted(glm.D93)
+
+# approximate model with backtransform, equals GLM
+c(fitted(outnosim))
+
+# importance sampling on exp(theta)
+fitted(outsim)
+
+# prediction variances on link scale
+# GLM
+as.numeric(predict(glm.D93,type='link',se.fit=TRUE)$se.fit^2)
+
+# approx, equals to GLM results
+c(outnosim$V_theta)
+    # importance sampling on theta
+    c(outsim$V_theta)
+# prediction variances on response scale
+# GLM
+as.numeric(predict(glm.D93,type='response',se.fit=TRUE)$se.fit^2)
+    # approx, equals to GLM results
+    c(outnosim$V_mu)
+# importance sampling on theta
+c(outsim$V_mu)
+    ## Not run:
+    data(sexratio)
+    model&lt;-SSModel(Male~SSMtrend(1,Q=list(NA)),u=sexratio[,'Total'],data=sexratio,
+    distribution='binomial')
+    fit&lt;-fitSSM(model,inits=-15,method='BFGS',control=list(trace=1,REPORT=1))
+    fit$model$Q #1.107652e-06
+
+# Computing confidence intervals in response scale
+# Uses importance sampling on response scale (4000 samples with antithetics)
+pred&lt;-predict(fit$model,type='response',interval='conf',nsim=1000)
+    ts.plot(cbind(model$y/model$u,pred),col=c(1,2,3,3),lty=c(1,1,2,2))
+
+# Now with sex ratio instead of the probabilities:
+imp&lt;-importanceSSM(fit$model,nsim=1000,antithetics=TRUE)
+    sexratio.smooth&lt;-numeric(length(model$y))
+sexratio.ci&lt;-matrix(0,length(model$y),2)
+    w&lt;-imp$w/sum(imp$w)
+    for(i in 1:length(model$y)){
+sexr&lt;-exp(imp$sample[i,1,])
+sexratio.smooth[i]&lt;-sum(sexr*w)
+oo&lt;-order(sexr)
+sexratio.ci[i,]&lt;-c(sexr[oo][which.min(abs(cumsum(w[oo]) - 0.05))],
++ sexr[oo][which.min(abs(cumsum(w[oo]) - 0.95))])
+}
+
+# Same by direct transformation:
+out&lt;-KFS(fit$model,smoothing='signal',nsim=1000)
+    KFS 17
+    sexratio.smooth2 &lt;- exp(out$thetahat)
+sexratio.ci2&lt;-exp(c(out$thetahat)
+    + qnorm(0.025) * sqrt(drop(out$V_theta))%o%c(1, -1))
+ts.plot(cbind(sexratio.smooth,sexratio.ci,sexratio.smooth2,sexratio.ci2),
+col=c(1,1,1,2,2,2),lty=c(1,2,2,1,2,2))
+
+## End(Not run)
+# Example of Cubic spline smoothing
+## Not run:
+require(MASS)
+data(mcycle)
+model&lt;-SSModel(accel~-1+SSMcustom(Z=matrix(c(1,0),1,2),
+T=array(diag(2),c(2,2,nrow(mcycle))),
+Q=array(0,c(2,2,nrow(mcycle))),
+P1inf=diag(2),P1=diag(0,2)),data=mcycle)
+model$T[1,2,]&lt;-c(diff(mcycle$times),1)
+model$Q[1,1,]&lt;-c(diff(mcycle$times),1)^3/3
+model$Q[1,2,]&lt;-model$Q[2,1,]&lt;-c(diff(mcycle$times),1)^2/2
+    model$Q[2,2,]&lt;-c(diff(mcycle$times),1)
+    updatefn&lt;-function(pars,model,...){
+    model$H[]&lt;-exp(pars[1])
+    model$Q[]&lt;-model$Q[]*exp(pars[2])
+    model
+    }
+    fit&lt;-fitSSM(model,inits=c(4,4),updatefn=updatefn,method=""BFGS"")
+    pred&lt;-predict(fit$model,interval=""conf"",level=0.95)
+plot(x=mcycle$times,y=mcycle$accel,pch=19)
+lines(x=mcycle$times,y=pred[,1])
+    lines(x=mcycle$times,y=pred[,2],lty=2)
+lines(x=mcycle$times,y=pred[,3],lty=2)
+## End(Not run)
+</code></pre>
+
+<p>The time-series data is:</p>
+
+<pre><code>Time, 2.4, 2.6, 3.2, 3.6, 4, 6.2, 6.6, 6.8, 7.8, 8.2, 8.8, 8.8, 9.6, 10, 10.2, 10.6, 11, 11.4, 13.2, 13.6, 13.8, 14.6, 14.6, 14.6, 14.6, 14.6, 14.6, 14.8, 15.4, 15.4, 15.4, 15.4, 15.6, 15.6, 15.8, 15.8, 16, 16, 16.2, 16.2, 16.2, 16.4, 16.4, 16.6, 16.8, 16.8, 16.8, 17.6, 17.6, 17.6, 17.6, 17.8, 17.8, 18.6, 18.6, 19.2, 19.4, 19.4, 19.6, 20.2, 20.4, 21.2, 21.4, 21.8, 22, 23.2, 23.4, 24, 24.2, 24.2, 24.6, 25, 25, 25.4, 25.4, 25.6, 26, 26.2, 26.2, 26.4, 27, 27.2, 27.2, 27.2, 27.6, 28.2, 28.4, 28.4, 28.6, 29.4, 30.2, 31, 31.2, 32, 32, 32.8, 33.4, 33.8, 34.4, 34.8, 35.2, 35.2, 35.4, 35.6, 35.6, 36.2, 36.2, 38, 38, 39.2, 39.4, 40, 40.4, 41.6, 41.6, 42.4, 42.8, 42.8, 43, 44, 44.4, 45, 46.6, 47.8, 47.8, 48.8, 50.6, 52, 53.2, 55, 55, 55.4, 57.6                                                                                                
+mcycle, 0, -1.3, -2.7, 0, -2.7, -2.7, -2.7, -1.3, -2.7, -2.7, -1.3, -2.7, -2.7, -2.7, -5.4, -2.7, -5.4, 0, -2.7, -2.7, 0, -13.3, -5.4, -5.4, -9.3, -16, -22.8, -2.7, -22.8, -32.1, -53.5, -54.9, -40.2, -21.5, -21.5, -50.8, -42.9, -26.8, -21.5, -50.8, -61.7, -5.4, -80.4, -59, -71, -91.1, -77.7, -37.5, -85.6, -123.1, -101.9, -99.1, -104.4, -112.5, -50.8, -123.1, -85.6, -72.3, -127.2, -123.1, -117.9, -134, -101.9, -108.4, -123.1, -123.1, -128.5, -112.5, -95.1, -81.8, -53.5, -64.4, -57.6, -72.3, -44.3, -26.8, -5.4, -107.1, -21.5, -65.6, -16, -45.6, -24.2, 9.5, 4, 12, -21.5, 37.5, 46.9, -17.4, 36.2, 75, 8.1, 54.9, 48.2, 46.9, 16, 45.6, 1.3, 75, -16, -54.9, 69.6, 34.8, 32.1, -37.5, 22.8, 46.9, 10.7, 5.4, -1.3, -21.5, -13.3, 30.8, -10.7, 29.4, 0, -10.7, 14.7, -1.3, 0, 10.7, 10.7, -26.8, -14.7, -13.3, 0, 10.7, -14.7, -2.7, 10.7, -2.7, 10.7
+</code></pre>
+"
+"0.272165526975909","0.294883912309794","148920","<p>I'm trying to build an artificial neural network (ANN) using the R ""neuralnet"" package, to predict streamflow from snow albedo (reflectance of the snow; controls the amount of heat absorbed by the snow, and therefore controls its melt), precipitation, air temperature, and a temporal variable, 'day of the year'. All the above variables are time-series with 4383 values each between the years 2002 and 2013, with daily temporal frequency. Simpler statistical models have not worked because of the complex autocorrelated and lagged relationship between the predictor and predictors.</p>
+
+<p>I have the following questions about building the ANN:</p>
+
+<ol>
+<li>What number of hidden layers should I use when building the model? How does this choice affect the model?</li>
+<li>Should I change the 'threshold' parameter from the default (0.01)? My flow values fluctuate between 0.5 and 134.82 cubic-foot per second (cfs), with a mean of 8.5 cfs. Ideally, my flow prediction errors should not be greater than 1-2 cfs.</li>
+<li>Will the choice of algorithm affect the prediction accuracy?</li>
+<li>Should I change any of the other parameters in neuralnet?</li>
+<li>Should I include any other variables (lags, temporal variables etc) in my model?</li>
+</ol>
+
+<p>Also, would any other machine learning or statistical method be more suitable for this task? My data is highly non-linear, with some seasonality every year, and PACF and CCF plots indicate lags at all lag periods between -30 and +30 days.</p>
+
+<p>I would be happy to answer any questions about the data, or about what I've already tried (GAMs, GLMs, Decision Trees and Random Forests).
+Thank you. </p>
+"
+"0.408248290463863","0.344031231028093","149799","<p>I want to code for Detrended Cross Correlation in R for time-series data but I'm still stuck. I don't know why the coefficient is not in range -1 : 1. I try to write following these equation below</p>
+
+<p><a href=""http://arxiv.org/pdf/1310.3984.pdf"" rel=""nofollow"">Measuring correlations between non-stationary series with DCCA coefficient</a></p>
+
+<p>Detrened cross-correlation coefficient is calculated as detrended covariance of two dataset over detrened variance of two integrated series </p>
+
+<p><img src=""http://i.stack.imgur.com/7EjJX.png"" alt=""enter image description here"">  (Equation 1)</p>
+
+<p>For time-series {xt}, use integrated series profile</p>
+
+<p><img src=""http://i.stack.imgur.com/JNdJv.png"" alt=""enter image description here"">   (Equation 2)</p>
+
+<p>where the data must be detrended by local trend in box of size s</p>
+
+<p><img src=""http://i.stack.imgur.com/eMg8Z.png"" alt=""enter image description here"">  (Equation 3)</p>
+
+<p><img src=""http://i.stack.imgur.com/SfhD3.png"" alt=""enter image description here"">(Equation 4)</p>
+
+<p>The X_hat is linear fit value evaluated by least square method</p>
+
+<p>Detrended covariance of two profiles</p>
+
+<p><img src=""http://i.stack.imgur.com/aiHyX.png"" alt=""enter image description here""> (Equation 5)</p>
+
+<p>Average the covariance over all boxes</p>
+
+<p><img src=""http://i.stack.imgur.com/ixtwd.png"" alt=""enter image description here"">  (Equation 6)</p>
+
+<pre><code>## data_1
+    x= c(-1.042061,-0.669056,-0.685977,-0.067925,0.808380,1.385235,1.455245,0.540762 ,0.139570,-1.038133,0.080121,-0.102159,-0.068675,0.515445,0.600459,0.655325,0.610604,0.482337,0.079108,-0.118951,-0.050178,0.007500,-0.200622)
+    ## data_2
+    y= c(-2.368030,-2.607095,-1.277660,0.301499,1.346982,1.885968,1.765950,1.242890,-0.464786,0.186658,-0.036450,-0.396513,-0.157115,-0.012962,0.378752,-0.151658,0.774253,0.646541,0.311877,-0.694177,-0.412918,-0.338630,0.276635)
+    ## window size = 6
+    k=6
+    DCCA_CC=function(x,y,k){
+      ## calculate cumulative sum profile of all t
+    xx&lt;- cumsum(x - mean(x))  ## Equation 2
+    yy&lt;- cumsum(y - mean(y))  ## Equation 2
+
+      ## Divide in to overlapping boxes of size k
+
+  slide_win_xx = mat_sliding_window(xx,k)
+  slide_win_yy = mat_sliding_window(yy,k)
+  ## calculate linear fit value in each box 
+  x_hat = t(apply(slide_win_xx,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+  y_hat = t(apply(slide_win_yy,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+
+##  Get detrend variance in each box with linear fit value (detrend by local trend).
+  F2_dfa_x = c()
+  F2_dfa_y = c()
+  for(i in 1:nrow(x_hat)){
+ ## Equation 4
+    F2_dfa_x = c(F2_dfa_x,mean((xx[i:(i+k-1)]-x_hat[i,])^2))
+  }
+  for(i in 1:nrow(y_hat)){
+## Equation 4
+    F2_dfa_y = c(F2_dfa_y,mean((yy[i:(i+k-1)]-y_hat[i,])^2))
+  }
+  ## Average detrend variance over all boxes to obtain fluctuation
+  F2_dfa_x = mean(F2_dfa_x) ## Equation 3
+  F2_dfa_y = mean(F2_dfa_y) ## Equation 3
+
+  ## Get detrended covariance of two profile
+  F2_dcca = c()
+  for(i in 1:nrow(x_hat)){
+  ## Equation 5
+    F2_dcca = c(F2_dcca,mean((xx[i:(i+k-1)]-x_hat[i,]) * (yy[i:(i+k-1)]-y_hat[i,]) ))
+  }
+
+## Equation 6
+  F2_dcca = mean(F2_dcca)
+
+## Calculate correlation coefficient 
+  rho = F2_dcca / (F2_dfa_x * F2_dfa_y) ## Equation 1
+  return(rho)
+}
+
+mat_sliding_window = function(xx,k){
+## Function to generate boxes given dataset(xx) and box size (k)
+  slide_mat=c()
+  for (i in 1:(length(xx)-k+1)){
+    slide_mat = rbind(slide_mat,xx[i:(i+k-1)] )
+  }
+  return(slide_mat)
+}
+
+print(DCCA_CC(x,y,k)) ##This give me 3.392302
+</code></pre>
+
+<p>I'm not sure if something wrong in integrated profile.</p>
+"
+"0.192450089729875","0.208514414057075","186265","<p>I am currently working on some research and we are trying to do some Time-Series prediction using neural networks. To get started, I was using the paper published by G. Peter Zhang (<a href=""http://cs.uni-muenster.de/Professoren/Lippe/diplomarbeiten/html/eisenbach/Untersuchte%20Artikel/Zhan03.pdf"" rel=""nofollow"">Time Series forcasting using a hybrid ARIMA and NN model</a>) since I am no expert in either R or statistics, I could really do with some help. </p>
+
+<p>I got R and the neuralnet lib setup and then took the Lynx dataset, then created a data-frame with the data long with the lags to set as input. My data now looks something like this (this is only for t, t-1, and t-2 lags) </p>
+
+<pre><code>     x     x1    x2
+1   269    NA    NA
+2   321   269    NA
+3   585   321    269
+</code></pre>
+
+<p>Now I want to train a NN with input x1 and x2 and get output at x.</p>
+
+<p>I do the training with the following code </p>
+
+<pre><code>nn &lt;- neuralnet(x~x1+x2, data=dat, hidden = 2, linear.output = T) # I am using t-1 ... t-4 so using hidden layer of 2
+</code></pre>
+
+<p>This does train the model, but the error is really high, and when I use it to do any computation the results of the second layer neuron is alway 1. I was discussing with some freinds and they said that its because I am maybe using the wrong activation function. I looked in the help for the act.fct and tried with both <code>logistic</code> and <code>tanh</code> but the results remain the same. </p>
+
+<p>I have been stuck on this for a few days now, so could really use some help. May I am doing something wrong? Or missing something? </p>
+
+<p>Thanks</p>
+"
+"0.430331482911935","0.419627163708141","186725","<p>Short version: How would one be able to quantify an intervention effect in time-series analysis when the intervention decreases seasonal amplitude variation but doesn't directly effect the median?</p>
+
+<p><a href=""https://www.dropbox.com/s/hb3g7j17igeqnoc/dat.csv?dl=0"" rel=""nofollow"">Here</a> is a link to my raw data.</p>
+
+<p>I have a complex time-series of daily incidence numbers for a population over 7 years, totaling 2557 observations. There is a strong weekly and yearly seasonality (high incidence in winter months and low incidence in summer months). There is a baseline negative trend which is orders of magnitude smaller than the seasonality. An intervention was introduced at time = 1700. This intervention should theoretically not cause a level shift. My aim is to detect whether the intervention increases the baseline negative trend.</p>
+
+<p>I have attempted to fit a dynamic linear regression with ARIMA errors in R using <code>auto.arima()</code> in the <code>forecast</code> package. I modeled the weekly season using a dummy variable for each weekday and the weekend. I modeled the monthly seasonality with harmonics using <code>fourier()</code> function in the <code>forecast</code> package. An the intervention effect was coded in by specifying the time index and post-intervention times as independent variables using the methods described in <a href=""http://isites.harvard.edu/fs/docs/icb.topic79832.files/L06_Program_Evaluation_2/Segmented_Regression.Wagner.2002.pdf"" rel=""nofollow"">Segmented regression analysis of interrupted time series studies in medication use research</a>. With these variables specified <code>auto.arima()</code> suggests an ARMA(7,7) process. The coefficients for baseline trend and post-intervention trend are however non-significant.  </p>
+
+<p>I am concerned that by using fourier terms to model away the seasonality I am artificially removing any intervention effect, as visual analysis of the time series indicates that the intervention is specifically decreasing incidence during the winter months and therefore reducing the yearly seasonal variability. </p>
+"
+"0.384900179459751","0.364900224599881","196901","<p>I'm trying to figure out how to find the marginal effect of an interaction term from a restricted cubic spline in a non-linear model.  The post <a href=""http://stats.stackexchange.com/questions/134526/nonlinear-effect-in-an-interaction-term"">Nonlinear effect in an interaction term</a> is a good start on modeling the nonlinear effects and how to get plots, but does not address finding the marginal effect.  </p>
+
+<p>The package <a href=""http://maartenbuis.nl/software/postrcspline.html"" rel=""nofollow"">postrcspline</a> in <code>STATA</code> has a function <a href=""http://repec.org/bocode/m/mfxrcspline.html"" rel=""nofollow"">mfxrcspline</a> which ""displays the marginal effect of a restricted cubic spline,""
+ which is exactly what I am after. (See Figure 1 below)  </p>
+
+<p>R does not seem to offer this feature as conveniently ,so I'm trying to figure out how to get these same results.</p>
+
+<p>As I understand it, suppose I have a multi-variable regression with restricted cubic splines and an interaction:</p>
+
+<p>$$y = \beta_{0} + \beta_{1}x1 + \beta_{2} \mathcal{f}(x2) + \beta_{3} \mathcal{f}(x2) \cdot x1 + \epsilon$$</p>
+
+<p>where $\mathcal{f}(x2)$ is a spline of the time-series (year)</p>
+
+<p>The marginal effect of $\frac{\partial y}{\partial x1}$ is:</p>
+
+<p>$$\frac{\partial y}{\partial x1} = \beta_{1} + \beta_{3} \mathcal{f}(x2)$$</p>
+
+<p>where $\beta_{3}$ is the coefficient on the spline and $ \mathcal{f}(x2)$ is a design matrix for each year in the regression that causes the slope to change for each $y$.  </p>
+
+<p>To say in words, I would like to find the marginal effect of $y$ for each year $x2$ in the spline given $\beta_{3}$.  </p>
+
+<p>In other words, it shows for each value of the spline variable how much the expected value of your explained variable changes for a unit change in the spline variable. It is the first derivative of the curve.</p>
+
+<p>This appears to be simple matrix multiplication to plot the marginal effect, but I'm not sure how to statistically do this.  </p>
+
+<p>Here is a plot to illustrate what I'm after:</p>
+
+<p><strong>Figure 1:</strong> The left plot shows the results of the regression using a restricted cubic spline and the right provides the marginal effect--note the changes on the y-axis.
+<a href=""http://i.stack.imgur.com/uqcX4.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/uqcX4.png"" alt=""Figure 1""></a></p>
+
+<hr>
+
+<p>Here is an R example to demonstrate the nonlinear effect from the regression (left plot in Figure 1):</p>
+
+<pre><code>library(rms)
+set.seed(5)
+# Fit a complex model and approximate it with a simple one
+x1 &lt;- runif(200)
+x2 &lt;- runif(200)
+y &lt;- x1 + x2 + rnorm(200)
+f &lt;- ols(y ~ x1 + rcs(x2,4)  + rcs(x2,4)*x1)
+ddist &lt;- datadist(x1,x2)
+options(datadist='ddist')
+plot(Predict(f))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DAuXS.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DAuXS.png"" alt=""enter image description here""></a></p>
+"
+"0.491909858248415","0.456832192576129","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"
+"0.45133546692422","0.444554224474387","198315","<p>I am currently getting slightly confused with how a rolling forecast should be setup in R, as in how the data should be organised in order to <em>train</em> and <em>test</em> my model. I feel there is a large gap in my understanding somewhere.</p>
+
+<p>I have seen many examples of forecasting methods, but not many on time-series (using lagged variables) that go into detail, i.e. perform everything manually using <code>predict()</code>. Instead it normally just points to a built in R package. <strong>My question has to do with the training of the model - the alignment of the data for the training.</strong></p>
+
+<p>I know that the regression equation (assuming I am performing a linear regression) looks like this:</p>
+
+<p>$$ y_t = \beta_1 y_{t-1} + \beta_2 y_{t-2} + \beta_3 x_{t-1} + \beta_4 x_{t-2} + \varepsilon_t $$ </p>
+
+<p>So I have my outcome variable, $y$, being explained by two of its own lagged values, plus two lagged values of a second variable, $x$. Each variable has its own coefficient, all of which my model is estimating.</p>
+
+<p>Let's say I have a <em>data.table</em> (or data.frame), where each row consists of the data aligned according to the equation above. Each row is one day, and represents the given equation. I have five columns, and for this example say 200 rows/days.</p>
+
+<blockquote>
+  <p>Day  |  $y_t$  |  $y_{t-1}$  |  $y_{t-2}$  |  $x_{t-1}$  |  $x_{t-2}$</p>
+  
+  <p>001  | <em>Values</em> --></p>
+  
+  <p>002  | <em>Values</em> --></p>
+  
+  <p>003  | <em>Values</em> --></p>
+</blockquote>
+
+<p>I use the above equation as the formula to fit my model to obtain estimates for the four coefficients (neglecting $\varepsilon$) using a fixed 40-day time frame.</p>
+
+<pre><code>model &lt;- lm(y ~ y_1 + y_2 + x_1, x_2,            ## my regression formula
+            data = input_data[1:40])             ## my data.table 
+</code></pre>
+
+<p>Now I want to make a prediction using the fitted <code>model</code>.
+I do this by using <code>predict()</code> in <strong>R</strong> as follows:
+I take the next (41st) row of data, minus the outcome variable</p>
+
+<pre><code>my_pred &lt;- predict(model, newdata = input_data[41][, outcome := NULL])
+</code></pre>
+
+<p>And then calculate my error:</p>
+
+<pre><code>my_error &lt;- input_data[41, outcome] - my_pred
+</code></pre>
+
+<p>I then shift everything forward one row, so still a 40-day frame <code>input_data[2:41]</code> updating the coefficients for all variables and predicting the following outcome variable, <code>input_data[42]</code>. This is yielding terrible results for my model, with overall accuracies not much better than a naÃ¯ve forecast, i.e. random guessing.</p>
+
+<p>Should I realign the data for the training segment, so that each row rather represents the data I had on that day? This would mean adding one more column, $x_t$.</p>
+
+<p>Any other suggestions or comments?</p>
+
+<p>Thanks.</p>
+"
+"NaN","NaN","214308","<p>I am studying time-series econometrics and in particular Dynamic Linear Models for multivariate time-series. </p>
+
+<p>Someone can help me in understanding which is the difference between SUTSE (Seemingly Unrelated Time Series Equations) and SUR (Seemingly Unrelated Regression) Dynamic Linear Models?</p>
+
+<p>How can I specify a SUTSE and a SUR model on <code>r</code>? I think <code>dlmModPoly</code> may be of help but I am a bit stuck</p>
+"
+"0.304290309725092","0.329690236697893","223379","<p>I'm fitting an <code>arima</code>(1,0,0) model using the <code>forecast</code> package in R on the <code>usconsumption</code> dataset. However, when I mimic the same fit using <code>lm</code>, I get different coefficients. My understanding is that they should be the same (in fact, they give the same coefficients if I model an <code>arima</code>(0,0,0) and <code>lm</code> with only the external regressor, which is related to this post: <a href=""http://stats.stackexchange.com/questions/28472/regression-with-arima0-0-0-errors-different-from-linear-regression"">Regression with ARIMA(0,0,0) errors different from linear regression</a>). </p>
+
+<p>Is this because <code>arima</code> and <code>lm</code> use different techniques to calculate coefficients? If so, can someone explain the difference?  </p>
+
+<p>Below is my code.</p>
+
+<pre><code>&gt; library(forecast)
+&gt; library(fpp)
+&gt; 
+&gt; #load data
+&gt; data(""usconsumption"")
+&gt; 
+&gt; #create equivalent data frame from time-series
+&gt; lagpad &lt;- function(x, k=1) {
++   c(rep(NA, k), x)[1 : length(x)] 
++ }
+&gt; usconsumpdf &lt;- as.data.frame(usconsumption)
+&gt; usconsumpdf$consumptionLag1 &lt;- lagpad(usconsumpdf$consumption)
+&gt; 
+&gt; #create arima model
+&gt; arima(usconsumption[,1], xreg=usconsumption[,2], order=c(1,0,0))
+
+Call:
+arima(x = usconsumption[, 1], order = c(1, 0, 0), xreg = usconsumption[, 2])
+
+Coefficients:
+         ar1  intercept  usconsumption[, 2]
+      0.2139     0.5867              0.2292
+s.e.  0.0928     0.0755              0.0605
+
+sigma^2 estimated as 0.3776:  log likelihood = -152.87,  aic = 313.74
+&gt; 
+&gt; #create lm model
+&gt; lm(consumption~consumptionLag1+income, data=usconsumpdf)
+
+Call:
+lm(formula = consumption ~ consumptionLag1 + income, data = usconsumpdf)
+
+Coefficients:
+    (Intercept)  consumptionLag1           income  
+         0.3779           0.2456           0.2614  
+</code></pre>
+"

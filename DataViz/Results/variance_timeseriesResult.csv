@@ -1,0 +1,294 @@
+"V1","V2","V3","V4"
+"0.577350269189626","0.5","226479","<p>I would like to estimate the variance of a time series. Say, if the time series has a period of 24, and I want to estimate the variance using </p>
+
+<p>$$ \sigma_t^2 = \frac{1}{2k+1} \sum^k_{-k} (y_{t+24k} - \bar{y}_t)^2 $$</p>
+
+<p>where $\bar{y}_t = \frac{1}{2k+1} \sum^k_{-k} y_{t+24k}$.</p>
+
+<p>I found some posts suggest using <code>roll apply</code>, but it seems to only work when estimating variance using neighbourhood data, which does not take the period into account. </p>
+
+<p>Does anyone which function to use in this case?</p>
+"
+"0.925820099772551","0.935414346693485"," 79216","<p><strong>Problem</strong>: When trying to calculate the variance of timeseries sums I get a negative variance, mostly due to autocovariances at large lag steps. Does not seem realistic.</p>
+
+<p>I have a timeseries which is calculated from another timeseries using a regression equation.
+I would like to propagate the uncertainty in the regression to the final timeseries. Then I want to sum (or take mean values) different segments of the timeseries over different timeperiods, and get the uncertainty of the sums. The timeseries is originally in 1 hour frequency and I want to sum over periods of 1 day (resampling to daily frequency) up to several years. The timeseries is strongly autocorrelated at short lag times.</p>
+
+<p>For getting the variance of the sum (in the case of 3 elements being summed):
+$$Var(a+b+c)= \\ Var(a)+Var(b)+Var(c) + 2 \times (Cov(a,b) + Cov(a,c)+Cov(b,c))$$</p>
+
+<p>I use <code>r</code> for the calculations. I get the variances for each timeseries element as $SE^2$, where $SE$ is the standard error (<code>se.fit</code>) returned from r's <code>predict()</code> function using the regression model. The covariances I get from the autocovariance function <code>acf()</code>.</p>
+
+<p>Here is some code and a selection of the data (excuse clumsy R code, I'm very new to R):</p>
+
+<pre><code>#tsY is the predicted timeseries from the regression
+tsY=c(81.4,  79.0,  83.4,   81.7,   75.7,   68.3,   62.3,   57.2,   52.6,   48.8,   45.4,   42.6,   39.9,   37.6,   35.6,   33.8,   32.2,   30.8,   29.6,   28.4,   27.3,   26.2,   25.0,   23.9)
+#tsSE is the standard error from the prediction (se.fit)
+tsSE=c(1.55,  1.49, 1.60,   1.56,   1.41,   1.23,   1.09,   0.97,   0.87,   0.78,   0.71,   0.65,   0.60,   0.55,   0.51,   0.48,   0.45,   0.42,   0.40,   0.38,   0.36,   0.34,   0.32,   0.30)
+
+tsVar=tsSE^2
+
+#create a matrix of the autocovariances at different lag times, diagonal is lag=0
+#rows and columns are indicies in timeseries
+covmat&lt;-matrix(numeric(0), length(tsY),length(tsY)) 
+for ( i in (1:(length(tsY)) ) ) {
+  if (i == 1) {
+    autocov&lt;-acf(tsY, type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }  else {
+    autocov&lt;-acf(tsY[-(1:i-1)], type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }
+
+}
+
+# sum the matrix columns, but not the diagonal
+sumofColumns &lt;- rep(NA, ncol(covmat))
+for (i in (1:ncol(covmat))) {
+  if (i == 1) {
+    sumofColumns[i]=sum(covmat[-(1),i])  
+  } else{ 
+    sumofColumns[i]=sum(covmat[-(1:i),i])  
+  }
+}
+
+sumofCov=sum(sumofColumns) # sum of the covariance (Cov(a,b) + Cov(a,c)+...)
+sumofVar=sum(tsVar) # sum of the variances of each timeseries element
+varofSum=sumofVar+2*sumofCov # variance of the sum of the timeseries
+
+# from the covmat the negative variance occurs at larger lag times.
+acf(tsY, type='covariance', lag.max= length(tsY))
+
+&gt; sumofCov
+[1] -1151.529
+&gt; varofSum
+[1] -2283.246
+</code></pre>
+
+<p><strong>So I have the following questions:</strong></p>
+
+<blockquote>
+  <ol>
+  <li><p>Did I completely misunderstand how to calculate variance of sums?</p></li>
+  <li><p>Is it better to use a cutoff from the max lags to be considered in the autocovariance? If so how would one determine this? This would especially be important with the complete data where the length is several thousand. </p></li>
+  </ol>
+  
+  <p><strike>3. Why is the covariance negative in this sample data at large? When plotting tsY  <code>plot(tsY)</code> it looks like the covariance/correlation should remain positive.</strike> Because it is the variation in direction from their means.</p>
+</blockquote>
+
+<p><strong>EDIT:</strong></p>
+
+<blockquote>
+  <p>Comment on <strong>question 2</strong> above:
+  I have realized that using n-1 lags, as above in the code, does not make a lot of sense. There appear to be few different ways to determine the maximum lags to consider.  Box &amp; Jenkins (1970) suggest n/4 and R by default 10*log10(n). This does not answer the question however, of how to determine an appropriate cutoff for summing the covariances.</p>
+  
+  <p>Does it make sense to look at the partial autocorrelation (function pacf()), in order not to overestimate the effect of the auto covariance in the summation term? The partial autocorrelation for my data is significantly different from zero only at 1 or 2 lags. Similarly, fitting an AR model using ar() function, I also get an order of 1 or 2.</p>
+</blockquote>
+
+<p>Cheers</p>
+
+<p>Related post <a href=""http://stats.stackexchange.com/questions/10943/variance-on-the-sum-of-predicted-values-from-a-mixed-effect-model-on-a-timeserie"">Variance on the sum of predicted values from a mixed effect model on a timeseries</a></p>
+"
+"0.471404520791032","0.612372435695795","211827","<p>I am trying to find if a particular pattern exists in a time series. I have found that I could try using Covariance or correlation for the task. I have used a sliding window technique for doing this. </p>
+
+<pre><code> xvector = as.vector(x$Mean.F3Amp)
+ xvectorarray = embed(xvector,40)
+ #n : is the point from where the time series is to be searched
+
+
+ for(r in 1:nrow(xvectorarray))
+   {
+    eachrow = xvectorarray[r,]
+    comparerow = xvectorarray[n,]
+    #testcossim = cos.sim(eachrow,comparerow)
+     # class(testcossim)
+     #if(cosSim(eachrow,comparerow)&gt;=0.96)
+     # if(cor.test(eachrow,comparerow,method=""pearson"")!=0)
+     #if(dcor.t(eachrow,comparerow,distance = FALSE)&gt;=20||is.infinite(dcor.t(eachrow,comparerow,distance = FALSE)))
+     if(sd(eachrow,na.rm = FALSE)!=0&amp;&amp;cov(eachrow,comparerow)&lt;=1&amp;&amp;cov(eachrow,comparerow)&gt;=0)
+     {
+         flush.console()
+       plot.ts(comparerow)
+      lines(eachrow,col=""red"")
+      Sys.sleep(0.1)
+
+      }
+
+
+}
+</code></pre>
+
+<p>The comments in the code shows the various parameters I have tried to find the similarity. But I am unable to find an optimum value for the condition check in the if conditions. For different time series and query patterns the optimum value range for covariance is different to get an accurate result. </p>
+
+<p>I am looking how can covariance be used as a measure of similarity in my case. </p>
+"
+"0.408248290463863","0.353553390593274","177671","<p>I am analysing the unconditional variance of a time series, with the <code>rugarch</code> package in R. However with an external regressor which is a dummy variable 0 before a certain  date and 1 after this date.</p>
+
+<p>Here is the code:</p>
+
+<pre><code>specgarch &lt;- ugarchspec(variance.model=list(model=""sGARCH"", external.regressors= dummy),
+                        mean.model=list(armaOrder=c(0,0)), distribution=""norm"")
+
+garchfit &lt;- ugarchfit(data=return, spec=specgarch)
+uncvariance(garchfit)  
+</code></pre>
+
+<p>My question is: <strong>How can the unconditional variance of this model be calculated and how can the conditional variance be calculated (i.e., when dummy = 0 and when dummy = 1)?</strong> How does <code>rugarch</code> do it? </p>
+
+<p>Here is the output:</p>
+
+<pre><code>mu                  omega        alpha1         beta1        vxreg1 
+-1.938049e-04  1.428670e-06  5.485199e-02  9.420126e-01  1.751348e-06
+</code></pre>
+
+<p>and unconditional variance:</p>
+
+<pre><code>0.0007350932
+</code></pre>
+"
+"NaN","NaN"," 35900","<p>I have two time series of count data which I believe are correlated.  Is there an equivalent to <code>cov()</code> that assumes an overdispersed Poisson rather than a normal distribution?  If there is a significance test for this (noting that both series increase over time but that doesn't prove correlation), so much the better.  I wondered if <code>vcov()</code> might help but it focuses on parameters of a solved model.  More broadly, I'm looking for a measure of the similarity between two variables which is appropriate for quasi-Poisson data.</p>
+"
+"0.612372435695795","0.707106781186547","214581","<p>This question follows the one asked <a href=""http://stats.stackexchange.com/questions/62802/state-space-model-and-a-kalman-filter"">there</a>.  </p>
+
+<p>I am trying to filter an equity index (Stoxx 600) time series using kalman filter. I'm using the R package dlm and my code is inspired from the <a href=""https://cran.r-project.org/web/packages/dlm/vignettes/dlm.pdf"" rel=""nofollow"">dlm vignette</a> with the Nile data filtering.  </p>
+
+<p>I was first trying to understand why my filtered data was similar to my observations and it turns out (as it has been said in the question mentioned above) that when estimating my model parameters, the variance of my measurement equation is extremely small (around 10e-5) compared to the one of the state equation (above 300). I am actually quite surprised by those results as I get similar ones for other financial time series (including macroeconomic ones) and those kind of time series are well known to be noisy.</p>
+
+<p>Could you please explain to me if it is the model that I'm not specifying well or if it is the MLE fitting process that is not working correctly?</p>
+
+<p>As in the Nile example of the dlm vignette, I'm using a random
+walk plus noise, with unknown system and observation variances.</p>
+
+<p>Here's the code I'm using. The <em>a</em> variable is a vector with monthly historical data for the Stoxx 600 since 1999 :</p>
+
+<pre><code>rm(list = ls())
+
+library(dlm)
+
+a &lt;- c(480.77,457.39,489.58,500.62,499.73,485.4,481.69,489.68,506.28,484.09,497.97,466.47,462.34,465.78,431.22,415.07,442.34,444.06,428.4,412.54,388.32,347.75,362.46,377.86,390,382.75,379.94,398.31,383.08,369.31,336.9,302.21,302.07,259.61,284.17,297.08,271.6,252.77,243.61,237.44,263.62,267.1,276.5,288.04,293.83,283.33,303.66,306.48,314.85,323.99,333.77,326.79,331.47,330.75,336.45,330.52,327.67,333.68,337.44,346.74,353.38,361.71,372.89,371.1,364.27,382.35,395.58,408.92,409.82,428.19,418.18,432.27,447.66,463.83,474.26,485.52,490.11,467.53,471.33,479.63,493.79,503.97,521.84,520.64,540.76,552.11,541.26,556.82,578.23,596.82,593.48,573.34,568.6,571.85,588.38,562.03,553.54,489.4,485.27,467.22,496.36,499.47,449.55,441.22,449.27,399.68,346.95,323.43,311.26,300.43,272.53,278.88,318.69,334.33,331.34,362.45,381.22,392,383.26,387.87,412.09,401.04,399.9,430.01,425.74,404.75,402.79,423.12,417.27,431.61,442.33,436.37,459.95,467.45,479,462.53,478.25,477.73,464.8,452.25,405.81,387.2,417.09,412.45,420.35,437.85,456.02,455.67,448.15,421.12,442.4,460.82,470.61,475.28,479.01,489.52,496.77,510.74,516.59,525.07,533.78,544.67,517.06,543.98,541.18,565.63,587.87,593.91,600.04,590.1,619.58,614.69,624.31,640.55,637.2,626.78,639.53,642.13,630.97,651.57,643.24,689.89,738.07,750.44,751.19,763.73,729.46,758.74,696.3,668.02,722.01,742.33,705,660.1,645.53,654.57,666.03)
+
+data_to_fit &lt;- a
+
+buildFun &lt;- function(x) {
+  dlmModPoly(1, dV = exp(x[1]), dW = exp(x[2]))
+}
+
+fit &lt;- dlmMLE(data_to_fit, parm = c(0,0), build = buildFun)
+
+print(exp(fit$par[1]))
+print(exp(fit$par[2]))
+
+dlm_Jump &lt;- buildFun(fit$par)
+
+JumpFilt &lt;- dlmFilter(data_to_fit, dlm_Jump)
+
+plot(data_to_fit, type = 'o')
+lines(dropFirst(JumpFilt$m), type = 'o', pch = 20, col = ""brown"")
+</code></pre>
+
+<p>Thanks</p>
+"
+"NaN","NaN","214810","<p>The DCC model is defined through the proxy $Q_t$ as
+$$Q_t=(1-\alpha-\beta) \overline{Q} +\alpha\epsilon_{t-1}\epsilon_{t-1}' + \beta Q_{t-1}$$which is then normalized to find the correlation matrix $R_t$
+$$R_t=\frac{q_{ij,t}}{\sqrt{q_{ii,t}q_{jj,t}}}$$</p>
+
+<p>I've been using the <code>rmgarch</code> package and its copula-garch commands (<code>cgarchspec</code> and <code>cgarchfit</code>) to couple time series with either a normal or Student-t copula and a DCC dependence structure.</p>
+
+<p>All results are nice and everything, but my question is on a problem which is present also at the univariate GARCH level: how is $Q_0$ chosen for the first estimation of $Q_1$? I've been going through the <code>rmgarch</code> document and other references on the Internet but haven't found any relevant info. </p>
+"
+"0","0.353553390593274","221518","<p>I'm trying to investigate how events affect the stock market through econo-physics and I came across a paper that uses the co-variance matrix. </p>
+
+<p>What I don't understand is how such a matrix can be formed with one time series. The paper says:</p>
+
+<blockquote>
+  <p>We study here the behaviour of the first three eigenvalues (Î»1, Î»2,
+  Î»3) and their ratio [(Î»1/Î»2), (Î»1/Î»3), (Î»2/Î»3)] of the co-variance matrices
+  of the original return series and of those rebuilt from wavelet
+  components for emerging and mature markets.</p>
+</blockquote>
+
+<p>How can I replicate this if I'm looking at a series like the DJIA?</p>
+
+<p><code>cov(ts)</code> simply returns a single value.</p>
+
+<p><a href=""https://www.dropbox.com/s/7cn0fwq6wzw8o6z/Reaction%20of%20Stock%20Markets%20to%20Events%20-%20Merging%20and%20Mature%20Markets%20using%20Wavelet%20Transforms.pdf?dl=0"" rel=""nofollow"">Link to the paper</a></p>
+"
+"0","0.353553390593274","224176","<p>If my series requires a log-transformation to stabilize variability, do I apply the <code>sarima</code> function to the log-transformed series or the original series? Does the same apply to the <code>auto.arima</code> function?</p>
+"
+"0.816496580927726","0.707106781186547","161818","<p>I am looking at some high frequency data and I would like to know how to interpret and compare Realized volatility (RV) and Two Scale Realized Volatility (TSRV). References below. Given X is the log return of a stock</p>
+
+<p>$$
+     [X,X]_{T}^{all} =  \sum\limits_{i=1}^{n} (X_{t_{i+1}} - X_{t_{i}})^2 
+$$</p>
+
+<p>Here subscript all means use all the data. In my case my data is second by second so it would be the sum of the differences of squared log returns 1 second apart.</p>
+
+<p>To compute RV in R I have a function that takes prices, takes there log, then differences, squares them and sums them up:</p>
+
+<pre><code>RV&lt;-function(prices)
+{
+  logprices = log(as.numeric(prices))
+  logreturns = diff(logprices)
+  return(sum(logreturns^2))
+}
+</code></pre>
+
+<p>the Two Scale Realized Volatility (TSRV) partitons the whole sample 1 to n in to K subsamples. In my case K= 300. So there will be a moving window time301-time1, time302 -time 2...and the RV for those windows will be averaged over.</p>
+
+<p>$$[X,X]_{T}^{K} = \dfrac 1K\sum\limits_{i=1}^{n-K+1} (X_{t_{i+K}} - X_{t_{i}})^2  $$</p>
+
+<p>THEN</p>
+
+<p>$$ TSRV =  (1- \dfrac zn)^{-1} [X,X]_{T}^{K} - \dfrac zn [X,X]_{T}^{all}$$</p>
+
+<p>where z = (n-K+1)/K. </p>
+
+<p>Taking the difference between $$[X,X]_{T}^{K}$$ and  $$[X,X]_{T}^{all}$$ cancels the effect of microstructure noise. The factor (1-z/n)^-1 is a coefficient to adjust for finite sample bias.</p>
+
+<p>In R there is a function to calculate TSRV:</p>
+
+<pre><code>myTSRV&lt;-function (pdata, K = 300, J = 1) 
+{ 
+  #pdata contains prices for a stock
+  #K the slow time scale = 300 seconds
+  #J is the fast time scale = 1 second
+  logprices = log(as.numeric(pdata))
+  n = length(logprices)
+  nbarK = (n - K + 1)/(K) 
+  nbarJ = (n - J + 1)/(J)
+  adj = (1 - (nbarK/nbarJ))^-1  #adjust for finite sample bias
+  logreturns_K = logreturns_J = c()
+  for (k in 1:K) {
+    sel = seq(k, n, K)
+    logreturns_K = c(logreturns_K, diff(logprices[sel]))
+  }
+  for (j in 1:J) {
+    sel = seq(j, n, J)
+    logreturns_J = c(logreturns_J, diff(logprices[sel]))
+  }
+  TSRV = adj * ((1/K) * sum(logreturns_K^2) - ((nbarK/nbarJ) *  (1/J) * sum(logreturns_J^2)))
+  return(TSRV)
+}
+</code></pre>
+
+<p>I took tick data for IBM for about 2 hours and calculated the RV  and and TSRV with K= 300 seconds and J= 1 second for about 2 hours. </p>
+
+<p>I have a few questions.</p>
+
+<ul>
+<li>The RV is in the range of .00002 to .00005. How do I interpret this? In the literature RV is also called integrated variance. I want the volatility so do I need to square root these number to get to .0044 to .007?</li>
+<li>Even if I square root them what does .0044 or .007 mean? The volatility for IBm during those 2 hours was .44% to .7%?</li>
+<li>Does .0044 and .007 need to be normalized to an annual or daily number somehow? Can you suggest how?</li>
+<li>How does one compare the RV or TSRV from different length intervals. Let's say I have an RV that is calculated using 2 hours of data. How do I compare it to and RV using 6 hours of data?</li>
+</ul>
+
+<p>References</p>
+
+<p>All of my post  is from: <a href=""https://lirias.kuleuven.be/bitstream/123456789/282532/1/AFI_1048.pdf"" rel=""nofollow"">https://lirias.kuleuven.be/bitstream/123456789/282532/1/AFI_1048.pdf</a></p>
+
+<p>original paper for TSRV: <a href=""http://wwwf.imperial.ac.uk/~pavl/AitSahalia2005.pdf"" rel=""nofollow"">http://wwwf.imperial.ac.uk/~pavl/AitSahalia2005.pdf</a></p>
+
+<p>R code getAnywhere(""TSRV"")</p>
+"

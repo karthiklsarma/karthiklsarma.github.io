@@ -1,0 +1,26 @@
+"V1","V2","V3","V4"
+"NaN","NaN","135095","<p>Given the following:</p>
+
+<pre><code>library(rpart.plot)
+iris &lt;- read.csv(""iris.csv"")
+my.control &lt;- rpart.control(cp = 0, minsplit=5, xval=10)
+iris.rpart &lt;- rpart(Species ~ ., iris[,-6], method='class',
+           control=my.control, parms=list(split='gini'))
+iris.rpart2 &lt;- prune(iris.rpart, cp=0.094)
+table(Original = iris$Species,
+      Predicted = predict(iris.rpart2, type='class'))
+</code></pre>
+
+<p>This yields a 3x3 matrix of original and predicted values.</p>
+
+<p><strong>Question:</strong> <em>Using this data, how do I now create a 2x2 confusion matrix of true/false labels from the original dataset on one axis, and true/false labels from the algorithm on the other axis?</em> This would be a sort of aggregate confusion matrix.</p>
+
+<p>Desired Output:</p>
+
+<pre><code>                       True labels:
+                     disagree agree
+Algorithm labels:
+            disagree    A       B
+            agree       C       D
+</code></pre>
+"

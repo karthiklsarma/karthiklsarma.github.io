@@ -1,0 +1,37 @@
+@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+
+.opentip strong {
+    font-weight: bold;
+}
+
+.opentip i {
+    font-style: italic;
+}
+
+.opentip div.ot-header  {
+    font-family: 'Yanone Kaffeesatz', sans-serif;
+    border-bottom: solid 1px lightgray;
+    margin-bottom: 10px;
+    padding-bottom: 3px;
+    text-align: left;
+}
+
+.opentip div.ot-content {
+    text-align: left;
+    font-family: 'Raleway', sans-serif;
+}
+
+.opentip div.ot-content p {
+    font-size: 10pt;
+}
+
+.opentip div.ot-content p:not(:last-child) {
+    margin-bottom: 5px;
+}
+
+.opentip div.ot-header h1 {
+    font-size: 16pt;
+    font-weight: bold;
+    line-height: 105%;
+    margin: 0;
+}

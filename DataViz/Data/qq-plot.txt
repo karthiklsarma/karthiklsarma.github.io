@@ -1,0 +1,1 @@
+distributions=3normal-distribution=2regression=2qq-plot=2gam=1lme4=1lognormal=1normalization=1repeated-measures=1binomial=1fisher=1

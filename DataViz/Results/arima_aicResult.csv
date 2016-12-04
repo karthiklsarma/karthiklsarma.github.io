@@ -1,0 +1,287 @@
+"V1","V2","V3","V4"
+"0.666666666666667","0.816496580927726","184880","<p>So I wanted to generate $500$ data points from an $ARMA(1,1)$ distribution in R, use the first $400$ as my training data and use the training data and the <code>predict</code> function to both see if I could obtain the correct model via AIC and then plot my prediction. I wanted to generate a whole bunch of different $ARMA$ models to use for the AIC which is why I basically built a grid, however I get a bunch of warnings and errors with my current method, despite the fact it seems to work. Note it is the estimation and not the actual prediction that raises the problems. Can I use a grid like so to produce AICs for various model types?</p>
+
+<pre><code>####### ARMA(1,1) ############
+# Causal stationary - root of the function phi(z) &gt; 1
+theta1&lt;- 0.5
+phi1&lt;- 0.6
+
+arma11&lt;- arima.sim(n = 500,list(ar = c(phi1), ma = c(theta1)), sd = sqrt(1))
+tr.data&lt;-arma11[1:400]
+AIC&lt;-c()
+for (i in 0:3){
+  for (j in 0:3){
+    aic.ij&lt;- arima(tr.data,order = c(i,0,j))$aic
+    AIC&lt;- c(AIC,aic.ij) 
+  }
+}
+AIC&lt;- matrix(AIC, ncol=4, byrow =T)
+colnames(AIC)&lt;- c(""q=0"",""q=1"",""q=2"",""q=3"")
+rownames(AIC)&lt;- c(""p=0"",""p=1"",""p=2"",""p=3"")
+AIC
+index&lt;-which(AIC==min(AIC),arr.ind=T)
+index
+prd&lt;-predict(arima(tr.data, order = c(index[1]-1,0,index[2]-1)),n.ahead =100)
+vld.data&lt;-arma11[401:500]
+
+# plot the training data with the next 100 predictions and the 95% confidence intervals
+plot.ts(arma11, xlim=c(0,500),ylim=c(floor(min(arma11)),ceiling(max(arma11)))) 
+lines(prd$pred, col='blue')
+lines(prd$pred-(1.96*prd$se), col='red')
+lines(prd$pred+(1.96*prd$se), col='red')
+</code></pre>
+
+<p>For this particular $ARMA$ I am error free but receive various size mismatch errors with other models under the same method, I receive this warning though. </p>
+
+<pre><code>Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1         q=0      q=1      q=2      q=3
+p=0 1608.907 1296.137 1207.432 1187.231
+p=1 1244.182 1178.820 1180.004 1181.993
+p=2 1190.716 1180.072 1182.002 1183.776
+p=3 1179.731 1181.688 1183.767 1181.305
+    row col
+p=1   2   2
+</code></pre>
+"
+"0.577350269189626","0.471404520791032","184899","<p>I have written the following code to generate 500 data points from a $SARIMA$ model, use $400$ as training data and then predict the following $100$, while estimating the model with AIC. It appeared to me that I did everything correctly as I could see the AIC correctly choosing the model with certain phi values, etc. etc., however my plot outputs for the estimations is very very dense and incomprehensible and I'm not sure why. I checked the number of data points, the window size, etc. and am not sure what I have done wrong in my implementation. </p>
+
+<pre><code>library(CombMSC)
+library(forecast)
+
+
+#####################
+#generate data
+sdat1&lt;- sarima.Sim(n=500, period=12, model = list(order = c(1,0,0), ar=0.5),list(order= c(1,0,0), ar = 0.5))
+#procure training data
+x.tr &lt;- window(sdat1, start=1, end=400)
+
+#candidate models
+op1 &lt;- arima(x.tr, order=c(0,0,0), list(order= c(0,1,0)))
+op2 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,1)))
+op3 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(0,2,0)))
+op4 &lt;- arima(x.tr, order=c(0,1,0), list(order= c(0,0,0)))
+op5 &lt;- arima(x.tr, order=c(1,0,1), list(order= c(0,0,0)))
+op6 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,0)))
+
+models &lt;- c(op1,op2,op3,op4,op5,op6)
+models.AIC &lt;- c(op1$aic,op2$aic,op3$aic,op4$aic,op5$aic,op6$aic)
+mod.best = NULL
+if (min(models.AIC) == op1$aic){
+        mod.best=op1
+    } else if (min(models.AIC) == op2$aic){
+    mod.best=op2
+} else if (min(models.AIC) == op3$aic){
+        mod.best=op3
+    } else if (min(models.AIC) == op4$aic){
+    mod.best=op4
+} else if (min(models.AIC) == op5$aic){
+        mod.best=op5 
+    } else if (min(models.AIC) == op6$aic){
+    mod.best=op6
+}
+models.AIC
+mod.best
+modpred &lt;- predict(mod.best, n.ahead=100)
+vld.data1&lt;-  sdat1[401:500]
+plot.ts(sdat1, ylim=c(floor(min(sdat1)),ceiling(max(sdat1))))
+plot.ts(sdat1, xlim=c(0,400),ylim=c(floor(min(sdat1)),ceiling(max(sdat1)))) 
+lines(modpred$pred, col='blue')
+    lines(modpred$pred-(1.96*modpred$se), col='red')
+    lines(modpred$pred+(1.96*modpred$se), col='red')
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/mUMEK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/mUMEK.png"" alt=""enter image description here""></a></p>
+"
+"0.471404520791032","0.577350269189626","122704","<p>I have used auto.arima to fit a time series model (a linear regression with ARIMA errors, as described <a href=""http://robjhyndman.com/hyndsight/arimax/"" rel=""nofollow"">on Rob Hyndman's site</a> )  When finished - the output reports that the best model has a (5,1,0) with drift structure - and reports back values of information criteria as </p>
+
+<p>AIC:  2989.2
+AICC:  2989.3
+BIC: 3261.2</p>
+
+<p>When I use Arima to fit a model with a (1,1,1) with drift structure - the output reports back noticeably lower IC's of</p>
+
+<p>AIC:  2510.3
+AICC:  2510.4
+BIC:  2759</p>
+
+<p>I can force auto.arima to consider the (1,1,1) with drift model (using the start.p and start.q parameters), and when I do that, and set ""trace=TRUE"" - I do see that the (1,1,1) with drift model is considered, but rejected, by auto.arima.  It still reports back the (5,1,0) with drift model as the best result.</p>
+
+<p>Are there circumstances when auto.arima uses other criteria to choose between models?</p>
+
+<p>Edited to add (in response to request)</p>
+
+<p>Data for this example can be found at <a href=""https://drive.google.com/file/d/0B6afOuS0y79aenBMeFYyWVNwUUU/view?usp=sharing"" rel=""nofollow"">this Google spreadsheet</a></p>
+
+<p>and R code to reproduce the example is</p>
+
+<pre><code>repro = read.csv(""mindata.csv"")
+reprots = ts(repro, start=1, frequency=24)
+fitauto = auto.arima(reprots[,""lnwocone""],
+xreg=cbind(fourier(reprots[,""lnwocone""], K=11),
+reprots[,c(""temp"",""sqt"",""humidity"",""windspeed"",""mist"",""rain"")]),
+start.p=1, start.q=1, trace=TRUE, seasonal=FALSE)
+fitdirect &lt;- Arima(reprots[,""lnwocone""], order=c(1,1,1), seasonal=c(0,0,0),
+xreg=cbind(fourier(reprots[,""lnwocone""], K=11),
+reprots[,c(""temp"",""sqt"",""humidity"",""windspeed"",""mist"",""rain"")]), include.drift=TRUE)
+summary(fitauto)
+summary(fitdirect)
+</code></pre>
+
+<p>Apologies if the Google docs data - inline code is not the best way to provide the example.  I think I have seen in the past guidelines on the best way to do this - but could not locate those guidelines in searching this morning.</p>
+"
+"0.577350269189626","0.471404520791032","194941","<p>I'm using <code>auto.arima</code> to get the best model for the <code>MASS</code> dataset <code>deaths</code>. However, <code>auto.arima</code> does not seem to give the best model by measures of AIC, AICc, or BIC. <code>auto.arima</code> code below:</p>
+
+<pre><code>&gt; data(deaths, package='MASS')
+&gt; deaths
+      Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
+1974 3035 2552 2704 2554 2014 1655 1721 1524 1596 2074 2199 2512
+1975 2933 2889 2938 2497 1870 1726 1607 1545 1396 1787 2076 2837
+1976 2787 3891 3179 2011 1636 1580 1489 1300 1356 1653 2013 2823
+1977 3102 2294 2385 2444 1748 1554 1498 1361 1346 1564 1640 2293
+1978 2815 3137 2679 1969 1870 1633 1529 1366 1357 1570 1535 2491
+1979 3084 2605 2573 2143 1693 1504 1461 1354 1333 1492 1781 1915
+
+&gt; library(forecast)
+&gt; auto.arima(deaths)
+Series: deaths 
+ARIMA(1,0,0)(2,0,0)[12] with non-zero mean 
+
+Coefficients:
+         ar1    sar1    sar2  intercept
+      0.4418  0.3098  0.5078  2058.2234
+s.e.  0.1345  0.0973  0.0998   175.8665
+
+sigma^2 estimated as 79455:  log likelihood=-515.07
+AIC=1040.13   AICc=1041.04   BIC=1051.51
+</code></pre>
+
+<p>If I instead fit a ARIMA(2,1,1)x(1,1,1) model, it is better by all measures: </p>
+
+<pre><code>&gt; Arima(deaths, order=c(2,1,1), seasonal=c(1,1,1))
+Series: deaths 
+ARIMA(2,1,1)(1,1,1)[12]                    
+
+Coefficients:
+         ar1      ar2      ma1     sar1     sma1
+      0.2729  -0.3270  -1.0000  -0.2985  -0.9999
+s.e.  0.1356   0.1396   0.1305   0.1426   1.0106
+
+sigma^2 estimated as 39753:  log likelihood=-413.08
+AIC=838.17   AICc=839.79   BIC=850.64
+</code></pre>
+"
+"0.471404520791032","0.577350269189626","100702","<p>A particular series (std), seems to exhibit a trend-like behavior. According to the ADF test for this series:</p>
+
+<pre><code>Dickey-Fuller = -2.8618, Lag order = 6, p-value = 0.2131
+</code></pre>
+
+<p>Therefore, I am taking the first difference of std with this code</p>
+
+<pre><code>stddif1&lt;- diff(std)
+</code></pre>
+
+<p>Here is the tricky part, the acf and pacf suggest that this would be an ARMA process (2,1), with a d=1. But the code shows both different estimates and different AIC values, when (I think) this <em>shouldn't</em> be the case:</p>
+
+<p>For std with no difference:</p>
+
+<pre><code>&gt; arima(std, order=c(2,1,1))
+
+Call:
+arima(x = std, order = c(2, 1, 1))
+
+Coefficients:
+     ar1     ar2      ma1
+  0.5206  0.2697  -0.7638
+s.e.  0.1218  0.0552   0.1153
+
+sigma^2 estimated as 0.06355:  log likelihood = -13.3,  aic = 34.6
+</code></pre>
+
+<p>And, for the differenced std (stddif):</p>
+
+<pre><code>&gt; arima(stddif, order=c(2,0,1))
+
+Call:
+arima(x = stddif, order = c(2, 0, 1))
+
+Coefficients:
+     ar1     ar2      ma1  intercept
+  0.5188  0.2695  -0.7620    -0.0003
+s.e.  0.1223  0.0554   0.1159     0.0157
+
+sigma^2 estimated as 0.06355:  log likelihood = -13.3,  aic = 36.6
+</code></pre>
+
+<p>The values for the AR1, AR2, MA1 as well as the AIC are different. Why is this?</p>
+
+<p>This was all done in R, the relevant package is 'tseries'.</p>
+"
+"0.577350269189626","0.235702260395516","220680","<p>I am trying to fit a time series with function <code>auto.arima</code> in the ""forecast"" package in R that is choosing the best model automatically. Since I am using it for my thesis, I have to show the trace of stepwise selection algorithm manually (without adding line ""trace"" in <code>auto.arima</code> code) with my web apps here <a href=""https://nugraha92.shinyapps.io/Analisis/"" rel=""nofollow"">https://nugraha92.shinyapps.io/Analisis/</a></p>
+
+<p>But, when I manually checked it, I found that <code>auto.arima</code> did not choose minimum AIC values.</p>
+
+<p>Then, I input the <code>trace=TRUE</code> line and the result shows that the AIC/BIC value is not the same between the ""trace ARIMA list"" and ""choosen ARIMA model"". For example, in the image it is shown that the best model is ARIMA(3,1,3), BIC score at the list is -252.4451 while at the equation below is -250.89.</p>
+
+<p>Why and which one is the correct one? Did I make some mistakes?</p>
+
+<p><a href=""http://i.stack.imgur.com/KWSPh.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/KWSPh.png"" alt=""enter image description here""></a></p>
+"
+"0.471404520791032","0.577350269189626","154398","<p>What are the applications of AR and MA model? To put my question exactly, when to use AR model and when to use MA model(for example, like when it is seasonal or when there is a trend, etc). In other words, which model to chose if it is seasonal, if it has  trend, if both seasonal and trend, and if no trend and not seasonal? It will be good if someone explains that with an example.</p>
+
+<p><code>auto.arima()</code> can be used to find the parameters of AR and MA easily in R. But I happen to find lower AIC values when using different parameters other than parameters found by <code>auto.arima()</code>. Which parameters is better to use? If parameters with lower AIC value is only better, then how to find those parameters without trying manually all possible parameters? </p>
+"
+"0.74535599249993","0.730296743340221"," 47419","<p>I am trying to fit a time series using the function auto.arima and I face some strange results.</p>
+
+<p>As a first try, I use the command</p>
+
+<pre><code>auto.arima(data,d=0,D=1,max.p=2,max.q=2,max.P=2,max.Q=2,max.order=8, xreg=xreg_past,trace=TRUE,ic=""aic"")
+</code></pre>
+
+<p>The model I get is an ARIMA(2,0,2)(0,1,1)[12] with an AIC equal to -300.14.</p>
+
+<p>But since I know that this command will make use of the stepwise selection algorithm, I want to make a try with the tests of all possible models using the option stepwise=FALSE. </p>
+
+<p>I thus try the command</p>
+
+<pre><code>auto.arima(data,d=0,D=1,max.p=2,max.q=2,max.P=2,max.Q=2,max.order=8, xreg=xreg_past,stepwise=FALSE,trace=TRUE,ic=""aic"")
+</code></pre>
+
+<p>And now, the model I get is an ARIMA(0,0,2)(2,1,0)[12] with an AIC equal to -293.14. Since my second attempt takes all the models into account, this result is strange as the previous model had a lower AIC. Furthermore, If I take a look in the trace of the last function call, I see that the ARIMA(2,0,2)(0,1,1)[12] model has now an AIC of -245.13 which explains why it has been rejected. Why did the AIC value change ?</p>
+
+<p>At least, if I use the simple command </p>
+
+<pre><code>arima(data, order=c(2,0,2), seasonal= list(order=c(2,1,2), period=12), xreg=xreg_past)
+</code></pre>
+
+<p>I get an AIC value of -319.15, which is better that the two models provided before.</p>
+
+<p>I think I am missing something important but I am not able to see what. Can somebody help me ?</p>
+
+<p>Thanks in advance,</p>
+
+<p>Regards,</p>
+
+<p>Ludo</p>
+"
+"0.577350269189626","0.471404520791032","197625","<p>I have been fitting ARIMA models to panel data.  My goal is to develop a single ARIMA model that explains growth across a number of different regions.  To do this, I followed Rob Hyndman's excellent advice in this CV thread: <a href=""http://stats.stackexchange.com/questions/23036/"">Estimating same model over multiple time series</a>.  Hyndman suggests applying <code>auto.arima</code> to a single time series separated by NAs.</p>
+
+<p>Using this approach, <code>auto.arima</code> enables me to automatically select from a range of different AR models. In theory, <code>auto.arima</code> should also consider ARMA and MA models.</p>
+
+<p>But <code>auto.arima</code> dismisses all models with MA terms. <code>auto.arima</code> produces an AIC of <code>Inf *</code> <strong>every</strong> single time it investigates a model with one or more MA terms.  </p>
+
+<p>The thread <a href=""http://stats.stackexchange.com/questions/160612/""><code>auto.arima</code> doesn't calculate AIC values for the majority of models</a> suggests that <code>auto.arima</code> may produce infinite AICs because the MA terms are non-invertible.  </p>
+
+<p>But I don't think non-invertible MAs are the problem! The <code>trace</code> command shows that <code>auto.arima</code> is producing infinite AICs EVERY single time, and across a range of industries. <code>auto.arima</code> also produces infinite AICs even if the MAs do not look non-invertible. For example, <code>auto.arima</code> deemed the model below to be non-invertible:</p>
+
+<pre><code>arima(x = reim_arma$demean_gdp_growth, order = c(0, 0, 1), include.mean = FALSE)
+
+Coefficients: 
+ma1   -0.18
+s.e.   0.08
+
+sigma^2 estimated as 0.00823:  log likelihood = 132,  aic = -261
+</code></pre>
+
+<p>Does anyone have any idea why <code>auto.arima</code> would work fine with AR terms but <strong>always</strong> produce infinite AICs when MA terms are included? I am wondering if it is some way related to my inclusion of NA terms?</p>
+"

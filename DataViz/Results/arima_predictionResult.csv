@@ -1,0 +1,317 @@
+"V1","V2","V3","V4"
+"0.866025403784439","0.866025403784439","184880","<p>So I wanted to generate $500$ data points from an $ARMA(1,1)$ distribution in R, use the first $400$ as my training data and use the training data and the <code>predict</code> function to both see if I could obtain the correct model via AIC and then plot my prediction. I wanted to generate a whole bunch of different $ARMA$ models to use for the AIC which is why I basically built a grid, however I get a bunch of warnings and errors with my current method, despite the fact it seems to work. Note it is the estimation and not the actual prediction that raises the problems. Can I use a grid like so to produce AICs for various model types?</p>
+
+<pre><code>####### ARMA(1,1) ############
+# Causal stationary - root of the function phi(z) &gt; 1
+theta1&lt;- 0.5
+phi1&lt;- 0.6
+
+arma11&lt;- arima.sim(n = 500,list(ar = c(phi1), ma = c(theta1)), sd = sqrt(1))
+tr.data&lt;-arma11[1:400]
+AIC&lt;-c()
+for (i in 0:3){
+  for (j in 0:3){
+    aic.ij&lt;- arima(tr.data,order = c(i,0,j))$aic
+    AIC&lt;- c(AIC,aic.ij) 
+  }
+}
+AIC&lt;- matrix(AIC, ncol=4, byrow =T)
+colnames(AIC)&lt;- c(""q=0"",""q=1"",""q=2"",""q=3"")
+rownames(AIC)&lt;- c(""p=0"",""p=1"",""p=2"",""p=3"")
+AIC
+index&lt;-which(AIC==min(AIC),arr.ind=T)
+index
+prd&lt;-predict(arima(tr.data, order = c(index[1]-1,0,index[2]-1)),n.ahead =100)
+vld.data&lt;-arma11[401:500]
+
+# plot the training data with the next 100 predictions and the 95% confidence intervals
+plot.ts(arma11, xlim=c(0,500),ylim=c(floor(min(arma11)),ceiling(max(arma11)))) 
+lines(prd$pred, col='blue')
+lines(prd$pred-(1.96*prd$se), col='red')
+lines(prd$pred+(1.96*prd$se), col='red')
+</code></pre>
+
+<p>For this particular $ARMA$ I am error free but receive various size mismatch errors with other models under the same method, I receive this warning though. </p>
+
+<pre><code>Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1Warning message:
+In arima(tr.data, order = c(i, 0, j)): possible convergence problem: optim gave code = 1         q=0      q=1      q=2      q=3
+p=0 1608.907 1296.137 1207.432 1187.231
+p=1 1244.182 1178.820 1180.004 1181.993
+p=2 1190.716 1180.072 1182.002 1183.776
+p=3 1179.731 1181.688 1183.767 1181.305
+    row col
+p=1   2   2
+</code></pre>
+"
+"0.707106781186547","0.707106781186547","184899","<p>I have written the following code to generate 500 data points from a $SARIMA$ model, use $400$ as training data and then predict the following $100$, while estimating the model with AIC. It appeared to me that I did everything correctly as I could see the AIC correctly choosing the model with certain phi values, etc. etc., however my plot outputs for the estimations is very very dense and incomprehensible and I'm not sure why. I checked the number of data points, the window size, etc. and am not sure what I have done wrong in my implementation. </p>
+
+<pre><code>library(CombMSC)
+library(forecast)
+
+
+#####################
+#generate data
+sdat1&lt;- sarima.Sim(n=500, period=12, model = list(order = c(1,0,0), ar=0.5),list(order= c(1,0,0), ar = 0.5))
+#procure training data
+x.tr &lt;- window(sdat1, start=1, end=400)
+
+#candidate models
+op1 &lt;- arima(x.tr, order=c(0,0,0), list(order= c(0,1,0)))
+op2 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,1)))
+op3 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(0,2,0)))
+op4 &lt;- arima(x.tr, order=c(0,1,0), list(order= c(0,0,0)))
+op5 &lt;- arima(x.tr, order=c(1,0,1), list(order= c(0,0,0)))
+op6 &lt;- arima(x.tr, order=c(1,0,0), list(order= c(1,0,0)))
+
+models &lt;- c(op1,op2,op3,op4,op5,op6)
+models.AIC &lt;- c(op1$aic,op2$aic,op3$aic,op4$aic,op5$aic,op6$aic)
+mod.best = NULL
+if (min(models.AIC) == op1$aic){
+        mod.best=op1
+    } else if (min(models.AIC) == op2$aic){
+    mod.best=op2
+} else if (min(models.AIC) == op3$aic){
+        mod.best=op3
+    } else if (min(models.AIC) == op4$aic){
+    mod.best=op4
+} else if (min(models.AIC) == op5$aic){
+        mod.best=op5 
+    } else if (min(models.AIC) == op6$aic){
+    mod.best=op6
+}
+models.AIC
+mod.best
+modpred &lt;- predict(mod.best, n.ahead=100)
+vld.data1&lt;-  sdat1[401:500]
+plot.ts(sdat1, ylim=c(floor(min(sdat1)),ceiling(max(sdat1))))
+plot.ts(sdat1, xlim=c(0,400),ylim=c(floor(min(sdat1)),ceiling(max(sdat1)))) 
+lines(modpred$pred, col='blue')
+    lines(modpred$pred-(1.96*modpred$se), col='red')
+    lines(modpred$pred+(1.96*modpred$se), col='red')
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/mUMEK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/mUMEK.png"" alt=""enter image description here""></a></p>
+"
+"0.707106781186547","0.707106781186547","230269","<p>I am sitting with a couple of time-series that I am analysing using ARIMA models. I have a question regarding prediction intervals. When predicting using a model that takes a first difference (a SARIMA(1,1,0)x(1,0,0) model), I get an increasing size of the prediction interval. Without I get a very constant and narrow band (see below):</p>
+
+<p><a href=""http://i.stack.imgur.com/UaHX6.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/UaHX6.png"" alt=""Graphs""></a></p>
+
+<p>The corresponding results are as follows:</p>
+
+<p><a href=""http://i.stack.imgur.com/Fu2nU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Fu2nU.png"" alt=""Results""></a></p>
+
+<p>Can anyone explain why the band is so constant? First I thought it was because of a large significant MA coefficient. This, however, I removed and the ""problem"" persisted. Then I though it was because the ARIMA without differencing automatically included an intercept. However, again, when I specified <code>include.mean = FALSE</code>, nothing changed.</p>
+
+<p>Any help would be appreciated.</p>
+"
+"0.5","0.5"," 83433","<p>I would like to ask how the long-term (multiple step ahead) prediction intervals are calculated by function <code>predict.Arima</code> in R. I am particularly interested in ARIMA models, SARIMA models and in ARIMA models with external regressors (include argument xreg => regression with ARIMA errors) </p>
+"
+"NaN","NaN","166725","<p>I am trying to model an ARIMAX model on my time series.</p>
+
+<pre><code>&gt; dput(tsOenb)
+structure(c(1.0227039, -5.0683144, 0.6657713, 3.3161374, -2.1586704, 
+-0.7833623, -0.2203209, 2.416144, -1.7625406, -0.1565037, -7.9803936, 
+9.4594715, -4.8104584, 8.4827107, -6.1895262, 1.4288595, 1.4896459, 
+-0.4198522, -5.1583964, 5.2502294, 1.0567102, -1.0923342, -1.5852298, 
+0.6061936, -0.3752335, 2.5008664, -1.3999729, 2.2802166, -2.1468756, 
+-1.4890328, -0.79254376, 3.21804705, -0.94407886, -0.27802316, 
+-0.20753079, -1.12610048, 2.0883735, -0.7424854, 0.44203729, 
+-1.48905938, 1.39644424, -3.8917377, 11.25665848, -9.22884035, 
+3.26856762, -0.00179541, -2.39664325, 4.00455574, -5.60891295, 
+4.6556348, -4.40536951, 6.64234497, -7.34787319, 7.56303006, 
+-8.23083674, 4.43247855, 1.31090412, 1.0227039, -5.0683144), .Tsp = c(2000.25, 
+2014.75, 4), class = ""ts"")
+&gt; quaterlyDummies &lt;-  seq(ISOdate(2000,4,1), ISOdate(2014,12,31), by = ""quarter"") # or ""3 months""
+&gt; month &lt;- month(quaterlyDummies)
+&gt; xreg &lt;- model.matrix(~as.factor(month))[1:59]
+&gt; fit &lt;- auto.arima(tsOenb, xreg=xreg) 
+&gt; accuracy(fit)
+                       ME     RMSE      MAE      MPE     MAPE      MASE       ACF1
+Training set 7.215274e-17 4.216134 3.144967 45.39733 146.9616 0.8467543 -0.7332704
+&gt; plot(tsOenb)
+&gt; lines(fitted(fit),col=2)
+&gt; 
+&gt; fit1 &lt;- auto.arima(tsOenb) 
+&gt; accuracy(fit1)
+                    ME     RMSE      MAE       MPE     MAPE      MASE        ACF1
+Training set 0.0707266 2.306156 1.739384 -3468.434 3627.246 0.4683134 0.003527999
+&gt; plot(tsOenb)
+&gt; lines(fitted(fit1),col=2)
+</code></pre>
+
+<p>Here is the output of my <code>arima model</code>:</p>
+
+<p><a href=""http://i.stack.imgur.com/Aybe9.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Aybe9.png"" alt=""enter image description here""></a></p>
+
+<p>Here is a plot of my <code>ARIMAX model</code>:</p>
+
+<p><a href=""http://i.stack.imgur.com/NLcAm.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/NLcAm.png"" alt=""enter image description here""></a></p>
+
+<p>Any suggestions why my <code>Arimax model</code> is so bad? Were my dummy variables created wrongly?</p>
+
+<p>I appreciate your replies!</p>
+"
+"0.5","0.5","207473","<p>I am new to R and statistics. I have a problem related to the prediction:
+I am not able to plot the real value together with the predicted value. 
+PROBLEM: I want to feed first 16 values into the ARIMA and then I want ARIMA should predict the next 3 values. I used both forecast and predict function but not sure which one is good for my case (please tell me).
+After prediction, I only can plot the green line which is the prediction values but not able to add the real values in the same line.</p>
+
+<p>Bonus: How to get the MAPE error measure when I use predict function in R.</p>
+
+<p>Thanks..</p>
+
+<p>SAMPLE CODE:</p>
+
+<pre><code>x=file$Cost
+    k&lt;-auto.arima(x[1:16]) 
+    m=forecast(k,h=3) ## I tried both of them
+    m=predict(k, n.ahead = 3)
+    j=(m$fitted)
+a=j[17:19]
+b=x[17:19]
+plot(a, col=""green"",type=""l"") # predicted
+lines(b) # real
+summary(m)
+</code></pre>
+
+<p>SAMPLE DATA:</p>
+
+<pre><code>Timestamp   Cost
+2010-09-21T00:00:00+00:00   5
+2010-09-21T00:01:00+00:00   6
+2010-09-21T00:02:00+00:00   6
+2010-09-21T00:03:00+00:00   6
+2010-09-21T00:04:00+00:00   6
+2010-09-21T00:05:00+00:00   6
+2010-09-21T00:06:00+00:00   6
+2010-09-21T00:07:00+00:00   5
+2010-09-21T00:08:00+00:00   6
+2010-09-21T00:09:00+00:00   5
+2010-09-21T01:10:00+00:00   5
+2010-09-21T01:11:00+00:00   6
+2010-09-21T01:12:00+00:00   6 
+2010-09-21T01:13:00+00:00   6
+2010-09-21T01:14:00+00:00   6
+2010-09-21T01:15:00+00:00   6
+2010-09-21T01:16:00+00:00   6
+2010-09-21T01:17:00+00:00   5
+2010-09-21T01:18:00+00:00   6
+</code></pre>
+"
+"NaN","NaN","154639","<p>I present here two examples one with transformed data and the other without any transformation. In the transformed data case, the upper interval gets enormous large, whereas not in the untransformed case. (Function in forecast package in R)</p>
+
+<pre><code>    dmnd=c(8.6,9.8,11.2,12.4,13.5,15.7,18.6,21.1,22.3,23.6,24.6,26.3,28.3,29.6,33.3,36.4,40.5,44.9,48.4,52.6,56.8,60.5,67.2,73.4,77.8,85.6,94.8,105.5,114.0,118.5,128.3,126.9,132.6,141.2,150.0,160.8,174.6,190.0,198.1,194.1,210.4,230.3,242.4,246.4,255.5)
+    #with transformation
+    fit &lt;- Arima(dmnd[11:45], order=c(1,2,0), lambda=-0.25)
+    prg=forecast(fit,h=16,level=c(95),fan=FALSE,lambda=-0.25)
+    prg
+
+
+
+Point Forecast     Lo 95      Hi 95
+36       262.8665 241.34010   286.8475
+37       271.4097 231.18466   320.7765
+38       279.9162 216.75679   367.8499
+39       288.9224 201.26616   429.9376
+40       298.2242 184.91488   513.2452
+41       307.9328 168.56079   626.1724
+42       318.0273 152.59291   782.3793
+43       328.5442 137.35984  1003.7047
+44       339.4971 123.06285  1326.8115
+45       350.9112 109.82630  1815.8213
+46       362.8087  97.70297  2589.1252
+47       375.2149  86.69722  3879.8347
+48       388.1558  76.77777  6185.0627
+49       401.6596  67.89002 10677.4213
+50       415.7557  59.96484 20513.6022
+51       430.4756  52.92545 45881.0816
+
+#without transformation
+fit &lt;- Arima(dmnd[11:45], order=c(1,2,0))
+prg=forecast(fit,h=16,level=c(95),fan=FALSE)
+prg
+
+ 36       263.5024 252.64559 274.3592
+ 37       271.7410 249.52972 293.9523
+ 38       279.9288 243.87448 315.9832
+ 39       288.1275 236.23983 340.0153
+ 40       296.3239 226.81344 365.8344
+ 41       304.5208 215.76687 393.2747
+ 42       312.7176 203.22448 422.2107
+ 43       320.9144 189.28707 452.5417
+ 44       329.1112 174.03721 484.1851
+ 45       337.3079 157.54444 517.0715
+ 46       345.5047 139.86827 551.1412
+ 47       353.7015 121.06045 586.3426
+ 48       361.8983 101.16647 622.6302
+ 49       370.0951  80.22673 659.9635
+ 50       378.2919  58.27746 698.3063
+ 51       386.4887  35.35135 737.6260
+</code></pre>
+"
+"0.866025403784439","0.866025403784439","224380","<p>I have a dataset which contains data from a sensor for every 5 minutes and am trying to predict for example 10 future values based on the first 500 values. My data looks like the following and could be downloaded <a href=""https://github.com/numenta/NAB/blob/master/data/artificialWithAnomaly/art_daily_flatmiddle.csv"" rel=""nofollow"">here</a>:</p>
+
+<pre><code>timestamp,value
+2014-04-01 00:00:00,-21.0483826823
+2014-04-01 00:05:00,-20.2954768676
+2014-04-01 00:10:00,-18.127229468299998
+2014-04-01 00:15:00,-20.1716653997
+2014-04-01 00:20:00,-21.223761612
+2014-04-01 00:25:00,-19.1044911334
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/iw6O3.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iw6O3.png"" alt=""enter image description here""></a></p>
+
+<p>I am taking the following steps:</p>
+
+<pre><code># Read data from file and create time series    
+myData &lt;- read.zoo(file=""filePath"", sep = "","", header = TRUE,index = 1, tz = """", format = ""%Y-%m-%d %H:%M:%S"", nrows=500)
+
+# Fit ARIMA model to the data
+fit &lt;- auto.arima(z, stepwise=FALSE, trace=TRUE, approximation=FALSE)
+
+# Predict 10 timesteps ahead
+pred &lt;- predict(fit, n.ahead = 10)
+</code></pre>
+
+<p>But when I print the prediction results they do not seem promising and model always converges to a single value:</p>
+
+<pre><code>$pred
+Time Series:
+Start = 1396474800 
+End = 1396477500 
+Frequency = 0.00333333333333333 
+ [1] 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789
+
+$se
+Time Series:
+Start = 1396474800 
+End = 1396477500 
+Frequency = 0.00333333333333333 
+ [1]  7.136100  9.728122 11.762177 13.493007 15.025767 16.416032 17.697417 18.892088 20.015580 21.079276
+</code></pre>
+
+<p>And here is the summary of fit:</p>
+
+<pre><code>&gt; summary(fit)
+Series: z 
+ARIMA(0,1,1)                    
+
+Coefficients:
+          ma1
+      -0.0735
+s.e.   0.0463
+
+sigma^2 estimated as 50.92:  log likelihood=-1688.17
+AIC=3380.34   AICc=3380.37   BIC=3388.77
+
+Training set error measures:
+                    ME     RMSE      MAE     MPE    MAPE       MASE        ACF1
+Training set 0.2215984 7.121813 3.141386 1592726 1592732 0.07197436 0.001426353
+</code></pre>
+
+<p>This is my first day with R and I think I might be doing something wrong. Any help would be much appreciated.</p>
+
+<p>Thanks</p>
+"

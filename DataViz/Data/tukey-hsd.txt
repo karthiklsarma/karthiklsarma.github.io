@@ -1,0 +1,1 @@
+anova=6lsmeans=6repeated-measures=3tukey-hsd=3glmm=2lmer=2lme4=1nlme=1estimation=1quantiles=1regression=1data-visualization=1permutation=1

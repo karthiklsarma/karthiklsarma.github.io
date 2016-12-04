@@ -1,0 +1,339 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 58598","<p>the question is trivial, but is there any statistical test (can be done in R) to show that the median is changing in a time-series?? For example, if you go to the following link, you would notice that, after the first few samples (6 or 7), the time series takes a sharp rise. I was wondering if there is a formal statistical way of saying it!</p>
+
+<p><a href=""https://docs.google.com/file/d/0B6GUNg-8d30vMzB3cUxJM1dBbXc/edit?usp=sharing"" rel=""nofollow"">https://docs.google.com/file/d/0B6GUNg-8d30vMzB3cUxJM1dBbXc/edit?usp=sharing</a></p>
+"
+"0.612372435695795","0.471404520791032"," 62646","<p>I've got data on mail volume sent by household for seven age groups, with 12 years of data for each age group. I originally ran a simple regression on each age group individually and realized I needed to dig deeper. My aim now is to pool the data (giving me 84 observations) and try to identify some period effects (or year effects, whichever you prefer). My pooled data are currently organized like this (PPHPY stands for Pieces per Household Per Year):</p>
+
+<pre><code>Age Group    Year   PPHPY
+1            2001   127.62
+1            2002   144.47
+1            2003   111.70
+1            2004   95.96
+1            2005   96.46
+1            2006   139.91
+1            2007   85.52
+1            2008   75.43
+1            2009   109.34
+1            2010   53.16
+1            2011   64.09
+1            2012   50.94        
+2            2001   176.48
+2            2002   172.86
+2            2003   137.79
+.              .      .
+.              .      .
+.              .      .
+7            2012   163.39
+</code></pre>
+
+<p>I first regressed PPHPY on year and year dummies (leaving the intercept as 0 to avoid perfect multicollinearity). This gave me period effects for the aggregated data (ie something like a period effect across all age groups, I think). This looked like the following:</p>
+
+<pre><code>&gt; ## Generate YearDummy using factor()
+&gt;
+&gt; YearDummy &lt;- factor(YearVar)
+&gt;
+&gt; ## Check to see that YearDummy is indeed a factor variable
+&gt;
+&gt; is.factor(YearDummy)
+[1] TRUE
+&gt;
+&gt; ## (...+0) ensures intercept is left out and thus YearDummy1 remains in.
+    ## One or the other must be subtracted out to avoid perfect mutlicollinearity
+&gt;
+&gt; LSDVYear &lt;- lm(PPHPY ~ YearVar + YearDummy + 0, data=maildatapooled)
+&gt; summary(LSDVYear)
+Call:
+lm(formula = PPHPY ~ YearVar + YearDummy + 0, data = maildatapooled)
+Residuals:
+Min 1Q Median 3Q Max
+-99.658 -39.038 8.814 43.670 82.300
+Coefficients: (1 not defined because of singularities)
+Estimate Std. Error t value Pr(&gt;|t|)
+YearVar 5.743e-02 9.851e-03 5.830 1.45e-07 ***
+YearDummy2001 1.099e+02 2.795e+01 3.930 0.000193 ***
+YearDummy2002 1.209e+02 2.796e+01 4.324 4.85e-05 ***
+YearDummy2003 7.791e+01 2.797e+01 2.786 0.006819 **
+YearDummy2004 8.053e+01 2.797e+01 2.879 0.005251 **
+YearDummy2005 6.887e+01 2.798e+01 2.461 0.016236 *
+YearDummy2006 6.572e+01 2.799e+01 2.348 0.021618 *
+YearDummy2007 5.975e+01 2.799e+01 2.134 0.036210 *
+YearDummy2008 5.836e+01 2.800e+01 2.084 0.040696 *
+YearDummy2009 4.119e+01 2.801e+01 1.471 0.145745
+YearDummy2010 3.056e+01 2.801e+01 1.091 0.278990
+YearDummy2011 1.472e+01 2.802e+01 0.525 0.600951
+YearDummy2012 NA NA NA NA
+---
+Signif. codes: 0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+Residual standard error: 52.44 on 72 degrees of freedom
+Multiple R-squared: 0.9316, Adjusted R-squared: 0.9202
+F-statistic: 81.71 on 12 and 72 DF, p-value: &lt; 2.2e-16
+</code></pre>
+
+<p>What I want, however, is to tease out period effects for each age group individually. This is what I'm not sure how to set up. I was hoping someone might help me devise some code in R that would kick out those period effects for <em>each</em> of the seven age groups using the pooled data, as well as help me understand the problem conceptually. </p>
+
+<p>EDIT: I forgot to mention that I see I must include an interaction term involving the time dummies to allow the coefficients to vary across age groups. I'm just having difficulty constructing the proper interaction term and resulting regression equation.</p>
+
+<p>EDIT 2: I came up with two models and ran them. I felt like the question had evolved at this point and might merit a new post, which is can be found <a href=""http://stats.stackexchange.com/questions/62755/period-effects-in-pooled-time-series-data-in-r"">here</a>.</p>
+"
+"0.609271795844942","0.502518907629606"," 62755","<p>This is closely related to a question I asked yesterday but I've now got a much more complete answer on which I was hoping to get feedback. The previous question was just looking for conceptual advice and was very helpful. You can find the relevant data and introduction <a href=""http://stats.stackexchange.com/questions/62646/pooled-time-series-regression-in-r"">here</a>.</p>
+
+<p>I wanted to find period effects for each age group. I've run two regressions using dummies as part of an interaction term. I'm hoping to see if my method is flawed and if my interpretation of the results is correct or not. They first regression is as follows:</p>
+
+<pre><code>&gt; ## Generate YearDummy and AgeGroupDummy using factor()
+&gt; 
+&gt; YearDummy &lt;- factor(YearVar)
+&gt; AgeGroupDummy &lt;- factor(AgeGroup)
+&gt; 
+&gt; ## Check to see that YearDummy and CohortDummy are indeed factor variables
+&gt; 
+&gt; is.factor(YearDummy)
+[1] TRUE
+&gt; is.factor(AgeGroupDummy)
+[1] TRUE
+&gt; ## Regress on AgeGroup and include AgeGroup*YearDummy interaction terms
+&gt; 
+&gt; PooledOLS1 &lt;- lm(PPHPY ~ AgeGroup + AgeGroup*YearDummy + 0, 
+data=maildatapooled)
+&gt; summary(PooledOLS1)
+Call:
+lm(formula = PPHPY ~ AgeGroup + AgeGroup * YearDummy + 0, data = 
+maildatapooled)
+Residuals:
+ Min 1Q Median 3Q Max 
+-38.852 -10.632 3.298 11.275 26.481 
+Coefficients:
+ Estimate Std. Error t value Pr(&gt;|t|) 
+AgeGroup 26.2212 3.5070 7.477 3.84e-10 ***
+YearDummy1 119.8836 15.6840 7.644 1.99e-10 ***
+YearDummy2 123.7458 15.6840 7.890 7.55e-11 ***
+YearDummy3 103.2660 15.6840 6.584 1.28e-08 ***
+YearDummy4 97.7102 15.6840 6.230 5.06e-08 ***
+YearDummy5 103.3295 15.6840 6.588 1.26e-08 ***
+YearDummy6 103.2330 15.6840 6.582 1.29e-08 ***
+YearDummy7 84.8291 15.6840 5.409 1.16e-06 ***
+YearDummy8 70.7114 15.6840 4.509 3.09e-05 ***
+YearDummy9 90.9566 15.6840 5.799 2.65e-07 ***
+YearDummy10 50.0885 15.6840 3.194 0.00224 ** 
+YearDummy11 37.7004 15.6840 2.404 0.01933 * 
+YearDummy12 33.1947 15.6840 2.116 0.03846 * 
+AgeGroup:YearDummy2 1.8066 4.9597 0.364 0.71695 
+AgeGroup:YearDummy3 -3.8022 4.9597 -0.767 0.44632 
+AgeGroup:YearDummy4 -1.7436 4.9597 -0.352 0.72640 
+AgeGroup:YearDummy5 -6.0494 4.9597 -1.220 0.22735 
+AgeGroup:YearDummy6 -6.7992 4.9597 -1.371 0.17552 
+AgeGroup:YearDummy7 -3.6752 4.9597 -0.741 0.46158 
+AgeGroup:YearDummy8 -0.4799 4.9597 -0.097 0.92323 
+AgeGroup:YearDummy9 -9.8190 4.9597 -1.980 0.05232 . 
+AgeGroup:YearDummy10 -2.2452 4.9597 -0.453 0.65241 
+</code></pre>
+
+<p>My interpretation of the interaction term coefficients is that they represent the difference in slope of AgeGroup between the period of the corresponding YearDummy and the AgeGroup slope at the top of the results. This is kind of like the AgeGroup effect across different periods.</p>
+
+<p>My second regression is as follows:</p>
+
+<pre><code>&gt; ## Regress YearVar and Include YearVar*AgeGroupDUmmy
+&gt; 
+&gt; PooledOLS2 &lt;- lm(PPHPY ~ YearVar + YearVar*AgeGroupDummy + 0, 
+data=maildatapooled)
+&gt; summary(PooledOLS2)
+Call:
+lm(formula = PPHPY ~ YearVar + YearVar * AgeGroupDummy + 0, data = 
+maildatapooled)
+Residuals:
+ Min 1Q Median 3Q Max 
+-29.345 -9.325 -0.915 8.540 40.150 
+Coefficients:
+ Estimate Std. Error t value Pr(&gt;|t|) 
+YearVar -7.089 1.252 -5.664 3.04e-07 ***
+AgeGroupDummy1 142.292 9.211 15.447 &lt; 2e-16 ***
+AgeGroupDummy2 185.508 9.211 20.139 &lt; 2e-16 ***
+AgeGroupDummy3 218.170 9.211 23.685 &lt; 2e-16 ***
+AgeGroupDummy4 255.733 9.211 27.763 &lt; 2e-16 ***
+AgeGroupDummy5 278.180 9.211 30.200 &lt; 2e-16 ***
+AgeGroupDummy6 300.910 9.211 32.667 &lt; 2e-16 ***
+AgeGroupDummy7 282.325 9.211 30.650 &lt; 2e-16 ***
+YearVar:AgeGroupDummy2 -1.737 1.770 -0.981 0.3298 
+YearVar:AgeGroupDummy3 -2.401 1.770 -1.357 0.1792 
+YearVar:AgeGroupDummy4 -3.772 1.770 -2.131 0.0366 * 
+YearVar:AgeGroupDummy5 -2.915 1.770 -1.647 0.1040 
+YearVar:AgeGroupDummy6 -3.587 1.770 -2.026 0.0465 * 
+YearVar:AgeGroupDummy7 -2.372 1.770 -1.340 0.1846 
+---
+Signif. codes: 0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+Residual standard error: 14.97 on 70 degrees of freedom
+Multiple R-squared: 0.9946, Adjusted R-squared: 0.9935 
+F-statistic: 917.9 on 14 and 70 DF, p-value: &lt; 2.2e-16
+</code></pre>
+
+<p>My interpretation of the interaction term coefficients here is that they represent the difference in slope of YearVar between the corresponding AgeGroup in the interaction term and the YearVar result at the very top. That is, they are something like a period effect across the different age groups.</p>
+
+<p>Can anyone see a problem with what I've done here or with my interpretation? This second regression is the closest thing to period effects across distinct age groups that I've been able to muster. Any critiques/new ideas are welcome.</p>
+"
+"0.763762615825973","0.629940788348712","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"0.408248290463863","0.235702260395516","173629","<p>When applying the ""urca"" package function <code>ur.df</code>, like </p>
+
+<pre><code>summary(ur.df(data$col1, type = c(""none""), lags = 12, selectlags = c(""AIC"")))
+</code></pre>
+
+<p>I get following result:</p>
+
+<pre><code>############################################### 
+# Augmented Dickey-Fuller Test Unit Root Test # 
+############################################### 
+
+Test regression trend 
+
+
+Call:
+lm(formula = z.diff ~ z.lag.1 + 1 + tt + z.diff.lag)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-12928366  -2888728   1284718   4218373   7179531 
+
+Coefficients:
+                 Estimate    Std. Error  t value  Pr(&gt;|t|)   
+(Intercept)  5.391984e+07  1.638362e+07  3.29108 0.0043123 **
+z.lag.1     -2.438154e+00  7.557134e-01 -3.22629 0.0049588 **
+tt           6.579260e+05  2.730453e+05  2.40959 0.0275861 * 
+z.diff.lag1  1.712004e+00  6.595980e-01  2.59553 0.0188537 * 
+z.diff.lag2  1.402824e+00  6.379412e-01  2.19899 0.0420083 * 
+z.diff.lag3  1.321555e+00  5.294537e-01  2.49607 0.0231329 * 
+z.diff.lag4  1.099430e+00  4.720412e-01  2.32910 0.0324428 * 
+z.diff.lag5  8.132753e-01  4.181477e-01  1.94495 0.0685140 . 
+z.diff.lag6  1.797331e-01  3.654326e-01  0.49184 0.6291254   
+z.diff.lag7  5.890640e-01  2.939590e-01  2.00390 0.0612825 . 
+z.diff.lag8  3.919041e-01  2.794371e-01  1.40248 0.1787705   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 6708593 on 17 degrees of freedom
+Multiple R-squared:  0.7237276, Adjusted R-squared:  0.5613144 
+F-statistic: 4.253547 on 10 and 17 DF,  p-value: 0.003348755
+
+
+Value of test-statistic is: -3.2263 3.9622 5.2635 
+
+Critical values for test statistics: 
+      1pct  5pct 10pct
+tau3 -4.15 -3.50 -3.18
+phi2  7.02  5.13  4.31
+phi3  9.31  6.73  5.61
+</code></pre>
+
+<p>Now the question:</p>
+
+<ol>
+<li>I do understand that ""-3.2263"" is the critical value (t-value)</li>
+<li><strong>There is a unit root</strong> with trend since -3.2263 > -3.18 (tau3@10pct)
+This means the time-series is <strong>non-stationary</strong> at a 10% significance level.</li>
+<li>But, what is the meaning of ""p-value: 0.003348755""? Should I list this value in a table summarizing my unit root test results or rather mark the 0.1 significance level (*10%)?</li>
+</ol>
+
+<p>The <a href=""http://www.inside-r.org/packages/cran/urca/docs/ur.df"" rel=""nofollow"">documentation</a> says that critical values are based on Hamilton (1994) and Dickey and Fuller (1981)"". </p>
+"
+"0.408248290463863","0.471404520791032","186725","<p>Short version: How would one be able to quantify an intervention effect in time-series analysis when the intervention decreases seasonal amplitude variation but doesn't directly effect the median?</p>
+
+<p><a href=""https://www.dropbox.com/s/hb3g7j17igeqnoc/dat.csv?dl=0"" rel=""nofollow"">Here</a> is a link to my raw data.</p>
+
+<p>I have a complex time-series of daily incidence numbers for a population over 7 years, totaling 2557 observations. There is a strong weekly and yearly seasonality (high incidence in winter months and low incidence in summer months). There is a baseline negative trend which is orders of magnitude smaller than the seasonality. An intervention was introduced at time = 1700. This intervention should theoretically not cause a level shift. My aim is to detect whether the intervention increases the baseline negative trend.</p>
+
+<p>I have attempted to fit a dynamic linear regression with ARIMA errors in R using <code>auto.arima()</code> in the <code>forecast</code> package. I modeled the weekly season using a dummy variable for each weekday and the weekend. I modeled the monthly seasonality with harmonics using <code>fourier()</code> function in the <code>forecast</code> package. An the intervention effect was coded in by specifying the time index and post-intervention times as independent variables using the methods described in <a href=""http://isites.harvard.edu/fs/docs/icb.topic79832.files/L06_Program_Evaluation_2/Segmented_Regression.Wagner.2002.pdf"" rel=""nofollow"">Segmented regression analysis of interrupted time series studies in medication use research</a>. With these variables specified <code>auto.arima()</code> suggests an ARMA(7,7) process. The coefficients for baseline trend and post-intervention trend are however non-significant.  </p>
+
+<p>I am concerned that by using fourier terms to model away the seasonality I am artificially removing any intervention effect, as visual analysis of the time series indicates that the intervention is specifically decreasing incidence during the winter months and therefore reducing the yearly seasonal variability. </p>
+"

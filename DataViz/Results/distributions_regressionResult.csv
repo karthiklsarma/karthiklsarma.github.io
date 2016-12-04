@@ -1,0 +1,1427 @@
+"V1","V2","V3","V4"
+"0.111803398874989","0.105409255338946"," 15900","<p>I plan to do a simulation study where I compare the performance of several robust correlation techniques with different distributions (skewed, with outliers, etc.). With <em>robust</em>, I mean the ideal case of being robust against a) skewed distributions, b) outliers, and c) heavy tails.</p>
+
+<p>Along with the Pearson correlation as a baseline, I was thinking to include following more robust measures:</p>
+
+<ul>
+<li>Spearman's $\rho$</li>
+<li>Percentage bend correlation (Wilcox, 1994, [1])</li>
+<li>Minimum volume ellipsoid, minimum covariance determinant (<code>cov.mve</code>/ <code>cov.mcd</code> with the <code>cor=TRUE</code> option)</li>
+<li>Probably, the winsorized correlation</li>
+</ul>
+
+<p>Of course there are many more options (especially if you include robust regression techniques as well), but I want to restrict myself to the mostly used/ mostly promising approaches.</p>
+
+<p><strong>Now I have three questions (feel free to answer only single ones):</strong></p>
+
+<ol>
+<li><strong>Are there other robust correlational methods I could/ should include?</strong></li>
+<li><strong>Which robust correlation techniques are</strong> <em><strong>actually</em></strong>  <strong>used in your field?</strong>
+<sub>(Speaking for psychological research: Except Spearman's $\rho$, I have never seen any robust correlation technique outside of a technical paper. Bootstrapping is getting more and more popular, but other robust statistics are more or less non-existent so far).</sub></li>
+<li><strong>Are there already systematical comparisons of multiple correlation techniques that you know of?</strong></li>
+</ol>
+
+<p>Also feel free to comment the list of methods given above.</p>
+
+<hr>
+
+<p>[1] Wilcox, R. R. (1994). The percentage bend correlation coefficient. <em>Psychometrika</em>, 59, 601-616.</p>
+"
+"0.353553390593274","0.333333333333333"," 18045","<p>The data simulated below has a maximum value of 4 and is interestingly skewed. The maximum of 4 is a limitation imposed by the instrument used and the data is semi-discrete, i.e., there are a reasonably large number of numbers it could be between -4 and 4. Because of the shape of the data, I thought about transforming it so it would approximate a gamma distribution:  </p>
+
+<p><em>Edit to update for comments:</em><br>
+It is limited to this range in this instance because it is a signal detection measure (d prime <a href=""http://en.wikipedia.org/wiki/D%27"" rel=""nofollow"">http://en.wikipedia.org/wiki/D%27</a>) and the accuracy we have for this particular measure limits us to +-4. It is skewed like this because one population does not very often get false positives and will generally get more hits while the other populations often do get false positives and less hits.</p>
+
+<pre><code>set.seed(69)
+g1&lt;-rnorm(700,0,1); g2&lt;-rnorm(100,-0.5,1.5); g3&lt;-rnorm(100,-1,2.5)
+gt&lt;-data.frame(score=c(g1, g2, g3), fac1=factor(rep(c(""a"", ""b"", ""c""), c(700, 100, 100))), fac2=ordered(rep(c(0,1,2), c(3,13,4))))
+gt$score&lt;-with(gt, ifelse(fac2 == 0, score, score-rnorm(1, 0.5, 2)))
+gt$score&lt;-with(gt, ifelse(fac2 == 2, score-rnorm(1, 0.5, 2), score))
+gt$score&lt;-round(with(gt, ifelse(score&gt;0, score*-1, score)), 1)+4
+gt$score&lt;-with(gt, ifelse(score &lt; -4, -4, score))
+gt$cov1&lt;-with(gt, score + rnorm(900, sd=40))/40
+hist(gt$score)
+gt$score2&lt;-with(gt, 4-score+0.0000001) #Gamma distribution can't have 0s (and is positive skewed???)
+hist(gt$score2)
+
+glm1&lt;-glm(score2~cov1+fac1*fac2, family=""Gamma"", data=gt)
+</code></pre>
+
+<p>This is quite new territory for me.<br>
+1. Is this a reasonable thing to do?<br>
+2. Are there other distributions I might try and compare (exponential perhaps)?</p>
+
+<p><em>Update:</em><br>
+After some comments below, I investigated beta regression using the <em>betareg</em> package in R. It gave me skewed residuals:  </p>
+
+<pre><code>gt$scorer&lt;-with(gt, (score--4)/(4--4))
+gt$scorer&lt;-with(gt, (scorer*(length(scorer)-1)+0.5)/length(scorer))
+b1 &lt;- betareg(scorer ~ cov1 + fac1 * fac2, data=gt)
+plot(density(resid(b1))) #Strange residuals, even straight lm looks better
+</code></pre>
+
+<p>So I had a look at a quasibinomial regression and it gave me smaller and better looking residuals:</p>
+
+<pre><code>glm2 &lt;- glm(scorer~cov1 + fac1 * fac2, data=gt, family=""quasibinomial"")
+plot(density(resid(g1))) #Better residuals
+</code></pre>
+
+<p>Are the residuals good enough to go on in this case?<br>
+Or is the fact that d', while based upon T/F, is not a binary variable, a serious issue?  </p>
+
+<p><em>Edit 3: d' clarification</em> 
+The below is an example of my d' scores, with the rough distributional qualities and similar raw scores for hits and false positives.  </p>
+
+<pre><code>hitrate&lt;-sample(0:16, 100, replace=T, prob=c(rep(0.02,11), 0.025, 0.05, 0.1, 0.2, 0.3, 0.2))/16
+hitrate&lt;-ifelse(hitrate==1, 31/32,hitrate); hitrate&lt;-ifelse(hitrate==0, 1/32,hitrate)
+farate&lt;-sample(0:32,100, replace=T, prob=c(0.7,0.1,0.05,0.05,0.05,0.02,rep(0.001, 27)))/32
+farate&lt;-ifelse(farate==0, 1/64,farate); farate&lt;-ifelse(farate==1, 63/64,farate)
+
+dprime&lt;-round(qnorm(hitrate) - qnorm(farate),1)
+plot(density(dprime))
+</code></pre>
+"
+"0.111803398874989","0.105409255338946"," 45546","<p>Suppose I have two real-valued PMFs $f(i)$ and $g(i)$ with $1\le i\le N$ and $N$ is about 1 billion.  The functions $f$ and $g$ can be assumed to be continuous on the positive integers, one-sidedly so at the endpoints of course. (Meaning if i and j are close, then $f(i)$ and $f(j)$ are close.)</p>
+
+<p>Lets say I have several samples of more than 10 billion observations each.  I tally each sample to get a series of histograms. The histograms basically give us functions $s_1(i)$, $s_2(i)$, $s_3(i)$ and so on.</p>
+
+<p>For each sample, I know the percentage of the observations that come from $f$ and the percentage that come from the distribution described by $g$.</p>
+
+<p>Can I use the samples to reconstruct the distributions $f$ and $g$.</p>
+
+<p>My first guess was to do linear regression.  Although, I'm unsure if linear regression makes use of all the information.</p>
+"
+"0.295803989154981","0.278886675511359"," 49497","<p>I have a dataset I'm working on that has some co-variate shift between the training set and the test set.  I'm trying to build a predictive model to predict an outcome, using the training set.  So far my best model is a random forest.</p>
+
+<p>How can I deal with the shifted distributions in the training vs. test set?  I've come across 2 possible solutions that I've been able to implement myself:</p>
+
+<ol>
+<li>Remove the shifted variables.  This is sub-optimal, but helps prevent my model from over fitting the training set.</li>
+<li>Use a logistic regression to predict whether a given observation is from the test set (after balancing the classes), predict ""test set probabilities"" for the training set, and then boostrap sample the training set, using the probabilities for sampling.  Then fit the final model on the new training set.</li>
+</ol>
+
+<p>Both 1 and 2 are pretty easy to implement, but neither one satisfies me, as #1 omits variables that might be relevant, and #2 uses a logistic regression, when my final model is tree-based.  Furthermore, #2 takes a few paragraphs of custom code, and I worry that my implementation may not be correct.</p>
+
+<p>What are the standard methods for dealing with covariate shift?  Are there any packages in R (or another language) that implement these methods?</p>
+
+<p>/edit: It seems like ""kernel mean matching"" is another approach I could take.  I've found lots of academic papers on the subject, but no one seems to have published any code.  I'm going to try to implement this on my own, and will post the code as an answer to this question when I do.</p>
+"
+"0.436040799636191","0.435285750066007"," 50086","<p>Assume for example a trivariate Gaussian model:
+$$
+{\boldsymbol Y}_1, \ldots, {\boldsymbol Y}_n \sim_{\text{iid}} {\cal N}_3\left({\boldsymbol \mu}, \Sigma\right) \quad (*)
+$$
+with ${\boldsymbol \mu} = (\mu_1,\mu_2,\mu_3)'$. </p>
+
+<p>The Bayesian conjugate theory of this model is well known. 
+This model is the most simple case of a  multivariate linear regression model. 
+And more generally, there is a well known Bayesian conjugate theory of multivariate linear regression, which is  the extension to the case when  the multivariate mean  ${\boldsymbol \mu}= {\boldsymbol \mu}(x_i)$ is allowed to depend on the covariates $x_i$ of individual $i \in \{1, \ldots, n \}$, with linear constraints about the multivariate means ${\boldsymbol \mu}(x_i)$. See for instance <a href=""http://books.google.be/books?id=GL8VS9i_B2AC&amp;dq=bayesian%20econometrics%20bayesm&amp;hl=fr&amp;source=gbs_navlinks_s"" rel=""nofollow"">Rossi &amp; al's book</a> accompanied by the crantastic <a href=""http://cran.r-project.org/web/packages/bayesm/index.html"" rel=""nofollow""><code>bayesm</code></a> package for <code>R</code>. 
+We know in addition that the Jeffreys prior is a limit form of the conjugate prior  distributions.</p>
+
+<p>Let us come back to the simple multivariate Gaussian model $(*)$. Instead of generalizing this model to the case of linearly dependent multivariate means ${\boldsymbol \mu}(x_i)$ depending on individuals $i=1,\ldots,n$, we can consider a more restrictive model by assuming linear constraints about the components $\mu_1$, $\mu_2$, $\mu_3$ of the multivariate mean ${\boldsymbol \mu}$. </p>
+
+<h3>Example</h3>
+
+<p>Consider some concentrations $x_{i,t}$ of $4$ blood samples $i=1,2,3,4$ measured at $3$ timepoints $t=t_1,t_2,t_3$. 
+Assume that the samples are independent and that the series of the three measurements 
+$(x_{i,t_1},x_{i,t_2},x_{i,t_3}) \sim {\cal N}_3\left({\boldsymbol \mu}, \Sigma\right)$ for each sample $i$ with a mean 
+${\boldsymbol \mu} = (\mu_1,\mu_2,\mu_3)'$ whose three components are 
+linearly related to the timepoints: $\mu_j = \alpha + \beta t_j$.</p>
+
+<p>This example falls into the context of <em>Multivariate linear regression with a within-design structure</em>. 
+See for instance <a href=""http://wweb.uta.edu/management/Dr.Casper/Fall10/BSAD6314/Coursematerial/O%27Brien%20&amp;%20Kaiser%201985%20-%20MANOVA%20-%20RM%20-%20Psy%20Bull%2085.pdf"" rel=""nofollow"">O'Brien &amp; Kaiser 1985</a> and <a href=""http://www.stat.ualberta.ca/~wiens/stat575/misc%20resources/Appendix-Multivariate-Linear-Models.pdf"" rel=""nofollow"">Fox &amp; Weisberg's appendix</a></p>
+
+<p>So my example is a simple example of this situation because there are only some predictors (the timepoints) for the components of the mean, but there are no predictors for individuals. This example could be written as follows:
+$$
+(**) \left\{\begin{matrix} 
+{\boldsymbol Y}_1, \ldots, {\boldsymbol Y}_n \sim_{\text{iid}} {\cal N}_3\left({\boldsymbol \mu}, \Sigma\right) \\ 
+{\boldsymbol \mu} = X {\boldsymbol \beta}
+\end{matrix}\right.
+$$
+with ${\boldsymbol \beta}=(\alpha, \beta)'$ and $X=\begin{pmatrix} 1 &amp; t_1 \\ 1 &amp; t_2 \\ 1 &amp; t_3 \end{pmatrix}$ is the matrix of covariates for the components of the multivariate mean ${\boldsymbol \mu}$. The second line of $(**)$ could be termed as the <em>within design</em>, or the <em>repeated measures design</em>, or the <em>structural design</em> (I would appreciate if a specialist had some comments about this vocabulary).</p>
+
+<p>I think such a model can be fitted as a generalized least-squares model, as follows in  <code>R</code> :</p>
+
+<pre><code>gls(response ~ ""between covariates"" , data=dat, 
+  correlation=corSymm(form=  ~ ""within covariates"" | individual ))
+</code></pre>
+
+<p>(after stacking the data in long format).</p>
+
+<p><strong>My first question</strong> is Bayesian: what about the Bayesian analysis of model $(**)$ and more generally the Bayesian analysis of the multivariate linear regression model with a structural design ? 
+Is there a conjugate family ? What about the Jeffreys prior ? Is there an appropriate R package to perform this Bayesian analysis ?</p>
+
+<p><strong>My second question</strong> is not Bayesian: I have recently discovered some possibilities of John Fox's great <code>car</code> package to analyse 
+such models with ordinary least squares theory (the <code>Anova()</code> function with the <code>idesign</code> argument --- see <a href=""http://www.stat.ualberta.ca/~wiens/stat575/misc%20resources/Appendix-Multivariate-Linear-Models.pdf"" rel=""nofollow"">Fox &amp; Weisberg's appendix</a>). Perhaps I'm wrong, but I am under the impression that this package only allows to get the MANOVA table (sum of squares analysis) with an orthogonal matrix $X$, and I'd like to get (exact) confidence intervals about the within-design parameters for an arbitrary matrix $X$, as well as prediction intervals. Is there a way to do so with <code>R</code> using ordinary least squares ?  </p>
+"
+"0.463552534650553","0.483045891539648"," 71414","<p>I'm trying to use a zero-inflated gamma model (or a gamma 'hurdle' model). The model is a mixture of logistic regression and generalized linear modeling. I can do this analysis in two steps: 1) do a logistic regression against presence/absence data and then 2) Use a generalized linear model with a gamma distribution on the positive values. I'm trying to set the model up where, if y = 0, then E(y) = p, but if y > 0, then E(y) is gamma distributed.</p>
+
+<p>I'm trying to set this up in BUGS/JAGS, because I've seen these models <a href=""http://stats.stackexchange.com/questions/15967/how-can-i-set-up-a-zero-inflated-poisson-in-jags"">worked before for poisson-distributions</a>. I tried to adapt the code from that link into a gamma distribution, but I can't quite seem to get it to work. I know the code won't work because my data have zeroes, and the likelihood function can't be evaluated with zeroes. However, even when restricted to positive values, I get errors for invalid parent values. Even so, I'm not even sure the model is specified correctly.</p>
+
+<p>Here is the model:</p>
+
+<pre><code># For the ones trick
+C &lt;- 10000
+
+# for every observation
+for(i in 1:N){
+    # log-likelihood of the observation from the gamma likelihood
+    LogPos[i] &lt;- (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - N*shape[i]*log(scale[i]) - N*loggam(scale[i])
+    #likelihood
+    Lpos[i] &lt;- exp(LogPos[i])
+
+    # redefine the shape and rate parameters as a function of the mean and sd
+    shape[i] &lt;- pow(mu[i], 2) / pow(sd, 2)
+    scale[i] &lt;- mu[i] / pow(sd, 2)
+
+    # mu is a function of MTD: use the inverse link
+    #mu[i] &lt;- 1/eta[i]
+    mu[i] &lt;- beta0 + beta1*MTD[i]
+
+
+    # zero-inflated part, where w[i] is the probability of being zero
+    w[i] &lt;- exp(zeta[i]) / (1 + exp(zeta[i]))
+    zeta[i] &lt;- gamma0 + gamma1*MPD[i]
+
+    # ones trick
+    p[i] &lt;- Lpos[i] / C
+    ones[i] ~ dbern(p[i])
+
+    # Full likelihood
+    Lik[i] &lt;- Lpos[i]*(1 - w[i]) + equals(y[i], 0)*w[i]
+  } 
+
+# PRIORS
+beta0 ~ dnorm(0, 0.001)
+beta1 ~ dnorm(0, 0.001)
+
+gamma0 ~ dnorm(0, 0.001)
+gamma1 ~ dnorm(0, 0.001)
+
+sd ~ dunif(0, 100)
+</code></pre>
+
+<p>Has anyone set a model up like this or have any advice on how to set it up correctly?</p>
+
+<p><strong>UPDATE</strong></p>
+
+<p>I've tried a new set of code that's similar, but slight different. I still have not gotten it to work</p>
+
+<pre><code>model{
+
+  # For the ones trick
+  C &lt;- 10000
+
+  # for every observation
+  for(i in 1:N){
+
+    # make a dummy variable that is 0 if y is &lt; 0.0001 and 1 if y &gt; 0.0001. This is essentially a presence
+    # absence dummy variable
+    z[i] &lt;- step(y[i] - 0.0001)
+
+    # define the logistic regression model, where w is the probability of occurance.
+    # use the logistic transformation exp(z)/(1 + exp(z)), where z is a linear function
+    w[i] &lt;- exp(zeta[i]) / (1 + exp(zeta[i]))
+    zeta[i] &lt;- gamma0 + gamma1*MPD[i]
+
+    # define the gamma regression model for the mean. use the log link the ensure positive, non-zero mu
+    mu[i] &lt;- exp(eta[i])
+    eta[i] &lt;- beta0 + beta1*MTD[i]
+
+    # redefine the mu and sd of the continuous part into the shape and scale parameters
+    shape[i] &lt;- pow(mu[i], 2) / pow(sd, 2)
+    scale[i] &lt;- mu[i] / pow(sd, 2)
+
+    # for readability, define the log-likelihood of the gamma here
+    logGamma[i] &lt;- (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - shape[i]*log(scale[i]) - loggam(scale[i])
+
+    # define the total likelihood, where the likelihood is (1 - w) if y &lt; 0.0001 (z = 0) or
+    # the likelihood is w * gammalik if y &gt;= 0.0001 (z = 1). So if z = 1, then the first bit must be
+    # 0 and the second bit 1. Use 1 - z, which is 0 if y &gt; 0.0001 and 1 if y &lt; 0.0001
+    logLik[i] &lt;- (1 - z[i]) * log(1 - w[i]) + z[i] * ( log(w[i]) + logGamma[i] )
+
+    # Use the ones trick
+    p[i] &lt;- logLik[i] / C
+    ones[i] ~ dbern(p[i])
+  } 
+
+  # PRIORS
+  beta0 ~ dnorm(0, 0.001)
+  beta1 ~ dnorm(0, 0.001)
+
+  gamma0 ~ dnorm(0, 0.001)
+  gamma1 ~ dnorm(0, 0.001)
+
+  sd ~ dgamma(1, 2)
+
+}
+</code></pre>
+
+<p><strong>UPDATE 2</strong></p>
+
+<p>I've gotten it to run by deleting the definition of logGamma[i] and putting it directly into the likelihood function, which now reads:</p>
+
+<pre><code>logLik[i] &lt;- (1 - z[i]) * log(1 - w[i]) + z[i] * ( log(w[i]) + (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - shape[i]*log(scale[i]) - loggam(scale[i]) )
+</code></pre>
+
+<p>The problem was that JAGS was trying to evaluate the log likelihood at all observations first, resulting in NA's for the 0's. In the new way, it only evaluates it if z = 1 (I think). I'm still having trouble getting the parameter estimates to line up. For example, the gamma's are almost identical to a logistic regression of the same form (hooray!). But the betas are pretty far off from a gamma GLM of the positive values. I don't know if this is normal or not, but I suspect there are still problems with my model specification.</p>
+"
+"0.111803398874989","0.105409255338946"," 71599","<p>Suppose that one has data on a proportion $P$ measured on a continuous scale.  Further suppose that this data has a grouped structure -- some proportions are clustered according to a certain variable $g$ (location, say).  Further say that you've got a covariate $X$ that your think is correlated with $P$.  You want to know the effect of $X$ on $P$ in order to get conditional distributions of $P$ given $X$.  </p>
+
+<p>One could simply run a linear model with random effects, but predictions may go beyond the 0,1 bounds, and intervals will be wrong.  </p>
+
+<p>One could fit a binomial(logit) GLM, but this may be a poor model for the data, as it would lead to overly upward (downward) skewed intervals near the boundaries, and a perhaps-artificial sigmoidal shape to the predictions.</p>
+
+<p>Could a Beta regression work for this sort of problem?  If so, how would one incorporate the grouped structure of the data?  Any ideas for implementation in R?</p>
+"
+"NaN","NaN"," 72334","<p>I am not a statistician but a Java/R programmer. So even the topic could be wrong. Please bear with me.</p>
+
+<p>I am collecting details from production servers. These details could be the number of active sessions, CPU utilization etc. I draw graphs. So for example, I have a R graph showing Time(x), Web Server hits(left y-axis) and MBytes transferred(right y-axis). Another one is the number of active sessions over time.</p>
+
+<p>I need to understand the statistical growth pattern of this data before and after an event. These are all distributions.</p>
+
+<ol>
+<li>How do I go about measuring the growth ? I use R.</li>
+<li>How do I understand what causes that growth ? I think this is about regression.</li>
+</ol>
+
+<p>The more complex question from my perspective.</p>
+
+<ol>
+<li>What is the statistical process to predict future growth in these cases ? I already read Capacity Planning books. This is not about Capacity planning which probably is the next step.</li>
+</ol>
+
+<p>I have come across topics like 'Growth Analysis curves and Visualization' but couldn't access any material even after searching.</p>
+
+<p>Mohan</p>
+"
+"0.193649167310371","0.182574185835055"," 87028","<p>I have modeled claim frequency data using Poisson regression and claim amount using gamma. I have seen the <a href=""http://en.wikipedia.org/wiki/Tweedie_distributions"" rel=""nofollow"">Tweedie compound Poisson gamma distribution</a> used to model aggregate claim data. I am quite new to R and I am trying best to model it using the Tweedie model in R. I have searched on the R codes and found the following <code>ptweedie.series(q, power, mu, phi)</code> and <code>dtweedie.series(y, power, mu, phi)</code>. I have predictors in my data set. Can anyone suggest how to proceed from here? </p>
+"
+"0.316227766016838","0.298142396999972"," 94089","<p>I started to use the function <code>multinom</code> of <code>R</code> package <code>nnet</code> in order to fit several conditional probability distributions with the multinomial logistic model. I need the parameters of the fittings in order to pass them to a Java program, which will compute the probabilities and use them.</p>
+
+<p>My problem is that the probabilities computed with the parameters returned by <code>multinom</code>, following the usual <a href=""http://en.wikipedia.org/wiki/Multinomial_logistic_regression#As_a_set_of_independent_binary_regressions"" rel=""nofollow"">definition</a> of multinomial logistic model, are not the same as those directly computed in <code>R</code>, which are the correct ones. On Stack Overflow I have already asked a <a href=""http://stackoverflow.com/questions/22905807/how-does-the-function-multinom-from-r-package-nnet-compute-the-multinomial-proba"">question</a> about this issue, but I do not still know how the <code>R</code> function <code>multinom</code> computes these probabilities; my guess is that it relies on neural networks, since this function belongs to <code>R</code> package <code>nnet</code>, but I do not have any idea about the details, and an inspection of the code led to nowhere.</p>
+
+<p>Do you know an <code>R</code> package which fits conditional probabilities and returns the corresponding parameters of the model, so that we may easily compute the probabilities in another program? E.g., using the MARS model (<code>R</code> package <code>earth</code>) or Projection Pursuit Regression (<code>R</code> package <code>ppr</code>) is not feasible, since computing the probabilities from the parameters of these models would be a mess. Besides, the function <code>mlogit</code> from the <code>R</code> package with the same name is not applicable as well, since the dataset should be in a certain format (we would also need the predictors corresponding to the alternative, ""non-chosen"" response variable).</p>
+"
+"0.44798933519052","0.447213595499958"," 95994","<p>I`d like to extract the parameters of a two-component mixture distribution of noncentral student t distributions which first has to be fitted to a one-dimensional sample.</p>
+
+<p>My question is closely related to this thread, but as pointed out I want to use Student t components for the mixture:
+<a href=""http://stats.stackexchange.com/questions/10062/which-r-package-to-use-to-calculate-component-parameters-for-a-mixture-model?newreg=fe1454a4702e4532a03bd2c705fe3b02"">Which R package to use to calculate component parameters for a mixture model</a></p>
+
+<p>There are many packages for R that are capable of handling mixture distributions in one way or another. Some in the context of a Bayesian framework requiring kernels. Some in a regression framework. Some in a nonparametric framework. ...</p>
+
+<p>In general the ""mixdist""-package seems to come closest to my wish. This package fits parametric mixture distributions to a sample of data. Unfortunately it doesn`t support the student t distribution.</p>
+
+<p>I have also tried to manually set up a likelihood function as described here:
+<a href=""http://stackoverflow.com/questions/6485597/r-how-to-fit-a-large-dataset-with-a-combination-of-distributions"">http://stackoverflow.com/questions/6485597/r-how-to-fit-a-large-dataset-with-a-combination-of-distributions</a>
+But my result is far from perfect.</p>
+
+<p>The ""gamlss.mx""-package might be helping, but originally it seems to be set up for another context, i.e. regression. I tried to regress my data on a constant and then extract the parameters for the estimated mixture error distribution. Is this a valid approach? </p>
+
+<p>But with this approach the estimated parameters seem to be not directly accessable individually by some command (such as fit1$sigma). And more importantly there seem to be serious estimation problems even in pretty simple and nonambiguous cases.
+E.g. in example 2 (see syntax below) I simulated a mixture which looks like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/MG7AA.jpg"" alt=""kernel density estimate of the mixture""></p>
+
+<p>When trying to fit a two-component student t mixture to these data either I get this error message (the deeper meaning of which I don't understand):</p>
+
+<p><img src=""http://i.stack.imgur.com/UPvg4.jpg"" alt=""enter image description here""></p>
+
+<p>or I get wrong results (convergenve is reached only after approximately two hours as can be seen from the output):</p>
+
+<p><img src=""http://i.stack.imgur.com/HjlfW.jpg"" alt=""enter image description here""></p>
+
+<p>The means could be estimated well, but both the variance and the degrees of freedom are estimated badly. In the TF2 implementation of the student t, the sigma parameter denotes the standard deviation. Its estimate is NEGATIVE for the first component! And for the second component the degrees of freedom estimate is also NEGATIVE. Probably one should not use these results in practice :(</p>
+
+<p>By the way: Is there a way to restrict these degree-of-freedom coefficient estimates to be natural numbers? </p>
+
+<p>The following syntax is my gamlss.mx-setup so far:</p>
+
+<pre><code>library(gamlss.dist)
+library(gamlss.mx)
+library(MASS)
+
+# example 1 (real data):
+data(geyser)
+plot(density(geyser$waiting) )
+fit1 &lt;- gamlssMX( waiting~1,data=geyser,family=""TF2"",K=2 )
+fit1
+# works fine
+
+# example 2 (simulated data):
+N &lt;- 100000
+components &lt;- sample(1:2,prob=c(0.6,0.4),size=N,replace=TRUE)
+mus &lt;- c(3,-6)    # denotes the mean of component 1 and 2, respectively
+sds &lt;- c(1,9)     # ... the standard deviations
+nus &lt;- c(25,3)    # ... the degrees of freedom
+mixsim &lt;-data.frame(rTF2( N,mu=mus[components],sigma=sds[components],nu=nus[components] ))
+colnames(mixsim) &lt;- ""MCsim""
+plot(density(mixsim$MCsim) , xlim=c(-50,50))
+fit2 &lt;- gamlssMX(MCsim~1,data=mixsim,family=""TF2"",K=2)
+fit2
+# error message or strange results (this also happens when using a sample of S&amp;P500 returns)
+</code></pre>
+
+<p>I would be very grateful for any advice!
+I've read through many related manuals and vignettes so far but I`m still lost.</p>
+
+<p>Thanks a lot in advance!!
+Jo</p>
+"
+"0.295803989154981","0.278886675511359"," 96991","<p>I have done survival analysis. I used Kaplan-Meir to do the survival analysis. </p>
+
+<p>Description of data: 
+My data set is large and data table has close 120,000 records of survival information belong to 6 groups.</p>
+
+<p>Sample: </p>
+
+<pre><code>   user_id   time_in_days   event total_likes total_para_length group
+1:       2          4657     1       38867        431117212   AA
+2:       2          3056     1       31392        948984460   BB
+3:       2            49     1          15            67770   CC
+4:       3          4181     1       15778        379211806   BB
+5:       3            17     1           3            19032   CC
+6:       3          2885     1       12001        106259666   EE
+</code></pre>
+
+<p>After fitting the survival curves and plotting it, I see they are similar but yet at any given point in time their survival proportions don't seem to look like identical.</p>
+
+<p>Here is the plot:
+<img src=""http://i.stack.imgur.com/9wLYH.png"" alt=""Survival Curves""></p>
+
+<p>I ran a hypothesis test where my H0: There is not difference between the survival curves and here is the results that I got. </p>
+
+<pre><code>&gt; survdiff(formula= Surv(time, event) ~ group, rh=0)
+Call:
+survdiff(formula = Surv(time, event) ~ group, rho = 0)
+
+             N Observed Expected (O-E)^2/E (O-E)^2/V
+group=FF 28310    27993    28632      14.3      19.0
+group=AA 64732    63984    67853     220.6     460.1
+group=BB 19017    18690    16839     203.4     245.6
+group=CC  9687     9536     8699      80.6      91.0
+group=DD 13438    13187    11891     141.3     164.2
+group=EE  3910     3847     3324      82.4      89.7
+
+ Chisq= 788  on 5 degrees of freedom, p= 0  
+</code></pre>
+
+<p>I am little confuse by trying to figure out what it means, specially since I got <code>p-value=0</code>. </p>
+
+<p>I am fairly new to survival analysis so after reading and digging through I realized that this is a non-parametric as I understand which means that it doesn't make any assumptions of the underline distributions of the time.</p>
+
+<p>After reading about cox-proportional hazard function and going over <a href=""http://cran.r-project.org/doc/contrib/Fox-Companion/appendix-cox-regression.pdf"" rel=""nofollow"">c-cran pdf</a> I performed a cox regression test and here is what I got from that: </p>
+
+<pre><code>&gt; cox_model &lt;- coxph(Surv(time, event) ~ X)
+&gt; summary(cox_model)
+Call:
+coxph(formula = Surv(time, event) ~ X)
+
+  n= 139094, number of events= 137237 
+
+         coef  exp(coef)   se(coef)       z Pr(&gt;|z|)    
+X1 -7.655e-05  9.999e-01  1.504e-06 -50.897   &lt;2e-16 ***
+X2 -1.649e-10  1.000e+00  5.715e-11  -2.886   0.0039 ** 
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+   exp(coef) exp(-coef) lower .95 upper .95
+X1    0.9999          1    0.9999    0.9999
+X2    1.0000          1    1.0000    1.0000
+
+Concordance= 0.847  (se = 0.001 )
+Rsquare= 0.111   (max possible= 1 )
+Likelihood ratio test= 16307  on 2 df,   p=0
+Wald test            = 7379  on 2 df,   p=0
+Score (logrank) test = 4628  on 2 df,   p=0
+</code></pre>
+
+<p>My big X is generated by doing rbind on total_like and total_para_length. Looking at Rsquare and P-Values I am not sure what really is going on here. If I can't throw away the Null-Hypothesis I should give a larger p-value. </p>
+"
+"0.158113883008419","0.149071198499986","123059","<p>As the title says, does a linear regression model make assumptions about distributions of depended and independent variables and what should these distributions be for the model to work as expected ?  I have a log normal distribution (or rather a very positively skewed one) for both  dependent and independent variables and I always log transformed them before doing any fitting but came across an article saying that is not necessary. Also just to add to this, I would like to use the model to predict values of individual data points. </p>
+"
+"NaN","NaN","125646","<p>How can I fit reduced-rank regression with continuous response in R?</p>
+
+<p>I found the package <code>VGAM</code> but it only fits for discrete distributions...</p>
+"
+"0.370809924354783","0.34960294939005","129337","<h3>The out-of-context short version</h3>
+
+<p>Let $y$ be a random variable with CDF
+$$
+F(\cdot) \equiv \cases{\theta &amp; y = 0 \\ \theta + (1-\theta) \times \text{CDF}_{\text{log-normal}}(\cdot; \mu, \sigma) &amp; y &gt; 0}
+$$</p>
+
+<p>Let's say I wanted to simulate draws of $y$ using the inverse CDF method. Is that possible? This function doesn't exactly have an inverse. Then again there's <a href=""http://stats.stackexchange.com/q/73028/36"">Inverse transformation sampling for mixture distribution of two normal distributions</a> which suggests that there is a known way to apply inverse transformation sampling here.</p>
+
+<p>I'm aware of the two-step method, but I don't know how to apply it to my situation (see below).</p>
+
+<hr>
+
+<h3>The long version with background</h3>
+
+<p>I fitted the following model for a vector-valued response, $y^i = \left( y_1 , \dots , y_K \right)^i$, using MCMC (specifically, Stan):</p>
+
+<p>$$
+\theta_k^i \equiv \operatorname{logit}^{-1}\left( \alpha_k x^i \right), \quad \mu_k^i \equiv \beta_k x^i - \frac{ \sigma^2_k }{ 2 } \\
+F(\cdot) \equiv \cases{\theta &amp; y = 0 \\ \theta + (1-\theta) \times \text{CDF}_{\text{log-normal}}(\cdot; \mu, \sigma) &amp; y &gt; 0} \\
+u_k \equiv F(y_k), \quad z_k \equiv\Phi^{-1}{\left( u_k \right)} \\
+z \sim \mathcal{N}(\mathbf{0}, R) \times \prod_k f(y_k) \\
+\left( \alpha, \beta, \sigma, R \right) \sim \text{priors}
+$$</p>
+
+<p>where $i$ indexes $N$ observations, $R$ is a correlation matrix, and $x$ is a vector of predictors/regressors/features.</p>
+
+<p>That is, my model is a regression model in which the conditional distribution of the response is assumed to be a Gaussian copula with zero-inflated log-normal marginals. I've posted about this model before; it turns out that Song, Li, and Yuan (2009, <a href=""http://onlinelibrary.wiley.com/doi/10.1111/j.1541-0420.2008.01058.x/abstract"" rel=""nofollow"">gated</a>) have developed it and they call it a vector GLM, or VGLM. The following is their specification as close to verbatim as I could get it:
+$$
+f(\mathbf{y}; \mathbf{\mu}, \mathbf{\varphi}, \Gamma) = c\{ G_1(y_1), \dots, G_m(y_m) | \Gamma \} \prod_{i=1}^m g(y_i; \mu_i, \varphi_i) \\
+c(\mathbf{u} | \Gamma) = \left| \Gamma \right|^{-1/2}\exp\left( \frac{1}{2} \mathbf{q}^T \left( I_m - \Gamma^{-1} \right) \mathbf{q} \right) \\
+\mathbf{q} = \left( q_1, \dots, q_m \right)^T, \quad q_i = \Phi^{-1}(u_i)
+$$
+My $F_K$ corresponds to their $G_m$, my $z$ corresponds to their $\mathbf{q}$, and my $R$ corresponds to their $\Gamma$; the details are on page 62 (page 3 of the PDF file) but they're otherwise identical to what I wrote here.</p>
+
+<p>The zero-inflated part roughly follows the specification of Liu and Chan (2010, <a href=""http://www.jstatsoft.org/v35/i11/paper"" rel=""nofollow"">ungated</a>).</p>
+
+<p>Now I would like to simulate data from the estimated parameters, but I'm a little confused as to how to go about it. First I thought I could just simulate $y$ directly (in R code):</p>
+
+<pre><code>for (i in 1:N) {
+    for (k in 1:K) {
+        Y_hat &lt;- rbinom(1, 1, 1 - theta[i, k])
+        if (Y_hat == 1)
+            Y_hat &lt;- rlnorm(1, mu[i, k], sigma[k])
+    }
+}
+</code></pre>
+
+<p>which doesn't use $R$ at all. I'd like to try to actually use the correlation matrix I estimated.</p>
+
+<p>My next idea was to take draws of $z$ and then convert them back to $y$. This also seems to coincide with the answers in <a href=""http://stats.stackexchange.com/q/78894/36229"">Generating samples from Copula in R</a> and <a href=""http://stats.stackexchange.com/q/123698/36229"">Bivariate sampling for distribution expressed in Sklar&#39;s copula theorem?</a>. But what the heck is my $F^{-1}$ here? <a href=""http://stats.stackexchange.com/q/73028/36229"">Inverse transformation sampling for mixture distribution of two normal distributions</a> makes it sound like this is possible, but I have no idea how to do it.</p>
+"
+"0.251039505523201","0.430331482911935","129761","<p>These multiple imputation results relate to data I have previously described and shown here - <a href=""http://stats.stackexchange.com/questions/129739/skewed-distributions-for-logistic-regression"">Skewed Distributions for Logistic Regression</a></p>
+
+<p>Three variables I am using have missing data. Their names, descriptions and % missing are shown below.</p>
+
+<pre><code>inctoCran - Time from head injury to craniotomy in minutes = 0-2880 (After 2880 minutes is defined as a separate diagnosis) - 58% missing
+GCS - Glasgow Coma Scale = 3-15 - 37% missing
+rcteyemi - Pupil reactivity (1 = neither, 2 = one, 3 = both) - 56% missing
+</code></pre>
+
+<p>I have been using mutliple imputation to model the missing data above following advice in a previous post here - <a href=""http://stats.stackexchange.com/questions/127134/describing-results-from-logistic-regression-with-restricted-cubic-splines-using"">Describing Results from Logistic Regression with Restricted Cubic Splines Using rms in R</a></p>
+
+<p>Given this is a longitudinal analysis, a key variable of importance is the year of the treatment so we can investigate how our patient management has improved. The variable in question, <code>Yeardecimal</code> is highly significant in univariate analysis:</p>
+
+<pre><code>&gt; rcs.ASDH&lt;-lrm(formula = Survive ~ Yeardecimalc, data = ASDH_Paper1.1)
+&gt; 
+&gt; rcs.ASDH
+
+Logistic Regression Model
+
+lrm(formula = Survive ~ Yeardecimalc, data = ASDH_Paper1.1)
+
+                      Model Likelihood     Discrimination    Rank Discrim.    
+                         Ratio Test            Indexes          Indexes       
+Obs          5998    LR chi2      91.47    R2       0.023    C       0.572    
+ 0           1281    d.f.             1    g        0.309    Dxy     0.143    
+ 1           4717    Pr(&gt; chi2) &lt;0.0001    gr       1.362    gamma   0.146    
+max |deriv| 3e-12                          gp       0.054    tau-a   0.048    
+                                           Brier    0.165                     
+
+             Coef   S.E.   Wald Z Pr(&gt;|Z|)
+Intercept    0.8696 0.0530 16.42  &lt;0.0001 
+Yeardecimalc 0.0551 0.0057  9.70  &lt;0.0001 
+</code></pre>
+
+<p>To deal with missingness, I used <code>aregImpute</code> and <code>fit.mult.impute</code> to conduct multiple imputation prior to multivariate logisic regression. When including Yeardecimal, the results were as follows:</p>
+
+<pre><code>&gt; a &lt;- aregImpute(~ I(Outcome30) + Age + GCS + I(Other) + ISS + inctoCran + I(rcteyemi) + I(neuroFirst) + I(neuroYN) + Mechanism + LOS + Yeardecimalc, nk=4, data = ASDH_Paper1.1, n.impute=10)
+Iteration 13 
+&gt; 
+&gt; a
+
+Multiple Imputation using Bootstrap and PMM
+
+aregImpute(formula = ~I(Outcome30) + Age + GCS + I(Other) + ISS + 
+    inctoCran + I(rcteyemi) + I(neuroFirst) + I(neuroYN) + Mechanism + 
+    LOS + Yeardecimalc, data = ASDH_Paper1.1, n.impute = 10, 
+    nk = 4)
+
+n: 5998     p: 12   Imputations: 10     nk: 4 
+
+Number of NAs:
+   Outcome30          Age          GCS        Other          ISS    inctoCran     rcteyemi   neuroFirst      neuroYN 
+           0            0         2242            0            0         3500         3376            0            0 
+   Mechanism          LOS Yeardecimalc 
+           0            0            0 
+
+             type d.f.
+Outcome30       c    1
+Age             s    3
+GCS             s    3
+Other           c    1
+ISS             s    3
+inctoCran       s    3
+rcteyemi        l    1
+neuroFirst      l    1
+neuroYN         l    1
+Mechanism       c    4
+LOS             s    3
+Yeardecimalc    s    3
+
+Transformation of Target Variables Forced to be Linear
+
+R-squares for Predicting Non-Missing Values for Each Variable
+Using Last Imputations of Predictors
+      GCS inctoCran  rcteyemi 
+    0.421     0.181     0.358 
+
+&gt; rcs.ASDH &lt;- fit.mult.impute(Survive ~ rcs(Age) + GCS + Mechanism + rcs(ISS) + neuroFirst + rcs(inctoCrand) + inctoCranYN + rcs(Yeardecimalc) + Sex + Other + rcteyemi,lrm,a,data=ASDH_Paper1.1)
+
+&gt; rcs.ASDH
+
+Logistic Regression Model
+
+fit.mult.impute(formula = Survive ~ rcs(Age) + GCS + Mechanism + 
+    rcs(ISS) + neuroFirst + rcs(inctoCrand) + inctoCranYN + rcs(Yeardecimalc) + 
+    Sex + Other + rcteyemi, fitter = lrm, xtrans = a, data = ASDH_Paper1.1)
+
+                      Model Likelihood     Discrimination    Rank Discrim.    
+                         Ratio Test            Indexes          Indexes       
+Obs          5998    LR chi2    1609.98    R2       0.365    C       0.836    
+ 0           1281    d.f.            25    g        1.584    Dxy     0.672    
+ 1           4717    Pr(&gt; chi2) &lt;0.0001    gr       4.875    gamma   0.674    
+max |deriv| 0.001                          gp       0.222    tau-a   0.226    
+                                           Brier    0.121                     
+
+                              Coef    S.E.    Wald Z Pr(&gt;|Z|)
+Intercept                     21.3339 67.4400  0.32  0.7517  
+Age                           -0.0088  0.0132 -0.67  0.5052  
+Age'                          -0.0294  0.0643 -0.46  0.6471  
+Age''                         -0.0134  0.2479 -0.05  0.9570  
+Age'''                         0.2588  0.3534  0.73  0.4639  
+GCS                            0.1100  0.0145  7.61  &lt;0.0001 
+Mechanism=Fall &gt; 2m           -0.0651  0.1162 -0.56  0.5754  
+Mechanism=Other                0.2285  0.1338  1.71  0.0876  
+Mechanism=RTC                  0.0449  0.1332  0.34  0.7360  
+Mechanism=Shooting / Stabbing  2.1150  1.1142  1.90  0.0577  
+ISS                           -0.1069  0.0318 -3.36  0.0008  
+ISS'                          -0.0359  0.1306 -0.27  0.7835  
+ISS''                          1.8296  1.9259  0.95  0.3421  
+neuroFirst                    -0.3483  0.0973 -3.58  0.0003  
+inctoCrand                     0.0001  0.0053  0.02  0.9872  
+inctoCrand'                   -0.0745  0.3060 -0.24  0.8077  
+inctoCrand''                   0.1696  0.5901  0.29  0.7738  
+inctoCrand'''                 -0.1167  0.3150 -0.37  0.7110  
+inctoCranYN                   -0.2814  0.6165 -0.46  0.6480  
+Yeardecimalc                  -0.0101  0.0337 -0.30  0.7641  
+Yeardecimalc'                  0.0386  0.0651  0.59  0.5536  
+Yeardecimalc''                -0.7417  0.8210 -0.90  0.3663  
+Yeardecimalc'''                7.0367  4.9344  1.43  0.1539  
+Sex=Male                       0.0668  0.0891  0.75  0.4534  
+Other=1                        0.3238  0.1611  2.01  0.0445  
+rcteyemi                       1.1589  0.1050 11.04  &lt;0.0001 
+
+
+&gt; anova(rcs.ASDH)
+                Wald Statistics          Response: Survive 
+
+ Factor          Chi-Square d.f. P     
+ Age              83.07      4   &lt;.0001
+  Nonlinear        5.97      3   0.1131
+ GCS              57.89      1   &lt;.0001
+ Mechanism         8.14      4   0.0867
+ ISS              77.31      3   &lt;.0001
+  Nonlinear       35.04      2   &lt;.0001
+ neuroFirst       12.81      1   0.0003
+ inctoCrand        2.32      4   0.6777
+  Nonlinear        2.29      3   0.5149
+ inctoCranYN       0.21      1   0.6480
+ Yeardecimalc      4.19      4   0.3807
+  Nonlinear        3.77      3   0.2874
+ Sex               0.56      1   0.4534
+ Other             4.04      1   0.0445
+ rcteyemi        121.80      1   &lt;.0001
+ TOTAL NONLINEAR  47.27     11   &lt;.0001
+ TOTAL           679.09     25   &lt;.0001
+&gt; 
+</code></pre>
+
+<p>Yeardecimal is no longer significant. However, if I exclude Yeardecimal from aregImpute only, I have the alternative result below:</p>
+
+<pre><code>&gt; a &lt;- aregImpute(~ I(Outcome30) + Age + GCS + I(Other) + ISS + inctoCran + I(rcteyemi) + I(neuroFirst) + I(neuroYN) + Mechanism + LOS, nk=4, data = ASDH_Paper1.1, n.impute=10)
+Iteration 13 
+&gt; 
+&gt; a
+
+Multiple Imputation using Bootstrap and PMM
+
+aregImpute(formula = ~I(Outcome30) + Age + GCS + I(Other) + ISS + 
+    inctoCran + I(rcteyemi) + I(neuroFirst) + I(neuroYN) + Mechanism + 
+    LOS, data = ASDH_Paper1.1, n.impute = 10, nk = 4)
+
+n: 5998     p: 11   Imputations: 10     nk: 4 
+
+Number of NAs:
+ Outcome30        Age        GCS      Other        ISS  inctoCran   rcteyemi neuroFirst    neuroYN  Mechanism        LOS 
+         0          0       2242          0          0       3500       3376          0          0          0          0 
+
+           type d.f.
+Outcome30     c    1
+Age           s    3
+GCS           s    3
+Other         c    1
+ISS           s    3
+inctoCran     s    3
+rcteyemi      l    1
+neuroFirst    l    1
+neuroYN       l    1
+Mechanism     c    4
+LOS           s    3
+
+Transformation of Target Variables Forced to be Linear
+
+R-squares for Predicting Non-Missing Values for Each Variable
+Using Last Imputations of Predictors
+      GCS inctoCran  rcteyemi 
+    0.407     0.194     0.320 
+&gt; 
+
+&gt; rcs.ASDH &lt;- fit.mult.impute(Survive ~ rcs(Age) + GCS + Mechanism + rcs(ISS) + neuroFirst + rcs(inctoCrand) + inctoCranYN + rcs(Yeardecimalc) + Sex + Other + rcteyemi,lrm,a,data=ASDH_Paper1.1)
+&gt; rcs.ASDH
+
+Logistic Regression Model
+
+fit.mult.impute(formula = Survive ~ rcs(Age) + GCS + Mechanism + 
+    rcs(ISS) + neuroFirst + rcs(inctoCrand) + inctoCranYN + rcs(Yeardecimalc) + 
+    Sex + Other + rcteyemi, fitter = lrm, xtrans = a, data = ASDH_Paper1.1)
+
+                      Model Likelihood     Discrimination    Rank Discrim.    
+                         Ratio Test            Indexes          Indexes       
+Obs          5998    LR chi2    1607.92    R2       0.364    C       0.834    
+ 0           1281    d.f.            25    g        1.578    Dxy     0.667    
+ 1           4717    Pr(&gt; chi2) &lt;0.0001    gr       4.846    gamma   0.669    
+max |deriv| 0.003                          gp       0.221    tau-a   0.224    
+                                           Brier    0.120                     
+
+                              Coef     S.E.    Wald Z Pr(&gt;|Z|)
+Intercept                     -55.6574 58.3464 -0.95  0.3401  
+Age                            -0.0084  0.0128 -0.66  0.5105  
+Age'                           -0.0335  0.0612 -0.55  0.5838  
+Age''                           0.0050  0.2365  0.02  0.9830  
+Age'''                          0.2321  0.3387  0.69  0.4930  
+GCS                             0.1099  0.0124  8.88  &lt;0.0001 
+Mechanism=Fall &gt; 2m            -0.0631  0.1138 -0.55  0.5793  
+Mechanism=Other                 0.2354  0.1381  1.70  0.0883  
+Mechanism=RTC                   0.0315  0.1319  0.24  0.8114  
+Mechanism=Shooting / Stabbing   1.9297  1.0930  1.77  0.0775  
+ISS                            -0.1012  0.0335 -3.02  0.0025  
+ISS'                           -0.0599  0.1366 -0.44  0.6613  
+ISS''                           2.1581  2.0120  1.07  0.2834  
+neuroFirst                     -0.3753  0.0888 -4.23  &lt;0.0001 
+inctoCrand                     -0.0007  0.0054 -0.13  0.9002  
+inctoCrand'                    -0.0496  0.3116 -0.16  0.8734  
+inctoCrand''                    0.1316  0.6021  0.22  0.8270  
+inctoCrand'''                  -0.1078  0.3224 -0.33  0.7381  
+inctoCranYN                    -0.1697  0.6172 -0.27  0.7834  
+Yeardecimalc                    0.0281  0.0291  0.96  0.3349  
+Yeardecimalc'                   0.0682  0.0600  1.14  0.2553  
+Yeardecimalc''                 -1.4037  0.7685 -1.83  0.0678  
+Yeardecimalc'''                10.2513  4.8156  2.13  0.0333  
+Sex=Male                        0.0595  0.0890  0.67  0.5037  
+Other=1                         0.3579  0.1641  2.18  0.0292  
+rcteyemi                        1.1862  0.0799 14.85  &lt;0.0001 
+
+
+&gt; anova(rcs.ASDH)
+                Wald Statistics          Response: Survive 
+
+ Factor          Chi-Square d.f. P     
+ Age              78.39      4   &lt;.0001
+  Nonlinear        6.23      3   0.1011
+ GCS              78.86      1   &lt;.0001
+ Mechanism         7.53      4   0.1104
+ ISS              76.46      3   &lt;.0001
+  Nonlinear       31.16      2   &lt;.0001
+ neuroFirst       17.87      1   &lt;.0001
+ inctoCrand        3.22      4   0.5214
+  Nonlinear        3.19      3   0.3630
+ inctoCranYN       0.08      1   0.7834
+ Yeardecimalc     44.83      4   &lt;.0001
+  Nonlinear        4.67      3   0.1979
+ Sex               0.45      1   0.5037
+ Other             4.76      1   0.0292
+ rcteyemi        220.51      1   &lt;.0001
+ TOTAL NONLINEAR  45.39     11   &lt;.0001
+ TOTAL           715.22     25   &lt;.0001
+&gt; 
+</code></pre>
+
+<p>Can anyone help me understand why the statistical results for Yeardecimal are so starkly different?</p>
+"
+"0.193649167310371","0.182574185835055","133387","<p>I'm trying to create a prediction model for estimation of continuous variable based on about 35 Independent variables.My data set has circa 27k observartions.
+Here is the summary of the the targeted continuous variable:</p>
+
+<pre><code>              Frequency Percent
+(0,5]              2706  10.053
+(5,10]             5226  19.415
+(10,25]            4397  16.335
+(25,100]           7142  26.533
+(100,1e+03]        6465  24.018
+(1e+03,1e+05]       981   3.645
+Total             26917 100.000
+</code></pre>
+
+<p>I tried (by using R) Random Forest (RandomForest package),Linear regression, Conditional Inference Trees (ctree function in party package) but all of them have results that have a significant overestimation.
+Here are the results of the prediction where I counted number of observations by thier distance from the actual values:
+Any idea how can i balance the results?</p>
+
+<p><img src=""http://i.stack.imgur.com/y70OM.png"" alt=""enter image description here""></p>
+
+<p>Here are some views on the data:
+The target variable is LTV for a user, I would like to predict LTV value after 180 days  based on users behavior of the first 7 days.
+Here Is a summary fot the target variavle:</p>
+
+<pre><code>  vars     n   mean     sd median trimmed   mad  min      max    range skew kurtosis   se
+1    1 26917 178.35 622.29  33.49   66.63 39.28 0.03 22103.73 22103.71 14.1   325.08 3.79
+</code></pre>
+
+<p>UPDATE:
+Here are the distributions of the targeted variable (first)and the prediction (secound)results:
+<img src=""http://i.stack.imgur.com/b3MBs.png"" alt=""targeted variable"">
+<img src=""http://i.stack.imgur.com/3N7d1.png"" alt=""prediction results based on the linear regression model that was the best""></p>
+"
+"0.463552534650553","0.437041520916824","135043","<p>I have three questions concerning accelerated failure time models (AFT), one statistical, one regarding how to implement these models in R, and one related to finding out information about what R is doing. In short my questions are;</p>
+
+<p>1) What is the relationship between the Gumbel and Weibull distributions?</p>
+
+<p>2) How can I use (1) to simulate a AFT model using Gumbel errors and fit this model in R?</p>
+
+<p>3) Where can I find formulae regarding exactly what distribution specification R is using when fitting a Weibull distribution, and exactly what model is being fitted?</p>
+
+<p>I am having difficulties implementing 2), which may be due to my mis-understanding of 1), but which I can't seem to resolve due to 3). Question (3) is self-explanatory but (2) and (3) require more detail;</p>
+
+<p>1) It seems a standard result that if $U\sim Gumbel(\alpha,\beta)$ then $V:=\exp(U)\sim Weibull(\lambda,\sigma)$ where $\alpha=\log(\sigma)$ and $\beta=1/\lambda$. However using the definition of the Gumbel and Weibull distributions commonly used (for example Wikipedia), when I do the derivation I can only get the transformation $V':=1/\exp(U)$ to give this result but where $\alpha=-\log(\sigma)=\log(1/\sigma)$. Thus can anyone confirm or not any knowledge of this relationship, or perhaps suggest where I have gone wrong (for brevity in the first instance I do not supply the detail)?</p>
+
+<p>2) My approach is to use</p>
+
+<p>$Y_{i}:=\log\left(\frac{1}{T_{i}}\right)=\beta_{0} + \beta_{1}x_{i} + e_{i},\hspace{20pt}i=1,...,N$,</p>
+
+<p>as a data-generating mechanism for the logarithm of the time to event where $e_{i}\sim Gumbel(\alpha,\beta)$, where $i$ indexes subjects, $x_{i}$ is a scalar covariate, and the $e_{i}$ are all independent. I choose $\alpha=-\beta*c$ where $c$ is Euler's constant in order to ensure $E[e_{i}]=\alpha+c\beta=0$. This gives</p>
+
+<p>$Y_{i}\sim Gumbel(\beta_{0} + \beta_{1}x_{i}+\alpha,\beta)$,</p>
+
+<p>and using (1)</p>
+
+<p>$T_{i}\sim Weibull(1/\beta,\exp[-(\beta_{0} + \beta_{1}x_{i}+\alpha)])$</p>
+
+<p>The code at the end of this post is a minimal working example of this approach, where I censor subjects if $T_{i}$ is greater than the median of the $N$ theoretical medians of $\{T_{1},...,T_{N}\}$, and create an event if not. This gives $50-60\%$ of subjects being censored, the balance having events, and I interpret this to be right-censoring (say the end of a study).</p>
+
+<p>I then use the survreg package in R to try to fit an AFT to $Y_{i}$ using the ""dist=weibull"" option. Using $\beta_{0}=-10$ and $\beta_{1}=0$ gives the following output</p>
+
+<p><img src=""http://i.stack.imgur.com/4sQlb.png"" alt=""enter image description here""></p>
+
+<p>which gives the intercept being positive when it should be negative. Things get worse when using $\beta_{0}=-10$ and $\beta_{1}=2$ which gives the following output</p>
+
+<p><img src=""http://i.stack.imgur.com/i7o3f.png"" alt=""enter image description here""></p>
+
+<p>which is obviously wrong. Thus I would like to know what model I am actually fitting when using the survreg package.</p>
+
+<p>The code below is a minimal working example (apart from some code to produce plots which can be helpful).</p>
+
+<pre><code># minimal working example
+set.seed(123)
+require(survival)
+#params of the gumbel(alpha_gum,beta_gum) distribution so that E[X]=0
+beta_gum = 1/5 #
+alpha_gum = -(beta_gum*(-digamma(1)))
+
+#calc the mean of the errors using Eulers constant as the negative of the diagamma function
+mu_e = alpha_gum + (beta_gum*(-digamma(1)))#should be 0   
+
+# regression parameters
+intercept = -10;
+beta1 =0;
+#beta1 =2;
+
+#number of subjects
+N=1000;
+
+# vector of uniform random numbers
+U = runif(N)
+
+#vector for gumbel distributed errors
+e = matrix(,nrow=N,ncol=1)
+
+
+# log of time to event, time to event, mean LTTE
+logTTE = matrix(,nrow=N,ncol=1)
+Xbeta_LTTE= matrix(,nrow=N,ncol=1)
+TTE = matrix(,nrow=N,ncol=1)
+TTE2 = matrix(,nrow=N,ncol=1)
+
+#censoring variable
+censor = matrix(,nrow=N,ncol=1)
+
+#simulate covariate from a normal distribution
+covariate1 = rnorm(N,6,4)
+
+for (i in 1:N)
+{
+  # calculate the Gumbel RV from the inverse CDF of the Gumbel
+  e[i,1] = alpha_gum + (-beta_gum*log(-log(U[i])))
+
+  #generate the mean log TTE  
+  Xbeta_LTTE[i,1] = intercept + (beta1*covariate1[i])
+
+  #add the errors
+  logTTE[i,1] = Xbeta_LTTE[i,1] + e[i,1]  
+
+  #transform to raw time variable - this is a Weibull dist
+  #TTE_i ~ Weibull[1/beta_gum , exp(-[logTTE_i+alpha_gum])
+  TTE[i,1] = 1/exp(logTTE[i,1])      
+}
+
+#calc the median the TTE given TTE ~ Weibull[1/beta_gum , exp(-[X_i^t*beta+alpha_gum])
+lambda_array = exp(-(Xbeta_LTTE + alpha_gum + (beta_gum*(-digamma(1)))))
+kappa = 1/beta_gum
+median_TTE_array = (lambda_array)*(log(2)^(1/kappa))
+median_TTE = median(median_TTE_array)
+
+# calculate the censoring variable
+for (i in 1:N)
+{
+  #censoring: subjects with a TTE &gt;median_TTE will be right-censored
+  #i.e. study ends at T=median_TTE say
+  if (TTE[i,1]&gt;median_TTE)
+  {
+    censor[i,1]=1 
+    TTE2[i,1]=median_TTE
+  }
+  else
+  {
+    censor[i,1]=0    
+    TTE2[i,1]=TTE[i,1]
+  }  
+}
+
+#calculate the percentage of censored subjects and do a plot
+pc_censored = sum(censor)/N
+
+#fit AFT model
+datframe_surv = data.frame(covariate1)
+attach(datframe_surv)
+
+m.surv = Surv(TTE2,censor,type=""right"")
+m.surv.fit = survreg(m.surv~covariate1,dist=""weibull"",scale=1)
+sum = summary(m.surv.fit)
+print(sum)
+
+
+
+###################  plots ########################
+
+
+#histogram of the errors - gumbel dist
+h1 = hist(e, breaks=50, plot=FALSE) 
+
+#histogram of the mean log TTE - gumbel dist
+h2 = hist(logTTE, breaks=50, plot=FALSE) 
+
+#histogram of the fixed means
+h3 = hist(Xbeta_LTTE, breaks=50, plot=FALSE) 
+
+#histogram of the TTE - weibul dist
+h4 = hist(TTE, breaks=50, plot=FALSE) 
+
+#calc the mean of the log TTE given logTTE ~ Gumbel(X_i^t*beta+alpha_gum,beta_gum)
+median_logTTE_array = Xbeta_LTTE + alpha_gum - (beta_gum*(log(log(2))))
+median_logTTE = median(median_logTTE_array)
+
+
+
+#calc the means
+ylim_h1 = c(min(h1$density),max(h1$density) )
+xlim_h1 = c(mu_e,mu_e )
+
+ylim_h2 = c(min(h3$density),max(h3$density) )
+xlim_h2 = c(median_logTTE,median_logTTE )
+
+ylim_h3 = c(min(h3$density),max(h3$density) )
+xlim_h3 = c(mean(Xbeta_LTTE),mean(Xbeta_LTTE) )
+
+
+ylim_h4 = c(min(h4$density),max(h4$density) )
+xlim_h4 = c(median_TTE,median_TTE )
+
+
+#dev.off()
+par(mfrow=c(2,2))
+
+plot(h1$mids,h1$density,col='red',main=""errors - gumbel dist"",xlab=""errors (log time)"")
+lines(xlim_h1,ylim_h1)
+
+plot(h3$mids,h3$density,col='red',main=""mean log TTE (X*beta) - fixed"",xlab=""mean log TTE (log time)"")
+lines(xlim_h3,ylim_h3)
+
+plot(h2$mids,h2$density,col='red',main=""log TTE - gumbel dist"",xlab=""log TTE (log time)"")
+lines(xlim_h2,ylim_h2)
+
+
+plot(h4$mids,h4$density,col='red',main=""TTE - Weibull dist"",xlab=""TTE (time)"")
+lines(xlim_h4,ylim_h4)
+</code></pre>
+"
+"0.182574185835055","0.215165741455968","142693","<p><strong><em>Is the following a reasonable illustration of the OVB problem?</em></strong></p>
+
+<p>We build up fictional data around the regression line:</p>
+
+<p>$$y = 7.2 + 2.3 \, x_1 + 0.1 \, x_2 + 1.5 \, x_3 + 0.013 \, x_4 + eps$$</p>
+
+<p>by using this function:</p>
+
+<pre><code>correlatedValue = function(x, r){
+  r2 = r**2
+  ve = 1 - r2
+  SD = sqrt(ve)
+  e  = rnorm(length(x), mean = 0, sd = SD)
+  y  = r * x + e
+}
+</code></pre>
+
+<p>-thank you, @gung for this post:
+<a href=""http://stats.stackexchange.com/questions/38856/how-to-generate-correlated-random-numbers-given-means-variances-and-degree-of"">How to generate correlated random numbers (given means, variances and degree of correlation)?</a></p>
+
+<p>And the following function, which generates four variables (<strong><em>x1</em></strong>, <strong><em>x2</em></strong>, <strong><em>x3</em></strong> and <strong><em>x4</em></strong>) as well as noise (<strong><em>eps</em></strong>). <strong><em>x1</em></strong> and <strong><em>x3</em></strong> are sample from normal distributions; <strong><em>x2</em></strong> is extracted from a uniform; and <strong><em>x4</em></strong> from a Poisson.</p>
+
+<pre><code>variables &lt;- function(){
+x &lt;- rnorm(1000)
+x1 &lt;- 50 + 15 * x
+x3 &lt;- 28 + 11 * correlatedValue(x = x, r = 0.6)
+x2 &lt;- runif(1000, 0, 100)
+x4 &lt;- rpois(1000,50)
+eps &lt;- rnorm(1000,5, 7)
+y = 7.2 + 2.3 * x1 + 0.001 * x2 + 1.5 * x3 + 0.013 * x4 + eps
+dat &lt;- as.data.frame(cbind(y, x1, x2, x3, x4))
+c &lt;- as.numeric(coef(lm(y ~ x2 + x3 + x4, dat))[3])
+d &lt;- as.numeric(coef(lm(y ~ x1 + x2 + x3 + x4, dat))[4])
+c(c,d)
+}
+</code></pre>
+
+<p><strong><em>x1</em></strong> and <strong><em>x3</em></strong> are highly influential on <strong><em>y</em></strong> and are correlated with each other, setting the values up to observe <strong><em>OVB</em></strong>. <strong><em>x2</em></strong> and <strong><em>x4</em></strong> are less influential.</p>
+
+<p>Here is the plotting of <strong><em>y</em></strong> against <strong><em>x1</em></strong>, <strong><em>x2</em></strong>, <strong><em>x3</em></strong>  and <strong><em>x4</em></strong>, and <strong><em>x1</em></strong> over <strong><em>x3</em></strong> with added regression lines:</p>
+
+<p><img src=""http://i.stack.imgur.com/I4u0S.png"" alt=""enter image description here""></p>
+
+<p>And following is the variance-covariance matrix:</p>
+
+<pre><code>             y           x1           x2         x3          x4
+y   1.00000000  0.944410945  0.014421682 0.77571067 -0.01463981
+x1  0.94441094  1.000000000 -0.001726526 0.56504020 -0.03562991
+x2  0.01442168 -0.001726526  1.000000000 0.03537959  0.02253922
+x3  0.77571067  0.565040198  0.035379590 1.00000000  0.02573827
+x4 -0.01463981 -0.035629906  0.022539218 0.02573827  1.00000000
+</code></pre>
+
+<p>Predictably, the regression including all variables shows similar coefficients to the initial equation:</p>
+
+<pre><code>coef(lm(y~.,dat))[2:5]
+         x1          x2          x3          x4 
+2.253353226 0.004899445 1.547915198 0.017710038 
+</code></pre>
+
+<p>Wrapping up, a quick simulation is carried out to obtain the mean of the <strong><em>x3</em></strong> coefficient in 1,000 simulations <em>WITHOUT</em> including <strong><em>x1</em></strong> (""coef_x3"") and then <em>WITH</em> <strong><em>x1</em></strong> (""coef_x3_full""):</p>
+
+<pre><code>coef_x3 &lt;- NULL
+coef_x3_full &lt;- NULL
+for (i in 1:1000){
+  coef_x3[i] = variables()[1]
+  coef_x3_full[i] = variables()[2]
+}
+mean(coef_x3)
+mean(coef_x3_full)
+</code></pre>
+
+<p>obtaining a coefficient for <strong><em>x3</em></strong> of <strong>3.383</strong> when <strong><em>x1</em></strong> is excluded versus a coefficient for <strong><em>x3</em></strong> of <strong>1.502</strong> when included. So when <strong><em>x1</em></strong> is included we have an unbiased estimation of the true <strong><em>x3</em></strong> coefficient (<strong><em>1.5</em></strong>), whereas the estimation is biased when we exclude <strong><em>x1</em></strong>.</p>
+"
+"0.158113883008419","0.149071198499986","153033","<p>I'm trying to create model for consumer loan defaults that incorporates individuals payment behavior as time series. Typically this kind of problem is modeled using Cox/Allen model.</p>
+
+<p>Then, the other day, I came across this paper: <a href=""https://www.google.com/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=1&amp;cad=rja&amp;uact=8&amp;ved=0CCQQFjAA&amp;url=http%3A%2F%2Fpapers.nips.cc%2Fpaper%2F4210-learning-patient-specific-cancer-survival-distributions-as-a-sequence-of-dependent-regressors.pdf&amp;ei=ojhbVb7gHoe4ggTTwoGYBA&amp;usg=AFQjCNHVEg6lOEFIV4WaZEwqnXwlez_wpA&amp;sig2=vA-EFCEDOzx2m1BGI_PTyg&amp;bvm=bv.93564037,d.eXY"" rel=""nofollow"">Learning Patient-Specific Cancer Survival
+Distributions as a Sequence of Dependent Regressors</a></p>
+
+<p>Basically authors propose to fit multiple logits with their own parameters at each time step  while enforcing smoothness of regression parameters over time. Also maximum likelihood objective function is modified such that model naturally enforces consistency of predicted event(i.e there is no come back after fatal event)</p>
+
+<p>I was wondering if anyone is aware of R implementation of similar problem?</p>
+"
+"0.158113883008419","0.149071198499986","153719","<p>Consider the following dataset:</p>
+
+<pre><code>#   color  type region_west region_cent region_east region_west_pct region_cent_pct region_east_pct
+# 1   red shirt          24          17          48          0.2697          0.1910          0.5393
+# 2  blue shirt          24          18          44          0.2791          0.2093          0.5116
+# 3   red  pant          42          13          33          0.4773          0.1477          0.3750
+# 4  blue  pant          46          17          41          0.4423          0.1635          0.3942
+# 5   red   hat          46          38           8          0.5000          0.4130          0.0870
+# 6  blue   hat          40          11          21          0.5556          0.1528          0.2917
+</code></pre>
+
+<p><code>color</code> and <code>type</code> should be self explanatory - we can say the region column represent ""sales"" and percent of sales by row.</p>
+
+<p>What are some approaches for answering questions such as:</p>
+
+<ol>
+<li>Is <code>color</code> and/or <code>type</code> statistically different by region? Which regions? (e.g. post-hoc testing)  </li>
+<li>How many (or what percent) <code>color = red</code> items should I put in the West?</li>
+<li>How many (or what percent) <code>type = pant</code> items should I place in the East?</li>
+<li>How would you express a confidence interval around the number of <code>color = red</code> items in the West? What about a confidence interval for the percentage? </li>
+<li>How are you correcting for making multiple comparisons? (e.g. Bonferonni)</li>
+</ol>
+
+<p><hr>
+<strong>Additional Assumptions:</strong> Assume these values represent a true population total sales. That is, all possible sales from the West, Central, and East region -- effectively demand. Additionally, we can assume the sales were made online and the customer resides in one of the three regions. This is essentially a warehouse distribution problem - say I have three warehouses, West, Central, and East - how much of each product should I place in each warehouse if these distributions are the assumed demand quantities.
+<hr>
+My initial thoughts are <code>chi-square</code>, <code>ANOVA</code>, and/or <code>regression/glm/gam</code> but I thought this is a ""neat"" little example hitting on a lot of fundamentals represented on this board, so I'm hoping to get some variety in the responses. </p>
+
+<p>Here's the original dataset:</p>
+
+<pre><code>df &lt;- structure(list(color = structure(c(1L, 2L, 1L, 2L, 1L, 2L), .Label = c(""red"", ""blue""), class = ""factor""), type = structure(c(1L, 1L, 2L, 2L, 3L, 3L), .Label = c(""shirt"", ""pant"", ""hat""), class = ""factor""),     region_west = c(24L, 24L, 42L, 46L, 46L, 40L), region_cent = c(17L,     18L, 13L, 17L, 38L, 11L), region_east = c(48L, 44L, 33L,     41L, 8L, 21L), region_west_pct = c(0.2697, 0.2791, 0.4773,     0.4423, 0.5, 0.5556), region_cent_pct = c(0.191, 0.2093,     0.1477, 0.1635, 0.413, 0.1528), region_east_pct = c(0.5393,     0.5116, 0.375, 0.3942, 0.087, 0.2917)), .Names = c(""color"", ""type"", ""region_west"", ""region_cent"", ""region_east"", ""region_west_pct"", ""region_cent_pct"", ""region_east_pct""), out.attrs = structure(list(    dim = 2:3, dimnames = structure(list(Var1 = c(""Var1=red"",     ""Var1=blue""), Var2 = c(""Var2=shirt"", ""Var2=pant"", ""Var2=hat""    )), .Names = c(""Var1"", ""Var2""))), .Names = c(""dim"", ""dimnames"")), row.names = c(NA, -6L), class = ""data.frame"")
+</code></pre>
+
+<p>Here's the dataset in a  ""tidy"" format:</p>
+
+<pre><code>df.tidy &lt;- structure(list(color = structure(c(1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L), .Label = c(""red"", ""blue""), class = ""factor""), type = structure(c(1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L), .Label = c(""shirt"", ""pant"", ""hat""), class = ""factor""),     region = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L,     2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 1L, 1L, 1L, 1L, 1L, 1L,     2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 1L, 1L, 1L,     1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L    ), .Label = c(""region_west"", ""region_cent"", ""region_east""    ), class = ""factor""), sales = c(24L, 24L, 42L, 46L, 46L,     40L, 17L, 18L, 13L, 17L, 38L, 11L, 48L, 44L, 33L, 41L, 8L,     21L, 24L, 24L, 42L, 46L, 46L, 40L, 17L, 18L, 13L, 17L, 38L,     11L, 48L, 44L, 33L, 41L, 8L, 21L, 24L, 24L, 42L, 46L, 46L,     40L, 17L, 18L, 13L, 17L, 38L, 11L, 48L, 44L, 33L, 41L, 8L,     21L), pct = c(0.2697, 0.2791, 0.4773, 0.4423, 0.5, 0.5556,     0.2697, 0.2791, 0.4773, 0.4423, 0.5, 0.5556, 0.2697, 0.2791,     0.4773, 0.4423, 0.5, 0.5556, 0.191, 0.2093, 0.1477, 0.1635,     0.413, 0.1528, 0.191, 0.2093, 0.1477, 0.1635, 0.413, 0.1528,     0.191, 0.2093, 0.1477, 0.1635, 0.413, 0.1528, 0.5393, 0.5116,     0.375, 0.3942, 0.087, 0.2917, 0.5393, 0.5116, 0.375, 0.3942,     0.087, 0.2917, 0.5393, 0.5116, 0.375, 0.3942, 0.087, 0.2917    )), row.names = c(NA, -54L), class = ""data.frame"", .Names = c(""color"", ""type"", ""region"", ""sales"", ""pct""))
+</code></pre>
+
+<p>Feel free to expand the dataset to a larger example.</p>
+"
+"0.25","0.235702260395516","156275","<p>I have two paired samples following normal distributions N(0, $\sigma_1^2$) and N(0, $\sigma_2^2$). Samples represent estimation errors (residuals) of two linear regression models used to predict the same response variable using two different methods/independent variables. I have 30 pairs of residuals, so I would like to apply Wilcoxon signed-rank test to check whether means of absolute values or relative errors are different. Since absolute values do not follow normal distribution, I cannot use t-test or something similar.</p>
+
+<p>I would like to find type II error and statistic power of Wilcoxon signed-rank test.
+Is there some R function (or any other tool) that can be used? I have found a number of functions for testing the power of tests here <a href=""http://www.statmethods.net/stats/power.html"" rel=""nofollow"">http://www.statmethods.net/stats/power.html</a>  but Iâ€™m not sure could they be applied on Wilcoxon signed-rank test. If there is no built-in function is there some other tool or algorithm to manually calculate error?   </p>
+"
+"0.447213595499958","0.421637021355784","168068","<p>I am using R for this analysis, and so examples and graphics will be produced in this language. I am willing to provide equivalent examples in similar languages if it will help someone, and am willing to accept answers in terms of other languages.</p>
+
+<p>In this question, I intend to display graphs produced in order to verify assumptions, and ask for help in getting a better model. I understand that this may be considered too specific. However, it is my opinion that it would be helpful to have more examples of bad models and how to correct them on this site. If a moderator finds this not to be the case, I will happily delete this post.</p>
+
+<p>I have conducted an initial linear model (lm) in R. It is multiple categorical regression with approx 100,000 cases, two categorical regressors and a continuous regressand. The goal of this regression is prediction: specifically, I would like to estimate prediction intervals. Find below some diagnostics of the initial model:</p>
+
+<p>Residuals histogram (full) below. It may be difficult (impossible) to see, but there exist (sparse) values between 300 and 2000, as well as -50 and -500. Between -50 and 300, values are very dense. This indicates, to my understanding, heavy tails.</p>
+
+<p><a href=""http://i.stack.imgur.com/FoGN7.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/FoGN7.png"" alt=""Residuals Historgram""></a></p>
+
+<p>Residuals histogram (partial) below. Same image as above, but zoomed to the dense area.</p>
+
+<p><a href=""http://i.stack.imgur.com/Q9bBl.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Q9bBl.png"" alt=""enter image description here""></a></p>
+
+<p>A normal Quantile Quantile (normal QQ plot) is found below. Again, according to the <a href=""http://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot"">holy grail of qqplots</a>, (super) heavy tails are indicated.</p>
+
+<p><a href=""http://i.stack.imgur.com/TrATp.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/TrATp.png"" alt=""Initial QQPlot""></a></p>
+
+<p>Below is predicted vs residuals. Clearly, funky stuff is going on, suggesting heteroscedasticity:</p>
+
+<p><a href=""http://i.stack.imgur.com/oOMRU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/oOMRU.png"" alt=""Resid Vs Predicted""></a></p>
+
+<p>I first tried some transformations. BoxCox yields a value very close to zero. So I will try to take the log of the regressand (in accordance with <a href=""https://en.wikipedia.org/wiki/Power_transform#Box.E2.80.93Cox_transformation"" rel=""nofollow"">the Wikipedia page</a>). </p>
+
+<p><a href=""http://i.stack.imgur.com/3IbMv.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/3IbMv.png"" alt=""boxcox""></a></p>
+
+<p><strong>Log Transform:</strong></p>
+
+<p>Log transformed histogram, looks a lot better, but we still have some skew:</p>
+
+<p><a href=""http://i.stack.imgur.com/exSgd.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/exSgd.png"" alt=""Histogram of Log transform""></a></p>
+
+<p>And the NormalQQ Plot. Still seems that the residuals are not normally distributed.</p>
+
+<p><a href=""http://i.stack.imgur.com/JosvR.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/JosvR.png"" alt=""log QQPlot""></a></p>
+
+<p>Logarithm transformed Residual vs Predicted. Seems we have some decreasing variance now, but I would be willing to accept this assumption.</p>
+
+<p><a href=""http://i.stack.imgur.com/Sg4B9.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Sg4B9.png"" alt=""Log Resid Vs Predicted""></a></p>
+
+<p>Other transformations I tried: raising regressand to powers 1/2, 1/3 and -1. None of these had satisfactory results; I choose not to include information about these transformations in order to save space, but will happily provide such information should it be requested.</p>
+
+<p><strong>Here lie my questions:</strong></p>
+
+<p>1) Is the solution to this problem simply to keep trying increasingly wacky transformations (ex: $1/log(x^{\pi/3})$)?</p>
+
+<p>2) I have been looking (intermittently over a period of weeks) at Generalized Linear Models, which seem to allow a non-normal distribution of residuals. Unfortunately, I have not been able to understand them, and non of my (undergraduate statistics) peers have knowledge of them. If GLM's present a solution to this issue, I would be grateful if someone could explain them in this context. (Even if they are not a solution, I would be grateful for a simple explanation, or a reference to one).</p>
+
+<p>2i) If GLM's are a good fit, I believe I would still need a distribution to model error by. What ways are there of detecting which (family) of distribution is the best fit for the residuals, after which I assume I can perform MLE to get the parameters? I've been having issues trying to evaluate heavy tailed distributions with respect to skew, because they tend not to have any moments, and so have $\infty$ or indeterminate skew.</p>
+
+<p>3) Is there another class of models not aforementioned I should look into?</p>
+
+<p>4) Is my current model sufficient for prediction intervals, despite the non-normality of residuals?</p>
+
+<p>Some more information about the model: I am predicting a cost, thus the log transform is appealing in that my predicted values are positive reals.</p>
+
+<p>I will be hanging around my computer all day, and have R gui open on my other monitor, so should be able to fulfill most requests for additional information.</p>
+"
+"0.111803398874989","0.105409255338946","178657","<p>I have a data set; sample size is 16, the number of  independent variable is 18 
+and one dependent variable . there are correlations between independent variables. I want to conduct Monte Carlo according the linear regression 
+relationship of these variables but some of independent variables do not follow  known distributions. in this regard, can anyone suggest a way ?</p>
+
+<p>Thank you in advance</p>
+
+<p>(I read this article <a href=""http://www.iaees.org/publications/journals/ces/articles/2011-1%284%29/a-fitter-use-of-Monte-Carlo-simulations.pdf"" rel=""nofollow"">article</a>, but I have no experience with simulation)</p>
+"
+"0.223606797749979","0.210818510677892","180191","<p>We can apply the Hosmer-Lemeshow goodness of fit to logistic regression modelling and to test if an underlying assumption is not applicable.</p>
+
+<p>This <a href=""https://www.youtube.com/watch?v=MYW8gA1EQCQ"" rel=""nofollow"">link</a> shows a video of the application to a standard <code>glm()</code> model</p>
+
+<p>This <a href=""http://stats.stackexchange.com/questions/132652/how-to-determine-which-distribution-fits-my-data-best-r"">detailed question</a>, outlines various simulation-based tests one can run to assess underlying distributions.</p>
+
+<p><strong>But I want to apply the Hosmer-Lemeshow goodness of fit to survival analysis with assumed underlying data distributions</strong>.</p>
+
+<p>Much literature points one towards a cox proportional hazards model, but from what I understand, a cox ph model does not assume an underlying distribution of data.
+Therefore lets take some random data from the <code>survreg()</code> function of the <code>survival</code> package</p>
+
+<pre><code>library(survival)
+
+data(ovarian)
+
+head(ovarian)
+
+s &lt;- Surv(ovarian$futime, ovarian$fustat)
+sWei &lt;- survreg(s ~ age,dist='weibull',data=ovarian)
+</code></pre>
+
+<p>How can we applying a H+L G.O.F statistic test?
+I had hoped to follow this <a href=""http://thestatsgeek.com/2014/02/16/the-hosmer-lemeshow-goodness-of-fit-test-for-logistic-regression/"" rel=""nofollow"">link</a>, however the <code>survreg()</code> does not allow a <code>fitted()</code> function. Thus this does not work</p>
+
+<pre><code>library(ResourceSelection)
+hl &lt;- hoslem.test(sWei$y, fitted(sWei), g=10))
+</code></pre>
+"
+"0.111803398874989","0.105409255338946","183724","<p>I need to fit a polynomial regression that accounts for measurement errors. I found out how to do it with a mcmc model (using RJags) and <strong>I would like to do it with a Maximum Likelihood Estimator</strong> (using <strong>mle2</strong> function in R), since the model will be later more complex and mle2 will be faster than mcmc.</p>
+
+<p>My model in RJags looks like this (I put some data to make the code reproducible):</p>
+
+<pre><code>modelFile = ""model.txt""
+modelString = ""
+model {
+# Likelihood:
+for (i in 1:N) {
+y[i] ~ dnorm(y.hat[i], tauy[i])
+y.hat[i] &lt;- b[1] + b[2]*x.hat[i] + b[3]*z.hat[i] 
+
+x.hat[i] ~ dnorm(x[i], taux[i])
+z.hat[i] ~ dnorm(z[i], tauz[i])
+
+taux[i] &lt;- 1/pow(sdx[i],2)
+tauy[i] &lt;- 1/pow(sdy[i],2)
+tauz[i] &lt;- 1/pow(sdz[i],2)
+}
+
+for(j in 1:3) {b[j]~dunif(-2,2)}
+
+}
+""
+writeLines(modelString,con=modelFile)
+
+
+#Data
+
+ ind &lt;- data.frame(A = c(2.428, 2.601, 2.749, 2.553, 2.753, 2.421, 2.579, 2.415, 2.407, 2.509),
+                  B = c(0.95, 0.99, 1.05, 1.00, 1.04, 0.96, 1.01, 0.95, 0.95, 1.01),
+                  C = c(-0.04, -0.09, 0.01, 0.04, -0.15, 0.11, -0.17, -0.12, -0.13, 0.17),
+                  eA=runif(10, 0, 0.5), eB=runif(10,0,0.5), eC=runif(10,0,0.2))
+
+ml.data &lt;- list(x=ind$A,
+                    y=ind$B,
+                z=ind$C,
+                    sdy=ind$eA,
+                sdx=ind$eB,
+                    sdz=ind$eC,
+                N=nrow(ind))
+
+ml.par &lt;- c(""b"")
+
+ml.mod &lt;- jags.model(modelFile,data=ml.data, n.chains=100, n.adapt=1000)
+
+update(ml.mod, n.iter = 1000)
+
+mcmc.out &lt;- coda.samples(ml.mod, var=ml.par, n.iter=10000)
+
+#summary of the posterior distributions of the parameters
+summary(mcmc.out)
+</code></pre>
+
+<p>How can I <strong>translate this into an mle2</strong>, or how the function would be? </p>
+"
+"0.316227766016838","0.298142396999972","192464","<p>I have like 30k rows in training set and 60k in test set. Distribution of dependent variable (ascending order) looks like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/MOTXU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MOTXU.png"" alt=""A""></a></p>
+
+<p>I believe I must use quantile regression here, as OLS regressions fit badly here.</p>
+
+<p>I've got the following code:</p>
+
+<pre><code>library(quantreg)
+Y &lt;- cbind(A)
+X &lt;- cbind(B,C,D,E,F,G)
+quantreg.all &lt;- rq(Y ~ X, tau = seq(0.05, 0.95, by = 0.05))
+quantreg.plot &lt;- summary(quantreg.all)
+plot(quantreg.plot)
+</code></pre>
+
+<p>At this point I have a plot of various distributions: 
+<a href=""http://i.stack.imgur.com/LnHdK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LnHdK.png"" alt=""enter image description here""></a></p>
+
+<p>As I understand that plot, tails (quantiles) of <code>B</code>, <code>C</code>, <code>D</code>, <code>E</code> has different from OSL structure. I cant say anything about <code>F</code>.  Thus, I tried to use following code to get predicted values for the test set:</p>
+
+<pre><code>P &lt;- predict.rq(quantreg25, newdata=test)
+</code></pre>
+
+<p>Which resulted in error message: </p>
+
+<pre><code>Warning message:
+'newdata' had 60000 rows but variables found have 30000 rows 
+</code></pre>
+
+<p>I get either vector or <code>DF</code> only for 30k rows (depending on number of quantiles). At the moment, I'm a bit stuck. In general: I need to get <code>A</code> vector using QRegression equation derived from the training set for test set independet variables.</p>
+
+<p>1) Do I understand QRegression properly? E.g. Can I get a vector of predicted values like from OLS model, but with respect to quantiles distribution?</p>
+
+<p>2) What can be said about <code>F</code> here?</p>
+
+<p>3) How to omit error while fitting regression?</p>
+
+<p>4) What quantiles and various equations here mean in general? I mean, I understand that they represent some law of distribution for <code>Nth</code> quantile of data, but how to apply these several equations to test data?</p>
+"
+"0.282842712474619","0.333333333333333","193643","<p>From what I've been reading, amongst others on the site of the <a href=""http://www.ats.ucla.edu/stat/mult_pkg/faq/general/nested_tests.htm"" rel=""nofollow"">UCLA statistics consulting group</a> likelihood ratio tests and wald tests are pretty similar in testing whether two glm models show a significant difference in the fit for a dataset (excuse me if my wording might be a bit off). In essence I can compare two models and test if the second model shows a significantly better fit than the first, or there is no difference between the models.</p>
+
+<p>So the LR and Wald tests should show the same ballpark p-values for the same regression models. At least the same conclusion should come out.</p>
+
+<p>Now I did both tests for the same model in R and get widely differing results.
+Here are results from R for one model:</p>
+
+<pre><code>&gt; lrtest(glm(data$y~1),glm(data$y~data$site_name,family=""poisson""))
+Likelihood ratio test
+
+Model 1: data$y ~ 1
+    Model 2: data$y ~ data$site_name
+      #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+    1   2 -89.808                         
+    2   9 -31.625  7 116.37  &lt; 2.2e-16 ***
+    ---
+    Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+    &gt; lrtest(glm(data$y~1,family=""poisson""),glm(data$y~data$site_name,family=""poisson""))
+Likelihood ratio test
+
+Model 1: data$y ~ 1
+    Model 2: data$y ~ data$site_name
+      #Df  LogLik Df  Chisq Pr(&gt;Chisq)    
+    1   1 -54.959                         
+    2   9 -31.625  8 46.667  1.774e-07 ***
+    ---
+    Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+    &gt; waldtest(glm(data$y~data$site_name,family=""poisson""))
+Wald test
+
+Model 1: data$y ~ data$site_name
+Model 2: data$y ~ 1
+      Res.Df Df      F Pr(&gt;F)
+    1     45                 
+    2     53 -8 0.7398 0.6562
+    &gt; waldtest(glm(data$y~1,family=""poisson""),glm(data$y~data$site_name,family=""poisson""))
+Wald test
+
+Model 1: data$y ~ 1
+    Model 2: data$y ~ data$site_name
+  Res.Df Df      F Pr(&gt;F)
+1     53                 
+2     45  8 0.7398 0.6562
+</code></pre>
+
+<p>About the data, data\$y contains count data and data\$site_name is a factor with 9 levels. There are 54 values in data\$y, with 6 values per level of data\$site_name. </p>
+
+<p>Here are frequency distributions:</p>
+
+<pre><code>&gt; table(data$y)
+
+ 0  2  4  5  7 
+50  1  1  1  1 
+&gt; table(data$y,data$site_name)
+
+    Andulay Antulang Basak Dauin Poblacion District 1 Guinsuan Kookoo's Nest Lutoban Pier Lutoban South Malatapay Pier
+  0       6        6     6                          4        6             6            6             5              5
+  2       0        0     0                          0        0             0            0             1              0
+  4       0        0     0                          1        0             0            0             0              0
+  5       0        0     0                          0        0             0            0             0              1
+  7       0        0     0                          1        0             0            0             0              0
+</code></pre>
+
+<p>Now this data doesn't fit the poisson distribution very well due to the enormous over-dispersion of zero counts. But with another model, where data\$y>0 fits the poisson model quite well, and while using a zero-inflated poisson model, I still get highly different wald test and lrtest results. There the wald test shows a p-value of 0.03 while the lrtest has a p-value 0.0003. Still a factor 100 difference, even though the conclusion might be the same.</p>
+
+<p>So what am I understanding incorrectly here with the likelihood ratio vs waldtest?</p>
+"
+"0.353553390593274","0.333333333333333","202973","<p>Suppose I have a data set of <code>N</code> observations <code>(n = 1...N)</code> for out-of-sample estimation and values of ($y_n$). I have also <code>I</code> statistical models <code>(i= 1...I)</code> which every model has its own estimate on each data point ($\hat{y}^i_n$).</p>
+
+<p>In addition I have a model selection method $\phi$ which would pick a model's estimate among the model set as its own according to its assessment on previous performance of the models ($\hat{y}^\phi_n = \min_i\{\hat{f_i}(y_n), i \in I\} $).</p>
+
+<p>My claim should be ""model selection's performance is better than all models it picks estimates from"". I am trying to find a proper method to describe the statistical power of the model selection method, compared to individual models in the model set.</p>
+
+<p>All individual models follow different assumptions, distributions and dependence structure. Some are iid, some have heteroskedasticity. Actually, there is no restriction on models except it should yield an estimate.</p>
+
+<p>Some The models are employed on time series but what they do is asset pricing on different assets and contracts. But for a broaded audience I will make the following analogy.</p>
+
+<p>Suppose you have a machine that predicts the scores on basketball matches. It does not only predict the final score, it also predicts a distribution of the scores throughout the time. It also predicts which player will score when.</p>
+
+<p>Suppose you have many machines of this sort and all have different predictions. All of them had been right on some occasion (That is what statistics is after all right? No model is perfect.). </p>
+
+<p>I am trying to figure out which machine is better at predicting what and when, using the previous performance of the machines. I can say stuff like 'oh machine A was good at predicting scores occured in the last 10 mins, but for the last 2 months model B became better'. </p>
+
+<p>It turns out my estimates using the machines are better than any machine could do it alone in the long run. I checked for several error terms starting with MAPE and MSE. But I want to show that it is not a coincidence but a statistically significant fact. I have a fair sample size (~100k) over a good enough time period (5 years).</p>
+
+<p>I fiddled with some thoughts about proportion of $\phi$ selecting the model with the lowest error and some logistic regression on that according to the criteria it uses to pick the models. But I lack the comprehensive knowledge on this domain of statistics.</p>
+
+<p>ps. R package suggestions are also appreciated.</p>
+"
+"0.193649167310371","0.182574185835055","204807","<p>My DV consists of a variable ranging between 0 and 1 (it's a percentage to be more precise) and I am using the <code>gbm</code> package to predict it. 
+Given the nature of my DV I am assuming that using a Laplace distribution, in order to minimize the absolute error, might be better than using a guassian distribution, which minimizes the squared error. However, I am not sure my assumption is correct and I would like to know whether in theory my assumption is correct. </p>
+
+<p>Additionally, on a later stage I might be interested in defining a cut-off point, <em>x</em>, for binary classification. If I aim to do that, which of the following would be the best alternative (I'm open for additional suggestions of course):</p>
+
+<ul>
+<li>spliting the data beforehand into ""high"" and ""low"" values (e.g.
+<code>ifelse(DV &gt; x, 1, 0)</code>) and treating it as a
+binary variable using <strong>adaboost</strong> or <strong>bernouli</strong> distributions </li>
+<li>staying with
+the original data and using a <strong>quantile regression</strong> with <em>x</em> as a cut-off
+point</li>
+<li>staying with the original data and using a <strong>gaussian</strong>/<strong>laplace</strong>
+distribution and defining <em>x</em> a posteriori.</li>
+</ul>
+
+<p>Thanks a lot in advance!</p>
+"
+"0.25","0.235702260395516","207999","<p>I am working on a project to predict a range for patient length of stay.  My data consists of 215,000 rows of the following variables (30 total):</p>
+
+<ul>
+<li><code>LOS</code> (length of stay in days)</li>
+<li><code>AGE</code> (in years)</li>
+<li><code>GENDER</code> </li>
+<li><code>MARITAL</code></li>
+<li><code>DIAGNOSIS 1</code></li>
+<li><code>DIAGNOSIS 2</code></li>
+<li><code>DIAGNOSIS 3</code></li>
+<li>... and so on</li>
+</ul>
+
+<p>With the exception of <code>AGE</code> and <code>LOS</code>, all the variables are binary.  The distribution for <code>LOS</code> is heavily skewed - almost all values are between 1-30, with extreme outliers from 50-370 that account for only 0.02% of the data.</p>
+
+<p>My approach to modeling the relationship between <code>LOS</code> and the rest of the variables is as follows.  First, remove the 0.02% outliers for the dependent variable.  Second, do a simple log transform of the dependent variable.  After taking these two steps, the <code>LOS</code> data is normally distributed.  </p>
+
+<p>My question is - is there any reason why I should not simply use plain old multivariate linear regression on this normalized <code>LOS</code> data?  </p>
+
+<p>When I do this, I get highly significant p-values and an R-squared of 0.207.  Which, as I understand it, isn't horrible for complex health care data (please correct me if I am wrong).  This approach also results in nicely distributed residuals.</p>
+
+<p>However, I was looking up different data distributions to see if I should be modeling in a different way.  Other length of stay models on the internet treat the data as a Poisson distribution, which led me here to inquire and hopefully acquire a greater understanding of how to treat this data!  </p>
+
+<p>So, is my methodology sound in this case?  Any and all feedback is greatly appreciated!</p>
+"
+"0.158113883008419","0.149071198499986","223098","<p>I know that neural nets use activation functions, but where do distribution functions play into deep neural networks? For example, the <code>h2o.deeplearning()</code> function in R has the variable <code>distribution = c(""AUTO"", ""gaussian"", ""bernoulli"", ""multinomial"", ""poisson"", ""gamma"", ""tweedie"", ""laplace"", ""huber"", ""quantile"")</code>.  Where does this apply in deep learning? Also, I came across this quote <a href=""https://github.com/h2oai/h2o-tutorials/blob/master/tutorials/deeplearning/README.md"" rel=""nofollow"">from an h2o tutorial</a> that says ""H2O Deep Learning supports regression for distributions other than Gaussian such as Poisson, Gamma, Tweedie, Laplace"", but again I am confused as to where a distribution function plays into the concept of multilayer perceptrons.</p>
+"
+"0.111803398874989","0.105409255338946","226226","<p>I'm new to predictive analytics. I have data variables which are highly skewed, I want to normalize those for better predictions. I've used normalization,standardization. but they gave same data distributions as before. how can I bring my data to Normality,and what techniques should I use.
+Is normalizing data variables necessary in every case (clustering, regression, classification) ? 
+please help with an example if possible.
+Thank you.</p>
+"

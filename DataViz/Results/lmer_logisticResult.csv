@@ -1,0 +1,1960 @@
+"V1","V2","V3","V4"
+"0.10690449676497","0.109435131032917","  1413","<p>It seems like the current revision of lmer does not allow for custom link functions.  </p>
+
+<ol>
+<li><p>If one needs to fit a logistic
+linear mixed effect model with a
+custom link function what options
+are available in R?</p></li>
+<li><p>If none - what options are available in other
+statistics/programming packages?</p></li>
+<li><p>Are there conceptual reasons lmer
+does not have custom link functions,
+or are the constraints purely
+pragmatic/programmatic?</p></li>
+</ol>
+"
+"0.135224680756563","0.173032135051496"," 11457","<p>is it possible to do stepwise (direction = both) model selection in nested binary logistic regression in R? I would also appreciate if you can teach me  how to get:</p>
+
+<ul>
+<li>Hosmer-Lemeshow statitistic,</li>
+<li>Odds ratio of the predictors, </li>
+<li>Prediction success of the model.</li>
+</ul>
+
+<p>I used lme4 package of R. This is the script I used to get the general model with all the independent variables:</p>
+
+<pre><code>nest.reg &lt;- glmer(decision ~ age + education + children + (1|town), family = binomial, data = fish)
+</code></pre>
+
+<p>where:</p>
+
+<ul>
+<li>fish -- dataframe</li>
+<li>decision -- 1 or 0, whether the respondent exit or stay, respectively.</li>
+<li>age, education and children -- independent variables.</li>
+<li>town -- random effect (where our respondents are nested)</li>
+</ul>
+
+<p>Now my problem is how to get the best model. I know how to do stepwise model selection but only for linear regression. (<code>step( lm(decision ~ age + education + children, data = fish), direction +""both"")</code>). But this could not be used for binary logistic regression right? also when i add <code>(1|town)</code> to the formula to account for the effects of town, I get an error result. </p>
+
+<p>By the way... I'm very much thankful to Manoel Galdino <a href=""http://stackoverflow.com/questions/5906272/step-by-step-procedure-on-how-to-run-nested-logistic-regression-in-r"">who provided me with the script on how to run nested logistic regression</a>. </p>
+
+<p>Thank you very much for your help.</p>
+"
+"0.18516401995451","0.189547207081969"," 12319","<p>Background: Iâ€™m analyzing data with mixed-models (lmer in lme4) from an experiment that had RTs and Error Rates as dependent variables. This is a repeated-measures design with approximately 300 measurements for each of the 190 human subjects. The fixed-effects are 1 between-subjects experimental manipulation (dichotomous), 2 within-subjects experimental manipulations (both dichotomous), and 1 subject variable (continuous, centered). My uncorrelated random effects are the participants, and 2 stimulus characteristics.  For the mixed-models, Iâ€™ve coded the experimental manipulations as a -.5/+.5 contrasts so that the parameters are estimates of the experimental effects and the intercept should be the grand mean.</p>
+
+<p>The grand mean produced by the RT model (740 ms) does not match the mean I get if I average all of the individual trials (730 ms). Why does this happen?</p>
+
+<p>A related question: the GLMM (binomial distribution, logistic link function) for error rates produces a parameter estimate  with an associated Z-score that has an absolute value over 2, but when I look at the means (determined the same way as above) to examine this difference they are tiny and almost identical (0.01353835 vs. 0.01354846). What are the values that I can provide that support the reliable parameter estimate? </p>
+
+<p>I have a feeling the discrepancy between my calculated means and the model estimates has something to do with the random factors (perhaps the grouping by subjects), but Iâ€™m not sure exactly what.</p>
+
+<p>If I want to display descriptive statistics along with the table of mixed model estimates, how should these descriptive be determined? Any points to references, examples, etc. will be greatly appreciated.</p>
+
+<p>If this is all just a brain fart on my part, please let me know that too.</p>
+
+<p>Edit: It is probably also important to mention that the amount of trials and types of trials contributed are not the same for every person. The between-subject manipulation changes the proportions of the different trial types presented, and for RTs only correct trials were analyzed. There were, however, very few errors made.</p>
+"
+"0.187082869338697","0.218870262065833"," 25714","<p>I've been using <code>nlme</code> and more recently <code>lmer</code> to fit multi-level models of time course data using orthogonal polynomials. My colleagues and I originally chose polynomials because we believed that ""nonlinear"" functions such as the logistic could not be used for multi-level modeling because they are not dynamically consistent. In at least one case this constraint is articulated very explicitly (Willett, 1997, p. 238-239):</p>
+
+<blockquote>
+  <p>In general, the individual growth modeling approach can accommodate any level-1 model that is <em>linear in the individual growth parameters</em>...Many common growth functions are dynamically consistent, including the quadratic model cited above and all other polynomial models, regardless of their order. Other potentially important individual growth models such as the logistic model (which provides an important theoretical representation of human development from the perspective of some psychological theories - see Fischer &amp; Pipp, 1984) is not linear in the individual growth parameters in its usual formulation.</p>
+</blockquote>
+
+<p>However, I recently discovered that, as I understand it, both <code>nlme</code> and <code>lmer</code> can use <code>SSfpl</code> to fit 4-parameter logistic functions in a multi-level modeling context. Did we misunderstand the dynamic consistency constraint? Perhaps <code>lmer</code> and/or <code>SSfpl</code> implements the 4-parameter logistic in a dynamically consistent way? If so, does anyone know how it is constrained to be dynamically consistent?</p>
+
+<p>Thanks in advance.</p>
+"
+"0.169030850945703","0.173032135051496"," 27273","<p>I am trying to analyze repeated measures data and am struggling to make it work in <code>R</code>. My data is essentially the following, I have two treatment groups. Every subject in each group is tested everyday and given a score (the percentage correct on a test). The data is in the long format:</p>
+
+<pre><code>Time Percent Subject   Group
+   1       0    GK11 Ethanol
+   2       0    GK11 Ethanol
+   3       0    GK11 Ethanol
+   4       0    GK11 Ethanol
+   5       0    GK11 Ethanol
+   6       0    GK11 Ethanol
+</code></pre>
+
+<p>The data resembles a logistic curve, subjects do very poorly for a few days followed by rapid improvement, followed by a plateau. I'd like to know if the treatment has an effect on the test performance curve. My thought was to use <code>nlmer()</code> in the <code>lme4</code> package in <code>R</code>. I can fit lines for each group using the following:</p>
+
+<pre><code>print(nm1 &lt;- nlmer(Percent ~ SSlogis(Time,Asym, xmid, scal) ~ Asym | Subject,
+salinedata, start = c(Asym =.60,  xmid = 23, scal = 5)), corr = FALSE)
+</code></pre>
+
+<p>I can than compare groups by looking at the estimates for the different parameters and standard deviations of the estimated lines but I'm not sure this is the proper way to do it. Any help would be greatly appreciated.  </p>
+"
+"0.302371578407382","0.309529293013655"," 29690","<p>I would like to construct predictions for a mixed model (logistic via glmer) on a new data set using only the fixed effects, holding the random effects to 0.    But I am having trouble setting up the model matrix to be able to calculate them.</p>
+
+<p>Since the mer class doesn't have a predict method, and since I want to omit the random effects for predictions on the new data set, I think I need to construct a model matrix for the fixed effects of the same structure used in the original model, but using the new data. Then multiply by the fixed effect coefficients in the model.  </p>
+
+<p>The fixed effect portion of my model formula contains factors and interaction terms between numeric fixed effects, so it's a little more complicated than just extracting the fixed variables from the matrix.  e.g. I need to ensure the factor contrast expansion is the same as the original, interaction terms are properly listed, etc.</p>
+
+<p>So my question is: what is the more straightforward general approach for constructing a new model matrix that mimics the structure of the original model matrix used in creating the model?</p>
+
+<p>I've tried model.matrix(my.model, data=newdata) but that seems to return the original model matrix, not one based on newdata.</p>
+
+<p>Sample code:</p>
+
+<pre><code>library(lme4)
+
+cake2 &lt;- head(cake) # cake2 is ""new"" data frame for future predictions
+
+# recipe is a fixed effect factor, temp is fixed effect numeric, replicate is random effect
+m &lt;- lmer(angle ~ temp + recipe + (1 | replicate), data=cake)
+summary(m)
+
+nrow(cake2)         # but new data frame has 6 rows
+nrow(cake)          # original data frame has 270 rows
+
+# attempt to make new model matrix using different data frame
+mod.mat.cake2 &lt;- model.matrix(m, data=cake2)
+nrow(mod.mat.cake2) # 270 rows, same as orig data frame
+</code></pre>
+
+<p>I tried other methods like extracting the terms from the formula and building a new formula from that, but it seemed overly convoluted, and brittle in handling factors and interaction terms.</p>
+
+<p>How can I get mod.mat.cake2 to be a fixed effect model matrix based on the formula in m, but using values from cake2?  Or is there an easier way to go about getting fixed-effect only predictions from an lmer model?</p>
+
+<p>All help is appreciated.  Thank you.</p>
+"
+"0.10690449676497","0.109435131032917"," 33151","<p>I have a dataset (<code>data.mrsa</code>) about the MRSA prevalence of elderly in long term care facilities (LTCF) with the following information:</p>
+
+<ul>
+<li>mrsa_result: MRSA result of recruited elderly (positive VS negative)</li>
+<li>age: residents' age</li>
+<li>ltcf: UID for each LTCF (we sampled 30 out of 1000 LTCFs)</li>
+<li>ltcf_type: type of LTCF (private VS non-private)</li>
+</ul>
+
+<p>I have a multi-level logistic regression model like the one below:</p>
+
+<pre><code>fit2 &lt;- glmer(mrsa_result ~ age + (1|ltcf), family=binomial(""logit""),data=data.mrsa)
+</code></pre>
+
+<p>I know I am trying to find out the effect of <code>age</code> on the log-odds of <code>mrsa_result</code>, having the <code>ltcf</code> on the 2nd level gives me a wider CI on the lod-odds.</p>
+
+<p>Now I want to add the <code>ltcf_type</code> into the model, I think this should be a fixed effect, as there can only be private and non-private, but <code>itcf_type</code> should be considered as 2nd level data, right? As this describe the type of LTCF, not the type of elderly.</p>
+
+<p>I am puzzled on where should I put the term <code>ltcf_type</code> into my model, I wonder which of the following lines is correct:</p>
+
+<pre><code>fit2a &lt;- glmer(mrsa_result ~ age + ltcf_type + (1|ltcf), family=binomial(""logit""),data=data.mrsa)
+fit2b &lt;- glmer(mrsa_result ~ age + (1|ltcf + ltcf_type), family=binomial(""logit""),data=data.mrsa)
+</code></pre>
+
+<p>Thanks.</p>
+"
+"0.130930734141595","0.134030115482631"," 37714","<p>I would like to make a prediction for a (new) subject to have a certain outcome given the historical data and the model:</p>
+
+<pre><code>glm(outcome ~ age + treatment + history, family=binomial, ...) 
+</code></pre>
+
+<p>however in the historical data that will be fitted by the model, I have some sort of repeated measurements on some of the subjects (and I don't know if repeated measures is the appropriate term to be used here, hence using lmer etc is doubtful); example:<br></p>
+
+<pre><code>subject_ID    age    treatment    history    outcome
+S_1           33      T_1         H_1        0
+S_2           27      T_2         H_2        1
+S_2           27      T_3         H_2        1
+S_3           56      T_1         H_11       0
+etc...
+</code></pre>
+
+<p>In this example subject_2 (S_2) has two rows because he had simultaneously two different treatments at the same time. could a logistic regression still be used or should cases like subject_2 be removed from the analysis?</p>
+"
+"0.0755928946018454","0.0773823232534137"," 38541","<p>I used the functions from this <a href=""http://www.math.mcmaster.ca/peter/s4f03/s4f03_0607/rochl.html"" rel=""nofollow"">link</a> for creating ROC curve for logistic regression model. Since the object produced by <code>glmer</code> in <code>lme4</code> package is a S4 object (as far as I know) and the function from the link cannot handle it.</p>
+
+<p>I wonder if there are similar functions for creating ROC curve for multi-level logistic regression model in R.</p>
+"
+"0.272554057547699","0.257543939358196"," 46322","<blockquote>
+  <p><strong>Possible Duplicate:</strong><br>
+  <a href=""http://stats.stackexchange.com/questions/28936/how-to-compute-significant-interaction-estimates-when-main-effect-is-not-signifi"">How to compute significant interaction estimates when main effect is not significant?</a>  </p>
+</blockquote>
+
+
+
+<p>I am an applied linguist and I am modelling responses to a vocabulary test taken by second language learners of English; the aim is to test theoretical hypotheses regarding the relationship between the nature of the word and the likelihood of the learnersâ€™ knowing that word. The models I am using to explore the role of explanatory variables are the random item Item Response Theory model LLTM+e (see de Boeck et al. 2011; de Boeck 2008). These are created using the lmer function in the LME4 package in R and treat item and person responses as random. The estimates shown below are effectively like those from a binary logistic regression model, indicating the log-odds of a correct response on a word, given certain properties. Covariates relate to both item and person characteristics. </p>
+
+<p>The nature of my concern is actually a basic regression issue. I have found a significant interaction between ability grouping of the test taker (GRP; with two levels High and Low) and the length of the word in letters (LEN_L). As far as I can see the estimate of the fixed effects for the first model shows that (a) the lower level learners have an overall lower probability of giving a correct answer (b) that LEN_L does not provide a significant explanation across the pattern of responses for the whole test-taker population, and (c) a significant interaction between GRP and LEN_L indicates that the lower ability learners are less likely to give a correct answer for a longer word. This is in keeping with theory. </p>
+
+<p>However, when I model the data without including the main effect for LEN_L, I am not seeing a significant effect for either high or low groups as shown in Model 2. LEN_L does not show as significant if modelled without interaction with grp low (not shown). I feel that I am missing something obvious, but I cannot quite grasp what is happening. And my references have run dry on this particular issue and I am thinking myself around in circles about it.</p>
+
+<p>(NB: in my full model I have many other significant covariates, but this pattern holds true.) 
+My query basically regards whether I should use Model 1, including the non-significant main effect, or whether my findings from Model 2 indicate that the finding is a little unstable. Any advice would be much appreciated! (I can post more details if necessary.)
+Karen</p>
+
+<p>Model 1 Fixed effects:</p>
+
+<pre><code>              Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    0.25244    0.83194   0.303  0.76156    
+grp low       -2.09126    0.26406  -7.920 2.38e-15 ***
+LEN_L          0.02093    0.13062   0.160  0.87272    
+grp low:LEN_L -0.09185    0.03146  -2.919  0.00351 **
+</code></pre>
+
+<p>Model 2 Fixed effects:</p>
+
+<pre><code>               Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)     0.25243    0.83194   0.303    0.762    
+grp low        -2.09126    0.26406  -7.920 2.38e-15 ***
+grp high:LEN_L  0.02093    0.13062   0.160    0.873    
+grp low:LEN_L  -0.07092    0.13202  -0.537    0.591  
+</code></pre>
+
+<blockquote>
+  <p>De Boeck, P., Bakker, M., Zwitser, R., Nivard, M., Hofman, A.,
+  Tuerlinckx, F. and Partchev, I. (2011) <a href=""http://www.jstatsoft.org/v39/i12/"" rel=""nofollow"">The Estimation of Item
+  Response Models with the 'lmer' Function from the lme4 Package in
+  R</a>. Journal of Statistical Software (39:12) pp 1-28</p>
+</blockquote>
+"
+"0.250713268211203","0.233316483306879"," 46789","<p>I collected data to find whether the presence or absence of vision, sound, and touch during a task affected the successful completion of that task. However, there were no samples collected where all three senses were absent. So the dependent variable is boolean success but I have a question about how to model the independent variables in a logistic regression.</p>
+
+<p>My initial analysis used a single categorical variable with seven levels representing each combination of senses (seven because there were no cases where all three senses were absent).</p>
+
+<pre><code>summary( glmer( Success ~ Condition + ( 1 | Participant ), family=binomial, data=trials))
+</code></pre>
+
+<p>When I tried to build a model with the Vision, Sound, and Touch as separate variables, the analysis fails. <a href=""http://stat.ethz.ch/pipermail/r-sig-mixed-models/2010q4/004552.html"" rel=""nofollow"" title=""[R-sig-ME] Structural zeros in lme4"">I believe this is because I have empty cells when including the vision*sound*touch interaction</a> because we did not collect results where all senses were absent.</p>
+
+<pre><code>summary( glmer( Success ~ Vision + Sound + Touch + Vision*Sound + Vision*Touch + 
+                Sound*Touch + Vision*Sound*Touch + ( 1 | Participant ), 
+                family=binomial, data=trials))
+</code></pre>
+
+<p>I followed the suggestion linked above to use the <code>interaction</code> function to drop the unused factor (all three senses absent). However, this seems to create a variable that looks like my original single categorical variable.</p>
+
+<pre><code>senses &lt;- interaction( trials$Vision, trials$Sound, trials$Touch, drop=TRUE )
+summary( glmer( Success ~ senses + ( 1 | Participant ), family=binomial, data=trials))
+</code></pre>
+
+<p>As I try to refine this analysis, is there a way to model the senses as separate variables to make the interaction between these variables clearer? That is, to appropriately model the contribution of vision in the <code>vision</code>, <code>vision*sound</code>, <code>vision*touch</code> and <code>vision*sound*touch</code> conditions. From the initial analysis, the <code>vision*sound*touch</code> interaction is the most interesting.</p>
+"
+"0.151185789203691","0.154764646506827"," 50726","<p>I'm using the <code>lme4</code> package in R to do some logistic mixed-effects modeling.<br>
+My understanding was that sum of each random effects should be zero.</p>
+
+<p>When I make toy linear mixed-models using <code>lmer</code>, the random effects are usually &lt; $10^{-10}$ confirming my belief that the <code>colSums(ranef(model)$groups) ~ 0</code>
+But in toy binomial models (and in models of my real binomial data) some of the random effect sum to ~0.9. </p>
+
+<p>Should I be concerned?  How do I interpret this?  </p>
+
+<p>Here is a linear toy example
+<code><pre>
+toylin&lt;-function(n=30,gn=10,doplot=FALSE){
+ require(lme4)
+ x=runif(n,0,1000)
+ y1=matrix(0,gn,n)
+ y2=y1
+ for (gx in 1:gn)
+ {
+   y1[gx,]=2*x*(1+(gx-5.5)/10) + gx-5.5  + rnorm(n,sd=10)
+   y2[gx,]=3*x*(1+(gx-5.5)/10) * runif(1,1,10)  + rnorm(n,sd=20)
+ }
+ c1=y1*0;
+ c2=y2*0+1;
+ y=c(t(y1[c(1:gn),]),t(y2[c(1:gn),]))
+ g=rep(1:gn,each=n,times=2)
+ x=rep(x,times=gn*2)
+ c=c(c1,c2)
+ df=data.frame(list(x=x,y=y,c=factor(c),g=factor(g)))
+ (m=lmer(y~x*c + (x*c|g),data=df))
+ if (doplot==TRUE)
+  {require(lattice)
+   df$fit=fitted(m)
+   plot1=xyplot(fit ~ x|g,data=df,group=c,pch=19,cex=.1)
+   plot2=xyplot(y ~ x|g,data=df,group=c)
+   print(plot1+plot2)
+  }
+ print(colMeans(ranef(m)$g))
+ m
+}
+</code></pre></p>
+
+<p>In this case the colMeans always come out $&lt;10^{-6}$ </p>
+
+<p>Here is a binomial toy example (I would share my actual data, but it is being submitted for publication and I am not sure what the journal policy is on posting beforehand):</p>
+
+<p><pre><code>
+toybin&lt;-function(n=100,gn=4,doplot=FALSE){
+  require(lme4)<br>
+  x=runif(n,-16,16)
+  y1=matrix(0,gn,n)
+  y2=y1
+  for (gx in 1:gn)
+  { com=runif(1,1,5)
+    ucom=runif(1,1,5)
+    y1[gx,]=tanh(x/(com+ucom) + rnorm(1)) > runif(x,-1,1)
+    y2[gx,]=tanh(2*(x+2)/com + rnorm(1)) > runif(x,-1,1)
+  }
+  c1=y1*0;
+  c2=y2*0+1;
+  y=c(t(y1[c(1:gn),]),t(y2[c(1:gn),]))
+  g=rep(1:gn,each=n,times=2)
+  x=rep(x,times=gn*2)
+  c=c(c1,c2)
+  df=data.frame(list(x=x,y=y,c=factor(c),g=factor(g)))
+  (m=lmer(y~x*c + (x*c|g),data=df,family=binomial))
+  if (doplot==TRUE)
+   {require(lattice)
+    df$fit=fitted(m)
+    print(xyplot(fit ~ x|g,data=df,group=c,pch=19,cex=.1))
+   }
+  print(colMeans(ranef(m)$g))
+  m
+}
+</pre></code></p>
+
+<p>Now the colMeans sometimes come out above 0.3, and definitely higher, on average than the linear example.</p>
+"
+"0.2","0.204734383200943"," 51464","<p>Background: For a project, I am fitting a conditional logit model where I have 5 control cases for every realized case. To do that I use the <code>clogit()</code> function in the package <code>survival</code>. I wanted to graph interactions with the <code>effects</code> package by John Fox et al. It turns out that this package can't handle <code>clogit</code> objects (output of <code>clogit()</code>). </p>
+
+<p>As I believed I remembered that conditional logit were a special case of GLM, I thought the clever/lazy way to get my interaction plots would be to refit the model using a fixed effects glm and then use <code>effect()</code>.
+The documentation of <code>clogit</code> seemed to confirm my intuition:</p>
+
+<blockquote>
+  <p>It turns out that the logliklihood for a conditional logistic regresson model = loglik from a Cox model with a particular data structure. [...]
+  When a well tested Cox model routine is available many packages use this â€˜trickâ€™ rather than writing a new software routine from scratch, and this is what the clogit routine does. </p>
+  
+  <p>In detail, a stratified Cox model with each case/control group assigned to its own stratum, time set to a constant, status of 1=case 0=control, and using the exact partial likelihood has the same likelihood formula as a conditional logistic regression. The clogit routine creates the necessary dummy variable of times (all 1) and the strata, then calls coxph.</p>
+</blockquote>
+
+<p>Based on this description, it seems that I should be able to reproduce the stratification achieved through <code>strata()</code> by using a random intercept for each case/control group with <code>1|group</code> in <code>lmer()</code>. However, when I try, the results of <code>clogit</code> and <code>lmer</code> differ. One thing is that I probably have the wrong likelihood function. I don't really know how to specify this in <code>lmer</code> but more important, I am wondering what else I am missing. </p>
+
+<p>I wonder whether I am completely wrong or somewhat on the right track but missing some pieces? What I would like is to understand what are the difference in terms of how the model is fitted between a conditional logit and a regular one (I understand that might be quite a long answer, so a book reference would be a great start). The my usual references for regression (Gelman and Hill, 2007; Mills 2011) are somewhat silent on the subject.</p>
+"
+"NaN","NaN"," 62483","<p>I've got a conditional logistic regression setup using <code>clogit</code> in <code>R</code> like this: </p>
+
+<pre><code>m&lt;-clogit(PHENO==2 ~ x + as.factor(COVAR[,1]) + strata(COVAR[,2]) )
+</code></pre>
+
+<p>I wanted to try doing GLMM analysis in <code>R</code>. I'm a little confused on the syntax for the <code>lme4</code> package in <code>R</code>. <code>COVAR[,2]</code> is the matching variable in my data. Can someone explain to me the difference between some of these statements:</p>
+
+<pre><code>m &lt;-  lmer(PHENO==2 ~ x + as.factor(COVAR[,1]) + (x|COVAR[,2]) )
+m &lt;-  lmer(PHENO==2 ~ x + as.factor(COVAR[,1]) + (1|COVAR[,2]) )
+</code></pre>
+
+<p>Which one is more appropriate? </p>
+"
+"0.151185789203691","0.154764646506827"," 63566","<p>I have conducted an experiment with multiple (categorical) conditions per subject, and multiple subject measurements.</p>
+
+<p>My data-frame in short: A subject has one property, <code>is_frisian</code> which is either 0 or 1 depending on the subject. And it is tested for two conditions, <code>person</code> and <code>condition</code>. The measurement variable is <code>error</code>, which is either 0 or 1.</p>
+
+<p>My mixed linear model in R is:</p>
+
+<pre><code>&gt; model &lt;- lmer(error~is_frisian*condition*person+(1|subject_id), data=output)
+</code></pre>
+
+<p>However, the residuals plot of this model gives an unexpected (?) result.</p>
+
+<p><img src=""http://i.stack.imgur.com/nz2KY.png"" alt=""Residuals lmer model""></p>
+
+<p>I was taught that this plot should show randomly scattered points, and they should be normal distributed. When plotting the density of the fitted and the residuals, it shows a reasonable normal distribution. The lines you can see in the graph, however, how is this to be explained? And is this okay?</p>
+
+<p>The only thing I could come up with is that the graph has two lines due to the categorical variables. The output variable <code>error</code> is either 0 or 1. But I do not have that much knowledge of the underlying system to confirm this. And then again, the lines also seem to have a low negative slope, is this then perhaps a problem?</p>
+
+<p><strong>UPDATE:</strong></p>
+
+<pre><code>&gt; model &lt;- glmer(error~is_frisian*condition*person + (1|subject_id), data=output, family='binomial')
+&gt; binnedplot(fitted(model),resid(model))
+</code></pre>
+
+<p>Gives the following result:</p>
+
+<p><img src=""http://i.stack.imgur.com/XMXFx.png"" alt=""binned residual plot""></p>
+
+<p><strong>FINAL EDIT:</strong></p>
+
+<p>The density-plots have been omitted, they have nothing to do with satisfaction of assumptions in this case. For a list of assumptions on logistic regression (when using family=binomial), <a href=""https://www.statisticssolutions.com/academic-solutions/resources/directory-of-statistical-analyses/assumptions-of-logistic-regression/"" rel=""nofollow"">see here at statisticssolutions.com</a></p>
+"
+"0.213808993529939","0.218870262065833"," 63927","<p>I am struggling to fit a simple logistic regression for one dependent value (group) by one independent qualitative variable (dilat) measured twice independently (rater).</p>
+
+<p>I try many solutions and think according <a href=""http://www.ats.ucla.edu/stat/mult_pkg/whatstat/"" rel=""nofollow"">http://www.ats.ucla.edu/stat/mult_pkg/whatstat/</a> that the solution is a Mixed Effects Logistic Regression.</p>
+
+
+
+<pre class=""lang-r prettyprint-override""><code>glmer_dilat&lt;-glmer(group ~ dilat + (1 | rater), data = ex, family = binomial)
+summary(glmer_dilat)
+</code></pre>
+
+
+
+<pre class=""lang-r prettyprint-override""><code>Generalized linear mixed model fit by the Laplace approximation 
+Formula: group ~ dilat + (1 | rater) 
+   Data: ex 
+   AIC   BIC logLik deviance
+ 105.5 112.5 -49.74    99.48
+Random effects:
+ Groups Name        Variance Std.Dev.
+ rater  (Intercept)  0        0      
+Number of obs: 76, groups: rater, 2
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)   0.8473     0.4880   1.736   0.0825 .
+dilat        -1.2827     0.5594  -2.293   0.0219 *
+</code></pre>
+
+<p>But the result is the same without !</p>
+
+<pre class=""lang-r prettyprint-override""><code>summary(glm(group ~ dilat, data =ex, family = binomial))
+
+glm(formula = group ~ dilat, family = binomial, data = ex)
+
+Deviance Residuals: 
+   Min      1Q  Median      3Q     Max  
+-1.552  -0.999  -0.999   1.367   1.367  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)   0.8473     0.4879   1.736   0.0825 .
+dilat        -1.2826     0.5594  -2.293   0.0219 *
+</code></pre>
+
+<p>What is the solution?</p>
+
+<p>please find my data set here after applying a dput command to it.</p>
+
+<pre class=""lang-r prettyprint-override""><code>structure(list(id = structure(c(38L, 11L, 6L, 28L, 3L, 30L, 39L, 4L, 8L, 12L, 32L, 29L, 34L, 35L, 33L, 16L, 27L, 5L, 36L, 10L, 9L, 14L, 1L, 13L, 31L, 2L, 17L, 7L, 19L, 20L, 18L, 21L, 23L, 15L, 24L, 25L, 37L, 26L, 38L, 11L, 6L, 28L, 3L, 30L, 39L, 4L, 8L, 12L, 32L, 29L, 34L, 35L, 33L, 16L, 27L, 5L, 36L, 10L, 9L, 14L, 1L, 13L, 31L, 2L, 17L, 7L, 19L, 20L, 18L, 21L, 22L, 23L, 15L, 24L, 37L, 26L), .Label = c(""1038835"", ""2025267"", ""2053954"", ""3031612"", ""40004760"", ""40014515"", ""40040532"", ""40092413"", ""40101857"", ""40105328"", ""4016213"", ""40187296"", ""40203950"", ""40260642"", ""40269263"", ""40300349"", ""40308059"", ""40327146"", ""40333651"", ""40364468"", ""40435267"", ""40440293"", ""40443920"", ""40485124"", ""40609779"", ""40628741"", ""40662695"", ""5025220"", ""E9701737"", ""M/377313"", ""qsc22913"", ""QSC29371"", ""QSC43884"", ""QSC62220"", ""QSC75555"", ""QSC92652"", ""QSD01289"", ""QSD02237"", ""U/FY0296"" ), class = ""factor""), group = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), rater = c(1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L), dilat = c(1L, 0L, 1L, 0L, 1L, 0L, 1L, 1L, 0L, 0L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 0L, 0L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 1L), midbrain_atroph = c(1L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 1L, 0L, 1L, 1L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), quadrigemi_atroph = c(1L, 0L, 1L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 1L, 1L, 0L, 1L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), hum_sig = c(1L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), flower_sig = c(0L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 1L, 0L, 1L, 1L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 1L, 0L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), fp_atroph = c(0L, 0L, 1L, 0L, 1L, 0L, 1L, 1L, 1L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 0L, 1L, 0L, 0L, 1L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L), scp_atroph = c(0L, 1L, 1L, 0L, 1L, 1L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 1L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L)), .Names = c(""id"", ""group"", ""rater"", ""dilat"", ""midbrain_atroph"", ""quadrigemi_atroph"", ""hum_sig"", ""flower_sig"", ""fp_atroph"", ""scp_atroph""), class = ""data.frame"", row.names = c(NA, -76L))
+</code></pre>
+"
+"0.151185789203691","0.154764646506827"," 65656","<p>My design is as follows.</p>
+
+<ul>
+<li>$y$ is Bernoulli response </li>
+<li>$x_1$ is a continuous variable </li>
+<li>$x_2$ is a categorical (factor) variable with two levels</li>
+</ul>
+
+<p>The experiment is completely within subjects. That is, each subject receives each combination of $x_1$ and $x_2$.</p>
+
+<p>This is a repeated measures logistic regression set-up. The experiment will give two ogives for $p(y=1)$ vs $x_1$, one for level1 and one for level2 of $x_2$. The effect of $x_2$ should be that for level2 compared to level1, the ogive should have a shallower slope and increased intercept.</p>
+
+<p>I am struggling with finding the model using <code>lme4</code>. For example,</p>
+
+<pre><code>glmer(y ~ x1*x2 + (1|subject), family=binomial)
+</code></pre>
+
+<p>So far as I understand it, the <code>1|subject</code> part says that <code>subject</code> is a random  effect. But I do not see how to specify that $x_1$ and $x_2$ are repeated measures variables. In the end, I want a model that includes a random effect for subjects, and gives estimated slopes and intercepts for level1 and level2.</p>
+"
+"0.427814457544428","0.451212604402024"," 67873","<p><strong>TLDR</strong>: How can I perform inference for the between group differences in a possibly logistic growth with time in the presence of outliers, unequal measurement times and frequency, bounded measurements and possible random effects on individual and per study level?</p>
+
+<p>I am attempting to analyse a dataset where measurements for individuals were made at different time points. Measurements start low at time 0 and follow (very roughly) a logistic growth pattern with time. I am trying to establish if there are differences between two groups of individuals. The analysis is complicated by the following factors:</p>
+
+<ul>
+<li>The effect of time is non-linear, so either a non-linear logistic regression (biologically plausible, but not particularly well fitting) or a non-parametric regression seem appropriate</li>
+<li>There are massive outliers, so regression using the sum of squared residuals seems off the table. Quantile regression seems appropriate.</li>
+<li>Random effects may be appropriate on a per individual and per study level. Mixed effects models seems appropriate.</li>
+<li>Measurement times, number of available measurements and end of monitoring differ between individuals. Survival analysis techniques seem appropriate. Possibly also applying weights equal to 1 / number of observations for individual.</li>
+<li>Measurements are bounded below at 0 and while there is no obvious boundary above, arbitrarily high measurements seem biologically implausible. However, quite a few individuals have some measurements of zero (partly due to the measurement accuracy of the device).</li>
+<li>A few models I tried so far failed to fit, usually with an unhelpful error related to the numerical procedure. This leads me to believe that I will need a reasonably robust method able to deal with this somewhat ugly dataset.</li>
+<li>Finally, I want to produce inference of the form ""group 1 has faster growth than group 2"" or ""group 1 has a higher asymptotic level than group 2"".</li>
+</ul>
+
+<p>What I have tried so far (all in R) - I was aware that most of the below are not particularly appropriate for the dataset, but I wanted to see which models could actually be fitted without numerical errors:</p>
+
+<ul>
+<li>Non-parametric regression using crs in the crs package. Nicely produces a curve reasonably close to logistic growth for most of the time period with some strange behavious toward the end of the monitoring period (where there are fewer observations). Using individuals as fixed effects reveals some outliers. Using the variable of interest as fixed effects shows some difference. However, I am not sure if there is any way to assess fits and do inference on a model this complex.</li>
+<li>Non-linear mixed effects regression using nlme in package nlme and SSlogis. Gradually building up the model with update() works reasonably well. Getting too complex with the fixed effects or the random effects leads to convergence failure. Since there is no reason to believe that residuals are normally distributed, it seems a bad idea to pursue this further. Edit: I have recently become aware that it is possible to specify autocorrelated residuals in nlme. However, at the moment it seems I cannot even get fixed weights to work. Advice on the correct syntax is welcome.</li>
+<li>Non-linear mixed effects regression using nlmer in package LME4 and a custom likelihood for the logistic growth model. Works fairly well, but standard errors on the fixed effects get massive, probably due to the outliers. I also have the slight suspicion that some of the models fail to fit without error, as I sometimes get tiny random effects (about 10^10 smaller than with slightly simpler models). Since there is no reason to believe that residuals are normally distributed, it seems a bad idea to pursue this further.</li>
+<li>Non-linear quantile regression using nlrq in package quantreg and SSlogis. Fits reliably and quickly, but percentile lines intersect. This means that an area containing 90% of the data is not fully contained in an area containing 95% of the data.</li>
+<li>Non-parametric quantile regression using the LMS method with package VGAM. Even trivial models failed with obscure errors using this dataset. I believe the number of zeros in the dataset and / or the large range of the data while also getting close to zero may be an issue.</li>
+<li>To complete this list, I should probably also mention the lqmm package for Linear Quantile Mixed Models, which I have not used yet. While the package cannot use non-linear models as far as I know, transforming the time variable may produce something reasonably close.</li>
+</ul>
+
+<p>I would appreciate feedback if these or any other method might be used to produce reasonably robust inference in this scenario. Maybe regression is not needed at all and another, possibly simpler method is sufficient. I'd be happy to provide an example dataset, if required, but think this question might also be of interest beyond the current dataset.</p>
+"
+"0.282842712474619","0.268856845592088"," 68786","<p>I measured a binary response for each subject in 5 different conditions. For each subject and condition, I replicated the experiment 36 times. I thus have 36 binary values per condition per subject.</p>
+
+<p>I am trying to build a model for those data. I suppose a logistic regression is what I'm looking for, and I am working with the <code>lmer</code> package. My aim is to check whether the conditions significantly influence the observed values, so I would have two models:</p>
+
+<pre><code>lmH1&lt;-lmer(value~condition, (random effects), data=dataset, family=binomial)
+</code></pre>
+
+<p>and</p>
+
+<pre><code>lmH0&lt;-lmer(value~1, (random effects), data=dataset, family=binomial) 
+</code></pre>
+
+<p>By looking at the output from <code>anova(lmH0, lmH1)</code>, I would be able to determine the significance of the effect of my condition.</p>
+
+<p>I am just not sure what to specify as random effect; the models I defined so far are:</p>
+
+<pre><code>lmH1 &lt;- lmer( value ~ condition + ( 1 | subject ), data = dataSet, family = binomial )
+</code></pre>
+
+<p>and </p>
+
+<pre><code>lmH2 &lt;- lmer( value ~ condition + ( 1 | subject/condition ), data = dataSet, family = binomial )
+</code></pre>
+
+<p>However I am not sure about how lmer handles the replicates, so I don't know whether I should include those replicates in my random effects or not. I could modify the proposed models so that the grouping defined by the random effects refers to a specific binary values instead of a group of binaries values. My new models would then be</p>
+
+<pre><code>lmH1a &lt;- lmer( value ~ condition + ( 1 | subject/(condition:replicate) ), data = dataSet, family = binomial )
+</code></pre>
+
+<p>and</p>
+
+<pre><code>lmH2a &lt;- lmer( value ~ condition + ( 1 | subject/condition/replicate ), data = dataSet, family = binomial )
+</code></pre>
+
+<p>With those models R returns the warning message <code>Number of levels of a grouping factor for the random effects is equal to n, the number of observations</code>. But the model is still computed.</p>
+
+<p>All 4 models return very similar values for the fixed effects and for the random effects that they have in common (e.g. the subject random effects are very similar for all 4 models and the condition within subject random effects are very similar for <code>lmH2</code> and <code>lmH2a</code>).</p>
+
+<p>How can I check which random effect structure is the most appropriate for my design and collected data?</p>
+"
+"0.151185789203691","0.116073484880121"," 82981","<p>I am exploring hierarchical logistic regression, using glmer from the lme4 package. To my understanding, one of the first steps in multilevel modeling is to estimate the degree of clustering of level-1 units within level-2 units, given by the intraclass correlation (to ""justify"" the additional cost of estimating parameters to account for the clustering). When I run a fully unconditional model with glmer</p>
+
+<pre><code>fitMLnull &lt;- glmer(outcome ~ 1 + (1|level2.ID), family=binomial)
+</code></pre>
+
+<p>the glmer fit gives me the variance in the intercept for outcome at level-2, but the residual level-1 variance in outcome is nowhere to be found. I read somewhere (can't track it down now) that the residual level-1 variance is <em>not</em> estimated in HGLM (or at least in glmer). Is this true? If so, is there an alternative way to approximate the degree of clustering in the data? If not, how can I access this value to calculate the ICC?</p>
+"
+"0.151185789203691","0.154764646506827"," 85555","<p>I would like to run a lagged random effects regression.</p>
+
+<p>The data is from an experiment in which participants were assigned to groups of five and participated in an interactive game for 20 rounds.</p>
+
+<p>Participants could exchange something during the experiment, which is the dependent variable.</p>
+
+<p>Now I would like to predict/explain, how much participant received from other participants based on the behaviour of previous rounds.</p>
+
+<p>Since the data is clustered on three levels: subject, group and time (rounds), I am a little bit lost how to correctly formulate the model.</p>
+
+<p>I am currently using the lme4 package in R. 
+I transformed the dependent variable to a 0/1 (nothing received/something received) variable, due to high skewness, so I would need to specify a multilevel logistic model.</p>
+
+<p>So far, I specified and ran the following models:</p>
+
+<pre><code>glmer(DV ~ predictors* + (1 + round * subject | group), family = binomial)
+</code></pre>
+
+<p>and:</p>
+
+<pre><code>glmer(DV ~ predictors* + (1 + round * group | subject), family = binomial)
+</code></pre>
+
+<p>*predictors are on subject-level.</p>
+
+<p>I get similar (although not the same) estimates for both models, however in model1, z-values are much higher (and therefore p-values much lower).</p>
+
+<p>Can someone help me on that?</p>
+
+<p>What I want to know is; Can previous behaviour (that is behaviour from round x-1 etc.) predict how much a participant received in round x.
+But control/acknowledge that participants are clustered in groups and that behaviour is correlated over time (rounds).</p>
+"
+"0.29277002188456","0.29970044925131"," 87359","<p><strong>Background</strong></p>
+
+<p>I have a large dataset that contains three binary outcomes for individuals belonging to groups. I am interested in jointly modeling these binary outcomes because I have reason to believe they are positively correlated with one another. Most of my data is at the individual level, however I also have some group-level information.</p>
+
+<p>Because of the structure of my data, I am treating this as a 3-level logistic regression. The first level defines the multivariate structure through dummy variables that indicate for each outcome. Therefore level-1 accounts for the within-individual measurements. Level-2 provides the between-individuals variances and level-3 gives the between-group variance.</p>
+
+<p><em>Hypothetical Example:</em></p>
+
+<p>Suppose I have data for students in classrooms. I want to examine whether certain student level characteristics are important predictors for passing three different pre-tests (math, history, and gym). The pre-tests are constructed such that about half of the students should pass each exam (no floor or ceiling effect). Since some students are better than others, I expect whether or not they pass their history exam to be correlated to their probability of passing their math and gym pre-tests. I also expect that students in the same classroom will perform more similarly than students across classrooms.</p>
+
+<p><strong>Here is my attempt at writing out the model</strong></p>
+
+<p>I use $h$ to index level-1, $i$ to index level-2, and $j$ to index level-3. Recall that level-1 corresponds to within-individual, level-2 corresponds to between-individuals, and level-3 corresponds to between-groups. So I have $h$ measures for the $i^\text{th}$ individual in the $j^\text{th}$ group.</p>
+
+<p>Let 
+\begin{align}
+\alpha_{1ij} &amp;= 1 \text{ if outcome}_1 = 1 \text{ and 0 otherwise} \\
+\alpha_{2ij} &amp;= 1 \text{ if outcome}_2 = 1 \text{ and 0 otherwise} \\
+\alpha_{3ij} &amp;= 1 \text{ if outcome}_3 = 1 \text{ and 0 otherwise}
+\end{align}</p>
+
+<p>\begin{align}
+\text{log}\left( \frac{\pi_{hij}}{1 - \pi_{hij}} \right) &amp;= \alpha_{0hij} + \alpha_{1hij}Z_{ij} + \eta_h \\
+Z_{ij} &amp;= \beta_{0ij} + X_{ij}\beta_{ij} + U_{j} + \epsilon_i \\
+U_{j} &amp;= \gamma_{0j} + X_{j}\gamma_{j}
+ + \rho_j
+\end{align}</p>
+
+<p>Please leave suggests about this notation; I am not positive that it is correct.</p>
+
+<p><strong>Trying to specify the model in R</strong></p>
+
+<p>I have been using R 3.0.1, but am open to solutions using other standard software (e.g. SAS, Stata, WinBUGs, etc.). Since I am modeling a binary response I am using the <code>glmer</code> function in the <code>lme4</code> package.</p>
+
+<p>My data is in a long format with one row per outcome per individual per group.</p>
+
+<p>One of my current problems is correctly specifying a 3-level model. Given 5 individual-level measures and one group level measure, I have tried to specify the model as:</p>
+
+<pre><code>&gt; glmer(pi ~ outcome1:(x1 + x2 + x3 + x4 + u5) + 
+             outcome2:(x1 + x2 + x3 + x4 + u5) +
+             outcome3:(x1 + x2 + x3 + x4 + u5) +
+             (1 + x1 + x2 + x3 + x4 | individual) +
+             (1 + u5 | group), family=binomial, data=pretest)
+</code></pre>
+
+<p>but this often produces warnings and does not converge.</p>
+
+<p><strong>My questions</strong></p>
+
+<ol>
+<li><p>Does my approach make sense? (i.e. does it make sense to model a multilevel multivariate model by specifying the multivariate structure in the first level?)</p></li>
+<li><p>I have difficult with the proper notation and appreciate suggestions for clarifying my notation.</p></li>
+<li><p>Am I using the right tools for this problem? Should I be using other packages or software?</p></li>
+</ol>
+
+<p>Thanks in advance for your suggestions and advice.</p>
+"
+"0.239045721866879","0.244704392116198"," 87650","<p>I ran into (what I think is) an inconsistency when running a random-intercept model (using the <em>lmer</em> function in the <em>lme4</em> package in R).</p>
+
+<p>Here is what I do: I first run a model with a set of covariates; then I run the same model re-scaling (linearly transforming) one of the regressors. To my knowledge, this should change <strong>only the coefficient</strong> of the variable that is linearly transformed. And indeed, this is what happens when I run this ""experiment"" with a simple linear regression model and with a logistic model.</p>
+
+<p>This code replicates the ""normal"" behaviour:</p>
+
+<pre><code># Create three random independent variables
+x1 &lt;- rnorm(20)
+x2 &lt;- rnorm(20)
+x3 &lt;- as.factor(sample(0:2, 20, replace = TRUE))
+# Their random coefficients
+coef1 &lt;- runif(1, -1, 1)
+coef2 &lt;- runif(1, -1, 1)
+# Create a continuous dependent variable and a binomial one
+y1 &lt;- coef1 * x1 + coef2 * x2 + runif(20)
+y2 &lt;- y1
+y2[which(y1 &gt; quantile(y1, 0.5))] &lt;- 1
+y2[which(y1 &lt;= quantile(y1, 0.5))] &lt;- 0
+# Finally, a linear transformation of x1
+x1.trans &lt;- x1*3
+</code></pre>
+
+<p>So, let us run an OLS model:</p>
+
+<pre><code>lm &lt;- lm(y1 ~ x1 + x2 + x3)
+summary(lm)
+# OLS model with one variable linearly transformed
+lm.bis &lt;- lm(y1 ~ x1.trans + x2 + x3)
+summary(lm.bis)
+</code></pre>
+
+<p>The coefficients of <em>x1</em> and <em>x1.trans</em> are different, <strong>but the R-square of the two models is the same</strong>:</p>
+
+<pre><code>summary(lm)$r.sq == summary(lm.bis)$r.sq
+</code></pre>
+
+<p>The same with a logistic model:</p>
+
+<pre><code>logm &lt;- glm(y2 ~ x1 + x2, family=""binomial"")
+summary(logm)
+logm.bis &lt;- glm(y2 ~ x1.trans + x2, family=""binomial"")
+summary(logm.bis)
+</code></pre>
+
+<p>Even in this case, <strong>the log-likelihood of the two models is the same</strong>:</p>
+
+<pre><code>logLik(logm) == logLik(logm.bis)
+</code></pre>
+
+<p>So far, so good. However, when I do the same with a hierarchical model, <strong>the log-likelihood (and consequently the AIC and BIC) of the two models are different</strong>, although the coefficient of the transformed variable remains significant with the same z value and the other coefficients are the same.</p>
+
+<pre><code># Multilevel model
+mm &lt;- lmer(y1 ~ x1 + x2 + (1 | x3))
+summary(mm)
+mm.bis &lt;- lmer(y1 ~ x1.trans + x2 + (1 | x3))
+summary(mm.bis)
+logLik(mm) == logLik(mm.bis) ### FALSE! ###
+</code></pre>
+
+<p>Why? Also the ""REML criterion at convergence"" is obviously different. I don't understand this result. This is probably due to my moderate knowledge of the math of hierarchical models. I'd be very happy if some of you could show me what's the trick here.</p>
+
+<p>Since we then use AIC and BIC to compare models, I am puzzled by the fact that a simple transformation that shouldn't change anything makes one model better (or worse) than another.</p>
+"
+"0.151185789203691","0.154764646506827"," 87956","<p>I have a repeated-measures experiment where the dependent variable is a percentage, and I have multiple factors as independent variables. I'd like to use <code>glmer</code> from the R package <code>lme4</code> to treat it as a logistic regression problem (by specifying <code>family=binomial</code>) since it seems to accommodate this setup directly.</p>
+
+<p>My data looks like this:</p>
+
+<pre><code> &gt; head(data.xvsy)
+   foldnum      featureset noisered pooldur dpoolmode       auc
+ 1       0         mfcc-ms      nr0       1      mean 0.6760438
+ 2       1         mfcc-ms      nr0       1      mean 0.6739482
+ 3       0    melspec-maxp    nr075       1       max 0.8141421
+ 4       1    melspec-maxp    nr075       1       max 0.7822994
+ 5       0 chrmpeak-tpor1d    nr075       1       max 0.6547476
+ 6       1 chrmpeak-tpor1d    nr075       1       max 0.6699825
+</code></pre>
+
+<p>and here's the R command that I was hoping would be appropriate:</p>
+
+<pre><code> glmer(auc~1+featureset*noisered*pooldur*dpoolmode+(1|foldnum), data.xvsy, family=binomial)
+</code></pre>
+
+<p>The problem with this is that the command complains about my dependent variable not being integers:</p>
+
+<pre><code>In eval(expr, envir, enclos) : non-integer #successes in a binomial glm!
+</code></pre>
+
+<p>and the analysis of this (pilot) data gives weird answers as a result.</p>
+
+<p>I understand why the <code>binomial</code> family expects integers (yes-no counts), but it seems it should be OK to regress percentage data directly. How to do this?</p>
+"
+"0.130930734141595","0.134030115482631"," 88036","<p>I am new to R, and don't see these questions answered anywhere in documentation (though I could be wrong).</p>
+
+<ol>
+<li><p>I am using the following nomenclature to run my mixed-effects logistic regression, based on instructions from another site:  </p>
+
+<p><code>output &lt;- glmer(DV ~ IV1 + IV2 + (1 | RE), family = binomial, nAGQ = 10)</code><br>
+RE is a factor with several levels.</p>
+
+<p>This works. But I'm wondering why it's necessary to use the <code>(1 | RE)</code> syntax instead of just <code>DV~IV1+IV2 | RE</code>.</p></li>
+<li><p>I am running two mixed effects logistic regressions. On one of them I can view the random effects intercepts using <code>ranef()</code>. But I get all 0s when I run ranef on the output of the other one. Both regressions/data are ostensibly the same. What do all 0s for the random effects intercepts mean?</p></li>
+</ol>
+"
+"0.0755928946018454","0.0773823232534137"," 88388","<p>I would like to use cross-validation to test how predictive my mixed-effect logistic regression model is (model run with glmer). Is there an easy way to do this using a package in R? I've only seen cross validation functions in R for use with linear models.</p>
+"
+"NaN","NaN"," 91184","<p>Suppose I fit a generalized mixed logistic model such like that:</p>
+
+<pre><code>set.seed(2014)
+require(lme4)
+df&lt;-data.frame(id=rep(1:5, c(8,10,12,14,15)), 
+               out=c(rbinom(8,1,0.1), rbinom(10,1,0.3),rbinom(12,1,0.1),rbinom(14,1,0.05),rbinom(15,1,0.1)),
+               age=rnorm(59,50,10),
+               gender=rbinom(59,1,0.5))
+fit&lt;-glmer(out~age+gender+(1|id),data=df,binomial)
+df$predicted&lt;-predict(fit,type=""response"")
+df$pred.binary&lt;-with(df,ifelse(predicted&gt;=0.5,1,0))
+apply(df[,c(2,6)],2,sum)
+        out pred.binary 
+          9           0 
+</code></pre>
+
+<p>What's the best way to predict a binary outcomes by accounting the random effects and with an optimized threshold based on the original data set?</p>
+"
+"0.320713490294909","0.310066204593264"," 92737","<p>In my data, I have two treatment conditions with repeated measures for each subject. I would like to run a mixed logistic regression separately for each of my two conditions where my binary outcome DV (dependent variable) is regressed on my IV (independent variable) and also have a random slope and intercept fitted for each subject.</p>
+
+<p>So, I run the following:</p>
+
+<pre><code>modelT0 &lt;- glmer(DV ~ IV + (1|subject) + (0 + IV|subject), data = D0, family = binomial)
+modelT1 &lt;- glmer(DV ~ IV + (1|subject) + (0 + IV|subject), data = D1, family = binomial)
+</code></pre>
+
+<p>In the above, D0 and D1 are data sets restricted to treatment conditions 0 and 1, respectively. What I would like to do is compare the estimated fixed effects coefficient on IV across conditions to see if it significantly changes. To do this, I pool D0 and D1 into a single data set, D, and create a treatment indicator that takes value 0 in D0 and 1 in D1. I then run:</p>
+
+<pre><code>model &lt;- glmer(DV ~ IV + treatment + treatment:IV + (1 + treatment|subject:treatment) 
+               + (0 + IV + treatment:IV|subject:treatment), data = D, family = binomial)
+</code></pre>
+
+<p>I should be able to look at the fixed effects coefficient on treatment:IV to get my answer, but the issue is that for whatever combination of random effects I seem to specify, the coefficients from the pooled regression are slightly different from the regressions specified by treatment. So for instance, the fixed effect coefficient on treatment:IV plus the one on IV in model is not equal to the coefficient on IV in model1.</p>
+
+<p>Any idea about what I might be doing wrong or how to answer the question I have? Thanks!</p>
+
+<p>EDIT:</p>
+
+<p>As per Henrik's suggestion, I'm copying the random effects output of the models below:</p>
+
+<p>summary(modelT0):</p>
+
+<pre><code>    Random effects:
+    Groups    Name        Variance  Std.Dev. 
+    subject   (Intercept) 1.412e-07 0.0003758
+    subject.1 IV          1.650e+00 1.2844341
+</code></pre>
+
+<p>summary(modelT1):</p>
+
+<pre><code>    Random effects:
+    Groups    Name        Variance Std.Dev.
+    subject   (Intercept) 0.00378  0.06148 
+    subject.1 IV          0.26398  0.51379 
+</code></pre>
+
+<p>summary(model):</p>
+
+<pre><code>    Random effects:
+    Groups              Name         Variance  Std.Dev. Corr 
+    subject.treatment   (Intercept)  0.0005554 0.02357       
+                        treatment    0.0066042 0.08127  -0.88
+    subject.treatment.1 IV           1.6500112 1.28453       
+                        IV:treatment 1.0278663 1.01384  -0.93
+</code></pre>
+"
+"0.0755928946018454","0.0773823232534137"," 94619","<p>Stata allows for fixed effects and random effects specification of the logistic regression through the <code>xtlogit fe</code> and <code>xtlogit re</code> commands accordingly. I was wondering what are the equivalent commands for these specifications in R.</p>
+
+<p>The only similar specification I am aware of is the mixed effects logistic regression </p>
+
+<pre><code>&gt; mymixedlogit &lt;- glmer(y ~ x1 + x2 +  x3 + (1 | x4), data = d, family = binomial)
+</code></pre>
+
+<p>but I am not sure whether this maps to any of the aforementioned commands.</p>
+"
+"0.10690449676497","0.109435131032917"," 97834","<p>I ran a mixed model using lme4::glmer for a logistic regression and consistently got these warning messages. I noticed there are still regular results even so, but are they accurate estimates?</p>
+
+<pre><code>    &gt; glmm.ms1&lt;-glmer(as.formula(paste(paste(y[1], x, sep=""~""), mix[1], sep=""+"")),
+    +             data=rtf2,control=glmerControl(optimizer=""bobyqa"",
+    +             optCtrl=list(maxfun=100000),family=binomial)
+Warning messages:
+1: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 0.8766 (tol = 0.001)
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
+
+&gt; coef(summary(glmm.ms1))
+                       Estimate Std. Error    z value  Pr(&gt;|z|)
+(Intercept)           1.810e+00  6.558e-01   2.760464 5.772e-03
+lepidays             -3.340e+00  2.770e-01 -12.059620 1.726e-33
+cldaysbirth          -1.555e+00  5.224e-01  -2.975934 2.921e-03
+rotaarm              -2.057e-01  3.209e-01  -0.641102 5.215e-01
+cldaysbirth2         -3.072e-01  2.955e-01  -1.039510 2.986e-01
+bfh2                 -1.043e+01  1.160e+03  -0.008996 9.928e-01
+bfh3                  4.653e-01  4.806e-01   0.968103 3.330e-01
+bfh4                  2.547e-01  4.994e-01   0.509966 6.101e-01
+bfh5                  3.744e-01  9.926e-01   0.377213 7.060e-01
+ruuska               -1.020e-01  5.928e-02  -1.720396 8.536e-02
+genderMale           -4.008e-01  2.645e-01  -1.515453 1.297e-01
+epiexlbf              6.078e-04  2.796e-03   0.217391 8.279e-01
+haz.epi              -7.211e-02  1.373e-01  -0.525039 5.996e-01
+cldaysbirth:rotaarm   6.928e-01  4.771e-01   1.452148 1.465e-01
+rotaarm:cldaysbirth2  5.181e-01  3.352e-01   1.545527 1.222e-01
+Warning messages:
+1: In vcov.merMod(object, use.hessian = use.hessian) :
+  variance-covariance matrix computed from finite-difference Hessian is
+not positive definite: falling back to var-cov estimated from RX
+2: In vcov.merMod(object, correlation = correlation, sigm = sig) :
+  variance-covariance matrix computed from finite-difference Hessian is
+not positive definite: falling back to var-cov estimated from RX
+</code></pre>
+
+<p>Due to data's sensitivity, I can't post the whole process for generating same messages, but I would like to know how to handle these warnings. I don't think it's suitable to keep my eye blind here.</p>
+"
+"0.2","0.204734383200943","106360","<p>I am running a binomial mixed effects logistic regression in R using <code>glmer</code> for a sociolinguistics project. I was asked to used deviation (effect) coding. From what I gather, in deviation coding the last level in a factor is assigned -1, because this is the level that is never compared to the other levels within that variable. Is it possible to obtain the <code>Estimate</code> (<code>Exp(B)</code> value) for the last level as well by using function <code>relevel</code>? I need to report the estimates for all the levels.</p>
+
+<p>For example, my model has the independent variable called <strong>Orthography</strong> with four levels (<code>s</code>, <code>sh</code>, <code>s1</code>, <code>sh1</code>). The dependent variable is <strong>produced sibilant</strong>. In deviation coding the fourth level (<code>sh1</code>) will not be compared to the other three levels, and estimates will be available for the first three (<code>s</code>, <code>sh</code>, <code>s1</code>). The intercept is the mean of the means of all four levels (<code>s + sh + s1 + sh1 / 4</code>). I am interested in obtaining the estimate for the last level (<code>sh1</code>) as well. Does anyone know how to get that? Do I have to rerun the model by changing levels? If so, does anyone know how to do that? I have been unsuccessful with using function <code>relevel</code> to do this.</p>
+
+<p>I have other terms in my model as well:  </p>
+
+<ul>
+<li>following segment, which has two levels (<code>vowel</code>, <code>consonant</code>), </li>
+<li>position of sibilant in word (<code>initial</code>, <code>medial</code>, <code>final</code>), </li>
+<li>grammatical function (<code>noun</code>, <code>verb</code>, <code>adjectives</code>), and </li>
+<li>language of instruction (<code>English</code>, <code>Gujarati</code>).</li>
+</ul>
+
+<p>This is the code for my model:</p>
+
+<pre><code>model.final_si = glmer(prod_sib ~ orthography + foll_segment + word_position + 
+                                  grammatical_func + language_instruction + 
+                                  (1|participant) + (1|item), 
+                       family=""binomial"",data=data)
+</code></pre>
+"
+"0.240039679259592","0.268060230965262","115356","<p>I'm a beginner in statistics and I have to run multilevel logistic regressions. I am confused with the results as they differ from logistic regression with just one level. </p>
+
+<p>I don't know how to interpret the variance and correlation of the random variables. And I wonder how to compute the ICC.</p>
+
+<p>For example : I have a dependent variable about the protection friendship ties give to individuals (1 is for individuals who can rely a lot on their friends, 0 is for the others). There are 50 geographic clusters of respondant and one random variable which is a factor about the social situation of the neighborhood. Upper/middle class is the reference, the other modalities are working class and underprivileged neighborhoods. </p>
+
+<p>I get these results :</p>
+
+<pre><code>&gt; summary(RLM3)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: Arp ~ Densite2 + Sexe + Age + Etudes + pcs1 + Enfants + Origine3 +      Sante + Religion + LPO + Sexe * Enfants + Rev + (1 + Strate |  
+    Quartier)
+   Data: LPE
+Weights: PONDERATION
+Control: glmerControl(optimizer = ""bobyqa"")
+
+     AIC      BIC   logLik deviance df.resid 
+  3389.9   3538.3  -1669.9   3339.9     2778 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2216 -0.7573 -0.3601  0.8794  2.7833 
+
+Random effects:
+ Groups   Name           Variance Std.Dev. Corr       
+ Neighb. (Intercept)     0.2021   0.4495              
+          Working Cl.    0.2021   0.4495   -1.00      
+          Underpriv.     0.2021   0.4495   -1.00  1.00
+Number of obs: 2803, groups:  Neigh., 50
+
+Fixed effects:
+</code></pre>
+
+<p>The differences with the ""call"" part is due to the fact I translated some words.</p>
+
+<p>I think I understand the relation between the random intercept and the random slope for linear regressions but it is more difficult for logistics ones. I guess that when the correlation is positive, I can conclude that the type of neighborhood (social context) has a positive impact on the protectiveness of friendship ties, and conversely. But how do I quantify that ?</p>
+
+<p>Moreover, I find it odd to get correlation of 1 or -1 and nothing more intermediate.</p>
+
+<p>As for the ICC I am puzzled because I have seen a post about lmer regression that indicates that intraclass correlation can be computed by dividing the variance of the random intercept by the variance of the random intercept, plus the variance the random variables, plus the residuals. </p>
+
+<p>But there are no residuals in the results of a glmer. I have read in a book that ICC must be computed by dividing the random intercept variance by the random intercept variance plus 2.36 (piÂ²/3). But in another book, 2.36 was replaced by the inter-group variance (the first level variance I guess). 
+What is the good solution ?</p>
+
+<p>I hope these questions are not too confused.
+Thank you for your attention !</p>
+"
+"NaN","NaN","122508","<p>I am trying to replicate a multilevel logistic analysis which uses a dyadic time series data set and R. As for my part, I am using the same data set but Stata.</p>
+
+<p>The original syntax has the following specifications:</p>
+
+<p><code>lmer(depvar ~ indepvar_n (1|country_a)+(1|country_b)+(1|year), data=d, family='binomial'))</code></p>
+
+<p>My Stata syntax currently looks like this:</p>
+
+<p><code>xtmelogit depvar indepvars || country_a:country_b</code></p>
+
+<p>Obviously, somehow I still have to add the <strong>year</strong> variable, but I have troubles in doing so. When excluding years from both equations I produce identical results. However, this is pointless since it is a different analysis.</p>
+
+<p>In which way do I have to modify the Stata syntax to produce the same results which are computed by the R command? I cannot simply add :year after country_b since this is not possible. What am I missing?</p>
+"
+"0.420883424647321","0.43084654172335","127479","<p>I'm using a mixed effects model with logistic link function (using lme4 version 1.1-7 in R).  However, I noticed that the estimates of significance for fixed effects change depending on the order of the rows in the dataset.  </p>
+
+<p>That is, if I run a model on a dataset, I get certain estimate for my fixed effect and it has a certain p-value.  I run the model again, and I get the same estimate and p-value.  Now, I shuffle the order of rows (the data is not mixed, just the rows are in a different order).  Running the model a third time, the p-value is very different.</p>
+
+<p>For the data I have, the estimated p-value for the fixed effect can be between p=0.001 and p=0.08.  Obviously, these are crucial differences given conventional significance levels. </p>
+
+<p>I understand that the estimates are just estimated, and there will be differences between values for a number of reasons.  However, the magnitude of the differences for my data seem large to me, and I wouldn't expect the order of my dataframe to have this effect (we discovered this problem by chance when a colleague ran the same model but got different results.  It turned out they had ordered their data frame.).  </p>
+
+<p>Here is the output of my script:
+(X and Y are binary variables which are contrast-coded and centred, Group and SubGroup are categorical variables)</p>
+
+<pre><code>&gt; # Fit model
+&gt; m1 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; # Shuffle order of rows
+&gt; d = d[sample(1:nrow(d)),]
+&gt; # Fit model again
+&gt; m2 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; summary(m1)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5421        
+              Y1          0.1847   0.4298   -0.79
+ Group        (Intercept) 0.2829   0.5319        
+              Y1          0.4640   0.6812   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1325  -8.214   &lt;2e-16 ***
+Y1            0.3772     0.2123   1.777   0.0756 .  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.112 
+&gt;
+&gt; # -----------------
+&gt; summary(m2)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5422        
+              Y1          0.1846   0.4296   -0.79
+ Group        (Intercept) 0.2829   0.5318        
+              Y1          0.4641   0.6813   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1166  -9.334  &lt; 2e-16 ***
+Y1            0.3773     0.1130   3.339 0.000841 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.074 
+</code></pre>
+
+<p>I'm afraid that I can't attach the data due to privacy reasons. </p>
+
+<p>Both models converge.  The difference appears to be in the standard errors, while the differences in coefficient estimates are smaller.  The model fit (AIC etc.) are the same, so maybe there are multiple optimal convergences, and the order of the data pushes the optimiser into different ones.  However, I get slightly different estimates every time I shuffle the data frame (not just two or three unique estimates).  In one case (not shown above), the model did not converge simply because of a shuffling of the rows.</p>
+
+<p>I suspect that the problem lies with the structure of my particular data.  It's reasonably large (nearly 200,000 cases), and has nested random effects.  I have tried centering the data, using contrast coding and feeding starting values to lmer based on a previous fit.  This seems to help somewhat, but I still get reasonably large differences in p-values.  I also tried using different ways of calculating p-values, but I got the same problem.</p>
+
+<p>Below, I've tried to replicate this problem with synthesised data.  The differences here aren't as big as with my real data, but it gives an idea of the problem.</p>
+
+<pre><code>library(lme4)
+set.seed(999)
+
+# make a somewhat complex data frame
+x = c(rnorm(10000),rnorm(10000,0.1))
+x = sample(x)
+y = jitter(x,amount=10)
+a = rep(1:20,length.out=length(x))
+y[a==1] = jitter(y[a==1],amount=3)
+y[a==2] = jitter(x[a==2],amount=1)
+y[a&gt;3 &amp; a&lt;6] = rnorm(sum(a&gt;3 &amp; a&lt;6))
+# convert to binary variables
+y = y &gt;0
+x = x &gt;0
+# make a data frame
+d = data.frame(x1=x,y1=y,a1=a)
+
+# run model 
+m1 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# shuffle order of rows
+d = d[sample(nrow(d)),]
+
+# run model again
+m2 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# show output
+summary(m1)
+summary(m2)
+</code></pre>
+
+<p>One solution to this is to run the model multiple times with different row orders, and report the range of p-values.  However, this seems inelegant and potentially quite confusing.</p>
+
+<p>The problem does not affect model comparison estimates (using anova), since these are based on differences in model fit.  The fixed effect coefficient estimates are also reasonably robust.  Therefore, I could just report the effect size, confidence intervals and the p-value from a model comparison with a null model, rather than the p-values from within the main model.</p>
+
+<p>Anyway, has anyone else had this problem?  Any advice on how to proceed?</p>
+"
+"0.320713490294909","0.310066204593264","130313","<p>In a logistic Generalized Linear Mixed Model (family = binomial), I don't know how to interpret the random effects variance:</p>
+
+<pre><code>Random effects:
+ Groups   Name        Variance Std.Dev.
+ HOSPITAL (Intercept) 0.4295   0.6554  
+Number of obs: 2275, groups: HOSPITAL, 14
+</code></pre>
+
+<p>How do I interpret this numerical result?</p>
+
+<p>I have a sample of renal trasplanted patients in a multicenter study. I was testing if the probability of a patient being treated with a specific antihypertensive treatment is the same among centers. The proportion of patients treated varies greatly between centers, but may be due to differences in basal characteristics of the patients. So I estimated a generalized linear mixed model (logistic), adjusting for the principal features of the patiens.
+This are the results:</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood ['glmerMod']
+ Family: binomial ( logit )
+Formula: HTATTO ~ AGE + SEX + BMI + INMUNOTTO + log(SCR) + log(PROTEINUR) + (1 | CENTER) 
+   Data: DATOS 
+
+     AIC      BIC   logLik deviance 
+1815.888 1867.456 -898.944 1797.888 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ CENTER (Intercept) 0.4295   0.6554  
+Number of obs: 2275, groups: HOSPITAL, 14
+
+Fixed effects:
+                           Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)               -1.804469   0.216661  -8.329  &lt; 2e-16 ***
+AGE                       -0.007282   0.004773  -1.526  0.12712    
+SEXFemale                 -0.127849   0.134732  -0.949  0.34267    
+BMI                        0.015358   0.014521   1.058  0.29021    
+INMUNOTTOB                 0.031134   0.142988   0.218  0.82763    
+INMUNOTTOC                -0.152468   0.317454  -0.480  0.63102    
+log(SCR)                   0.001744   0.195482   0.009  0.99288    
+log(PROTEINUR)             0.253084   0.088111   2.872  0.00407 ** 
+</code></pre>
+
+<p>The quantitative variables are centered.
+I know that the among-hospital standard deviation of the intercept is 0.6554, in log-odds scale.
+Because the intercept is -1.804469, in log-odds scale, then probability of being treated with the antihypertensive of a man, of average age, with average value in all variables and inmuno treatment A, for an ""average"" center, is 14.1 %.
+And now begins the interpretation:  under the assumption that the random effects follow a normal distribution, we would expect approximately 95% of centers to have a value within 2 standard deviations of the mean of zero, so the probability of being treated for the average man will vary between centers with coverage interval of:</p>
+
+<pre><code>exp(-1.804469-2*0.6554)/(1+exp(-1.804469-2*0.6554))
+
+exp(-1.804469+2*0.6554)/(1+exp(-1.804469+2*0.6554))
+</code></pre>
+
+<p>Is this correct?</p>
+
+<p>Also, how can I test in glmer if the variability between centers is statistically significant?
+I used to work with MIXNO, an excellent software of Donald Hedeker, and there I have an standard error of the estimate variance, that I don't have in glmer.
+How can I have the probability of being treated for the ""average"" man in each center, with a confidene interval?</p>
+
+<p>Thanks</p>
+"
+"0.239045721866879","0.244704392116198","132971","<p>There is something I'm not quite understanding conceptually about the output from generalized linear mixed models. I have read that the target of inference in GLMMs is subject-specific. For example, the accepted answer to <a href=""http://stats.stackexchange.com/questions/17331/what-is-the-difference-between-generalized-estimating-equations-and-glmm"">this</a> question states that in a logistic GLMM the odds-ratios are conditioned on both the fixed and random effects. So, in a GLMM of pupils within classrooms, with random intercepts for classroom (i.e., the ""subject"" in this case), the odds-ratios will differ for each classroom as there will be many random intercepts. So far, this makes sense to me.</p>
+
+<p>What I am confused about is that the typical output from the fixed effects part of such a model reports just one odds-ratio. For example, in the R example I provide below, the odds-ratio for the fixed effect of <code>sex</code> is .662. I have three questions:</p>
+
+<ol>
+<li><p><strong>How do I interpret this single fixed effect odds-ratio?</strong><br>
+(Is it an odds-ratio ignoring the random effects? Is it an odds-ratio of the average random effect - in which case, isn't it a population average? Is it calculated assuming the random effect variance is zero?) </p></li>
+<li><p><strong>Is it possible to calculate a population average odds-ratio using the output from a GLMM?</strong><br>
+I know this can be done using a GEE, but what about a GLMM?</p></li>
+<li><p><strong>How would I go about calculating the odds-ratio for a particular random effect (a particular classroom, lets say class 7 in the example below)?</strong><br>
+Presumably this involves combining the fixed and random effect estimates somehow.</p></li>
+</ol>
+
+<p><strong>EDIT 1:</strong>
+It seems after doing more reading (for example, this <a href=""http://stats.stackexchange.com/questions/32419/difference-between-generalized-linear-models-generalized-linear-mixed-models-i?lq=1"">post</a>), that since the fixed effect for <code>sex</code> in this example does not have its own random effect (e.g., a random slope), there will be no subject-level interpretation of this parameter. Does this mean that only the intercept term in the model below is subject-specific, while the <code>sex</code> term is a population average?</p>
+
+<pre><code># dummy data:
+set.seed(1)
+dat &lt;- data.frame(Y         = factor(sample(rep(c(0, 1), 100))),
+                  sex       = factor(sample(rep(c(""M"", ""F""), 100))),
+                  classroom = factor(sample(rep(paste(""class"", 1:10), 20)))
+) 
+
+# model:
+library(lme4)
+fit &lt;- glmer(Y ~ sex + (1 | classroom), family=binomial, data=dat)
+
+# summary(fit)
+exp(fixef(fit))
+# (Intercept)   sexM 
+#  1.229       0.662 
+</code></pre>
+"
+"0.226778683805536","0.232146969760241","138908","<p>I am looking at the effects role has an opportunities to collaborate between groups in a social network. At a basic level the data are modeled as:</p>
+
+<pre><code>relRatio~role
+</code></pre>
+
+<p>With relative ratio being the percentage of teammates who are part of the subject's normal group. The data I have come from multiple time slices over the years, with some of the subjects being polled two or more times. Not every subject has multiple entries, nor does every subject with multiple entries have the same number of entries. From some advice I received it was suggested that I test the differences between groups using a random effect ANOVA model, which would be modeled (in R) as</p>
+
+<pre><code>relRatio~role+Error(subjectId)
+</code></pre>
+
+<p>After trying to read up more on random effects ANOVA, I started to get the impression that linear mixed effects models (with the lmer) package are preferred over random effects ANOVA, although I have yet to see a clear distinction between the two. This leads to my first question: Which approach is best for modeling my data?</p>
+
+<p>If it involves using the random effects ANOVA, I would greatly appreciate it if someone could recommend a resource for the process of interpreting the results.</p>
+
+<p>My second question is, if the better approach is to use the mixed effects models, which I have tried, why do I get striping in my residuals?</p>
+
+<p><img src=""http://i.stack.imgur.com/vqWjn.png"" alt=""enter image description here""></p>
+
+<p>One guide suggested that I am dealing with categorical data, which requires the use of logistic regression. However, the dependent variable for my data is continuous, and the IV is categorical, which I thought LMM are supposed to handle. This leads to my second question - does my residual plot indicate something is wrong with the way I have modeled my data?</p>
+"
+"0.262639661583575","0.248175549777312","140972","<p>Iâ€™m using a maximal logistic regression model to analyze some data. I would like to keep using this technique if possible, just include more data in the model. The main data Iâ€™m looking at is counts of a particular behavior over items in a sequence, and I would like my analysis to also include data from a post-experiment questionnaire (8 items, 1-9 Likert scored). Hereâ€™s some info about my data:</p>
+
+<pre><code>'data.frame':
+Pair          : Factor w/ 36 levels ""1"",""2"",""3"",""4"",..: 1 1 1 1 1 1 1 1 1 1 ...
+SpeakerID     : Factor w/ 72 levels ""10A"",""10B"",""11A"",..: 21 22 21 22 22 21 22 21 21 22 ...
+Speaker       : Factor w/ 2 levels ""A"",""B"": 1 2 1 2 2 1 2 1 1 2 ...
+Condition1     : Factor w/ 4 levels ""ANTI"",""CONTROL"",..: 1 1 1 1 1 1 1 1 1 1 ...
+..- attr(*, ""contrasts"")= num [1:4, 1:3] -0.333 1 -0.333 -0.333 0.25 ...
+.. ..- attr(*, ""dimnames"")=List of 2
+.. .. .. : chr  ""ANTI"" ""CONTROL"" ""IN"" ""OUT""
+.. .. .. : NULL
+Condition2         : Factor w/ 3 levels ""0"",""90"",""180"": 2 3 1 1 2 1 1 2 2 3 ...
+..- attr(*, ""contrasts"")= num [1:3, 1:2] 0 -0.5 0.5 -0.5 0.25 0.25
+.. ..- attr(*, ""dimnames"")=List of 2
+.. .. ..$ : chr  ""0"" ""90"" ""180""
+    .. .. ..$ : NULL
+Item         : Factor w/ 16 levels ""MAP1"",""MAP10"",..: 1 9 10 11 12 13 14 15 16 2 ...
+Foo       : num  0.847 1.099 1.946 -1.099 -0.452 ...
+wtsFoo          : num  0.952 0.889 2.286 0.889 0.468 ...
+Close      : num  -1.798 0.202 -1.798 0.202 0.202 ...
+Similar    : num  0.505 0.505 0.505 0.505 0.505 ...
+Like       : num  -0.833 0.167 -0.833 0.167 0.167 ...
+Task1Hard   : num  -0.89 4.11 -0.89 4.11 4.11 ...
+Task2Hard: num  -1.02 2.98 -1.02 2.98 2.98 ...
+</code></pre>
+
+<p>My analysis is based on this guide to empirical logit analyses:
+<a href=""http://talklab.psy.gla.ac.uk/tvw/elogit-wt.html"" rel=""nofollow"">http://talklab.psy.gla.ac.uk/tvw/elogit-wt.html</a>
+So far, so good. In my regression model, Iâ€™m testing the fixed effects of Condition1 (4 levels) and Condition2 (3 levels) on Foo (the behavior, expressed as a proportion converted into empirical logit form, see link for how and why). Pair, Pair:Subject (Subject nested within Pair) and Item are included as random effects. Condition1 is between-subjects/pairs and Condition2 is within-subjects. Hereâ€™s the model Iâ€™m using in R:</p>
+
+<pre><code>model &lt;- lmer(Foo ~ Condition1*Condition2 + (1+Condition1 | Pair) 
++ (1+Condition1 | Pair:Subject) + (1+Condition2 | Item), weights=1/wtsFoo, data)
+</code></pre>
+
+<p>This all works fine, but hereâ€™s where it gets fun. Where should the questionnaire data go? </p>
+
+<p>Bad idea #1: Each participant has one score for each questionnaire item, so each questionnaire item type should be included as a fixed effect, so that Foo can be predicted by any of the variables discovered in the post-experiment questionnaire (things like social closeness and task difficulty). This is a terrible idea because the questionnaire items are NOT independent variables from Condition1 and Condition2, and if I include them as fixed effects it will introduce a mess of multicollinearity and will just be flat-out wrong.</p>
+
+<p>Bad idea #2: Analyzing the questionnaire data separately. Not such a bad idea, just one that my committee doesnâ€™t like. </p>
+
+<p>Less bad ideas: please suggest a model that allows me to observe the effects of Condition1 and Condition2 on questionnaire items (Close, Similar, Like, Task1Hard, Task2Hard) AND allows me to observe the effects of questionnaire items on Foo. Failing that, explain to me why the only good thing to do is analyze the questionnaire separately from the observation data.</p>
+
+<p>I've read around on Stackexchange and I haven't seen this particular problem covered, although some answers come close to looking useful, I don't yet have the R or stats chops to make them work for me. If I've missed something obvious, please clue me.</p>
+"
+"0.250713268211203","0.256648131637567","148699","<p>For a current piece of work Iâ€™m trying to model the probability of tree death for beech trees in a woodland in the UK. I have records of whether trees were alive or dead for 3 different census periods along with data on their diameter and growth rate. Each tree has an ID number so it can be identified at each time interval. However, the census intervals vary so that for the time between one survey and another is either 4, 12 or 18 years. Obviously the longer the census period the greater the probability a tree will have died by the time it is next surveyed. <strong>I had problems making a realistic reproducible example so you can find the <a href=""https://github.com/PhilAMartin/Denny_mortality/blob/master/Data/Stack_dead.csv"" rel=""nofollow"">data here</a>.</strong></p>
+
+<p>The variables in the dataset are:</p>
+
+<ol>
+<li>ID - Unique ID for tree</li>
+<li>Block - the ID for the 20x20m plot in which the tree was located</li>
+<li>Dead - Status of tree, either dead (1) or alive (0)</li>
+<li>GR - Annual growth rate from previous survey</li>
+<li>DBH - diameter of tree at breast height</li>
+<li>SL - Length of time between censuses in years</li>
+</ol>
+
+<p>Once a tree is recorded as dead it disappears from subsequent surveys.</p>
+
+<p>Ideally I would like to be able to estimate the annual probability of mortality of a tree using information on diameter and growth rate. Having searched around for quite a while I have seen that logistic exposure models appear able to account for differences in census periods by using an altered version of logit link for binomial models as detailed by Ben Bolker <a href=""https://rpubs.com/bbolker/logregexp"" rel=""nofollow"">here</a>. This was originally used by Shaffer to determine the daily probability of bird nest survival where the age (and therefore exposure) of the nest differed. I've not seen it used outside of the context of models of nest survival but it seems like I should be able to use it to model survival/mortality where the exposure differs.</p>
+
+<pre><code>require(MASS)
+logexp &lt;- function(exposure = 1)
+{
+  linkfun &lt;- function(mu) qlogis(mu^(1/exposure))
+  ## FIXME: is there some trick we can play here to allow
+  ##   evaluation in the context of the 'data' argument?
+  linkinv &lt;- function(eta)  plogis(eta)^exposure
+  logit_mu_eta &lt;- function(eta) {
+    ifelse(abs(eta)&gt;30,.Machine$double.eps,
+           exp(eta)/(1+exp(eta))^2)
+    ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = ""stats"")
+  }
+  mu.eta &lt;- function(eta) {       
+    exposure * plogis(eta)^(exposure-1) *
+      logit_mu_eta(eta)
+  }
+  valideta &lt;- function(eta) TRUE
+  link &lt;- paste(""logexp("", deparse(substitute(exposure)), "")"",
+                sep="""")
+  structure(list(linkfun = linkfun, linkinv = linkinv,
+                 mu.eta = mu.eta, valideta = valideta, 
+                 name = link),
+            class = ""link-glm"")
+}
+</code></pre>
+
+<p>At the moment my model looks like this, but I will incorporate more variables as I go along:</p>
+
+<pre><code>require(lme4)
+Dead&lt;-read.csv(""Stack_dead.csv"",)
+
+
+M1&lt;-glmer(Dead~DBH+(1|ID),data=Dead,family=binomial(logexp(Dead$SL))) 
+#I use (1|ID) here to account for the repeated measurements of the same individuals
+    summary(M1)
+
+plot(Dead$DBH,plogis(predict(M1,re.form=NA)))
+</code></pre>
+
+<p><strong>Primarily I want to know</strong>:</p>
+
+<ol>
+<li><strong>Does the statistical technique I am using to control for the difference in time between census seem sensible? If it isn't, can you think of a better way to deal with the problem?</strong></li>
+<li><strong>If the answer to the first question is yes, is using the inverse logit (plogis) the correct way to get predictions expressed as probabilities?</strong></li>
+</ol>
+
+<p>Thanks in advance for any help!</p>
+"
+"0.169030850945703","0.173032135051496","152868","<p>I have an administrative database with hospital readmissions (binomial: yes/no) and a couple of predictors. I've fitted a multilevel model with the function <code>glmer</code> from the package <code>lme4</code> to estimate the effect of these predictors on readmissions. 
+The model has two levels: <code>hospital</code> and <code>patient</code>.
+When I calculate the predicted probabilities (the chance of a readmission), and afterwards calculate the readmission ratio's for each hospital (by dividing the observed readmissions by the predicted readmissions), all my ratio's are around 1 which can't be correct.</p>
+
+<p>Before I've calculated the predicted probabilities with a normal logistic regression, which gives more plausible ratio's (from 0,64 to 1,5)</p>
+
+<p>This is my code to calculate predicted probabilities for the multilevel model:</p>
+
+<pre><code>database$predprob &lt;- fitted(model1)
+</code></pre>
+
+<p>I've also tried this one, but it gives exactly the same predicted probabilities:</p>
+
+<pre><code>database$predprob &lt;- predict(model1, newdata = database, type = ""response"", na.action = na.omit)
+</code></pre>
+
+<p>Does anybody know how to calculate predicted probabilities for a multilevel analysis? I suppose there must be another way to calculate it as my calculated ratios (observed/predicted) are all around 1.</p>
+"
+"0.0755928946018454","0.0773823232534137","156804","<p>I have estimated a mixed-effects logistic regression with glmer
+and want to draw a bootstrapped confidence-region for the mean predicted probability for two subgroups of the sample.</p>
+
+<p>I have a $1000 \times 2$ Matrix $X$ containing the bootstrapped mean predicted probabilities for the two groups.
+One could now compute the empirical covariance matrix $S$ and draw a
+circle around the means using the metric induced by $S^{-1}$,
+i.e. drawing a confidence ellipsoid based on normality-assumption.</p>
+
+<p>Are there any widely used alternatives to this approach that do not imply distributional assumptions? </p>
+
+<p>skeletor</p>
+"
+"0.130930734141595","0.134030115482631","159735","<p>I have two factors that are fully crossed, the levels of the factor are each coded 0 and 1. I am running a regression testing for one main effect and one interaction. The following is my logistic regression formula:</p>
+
+<pre><code>m1=glmer(y~1+A+A:B+(1|Participants)+(1|Word),data=data, family = ""binomial"")
+</code></pre>
+
+<p>I am wondering if this is acceptable (only testing for one main effect and an interaction), and also why I am getting two interaction terms in my output:</p>
+
+<pre><code>Fixed effects:
+        Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept) -0.18740    0.21600  -0.868  0.38561   
+A1           0.74546    0.28399   2.625  0.00867 **
+A0:B1        0.01537    0.28244   0.054  0.95662   
+A1:B1        0.15884    0.28650   0.554  0.57929   
+</code></pre>
+"
+"0.130930734141595","0.134030115482631","161581","<p>I want to extract standard deviation of residual from <code>glmer()</code> function in R .</p>
+
+<p>So I wrote :</p>
+
+<pre><code>lmer_obj = glmer(Y ~ X1 + X2 + (1|Subj), data=D, family=binomial)
+sigma(lmer_obj)
+</code></pre>
+
+<p>I noticed that the last command <code>sigma(lmer_obj)</code> returns always <code>1</code> irrespective of the data That is, whether I used the <code>cbpp</code> data or my own simulated data from multilevel logistic distribution, the residual standard error is always <code>1</code>.</p>
+
+<p>How can I get the residual standard deviation from <code>glmer()</code> function?</p>
+"
+"NaN","NaN","182467","<p>I'm running a logistic regression (presence/absence response) in R, using glmer (lme4 package). Ben Bolker'sÂ <a href=""http://glmm.wikidot.com/faq"" rel=""nofollow"">overdisp_fun</a> (see link) tells me my model is overdispersed, so I decided to include an individual-level random effect. This is not solving my problem, as I get convergence issues and overdispersion is not reduced. Could anyone recommend an alternative?</p>
+
+<p>Thanks!! </p>
+"
+"0.18516401995451","0.189547207081969","183908","<p>I have a binary logistic regression with just one binary fixed factor predictor. The reason I don't do it as a Chi square or Fisher's exact test is that I also have a number of random factors (there are multiple data points per individual and individuals are in groups, although I don't care about coefficients or significances for those random variables). I do this with R glmer.</p>
+
+<p>I would like to be able to express the coefficient and associated confidence interval for the predictor as a risk ratio rather than an odds ratio. This is because (maybe not for you but for my audience) risk ratio is much easier to understand. Risk ratio here is the relative increase in chance of the outcome being 1 rather than 0 if the predictor is 1 rather than 0.</p>
+
+<p>The odds ratio is trivial to get from the coefficient and associated CI using exp(). To convert an odds ratio to a risk ratio, you can use ""RR = OR / (1 â€“ p + (p x OR)), where p is the risk in the control group"" (source: <a href=""http://www.r-bloggers.com/how-to-convert-odds-ratios-to-relative-risks/"" rel=""nofollow"">http://www.r-bloggers.com/how-to-convert-odds-ratios-to-relative-risks/</a>). But, you need the risk in the control group, which in my case means the chance that the outcome is 1 if the predictor is 0. I believe the intercept coefficient from the model is in fact the odds for this chance, so I can use prob=odds/(odds+1) to get that. I'm pretty much so-far-so-good on this as far as the central estimate for the risk ratio goes. But what worries me is the associated confidence interval, because the intercept coefficient also has its own associated CI. Should I use the central estimate of the intercept, or to be conservative should I use whatever limits of the intercept CI make my relative risk CI widest? Or am I barking up the wrong tree entirely?</p>
+"
+"0.508085879063965","0.47677047487332","191810","<h2>Study design</h2>
+
+<p>504 individuals were all sampled 2 times. Once before and once after a celebration.</p>
+
+<p>The goal is to investigate if this event (Celebration) as well as working with animals (sheepdog) have an influence on the probability that an individual gets infected by a parasite. (out of 1008 observations only 22 are found to be infected)</p>
+
+<p><strong>Variables</strong></p>
+
+<ul>
+<li>dependent variable = ""T_hydat"" (infected or not) </li>
+</ul>
+
+<p>(most predictiv variables are categorical) </p>
+
+<ul>
+<li>""Celebration"" (yes/no)</li>
+<li>""sex"" (m/f)</li>
+<li>""RelAge"" (5 levels)</li>
+<li>""SheepDog"" (yes/no)</li>
+<li>""Area"" (geographical area = 4 levels)</li>
+<li>""InfectionPeriodT_hydat"" (continuous --> Nr Days after deworming"")</li>
+<li>""Urbanisation (3 levels)</li>
+</ul>
+
+<h2>Question 1:</h2>
+
+<p>1) Should I include Individual-ID (""ID"") as a random Effekt as I sampled each Ind. 2 times? (Pseudoreplication?) </p>
+
+<pre><code>mod_fail &lt;- glmer( T_hydat ~ Celebration + Sex + RelAge + SheepDog + InfectionPeriodT_hydat + Urbanisation + (1|ID), family = binomial)
+
+Warnmeldungen:
+1: In (function (fn, par, lower = rep.int(-Inf, n), upper = rep.int(Inf,  :
+  failure to converge in 10000 evaluations
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 1.10808 (tol = 0.001, component 10)
+3: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+</code></pre>
+
+<p>--> unfortunately this model fails to converge (is it a problem that ID = 504 levels with only 2 observations per level?) 
+Convergence is achieved with glmmPQL() but after droping some unsignficant preditiv variables the model fails to converge again ? What is the Problem here? Could geeglm() be a solution?</p>
+
+<p>In an other attempt I run the model only with ""Area"" (4 levels) as random effect (my expectation is that Ind. in the same geogr. Area are suffering from the same parasite pressure etc.) and received the follwoing p-Values. </p>
+
+<h2>My model in R:</h2>
+
+<pre><code>mod_converges &lt;- glmer( T_hydat ~ Celebration + Sex + RelAge + SheepDog + InfectionPeriodT_hydat + Urbanisation + (1|Area), family = binomial)
+</code></pre>
+
+<h2>mod_converges output:</h2>
+
+<p>summary(mod_converges)</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + sex + SheepDog + RelAge + Urbanisation +  
+    InfectionPeriodT_hydat + (1 | Area)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   203.0    262.0    -89.5    179.0      996 
+
+Scaled residuals: 
+   Min     1Q Median     3Q    Max 
+-0.461 -0.146 -0.088 -0.060 31.174 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ Area   (Intercept) 0.314    0.561   
+Number of obs: 1008, groups:  Area, 4
+
+Fixed effects:
+                       Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)            -6.81086    1.96027   -3.47  0.00051 ***
+Celebration1            1.36304    0.57049    2.39  0.01688 *  
+sexm                   -0.18064    0.49073   -0.37  0.71279    
+SheepDog1               2.02983    0.51232    3.96  7.4e-05 ***
+RelAge2                 0.34815    1.18557    0.29  0.76902    
+RelAge3                 0.86344    1.05729    0.82  0.41412    
+RelAge4                -0.54501    1.43815   -0.38  0.70471    
+RelAge5                 0.85741    1.25895    0.68  0.49584    
+UrbanisationU           0.17939    0.78669    0.23  0.81962    
+UrbanisationV           0.01237    0.59374    0.02  0.98338    
+InfectionPeriodT_hydat  0.00324    0.01159    0.28  0.77985    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<h2>glmmPQL-Model output below (added after the first reply by usÎµr11852)</h2>
+
+<p>This model converges with ""Sample_ID"" as a random effect, however, as statet by 
+<strong>usÎµr11852</strong> the varaince of the random effect is quiet high  4.095497^2 = 16.8. And the std.error of Area5 is far to high (complete separation).
+Can I just remove Datapoints from Area5 to overcome this Problem? </p>
+
+<pre><code>#     T_hydat
+#  Area   0   1
+#     1 226   4
+#     2 203   3
+#     4 389  15
+#     5 168   0  ## here is the problematic cell
+
+Linear mixed-effects model fit by maximum likelihood
+ Data: dat 
+  AIC BIC logLik
+   NA  NA     NA
+
+Random effects:
+ Formula: ~1 | Sample_ID
+        (Intercept)  Residual
+StdDev:    4.095497 0.1588054
+
+Variance function:
+ Structure: fixed weights
+ Formula: ~invwt 
+Fixed effects: T_hydat ~ Celebration + sex + SheepDog + YoungOld + Urbanisation +      InfectionPeriodT_hydat + Area 
+                            Value Std.Error  DF    t-value p-value
+(Intercept)            -20.271630     1.888 502 -10.735869  0.0000
+Celebration1             5.245428     0.285 502  18.381586  0.0000
+sexm                    -0.102451     0.877 495  -0.116865  0.9070
+SheepDog1                3.356856     0.879 495   3.817931  0.0002
+YoungOldyoung            0.694322     1.050 495   0.661017  0.5089
+UrbanisationU            0.660842     1.374 495   0.480990  0.6307
+UrbanisationV            0.494653     1.050 495   0.470915  0.6379
+InfectionPeriodT_hydat   0.059830     0.007 502   8.587736  0.0000
+Area2                   -1.187005     1.273 495  -0.932576  0.3515
+Area4                   -0.700612     0.973 495  -0.720133  0.4718
+Area5                  -23.436977 28791.059 495  -0.000814  0.9994
+ Correlation: 
+                       (Intr) Clbrt1 sexm   ShpDg1 YngOld UrbnsU UrbnsV InfPT_ Area2  Area4 
+Celebration1           -0.467                                                               
+sexm                   -0.355  0.018                                                        
+SheepDog1              -0.427  0.079  0.066                                                 
+YoungOldyoung          -0.483  0.017  0.134  0.045                                          
+UrbanisationU          -0.273  0.005 -0.058  0.317 -0.035                                   
+UrbanisationV          -0.393  0.001 -0.138  0.417 -0.087  0.586                            
+InfectionPeriodT_hydat -0.517  0.804  0.022  0.088  0.016  0.007  0.003                     
+Area2                  -0.044 -0.035 -0.044 -0.268 -0.070 -0.315 -0.232 -0.042              
+Area4                  -0.213 -0.116 -0.049 -0.186 -0.023 -0.119  0.031 -0.148  0.561       
+Area5                   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+
+Standardized Within-Group Residuals:
+          Min            Q1           Med            Q3           Max 
+-14.208465914  -0.093224405  -0.022551663  -0.004948562  14.733133744 
+
+Number of Observations: 1008
+Number of Groups: 504 
+</code></pre>
+
+<p><strong>Output from logistf (Firth's penalized-likelihood logistic regression)</strong></p>
+
+<pre><code>logistf(formula = T_hydat ~ Celebration + sex + SheepDog + YoungOld + 
+    Urbanisation + InfectionPeriodT_hydat + Area, data = dat, 
+    family = binomial)
+
+Model fitted by Penalized ML
+Confidence intervals and p-values by Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood 
+
+                               coef   se(coef)  lower 0.95  upper 0.95       Chisq
+(Intercept)            -5.252164846 1.52982941 -8.75175093 -2.24379091 12.84909207
+Celebration1            1.136833737 0.49697927  0.14999782  2.27716500  5.17197661
+sexm                   -0.200450540 0.44458464 -1.09803320  0.77892986  0.17662930
+SheepDog1               2.059166246 0.47197694  1.10933774  3.12225212 18.92002321
+YoungOldyoung           0.412641416 0.56705186 -0.66182554  1.77541644  0.50507269
+UrbanisationU           0.565030324 0.70697218 -0.98974390  1.97489240  0.56236485
+UrbanisationV           0.265401035 0.50810444 -0.75429596  1.33772658  0.25619218
+InfectionPeriodT_hydat -0.003590666 0.01071497 -0.02530179  0.02075254  0.09198425
+Area2                  -0.634761551 0.74958750 -2.27274031  0.90086554  0.66405078
+Area4                   0.359032194 0.57158464 -0.76903324  1.63297249  0.37094569
+Area5                  -2.456953373 1.44578029 -7.36654837 -0.13140806  4.37267766
+                                  p
+(Intercept)            3.376430e-04
+Celebration1           2.295408e-02
+sexm                   6.742861e-01
+SheepDog1              1.363144e-05
+YoungOldyoung          4.772797e-01
+UrbanisationU          4.533090e-01
+UrbanisationV          6.127483e-01
+InfectionPeriodT_hydat 7.616696e-01
+Area2                  4.151335e-01
+Area4                  5.424892e-01
+Area5                  3.651956e-02
+
+Likelihood ratio test=36.56853 on 10 df, p=6.718946e-05, n=1008
+Wald test = 32.34071 on 10 df, p = 0.0003512978
+</code></pre>
+
+<p>** glmer Model (Edited 28th Jan 2016)**</p>
+
+<p>Output from glmer2var: Mixed effect model with the 2 most ""important"" variables (""Celebration"" = the factor I am interested in and ""SheepDog"" which was found to have a significant influence on infection when data before and after the celebration were analysed separately.) The few number of positives make it impossible to fit a model with more than two explanatory variables (see commet EdM). </p>
+
+<p>There seems to be a strong effect of ""Celebration"" that probably cancels out the effect of ""SheepDog"" found in previous analysis.</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + SheepDog + (1 | Sample_ID)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   113.0    132.6    -52.5    105.0     1004 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5709 -0.0022 -0.0001  0.0000 10.3491 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ Sample_ID (Intercept) 377.1    19.42   
+Number of obs: 1008, groups:  Sample_ID, 504
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -19.896      4.525  -4.397  1.1e-05 ***
+Celebration1    7.626      2.932   2.601  0.00929 ** 
+SheepDog1       1.885      2.099   0.898  0.36919    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+            (Intr) Clbrt1
+Celebratin1 -0.908       
+SheepDog1   -0.297 -0.023
+</code></pre>
+
+<h2>Question 2:</h2>
+
+<p>2) Can I use drop1() to get the final model and use the p-Values from summary(mod_converges) for interpretation? Does my output tell me if it makes sense to include the random effect (""Area"") ?</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + SheepDog + (1 | Area)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   190.8    210.4    -91.4    182.8     1004 
+
+Scaled residuals: 
+   Min     1Q Median     3Q    Max 
+-0.369 -0.135 -0.096 -0.071 17.438 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ Area   (Intercept) 0.359    0.599   
+Number of obs: 1008, groups:  Area, 4
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    -5.912      0.698   -8.47  &lt; 2e-16 ***
+Celebration1    1.287      0.512    2.51    0.012 *  
+SheepDog1       2.014      0.484    4.16  3.2e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+            (Intr) Clbrt1
+Celebratin1 -0.580       
+SheepDog1   -0.504  0.027
+</code></pre>
+
+<p>I know there are quite a few questions but I would really appreciate some advice from experienced people. Thanks!</p>
+"
+"0.2","0.204734383200943","198737","<p>I have a dataset with the following variables:</p>
+
+<ul>
+<li>proportion of species present, between 0 and 1 (called speciesProp)</li>
+<li>a binomial (0,1) presence/absence of the same species (called PA in the model)</li>
+<li>year</li>
+</ul>
+
+<p>The dataset has many 0s in the proportion and binomial columns. These are actual 0 values collected in the field.</p>
+
+<p>I want to know if the proportion of species is increasing over the year (controlling for random effects)</p>
+
+<p>I logit transformed my proportional data, and then originally I thought of running a linear mixed effects model in lme4 as follows:</p>
+
+<pre><code>m01 &lt;- lmer(speciesPropLOGIT ~ year + (1|referenceID), data = speciesAll)
+</code></pre>
+
+<p>But then wondered if the following was more appropriate:
+1) a logistic model of the binomial presence / absence data as follows:</p>
+
+<pre><code>model &lt;- glm(PA ~ year , family = binomial(link = ""cloglog""), data = speciesAll)
+</code></pre>
+
+<p>followed by the following linear mixed effects model, where the proportion is the response variable and excluding the 0s:</p>
+
+<pre><code>m01 &lt;- lmer(speciesPropLOGIT ~ year + (1|referenceID), data = speciesAll)
+</code></pre>
+
+<p>Someone suggested that I think about model multiplication, of the two outputs, the first estimating the proportion of species over year with the 1s and 0s, and the second looking at the positive data over time. I then would like to plot one line of model fit.</p>
+
+<p>When i run the models separately, year comes out as significant in all of them.</p>
+
+<p>I have spent a long time looking for advice on how to do it, but can't seem to find any. </p>
+
+<p>Also - do I need to have family = binomial somewhere if I have logit transformed the proportional data?</p>
+
+<p>Hope you can help?</p>
+"
+"0.18516401995451","0.189547207081969","206870","<p>By converting and by trying to interpret the parameters of a logistic regression ran in R, I just find them to be overestimated. Therefore I tried to compute them myself but I can not obtain the same values reported by the regression.</p>
+
+<p>I used this web-page for computations:
+<a href=""http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm"" rel=""nofollow"">http://www.ats.ucla.edu/stat/mult_pkg/faq/general/odds_ratio.htm</a></p>
+
+<p>Let say we only focus on the LagC parameter:</p>
+
+<p><strong>Logistic Regression</strong></p>
+
+<pre><code>&gt; model &lt;- glmer(RepT2 ~ DistractorC1 + DistractorC2 + LagC + DistractorC1:LagC + DistractorC2:LagC + (LagC | Subject) + (1 | Item),
+                data = DF,
+                family = binomial(link = ""logit""),
+                control = glmerControl(optimizer = ""bobyqa""))
+&gt; summary(model)
+
+  Fixed effects:
+                    Estimate Std. Error z value Pr(&gt;|z|)    
+  (Intercept)       -0.81039    0.22040  -3.677 0.000236 ***
+  DistractorC1       0.33129    0.06393   5.182  2.2e-07 ***
+  DistractorC2       0.03436    0.10011   0.343 0.731467    
+  LagC               2.09567    0.12725  16.469  &lt; 2e-16 ***
+  DistractorC1:LagC -0.21654    0.12770  -1.696 0.089932 .  
+  DistractorC2:LagC -0.84018    0.20055  -4.189  2.8e-05 ***
+</code></pre>
+
+<p>Odds of the parameters:</p>
+
+<pre><code>&gt; show(Odds &lt;- exp(summary(model)$coefficients[,""Estimate""])
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.4446833         1.3927594         1.0349529         8.1308503         0.8052993         0.4316343 
+</code></pre>
+
+<p>Probabilities of the parameters:</p>
+
+<pre><code>&gt; show(P &lt;- Odds / (1 + Odds))
+
+  (Intercept)      DistractorC1      DistractorC2              LagC DistractorC1:LagC DistractorC2:LagC 
+    0.3078068         0.5820725         0.5085881         0.8904812         0.4460752         0.3014976 
+</code></pre>
+
+<p><strong>My Estimations</strong></p>
+
+<pre><code>&gt; Means &lt;- DF %&gt;%
+    group_by(Subject, Lag) %&gt;%
+    filter(RepT1 == 1) %&gt;%
+    summarise(repok = sum(RepT2) / (n())) %&gt;%
+    group_by(Lag) %&gt;%
+    summarise(Means = mean(repok))
+
+&gt; show(Means)
+
+     Lag     Means
+  (fctr)     (dbl)
+1   Lag3 0.1972174
+2   Lag8 0.5475624
+</code></pre>
+
+<p>Odds of the parameter:</p>
+
+<pre><code>&gt; OddsLag3 &lt;- 0.1972174 / (1-0.1972174)
+&gt; OddsLag8 &lt;- 0.5475624 / (1-0.5475624)
+&gt; OddsLagC &lt;- OddsLag8 / OddsLag3
+&gt; show(OddsLagC)
+
+[1] 4.926377
+</code></pre>
+
+<p>Probabilities of the parameter:</p>
+
+<pre><code>&gt; show(OddsLag / (1 + OddsLag))
+
+[1] 0.8312628
+</code></pre>
+
+<p>We can see that it is close, but not accurate. Does anyone have an explanation?
+Note that I compute a mean for each subject and then only a mean for each condition. I also did estimate the parameters without taking into account the subjects, but still, the mismatch was here.</p>
+
+<p><a href=""http://i.stack.imgur.com/YRdPf.png"" rel=""nofollow"">Graphical representation</a></p>
+"
+"0.169030850945703","0.173032135051496","209773","<p>I am estimating a model of the type (logistic regression with random slopes and random intercepts clustered by the variable ID):</p>
+
+<pre><code>formula = result ~ year + (1 | ID) + (year | ID)
+</code></pre>
+
+<p>using</p>
+
+<pre><code>glmer(formula, data = data1, family = binomial, control = glmerControl(optimizer = ""bobyqa""), nAGQ = 1)
+</code></pre>
+
+<p>However, I am getting results for three random effects:</p>
+
+<pre><code>Random effects:
+ Groups Name        Variance  Std.Dev.  Corr 
+ ID    (Intercept) 3.645e-01 0.6037203      
+ ID.1  (Intercept) 1.228e+00 1.1082860      
+        year       3.043e-07 0.0005516 -1.00
+</code></pre>
+
+<p>Is there something I am specifying incorrectly?</p>
+
+<p>On the other hand, the fixed effects are correct:</p>
+
+<pre><code>Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept) 55.328196   8.052619   6.871 6.38e-12 ***
+year       -0.027933   0.004008  -6.969 3.20e-12 ***
+</code></pre>
+"
+"0.10690449676497","0.109435131032917","211094","<p>I am following the advice to ""keep it maximal"", and am analyzing the results from several psycholinguistic experiments. My main interest is in the fixed effects, with the random effect terms in there to provide a better test of these fixed effects.</p>
+
+<p>That being said, I would like to keep things simple and, as much as possible, have the same analyses in each experiment.</p>
+
+<p>In several of the experiments my random subject intercepts and slopes are perfectly, negatively correlated.</p>
+
+<p>Given everything I said, would I be committing a cardinal sin by keeping both of them in the model?</p>
+
+<p>Some details: I am the glmer function in R. I have only one fixed effect. I am running a logistic regression.</p>
+"
+"0.18516401995451","0.189547207081969","212301","<p>I have a huge doubt, which I believe is Basic. I have no difficulty in interpreting the results of our logistic regression model using the ODD ratio, but I do not know what to do when I work with Mixed effects model for longitudinal data.</p>
+
+<p>Below they use the <code>glmer</code> function to estimate a mixed effects logistic regression model with Il6, CRP, and LengthofStay as patient level continuous predictors, CancerStage as a patient level categorical predictor (I, II, III, or IV), Experience as a doctor level continuous predictor, and a random intercept by DID, doctor ID.</p>
+
+<p>The <code>glmer</code> function created 407 groups that refer to the number of doctors.</p>
+
+<p>What would it mean for example the -0.0568 of IL6 and the -2.3370 of CancerStageIV's in the study presented?</p>
+
+#################
+
+<p>m &lt;â€ glmer(remission ~ IL6 + CRP + CancerStage + LengthofStay + Experience +      (1 | DID), data = hdp, family = binomial, control = glmerControl(optimizer =  ""bobyqa""),      nAGQ = 10) 
+print(m, corr = FALSE) </p>
+
+<h1>Generalized linear mixed model fit by maximum likelihood</h1>
+
+<h2>Gauss-Hermite Quadrature, nAGQ = 10) [glmerMod]</h2>
+
+<h2>Family:</h2>
+
+<p>binomial ( logit )  </p>
+
+<h2>Formula:</h2>
+
+<p>remission ~ IL6 + CRP + CancerStage + LengthofStay + Experience +<br>
+   (1 | DID)  </p>
+
+<p>Data: hdp  </p>
+
+<pre><code>  AIC        BIC    logLik     deviance  df.resid   
+ 7397        7461    -3690        7379     8516 
+</code></pre>
+
+<h2>Random effects:</h2>
+
+<p>Groups Name         Std.Dev.<br>
+     DID    (Intercept) 2.01 </p>
+
+<p>Number of obs: 8525, groups: DID, 407  </p>
+
+<h1>Fixed Effects:</h1>
+
+<pre><code>  Intercept    IL6        CRP       CancerStageII  
+ â€2.0527     â€0.0568    â€0.0215       â€0.4139 
+
+CancerStageIII   CancerStageIV       LengthofStay      Experience  
+ â€1.0035           â€2.3370              â€0.1212          0.1201 
+</code></pre>
+"
+"0.130930734141595","0.134030115482631","217639","<p>Using the glmer() function in the LME4-library in R I computed logistic models, of the form: Y ~ cat1 * cont1 + (1|Subject) where, obviously, Y is the binomial outcome variable (0 or 1), cat1 is a categorial variable (0,1,2) and cont1 is a continuous variable). Then, using confint(model, method = ""boot"") I computed confidence interval on the variables.</p>
+
+<p>Now I would like to plot a graph of the chance P(Y==1), I want to plot P against cont1 for every cat1.</p>
+
+<p>So you'd say: X = B(0) + B(cont1) * cont1 + B(cat1:1) * (cat1==1) + .... + etc
+And then: P(Y==1) = 1/(1-exp(-X))</p>
+
+<p>Which does exactly what I expect. But now, I want to incorporate the bootstrapped confidence intervals (so not std. error * 1.96!!) in the graph. I have the numbers, I do not know how to interpret them, what would be the formula for e.g. the 97.5 % line and the 2.5 % line?</p>
+
+<p>Thanks in advance!</p>
+
+<p><strong>EDIT</strong>
+Is this the correct way?
+Basically taking 10000 samples with replacement, same size as original data, creating the model, computing the predictions, and taking the 97.5th and 2.5th intervals of the predictions.</p>
+
+<pre><code>prediction_pars = expand.grid(cont1= seq(-4,4,.05), cat1= as.factor(c(1,2,3)));
+
+predictions = array(dim = c(10000, dim(prediction_pars)[1]));
+
+for (i in 1:10000){
+  new_sample = data[sample(nrow(data), samplesize, replace = T) , ];
+  new_model  = glmer (Y ~ cont1 * cat1 + (1|Subject), dat=newdat, family=""binomial"");
+  predictions[i , ] = predict(new_model, newdat = new_sample, re.form = NA);
+}
+
+hi = lo = array(dim = dim(prediction_pars)[1]);
+for (i in (1, dim(prediction_pars)[1])){
+  hi[i] = sort(predictions[,1]) [9750];
+  lo[i] = sort(predictions[,1]) [ 250];
+}
+</code></pre>
+"
+"0.250713268211203","0.256648131637567","218738","<p>I want to build a linear regression model where I predict a mean of a group of participants (how they rate something on average). Predictors should be </p>
+
+<ol>
+<li>age (continuous)</li>
+<li>origin (deviation coded, each level compared to grand mean, levels=1,2,3,4)</li>
+<li>education (Helmert coded, each level compared to subsequent ones, haven't decided on number of levels yet)</li>
+<li>gender/sex (dummy coded, 0/1)</li>
+</ol>
+
+<p>Following questions:</p>
+
+<p><strong>1.</strong> In R, I use the following code for the coding, for example for 4) sex:</p>
+
+<pre><code>    data$sex &lt;- factor(data$sex, labels=c(""1"",""2"")) 
+    contr.treatment(2) 
+    contrasts(data$sex) = contr.treatment(2)  
+</code></pre>
+
+<p>That gives me the right (dummy) coding, for the other 2 and 3 a little differently. Can I use run this kind of code for each predictor (except age) and then throw all predictors into a model like this:</p>
+
+<pre><code>    model &lt;- lm(Mean ~ age +  sex + educ..., data)
+</code></pre>
+
+<p>It seems wrong because: what is the common intercept going to be with these different coding systems? It's different for each coding system.
+But then, how am I going to enter these different predictors into a model?</p>
+
+<p><strong>2.</strong> Can I leave age in there as it is, unchanged, continuous?</p>
+
+<p><strong>3. Quite a different question:</strong> This is my <em>participant analysis</em>. For the <em>item analysis</em>, I used a logistic regression based on medians instead of means. That's because I did four rating surveys with Likert scales. 4 surveys - 4 participant groups - each group rated the items on <strong>one</strong> property only, such that each item was rated on 4 properties by different people.</p>
+
+<p>Given this, is it okay if I use linear models and means in this analysis now? And can I even build my model as I suggested above?</p>
+
+<p><strong>Many thanks</strong> for any input! I've been trying some things, but confusion isn't fading yet...</p>
+"
+"0.2","0.204734383200943","229211","<p>I have a logistic mixed model, where I look at the effect of two conditions over  accuracy (% correct) for different subjects. </p>
+
+<pre><code>glmres = glmer(accuracy ~ condition + (1|subject), data = myData, family = binomial) 
+</code></pre>
+
+<p>All subjects saw the same 100 stimuli (words), but the experimental condition these words belonged to depended on the subject. So for example, for some subjects word A belonged to condition C1 and word B belonged to condition C2. For some subjects it was the other way around. The words were drawn from a bigger pool so I think I should include them as a random effect. </p>
+
+<p>The problem is, the correspondence between words and conditions could not be (precisely) controlled and it is the case that for <em>most</em> subjects (about 70:30, depending on the word), A belonged to condition C1.
+This means that the fixed effect <code>condition</code> and the (potential) random effect <code>(1|word)</code> are not completely independent. </p>
+
+<p>My question is whether it would be incorrect to include two non-independent effects (where one is fixed, one is random). As a result of this dependency (I think) my results change a lot according to whether I include the random effect or not. </p>
+"
+"0.2","0.204734383200943","232450","<p>We are developping a software that run hierarchical linear model in R with the lme4 package. The model we are trying to fit is of the following shape:</p>
+
+<pre><code>&gt; data
+ID | Dummy_1 | Dummy_2 | Dummy_3 | Rating 
+1  | 0       | 1       | 1       | 14
+1  | 1       | 0       | 1       | 15
+1  | 0       | 1       | 0       | 11
+2  | 1       | 0       | 1       | 15
+2  | 1       | 0       | 0       | 12
+
+x = lmer(formula = Rating ~ Dummy_1 + Dummy_2 + Dummy_3 + (1 + Dummy_1 + Dummy_2 + Dummy_3 | ID), data = data)
+</code></pre>
+
+<p>It is important to note that this is the shape that the data will take, however, Rating can have very different range depending on the data te user provide.</p>
+
+<p>The example above illustrate a limit case we are trying to deal with which occurs when the dummy variables perfectly predict the independant variable.</p>
+
+<p>Here we can see that for example with <code>intercept = 10</code>, <code>B1 = 2</code>, <code>B2 = 1</code> and <code>B3 = 3</code> we perfectly predict the Rating variable. It implies first that the <code>ID</code> is useless and that we are in a case of <code>complete separation</code>.</p>
+
+<p><strong>Question:</strong> How do you deal with (quasi-)complete separation when the independant variable is not binomial but continuous as it is the case here ? I could only find explanations for logistic regression. Please, ignore the fact that I use a linear regression for discrete-ordinal data and that I treat them as continuous :)</p>
+
+<p>So that you know the warnings I get from R are the following:</p>
+
+<pre><code>1: In optwrap(optimizer, devfun, getStart(start, rho$lower,  ... :
+  convergence code 1 from bobyqa: bobyqa -- maximum number of function evaluations exceeded
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  ... :
+  unable to evaluate scaled gradient
+3: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  ... :
+  Model failed to converge: degenerate  Hessian with 4 negative eigenvalues
+</code></pre>
+"
+"0.18516401995451","0.189547207081969","233366","<p>I am trying to use <code>lme4::glmer()</code> to fit a binomial GLMM with dependent variable that is not binary, but a continuous variable between zero and one. One can think of this variable as a probability; in fact it <em>is</em> probability as reported by human subjects (in an experiment that I help analyzing). The <code>glmer()</code> yields a model that is clearly off, and very far from the one I get with <code>glm()</code>, so something goes wrong. Why? What can I do? </p>
+
+<hr>
+
+<p><strong>More details</strong></p>
+
+<p>Apparently it is possible to use logistic regression not only for binary DV but also for continuous DV between zero and one. Indeed, when I run </p>
+
+<pre><code>glm(reportedProbability ~ a + b + c, myData, family=""binomial"")
+</code></pre>
+
+<p>I get a warning message</p>
+
+<pre class=""lang-none prettyprint-override""><code>Warning message:
+In eval(expr, envir, enclos) : non-integer #successes in a binomial glm!
+</code></pre>
+
+<p>but a very reasonable fit (all factors are categorical, so I can easily check whether model predictions are close to the across-subjects-means, and they are). </p>
+
+<p>However, what I actually want to use is</p>
+
+<pre><code>glmer(reportedProbability ~ a + b + c + (1 | subject), myData, family=""binomial"")
+</code></pre>
+
+<p>It gives me the identical warning, returns a model, but this model is clearly very much off; the estimates of the fixed effects are very far from the <code>glm()</code> ones and from the across-subject-means. (And I need to include <code>glmerControl(optimizer=""bobyqa"")</code> into the <code>glmer</code> call, otherwise it does not converge at all.)</p>
+"
+"0.10690449676497","0.109435131032917","234498","<p>First, many thanks to the developers of <code>stan_glmer</code>. I have fit a mixed logistic model, <code>value ~ (1 | site_no) + Is.mid + sinWeek + cosWeek</code>. When fitted by <code>glmer</code>, it returns just the variance on <code>site_no</code>. From <code>stan_glmer</code>, I get coefficients (intercept effects) on each site, plus a variable named <code>b[(Intercept) site_no:_NEW_site_no]</code> that is reported by <code>stan_summary</code>.</p>
+
+<p>I am after marginal posterior of the random effects. Is that what the <code>_NEW_</code> coefficient is giving me? i.e., Is this a marginal posterior not conditioning on the site in the <code>new = dataset</code> provided?</p>
+
+<p>Also, how do I find a variance on the random effect, or is the model not specified correctly? The call is below. I welcome any other suggestions as well. Thank you in advance for any help in finding documentation for these <code>stan_glmer</code> outputs.</p>
+
+<pre><code>stan.T.mod &lt;- stan_glmer(form, iter = 50000, warmup = 5000, thin = 1,
+family = binomial(link = ""logit""),
+prior = student_t(location = 0, df = 1, scale = 10),
+prior_intercept = student_t(location = 0, df = 7, scale = 1),
+prior_covariance = decov(shape = 10, scale = 1),
+chains = 4, seed = 0305991, data = sub.data)
+</code></pre>
+"
+"0.087287156094397","0.134030115482631","234947","<p>I'm looking to run a linear mixed effect model using lme4, where my dependent variable <code>one_syllable_words / total_words_generated</code> is a proportion and my random effect <code>(1 | participant_ID)</code> reflects the longitudinal nature of the design. Independent, fixed effect variables of interest include <code>age</code>, <code>group</code>, <code>timepoint</code>, and interactions between them. </p>
+
+<p>I've come across two main ways to deal with the proportional nature of the DV:  </p>
+
+<ol>
+<li><p><strong>Standard logistic regression / binomial GLM</strong>  </p>
+
+<p>In my scenario, I envision the lme4 equation looking like this:  </p>
+
+<pre><code>glmer(one_syllable_words / total_words_generated ~ age + group +
+timepoint + age:timepoint + age:group + timepoint:group + (1 |
+participant_ID), family = ""binomial"", weights =
+total_words_generated, data = mydat)  
+</code></pre></li>
+<li><p><strong>Beta regression</strong>  </p>
+
+<p>I would apply a transformation to my DV <code>(DV * (n - 1) + .5)/ n)</code> so that it cannot equal 0 or 1. (There are a few instances where it equals zero, no instances where it equals one.)  </p></li>
+</ol>
+
+<p>I'm unclear whether logistic regression or beta regression is preferred in this example. My DV isn't a clear-cut case of successes and failures (unless we stretch the definition of ""success""), so I'm worried logistic regression might not be appropriate. However, I'm having trouble getting a firm grasp on beta regression &amp; all it entails. If beta regression is preferred:  </p>
+
+<ol>
+<li>Why is it preferred?  </li>
+<li>What is it doing ""behind the scenes"" to the data?  </li>
+<li>How can it be applied in R?  </li>
+</ol>
+"

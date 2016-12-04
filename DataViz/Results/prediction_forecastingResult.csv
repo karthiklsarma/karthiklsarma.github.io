@@ -1,0 +1,1589 @@
+"V1","V2","V3","V4"
+"0.111111111111111","0.11322770341446"," 26183","<p>I would like to convert an ARIMA model developed in R using the <code>forecast</code> library to Java code. Note that I need to implement only the forecasting part. The fitting can be done in R itself. I am going to look at the <code>predict</code> function and translate it to Java code. I was just wondering if anyone else had been in a similar situation before and managed to successfully use a Java library for the same. </p>
+
+<p>Along similar lines, and perhaps this is a more general question without a concrete answer; What is the best way to deal with situations where in model building can be done in Matlab/R but the prediction/forecasting needs to be done in Java/C++? Increasingly, I have been encountering such a situation over and over again. I guess you have to bite the bullet and write the code yourself and this is not generally as hard as writing the fitting/estimation yourself. Any advice on the topic would be helpful. </p>
+"
+"0.497468338163091","0.506944777064531"," 29336","<p><strong>Introduction</strong> </p>
+
+<p>I am aiming to forecast the annual growth rates for a number of macroeconomic indicators (denote one by $Y_t$).
+One of the tasks is to test the forecasting performance of rival time series models with and without exogenous variables ($X_t$, a $T\times k$ matrix). The list of rival models include:</p>
+
+<ol>
+<li>AR(I)MA model (annual growth rates are unlikely to have ""unit Roo"", though the latter is either assumed or tested) $$A(L)Y_t =\mu+ B(L)\varepsilon_t$$</li>
+<li>linear regression model with ARMA errors $$Y_t = X_t\beta + \eta_t, \ \ A(L)\eta_t =  B(L)\varepsilon_t $$</li>
+<li>lagged dependent variable model (autoregressive model with exogenous variables)
+$$A(L)Y_t = X_t\beta + \varepsilon_t$$ </li>
+<li>linear regression model
+$$Y_t = X_t\beta + \varepsilon_t$$</li>
+</ol>
+
+<p>Where $\varepsilon_t$ is assumed to be a strong white noise, zero-mean constant variance i.i.d. process; $A(L)$ and $B(L)$ are autoregressive (of order $p$) and moving average (of order $q$) polynomials with $L$ - a back-shift (lag) operator.</p>
+
+<p>Note that the primary and the only goal is forecasting performance, thus any ""good"" properties of parameter estimates are of the secondary concern. All I need is to test for the most parsimonious, robust to starting conditions forecaster. Decision will be made with one of the <code>accuracy()</code> options, but first I need to obtain the material for the comparison.</p>
+
+<p>Models 1. and 2. are estimated by <code>auto.arima()</code> with default <code>""CSS-ML""</code> estimation method. Models 3. and 4. are estimated by ordinary least squares (<code>lm()</code>). $T$ is about $40$ quarters.</p>
+
+<p><strong>Approaches tried so far</strong></p>
+
+<p>To make the jack-knifed residuals the first approach denoted by ""rolling"" has been implemented. Starting from feasibly large sub-sample of time series data, parameters are estimated and an $h$ ahead forecast is done by the <code>predict()</code> function (EDIT: it is the same suggestion as in the first part Rob's answer to the second question). After that one point is added and the estimation\prediction steps are repeated. </p>
+
+<p>A weak point of such experiments is that the number of time ticks (sample size) used to estimate the parameters is different. While I would like to test the robustness to the starting conditions, keeping the sample size for estimation fixed.</p>
+
+<p>Bearing this in mind I tried to set the several subsequent values (EDIT: for the interval $k+p+q&lt;t_0&lt;t_1&lt;T-h+1$) in $Y_t$ being missing values (NA). In models 2.-4. this also implies dropping the corresponding subsequent rows in data matrix $X_t$. Prediction for 3. and 4. is straightforward (the same <code>predict()</code> with omitted $X_t$ data rows works well). All my concerns are about models 1. and 2.</p>
+
+<p>With just the AR($p$) part the predictions are done sequentially $Y_{t+1|t} = \hat A(L)Y_t$. But with the presence of MA($q$) one could not (?) use the estimated parameters directly. From the Brockwell and Davis ""Introduction to Time Series and Forecasting"" Chapter 3.3 it follows that one needs an innovation algorithm to recursively estimate the $\theta_{n,j}$ from the specific system of equations that involves estimated autoregressive and moving average parameters. EDIT: these $\theta_{n,j}$ parameters are used to make the ARMA prediction, not the originally estimated parameters $\theta_{j}$. However it is remarked in the same chapter that $\theta_{n,j}$ asymptotically approaches $\theta_{j}$ if the process is invertible. It is not evident that 30-40 points is enough for the asymptotic result to be used even if is invertible. </p>
+
+<p>Notes: I don't want to restrict $q$ to zero, since I am not doing so in true out-of-sample forecasting. EDIT: also not that it is not missing value imputation problem, but forecasting experiment, that the trajectory is not supposed to bridge two sub-samples by this imputing the missing values.</p>
+
+<p><strong>Questions</strong></p>
+
+<ol>
+<li>Does <code>auto.arima()</code> performs correctly with the presence of missing values inside of the sample? [Already answered by Rob.]</li>
+<li>(The actually crucial part of this post) How to correctly forecast (NOT impute) these missed points from the ARMA model when both $p&gt;0$ and $q&gt;0$? (I hope there are the ways already implemented in R language, but I simply is missing something.)</li>
+</ol>
+
+<p>EDIT: since the parameters for ARMA parts are estimated correctly could I legally rearrange the arima object to include the estimated parameters and the data only for the first subsample and then use a predict function? </p>
+
+<p>EDIT2: I have tried to modify the estimated <code>mod</code> structure - the resulting forecast from <code>predict.Arima</code> is identical (double precision differences) to the forecast where I use the estimated MA and AR coefficients predicting $Y_{t+1|t}$ directly as $\hat A(L)(Y_t-X_t\hat \beta)+ X_t\hat \beta+\hat B(L)\hat \varepsilon_t $, without <code>KalmanForecast()</code>. This was expected since state space representation is supplied with the same estimated $\theta_j$, not $\theta_{n,j}$. So the only question remains is the difference between $\theta_j$ and $\theta_{n,j}$ significant to influence the point forecasts? I hope the answer is negative.</p>
+"
+"0.248451997499977","0.253184841770917"," 29424","<p>I'm looking for some forecasting advice when dealing with seasonal time series data that has a large number of observations.  By ""large"" I only mean a few thousand --- I'm used to such sizes in Data Mining being considered pretty small, but it seems that in time series modeling that's pretty unwieldy for many of the tools I've tried.</p>
+
+<p>For example, here's a toy data set that records an observation once per minute, for five days:</p>
+
+<pre><code>set.seed(123)
+t &lt;- 1:(5*24*60)
+x &lt;- ts(15 + 0.001*t + 10*sin(2*pi*t/(length(t)/5)) + rnorm(length(t)), freq=length(t)/5)
+plot(x, type='l')
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/xVSCN.png"" alt=""time series plot""></p>
+
+<p>(In my real operational data set, the values are observed at irregular intervals, but I've regularized them by doing something like <code>x &lt;- approx(d$t, d$x, xout=1:(5*24*60))</code> first.  Advice on whether that's advisable, or alternative approaches, is welcome too.)</p>
+
+<p>So the seasonality in this data set has a lag of 1,440 observations, which seems to be way outside the range that things like <code>auto.arima()</code> (in the <code>forecast</code> package) will find:</p>
+
+<pre><code>m1 &lt;- auto.arima(x)
+plot(forecast(m1))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/ccnGc.png"" alt=""prediction plot""></p>
+
+<p>And I'm not quite sure how to interpret the <code>ets()</code> function here, but it doesn't seem to be able to handle this size data, and it didn't seem to pick up on the seasonality:</p>
+
+<pre><code>&gt; m2 &lt;- ets(x, 'MAZ')
+&gt; plot(forecast(m2))
+Error in forecast.ets(m2) : Forecast horizon out of bounds
+&gt; m2$method
+[1] ""ETS(M,A,N)""
+</code></pre>
+
+<p>Where to go from here?  Any suggestions?  Thanks.</p>
+"
+"0.416666666666667","0.424603887804223"," 35489","<p>I have real daily market data which I'm looking at to create a model for forecasting. The model that I created (below) used autoregressive terms within a linear regression.</p>
+
+<p>I was sharing this with a colleague and he said ""autoregressive variables are correlated with the other variables in multiple linear setting which creates multicollinarity problem, creating unreliable result.""</p>
+
+<p>So I'm turning to the group for help. Here is the data and the analysis that I performed in R.</p>
+
+<pre><code>#Read in Data
+MarketData = read.table('http://sharp-waterfall-3397.herokuapp.com/MarketCategories6.txt', header=TRUE,na.strings = ""NA"", sep="","")
+MarketData$Month &lt;- as.factor(MarketData$Month)
+MarketData$Weekday &lt;- as.factor(MarketData$Weekday)
+
+str(MarketData)
+</code></pre>
+
+<p>I'm using the <a href=""http://cran.r-project.org/web/packages/PERregress/index.html"" rel=""nofollow"">PERregress</a> library to help with the autoregression using the <code>back()</code> function and to help with the residual diagnostics:</p>
+
+<pre><code>library(PERregress)
+descStat(MarketData)
+</code></pre>
+
+<p>Subsetting the data for model building and prediction purposes:</p>
+
+<pre><code>Total = MarketData
+MarketData = MarketData[1:268,]
+attach(MarketData)
+</code></pre>
+
+<p>Here is a regression with everything that I can think of. Note you can have higher autoregressive terms but this will start to mask events since R will ignore the first several rows. Also just an FYI for some reason the residual analysis is breaking which I liked to look for points with undue leverage.</p>
+
+<pre><code>#Market1Category1 Regression for the markets with everything that I can think of it
+Market1Category1Output=lm(Market1Category1 ~ Trend+Month2+Month3+Month4+
+                          Month5+Month6+Month7+Month8+Month9+Monday+
+                          Tuesday+Wednesday+Thursday+Friday+Saturday+
+                          Holiday1+Holiday2+Holiday3+Holiday4+
+                          Event1+Event2+Event3+Event4+Event5+Event6+Event7+
+                          Event8+Event9+Event10+Event11+Event12+Event13+
+                          Event14+Event15+Event16+Event17+Event18+Event19+
+                          Event20+Event21+Event22+Event23+Event24+Event25+
+                          Event26+Event27+Event28+
+                          back(Market1Category1)+back(Market1Category1, 2))
+summary(Market1Category1Output)
+acf(Market1Category1Output$residuals)
+residualPlots(Market1Category1Output)
+</code></pre>
+
+<p>Here is the final equation. I'd like to say that I reduced the variables using partial f-test but I couldn't find an easy way to do this so if you know a function please let me know. Basically I looked at the change in adjusted $R^2$.</p>
+
+<pre><code>#Final regression equation 
+Market1Category1Output=lm(Market1Category1 ~ Month5+Month6+Month7+
+                          Tuesday+Wednesday+Thursday+Friday+Saturday+
+                          Holiday1+Holiday3+Event2+Event7+Event10+
+                          Event13+Event16+Event25+Event28+
+                          back(Market1Category1)+back(Market1Category1, 6))
+summary(Market1Category1Output)
+acf(Market1Category1Output$residuals)
+residualPlots(Market1Category1Output)
+</code></pre>
+
+<p>Here is a plot of the actuals in green vs the predictions in blue but there's a problem:</p>
+
+<pre><code>plot(Time, Market1Category1, col='green')
+points(Time, predict(Market1Category1Output, MarketData), col='blue', pch=20)
+</code></pre>
+
+<p>The issue is that predict will use the data values instead of it's predicted values for the autoregressive terms. In order to make it use predicted terms I created this loop. If you know a better way let me know.</p>
+
+<pre><code>dataSet2 &lt;- Total
+dataSet2[8:length(dataSet2$Time),""Market1Category1""] &lt;- NA
+    for (i in (1:(length(dataSet2$Time)-7))) {
+  dataSet2[6+i+1,""Market1Category1""] &lt;- 1
+  dataSet2[6+i+1,""Market1Category1""] &lt;- predict(Market1Category1Output, 
+                                                dataSet2[0:6+i+1,])[6+1] 
+}
+</code></pre>
+
+<p>Here is the plot again with the results in blue using the predicted results for the autoregressive terms (with the exception of the first 7 since the model needs those to <code>predict</code>):</p>
+
+<pre><code>plot(Total$Time, Total$Market1Category1, col='green')
+points(dataSet2$Time, dataSet2$Market1Category1, col='blue', pch=20)
+</code></pre>
+
+<p>So here are my questions in order of importance:</p>
+
+<ol>
+<li>Does using autoregressive and linear terms violate any fundamental assumptions?</li>
+<li>What issues can this cause and what analysis/steps should I do take to avoid these problems?</li>
+<li>Is there a better approach to modeling this timeseries?</li>
+<li>Is there a more efficient approach?</li>
+<li>Given the residuals what steps would you take?</li>
+</ol>
+
+<p>Finally two questions which is just causing me more work than possibly necessary:</p>
+
+<ol>
+<li>As you can see instead of using the factors for weekday and month I'm using separate conditional variables. I'm doing this because if I use the factor and a level turns out to be insignificant (e.g., Monday for days of the week). I can't remove it. Perhaps there's a way?</li>
+<li>Is there a quick way to run a partial F-statistic to understand whether removing a variable makes sense?</li>
+</ol>
+"
+"0.157134840263677","0.160128153805087"," 59065","<p>I have a monthly time series (for 2009-2012 non-stationary, with seasonality). I can use ARIMA (or ETS) to obtain point and interval forecasts for each month of 2013, but I am interested in forecasting the total for the whole year, including prediction intervals. Is there an easy way in R to obtain interval forecasts for the total for 2013?</p>
+"
+"0.192450089729875","0.196116135138184"," 62237","<p>I am working on a data set. After using some model identification techniques, I came out with an ARIMA(0,2,1) model. </p>
+
+<p>I used the <code>detectIO</code> function in the package <code>TSA</code> in R to detect an <em>innovative</em> outlier (IO) at the 48th observation of my original data set. </p>
+
+<p>How do I incorporate this outlier into my model so I can use it for forecasting purposes? I don't want to use the ARIMAX model since I might not be able to make any predictions from that in R. Are there any other ways I could do this?  </p>
+
+<p>Here are my values in order:</p>
+
+<pre><code>VALUE &lt;- scan()
+  4.6  4.5  4.4  4.5  4.4  4.6  4.7  4.6  4.7  4.7  4.7  5.0  5.0  4.9  5.1  5.0  5.4
+  5.6  5.8  6.1  6.1  6.5  6.8  7.3  7.8  8.3  8.7  9.0  9.4  9.5  9.5  9.6  9.8 10.0
+  9.9  9.9  9.8  9.8  9.9  9.9  9.6  9.4  9.5  9.5  9.5  9.5  9.8  9.3  9.1  9.0  8.9
+  9.0  9.0  9.1  9.0  9.0  9.0  8.9  8.6  8.5  8.3  8.3  8.2  8.1  8.2  8.2  8.2  8.1
+  7.8  7.9  7.8  7.8
+</code></pre>
+
+<p>That is actually my data. They are unemployment rates over a period of 6 years. There are 72 observations then . Each value is to at most one decimal place</p>
+"
+"0.111111111111111","0.11322770341446"," 64166","<p><img src=""http://i.stack.imgur.com/aWnvS.jpg"" alt=""enter image description here"">I'm using the library <code>vars</code> in <code>R</code> to plot fanchart and predictions through the vector of error correction model. I have used this code:</p>
+
+<pre><code>b&lt;-ts(KtF,start=1921,end=2009,frequency=1)
+vecmfemales&lt;-ca.jo(b,type=""trace"",spec=""transitory"")
+vecm.level &lt;- vec2var(vecmfemales, r = 3)
+vecm.females&lt;-predict(vecm.level,n.head=50,start=1921,frequency=1)
+plot(vecm.females)
+fanchart(vecm.females)
+</code></pre>
+
+<p>My graph comes out on the abcissa with and index of number which start by 0 and ends up with 100. However on my graphs I need years calendars from 1921 to 2009. Furthermore, I want to get also forecasting years up to 2059. I try to read the package from Pfaff(2013) but he presents only the abscissa as an index not as a calendar years.
+ Please somebody can help me to improve my codes in order to get only calendar years? These codes above are my codes.</p>
+
+<p>Thank you!</p>
+"
+"0.248451997499977","0.253184841770917"," 64621","<p>I am new to time series modeling in R. I have sales data of one year and three months only. I am trying to do sales forecasting at the day level or max at the week level. Following is the step I intend to follow</p>
+
+<ol>
+<li>Convert it into time series object using <code>ts(data$qty, frequency= ??)</code>. Here I am very confused about frequency. I can see in data that there is some seasonality like sales is picking up in May, June, July and then again in festival seasons. I guess I cannot use 365 as I have only one year data. Please suggest what should be the frequency</li>
+<li>Decompose the time series. Subtract the seasonality and trend from the actual time series model </li>
+<li>Fit ARIMA to get a prediction</li>
+<li>Again add seasonality and trend to output the final forecast</li>
+</ol>
+
+<p>Please provide feedback on this if its correct approach or not or if there is any other better way to handle it.</p>
+"
+"0.192450089729875","0.196116135138184"," 66927","<p>I need to take the output parameters from an ARIMA model fitted in R from the following set (1,0,1), (0,1,0), (1,1,0), (0,1,1), (1,1,1) of models and implement the prediction function in C. I DO NOT HAVE THE OPTION of calling predict or any other R package for that step. </p>
+
+<p>Obviously, I can eventually track down all the source code in predict and figure it out. But I was hoping there is somewhere that will walk me through a simple example of how to map the various output parameters of Arima() with X, Y, a, b, E, t (no upper and lower case thetas and B^t's) since every paper loves to include those already. </p>
+
+<p>I think this request is slightly duplicative except in previous versions the question was retired without an answer or a link.</p>
+
+<p>UPDATE: So, first, I HIGHLY second all recommendations for <a href=""http://otexts.com/fpp/"" rel=""nofollow"">Forecasting: Principles and Practice by Hyndman&amp;Athanasopoulos</a>. </p>
+
+<p>I think what I've been missing is that ""d"" isn't a model parameter -- it changes what is being modeled. So while I'm not all the way to where I want to be, I'm starting to be able to write predictive equations based on R output. I will update with my eventual findings if nobody else posts something better. </p>
+"
+"0.400616808384888","0.408248290463863"," 88145","<p>I am using the ar() function to fit an AR model to some data, and this object will return the in sample residuals. I also know the syntax for how to get the corresponding predicted values, but I want to compute these predicted values manually (just to check my own understanding) for a simple AR(1) example. </p>
+
+<p>My problem is that my manually computed residuals (based on my manually computed predictions) do not match the in sample residuals stored in the ar object (well the 1st residual does match, but not the rest).</p>
+
+<p>From the documentation, I see that</p>
+
+<pre><code>x[t]  = m + a[1]*(x[t-1] - m) 
+</code></pre>
+
+<p>where m is the sample mean of the series. Here is an example of what I am doing manually.</p>
+
+<pre><code># Create some true AR(1) data
+set.seed(123)
+x = w = rnorm(30) + 3 ; for (t in 2:30) x[t] = .60*x[t-1] + w[t]
+# Fit an ar model
+x.model = ar(x) # coefficient is .49, mean value of x is 6.98
+# Manually create predictions
+x.MyPred = rep(0,30) ; x.MyPred[1] = x[1]
+for (t in 2:30) x.MyPred[t] = 6.984234 + .4988327*(x.MyPred[t-1] - 6.984234)
+MyResid = x - x.MyPred
+cbind(MyResid, x.model$res) # does not match
+</code></pre>
+
+<p>And interestingly, the first residual (at observation 2) does match, but the rest do not. Thanks in advance.</p>
+
+<p><strong>Update</strong></p>
+
+<p>The answer given below is basically highlighting the difference between so called static forecasting and dynamic forecasting, here are a few more details. </p>
+
+<p>The two possible choices to make the fitted values are </p>
+
+<pre><code># Method 1:
+for (t in 2:30) x.MyPred[t] = 6.984234 + .4988327*(x.MyPred[t-1] - 6.984234)
+
+# Method 2:
+for (t in 2:30) x.MyPred[t] = 6.984234 + .4988327*(x[t-1] - 6.984234)
+</code></pre>
+
+<p>Method 1 is taking the forecasted value from the previous step and using this to plug in for the lagged values on the RHS.
+This could feasibly be used to create out of sample predictions forever. Also, depending on what time point you start to make predictions, the resulting predictions for a given time period can be different.</p>
+
+<p>Method 2 is taking the actual known historical values to plug in for the lagged values on the RHS. It will never be able to forecast more than 1 step out of sample. Also, the forecast values will always be the same no matter where you start.</p>
+
+<p>Both of these will give the same 1 step ahead forecast value. Method 2 is what produces the residuals returned in the ar() object.</p>
+
+<p>The Eviews software documentation has a good discussion of this. This R documentation was problematic in not specifying which of the x values are fitted values versus known historical values. A better expression to show in the documentation would be</p>
+
+<pre><code>\hat{x}[t]  = m + a[1]*(x[t-1] - m)
+</code></pre>
+
+<p>and, dare I say, possibly a few sentences on this very topic. But good documentation is hardly something to expect in R.</p>
+"
+"0.157134840263677","0.160128153805087"," 92935","<p>I'm making a project connected with identifying the dynamics of sales. My database concerns 26 weeks (so equally in 26 time-series observations) after launching the product.</p>
+
+<p>This is what my database looks like: <a href=""https://imageshack.com/i/0yyh6ij"" rel=""nofollow"">https://imageshack.com/i/0yyh6ij</a> </p>
+
+<p>I want to make forecast based on S-curve for clusters of time-series. The main aim was to compare two methods of forecasting:</p>
+
+<ol>
+<li>based on parameters of logistic curve</li>
+<li>based on ARIMA</li>
+</ol>
+
+<p>However, I do not know how to compare these two methods = measure their performance.</p>
+
+<p>That's a plot with prediction based on S-curve</p>
+
+<p><a href=""http://imageshack.com/a/img850/6600/rzkp.jpg"" rel=""nofollow"">http://imageshack.com/a/img850/6600/rzkp.jpg</a></p>
+
+<p>So my questions are:</p>
+
+<ol>
+<li>How to measure performance=forecast errors based on logistic curve?</li>
+<li>How to compare forecasting based on logistic curve and ARIMA - what is the main difference between these two approaches if I base on one variable - units_sold_that_week?</li>
+</ol>
+
+<p>I would be grateful for any explanation.</p>
+"
+"0.222222222222222","0.226455406828919","100363","<p>I have a question regarding the use of the dlm CRAN package for forecasting values of a seasonal time series.</p>
+
+<p>I've built a dlm model combining a stochastic local level model with a stochastic trigonometric (Fourier representation) seasonal component of period 96 (measurements every 15 mins with a daily cycle).</p>
+
+<p>I used dlmMLE to estimate the parameters for my data and filtered and smoothed the series which all seems to be working fine.</p>
+
+<p>However, when I try to use the dlmForecast function to predict out-of-sample observations, the predictions stay constant. The value of all ""predictions"" are equal to the sum of the filtered level and filtered seasonal components for the final observation in the series.</p>
+
+<p>I have used dlmForecast with several other models including a model with a seasonal factor component but never before with a trigonometric seasonal component.</p>
+
+<p>I notice in the documentation for dlmForecast it says ""Currently, only constant models are allowed"" so I wonder if this applies to trigonometric seasonal models.</p>
+"
+"0.400616808384888","0.376844575812797","124707","<p>Sorry for the rather long introduction, but since I was (legitimately) critizised for not explaining my cause and questions enough, I will do so now. </p>
+
+<p>I would like to conduct a <strong><em>(price)-forecast</em></strong> based on a multiple time series VAR-Model (vector autoregressive Model) with multiple endogeneous variables and two exogeneous. Since I am not that skillfull with regards to neither statistics nor R I want to keep is as simple as possible (Trend forecast for 3 months is sufficient).</p>
+
+<p>I am using the ""vars"" - Package, <a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a> and all in all those four functions: decompose(), VARselect(), VAR(), and predict()</p>
+
+<p>I have 1 dependent time series (y, in my model referred to as ""RH"", or ""raRH""), 4-5 endogeneous predictors and 2 exogeneous predictors.
+All timeseries have a length of 1-91 observations and are monthly data without any gaps.</p>
+
+<p><strong><em>Data description:</em></strong>
+My y (dependent var) are sawlog prices, sawlogs are raw material for plenty of follow up products.<br> My endogeneous (since they all kind of correlate with each other and y) are follow up product-prices or further elaborated sawlogs. <br>My 2 exogeneous predictors are economic indicators similar to BIP etc.</p>
+
+<p>All the time series are <em>non-stationary</em>, since I have read that you should use stationary data in order to gain a valid VAR-Model, I used the decompose() - function in R to split each variable into trend, season and the randwom walk. </p>
+
+<pre><code> raKVH&lt;-decompose(KVH)$random
+raKVH&lt;-na.omit(raKVH)
+raSNS&lt;-decompose(SNP_S)$random
+raSNS&lt;-na.omit(raSNS)
+</code></pre>
+
+<p>... and so on for every variable.<br><br>
+What I'm interested now in order to do some forecasting are predictions of the randwom walk (right?!). Anyways, I found out that all my data is first-order-integrated, since taking the logarithm makes them all stationary timeseries (ts), tested via Dickey-Fuller-Test. </p>
+
+<p>The picture also provides data example, first picture shows the raw-data, <img src=""http://i.stack.imgur.com/BcMOT.png"" alt=""enter image description here""></p>
+
+<p>second picture the random walks gained by decomposing$random the raw-data. 
+<img src=""http://i.stack.imgur.com/96yii.png"" alt=""enter image description here""></p>
+
+<p>I used the command VARselect that automatically computes the optimal lag for my model, whereas tsall is my time-series matrix containing all the timeseries mentioned above.</p>
+
+<pre><code>VARselect(tsall)
+</code></pre>
+
+<p>proceeding now with the estimation of the model VAR(p=number of lags given by VARselect), <strong><em>I encountered the following problem</em></strong>: how should I use the attribute ""type"" within the VAR-function? What does ""trend"",""none"", ""const"", ""both"" exactly mean? Since I have stationary data, there won't be any trend right? How can I check if there is a constant? Since the default value is ""const"", I chose to go with that.
+<br><br>
+<strong><em>The main question I have is the following:</em></strong><br>
+How do I get ""real"" forecasts out of the prediction of the randwom walks anyways? If I want to predict the price of yt+3, I need more than the prediction of the random walks here, I need ""real figures"" like in graphic 1. How can I ""add back"" trend and season?</p>
+
+<p>Third picture shows the Forecast of the random walk of my ""target Variable"" Y, but what's the next step here? 
+<img src=""http://i.stack.imgur.com/ZtInk.png"" alt=""enter image description here""></p>
+
+<p>Thank you for any help, if my questions/introduction are insufficient, please let me know. I'll try to explain myself better then.</p>
+"
+"0.222222222222222","0.226455406828919","137688","<p>I have been trying to use Support Vector Machine method for time series forecasting. I have seen allot of research papers, but nobody shared the code or tool they have used for that.
+Got some materials from KU Leuven.
+"" LS-SVMlab Toolbox Userâ€™s Guide version 1.7"" using the code in the page 34 section 3.3.8.""</p>
+
+<p>The problem is it cannot predict accurately. </p>
+
+<p>It would be great if anybody can share the code for the problem and the software for that.(Matlab/R etc).</p>
+
+<h2>Attaching here the Matlab output and code i have used.</h2>
+
+<blockquote>
+  <blockquote>
+    <p>% load time-series in X and Xt</p>
+    
+    <p>lag = 50;</p>
+    
+    <p>Xu = windowize(X,1:lag+1);</p>
+    
+    <p>Xtra = Xu(1:end-lag,1:lag); %training set</p>
+    
+    <p>Ytra = Xu(1:end-lag,end); %training set</p>
+    
+    <p>Xs=X(end-lag+1:end,1); %starting point for iterative prediction
+    Cross-validation is based upon feedforward simulation on the validation set using the feedforwardly
+    trained model:</p>
+    
+    <p>[gam,sig2] = tunelssvm({Xtra,Ytra,â€™fâ€™,[],[],â€™RBF_kernelâ€™},â€™simplexâ€™,...
+    â€™crossvalidatelssvmâ€™,{10,â€™maeâ€™});
+    Prediction of the next 100 points is done in a recurrent way:</p>
+    
+    <p>[alpha,b] = trainlssvm({Xtra,Ytra,â€™fâ€™,gam,sig2,â€™RBF_kernelâ€™});</p>
+    
+    <p>%predict next 100 points</p>
+    
+    <p>prediction = predict({Xtra,Ytra,â€™fâ€™,gam,sig2,â€™RBF_kernelâ€™},Xs,50);</p>
+    
+    <p>plot([prediction Xs]);</p>
+  </blockquote>
+</blockquote>
+
+<hr>
+
+<p><img src=""http://i.stack.imgur.com/QEeXv.png"" alt=""enter image description here""></p>
+"
+"0.222222222222222","0.226455406828919","139164","<p>I'm trying to find out how to do forecasting with a mixture model (averaging the forecasts of an <code>ets</code>, an <code>arima</code> and an <code>stlf</code> model). I do not have a huge amount of statistics experience and so I'm struggling with finding out how to do it.</p>
+
+<p>The point forecasts will just be the average of the point forecasts of the three methods, no problem.</p>
+
+<p>The problem is how to calculate the prediction intervals. </p>
+
+<p>I have found an R script with an attempt to do it, but the mixture prediction intervals are just calculated as an average of the prediction intervals of the models, and I am pretty sceptical about this approach - is it really that easy?</p>
+
+<p>If not, how do I go about calculating them?</p>
+"
+"0.157134840263677","0.160128153805087","139448","<p>I have a client who has sparse hourly data (by sparse I mean there are too many hours with 0 calls). I used TBATS in R to forecast hourly data for them. Regardless of the point forecast, the actual values are always in the 80% prediction interval. I wonder if there is any specific method/package in R that is specifically used for uni variate forecasting of sparse data.</p>
+
+<p>Thanks</p>
+"
+"0.333333333333333","0.339683110243379","141970","<p>I want to automate the forecasting procedure for a data set that I have. I have a three years of daily historic data and I want to use 2 years as test data and one year as train data. I want to have rolling forecast which means that I read historic data+observed data for train set, and forecast for every 2 days ahead. Then I again read the data including the historic set and the two observed data and this process goes on until the whole train set is predicted. I want to automate the process. My code is like the following:</p>
+
+<pre><code>i &lt;- 883 
+while (i &lt; 912){
+orders &lt;- window(data$orders,end=i)
+ y &lt;- msts(orders,seasonal.periods=c(7,365.25))
+ model &lt;- tbats(y)
+ print(forecast(model,h=2,l=c(50,80)))
+ i &lt;- i+2}
+</code></pre>
+
+<p>Instead of printing forecast for each 2 days, I prefer to have an empty dataframe and add the new forecasted values to that. However, I have a problem with understanding what is the data type that this line of code is generating:</p>
+
+<pre><code>forecast(model,h=2,l=c(50,80))
+</code></pre>
+
+<p>it generates three rows, the first row includes headers, second row shows point forecast, low 50% and high 50% prediction intervals and low 80% and high 80% prediction intervals. so it includes 5 columns. My only problem is that each time it wants to store these results in the data frame, it stores the first row which is the header row as well. I wonder how I can store only the last two rows in the data frame.</p>
+
+<p>Thanks</p>
+"
+"0.222222222222222","0.226455406828919","155305","<p>I have a large dataset with different factors that I want to forecast to the future. These forecasts I will then later on use as inputs for a Monte Carlo simulation. My idea would be to use arima forecasting on the different variables. Subsequently, I would use the resulting prediction interval as inputs for the Monte Carlo simulation.</p>
+
+<p>Using R, (I think) I get what I want by using the following.</p>
+
+<p>First, I set some parameters FC_years &lt;- 4 FC_boundaries &lt;- 68 # This would be 1 sd</p>
+
+<p>Next, the forecasting is done by: <code>fit &lt;- auto.arima(POP) forecast &lt;- data.frame(forecast(fit,FC_years,level=FC_boundaries))</code></p>
+
+<p>What is now very important for me in order to use these results for a MC simulation, is to know how R calculates the prediction interval (I have been searching for quite a while now, but I can't get a clear answer), and how this interval is distributed (I assume it is normal, but again, I can't get a clear answer).</p>
+
+<p>Just as an example, the following dataset could be used:</p>
+
+<pre><code>1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 68235 72498 76700 80326 83195 85447 87276 89004 90858 92894 94995 97015 98742 100031 100830 101219 101344 101418 101597 101932 102384 102911
+</code></pre>
+
+<p>Can anybody give me any hints?</p>
+"
+"0.222222222222222","0.226455406828919","156202","<p>I am working on a project where I am to do the intervention analysis and forecasting based on the time series. The problem is something like:</p>
+
+<p><em>I have a normal time series entries but in between them some known event like natural calamities (storm, tornado) happens. I have the data for that and it affects the normal time series. Now my objective is to forecast the value of time series both in normal mode and also when I have a prediction of storm coming.</em></p>
+
+<p>I have been reading <a href=""http://rads.stackoverflow.com/amzn/click/0471615285"" rel=""nofollow"">Forecasting with dynamic regression</a> chapter 7 about intervention analysis. I am also reading about the transfer function modeling. Can you please help me as in which model is good for this kind of time series analysis? Or may be some link which can guide me as how to do it? I will appreciate a link with some example in R or some examples.</p>
+
+<p>EDIT: I guess I was not correct in description but I know the exact time information of all the previous storm events and I sort of want to find out the effect of storm intervention on the time series and I can forecast more closely if I know that there is a storm happening right now.</p>
+"
+"0.157134840263677","0.160128153805087","157378","<p>My issue is really simple: I need to compute a seasonal arima model on traffic data (5 min frequency). The data exhibits daily seasonality (288 observations).</p>
+
+<p>This is causing me issues in computing the model using R. (SO question: <a href=""http://stackoverflow.com/questions/30804281/r-arima-method-blocks-when-adding-seasonality"">http://stackoverflow.com/questions/30804281/r-arima-method-blocks-when-adding-seasonality</a>)</p>
+
+<p>I know that seasonal arima models are not particulary suited for long seasonality periods, however I read tons of articles regarding traffic forecasting that exploits them in order to make predictions.</p>
+
+<p>I will appreciate any suggestion regarding software tools (in addition to R) that would do the trick. Thank you. </p>
+"
+"0.248451997499977","0.202547873416733","166953","<p><strong>Issue</strong>: Cannot forecast sales accurately using quantile regression in R. I am using rq function from ""quantreg"" package which is giving me warning ""Result might have Non unique solutions""</p>
+
+<p><strong>Aim</strong>: I am trying to forecast hourly sales of a store using quantile regression. </p>
+
+<p>Below are the columns in my source table for forecasting.</p>
+
+<ul>
+<li><em>transaction_date</em> : sales date (input)</li>
+<li><em>hr1 to hr24</em> : column with hourly sales info. (24 columns) (input)</li>
+<li><em>totala</em> : total of 24 column hr1 to hr24 (not using currently)</li>
+<li><em>location, department, sales_type</em>: forecasting will be done for each location, sales_type and department. (used to select data)</li>
+<li><em>f1 to f24 :</em> columns I want to forecast for each hour (24 columns) (output)</li>
+</ul>
+
+<p>Packages Used: forecast, quantreg, Metrics</p>
+
+<p><strong>Code</strong>: 
+I have extracted date features from transaction_date eg. weekend, week of month and also holidays (1 if it is holiday 0 for regular days).</p>
+
+<pre><code>attach(train_data) 
+Y &lt;- cbind(hr) 
+X &lt;- cbind(transation_date, Years, Months, Days, WeekDay, WeekofYear, Weekend, WeekofMonth, holidays) 
+
+quantreg.all &lt;- rq(Y ~ X, tau = seq(0.05, 0.95, by = 0.05))
+prediction_train &lt;- data.frame(predict(quantreg.all))
+</code></pre>
+
+<p>I have 19 models in prediction_train for each tau from 0.05 to 0.95, I select best model based on rmse value and than forecast using that tau.</p>
+
+<pre><code>rmse(actual, predicted)
+</code></pre>
+
+<p>transaction_date is Date type, quantreg.all is rqs class and rest are numeric.</p>
+
+<p><strong>Note:</strong> Stores are not open 24 hours, hence many hour columns will be 0 (time when store was close). Currently for most of such hours rq is predicting 0 or some negative values.</p>
+
+<p>Weather  does not have major impact on sales.</p>
+"
+"0.111111111111111","0.11322770341446","167944","<p>I have the following time series of <em>count data</em>:</p>
+
+<pre><code>x &lt;- ts(c(21337, 56994, 95497, 138829, 146346, 157182, 128136,
+          104615, 103659, 102082, 109968, 113945, 118067, 93867, 54930))
+</code></pre>
+
+<p>To which I have associated the following model</p>
+
+<pre><code>&gt; library(forecast)
+...
+&gt; ets(x)
+ETS(A,N,N) 
+
+Call:
+ ets(y = x) 
+
+  Smoothing parameters:
+    alpha = 0.9999 
+
+  Initial states:
+    l = 105466.6663 
+
+  sigma:  32125.45
+
+     AIC     AICc      BIC 
+355.9429 356.9429 357.3590 
+</code></pre>
+
+<p>Which gives me negative prediction boundaries at 95% confidence:</p>
+
+<pre><code>&gt; forecast(ets(x), level = .95)
+   Point Forecast       Lo 95    Hi 95
+16       54933.94   -8030.795 117898.7
+17       54933.94  -34107.138 143975.0
+18       54933.94  -54116.824 163984.7
+...
+</code></pre>
+
+<p>Since we're dealing with count data, I've decided to hide the negative values from my final plot:</p>
+
+<pre><code>plot(forecast(ets(x), level = .95), ylim = c(0, 260e3))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Vp2wN.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Vp2wN.png"" alt=""plot""></a></p>
+
+<p><strong>My questions are:</strong></p>
+
+<ol>
+<li><strong>How many Statistics professors have I just aggravated with that procedure?</strong></li>
+<li><strong>How could I get away with such a model without having to resort to transforming my data (I'm trying to avoid the back-and-forth of log-transformation)?</strong></li>
+</ol>
+
+<p>Related questions:</p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/q/92443/27433"">Can a mathematically sound prediction interval have a negative lower bound?</a></li>
+<li><a href=""http://stats.stackexchange.com/q/143129/27433"">Getting Negative Forecasting Values</a></li>
+</ul>
+"
+"0.444444444444444","0.452910813657838","169468","<p>I have monthly time series data, and would like to do forecasting with detection of outliers .</p>
+
+<p><strong>This is the sample of my data set:</strong></p>
+
+<pre><code>       Jan   Feb   Mar   Apr   May   Jun   Jul   Aug   Sep   Oct   Nov   Dec
+2006  7.55  7.63  7.62  7.50  7.47  7.53  7.55  7.47  7.65  7.72  7.78  7.81
+2007  7.71  7.67  7.85  7.82  7.91  7.91  8.00  7.82  7.90  7.93  7.99  7.93
+2008  8.46  8.48  9.03  9.43 11.58 12.19 12.23 11.98 12.26 12.31 12.13 11.99
+2009 11.51 11.75 11.87 11.91 11.87 11.69 11.66 11.23 11.37 11.71 11.88 11.93
+2010 11.99 11.84 12.33 12.55 12.58 12.67 12.57 12.35 12.30 12.67 12.71 12.63
+2011 12.60 12.41 12.68 12.48 12.50 12.30 12.39 12.16 12.38 12.36 12.52 12.63
+</code></pre>
+
+<p>I have referred to <a href=""http://stats.stackexchange.com/questions/140163/timeseries-analysis-procedure-and-methods-using-r?lq=1"">Timeseries analysis procedure and methods using R</a>, to do a series of different model of forecasting, however it does not seems to be accurate. In additional, I am not sure how to incorporate the tsoutliers into it as well.</p>
+
+<p>I have got another post regarding my enquiry of tsoutliers and arima modelling and procedure over <a href=""http://stats.stackexchange.com/questions/168655/how-to-interpret-and-do-forecasting-using-tsoutliers-package-and-auto-arima/168869#168869"">here</a> as well.</p>
+
+<p>So these are my code currently, which is similar to link no.1.</p>
+
+<p><strong>Code:</strong></p>
+
+<pre><code>product&lt;-ts(product, start=c(1993,1),frequency=12)
+
+#Modelling product Retail Price
+
+#Training set
+product.mod&lt;-window(product,end=c(2012,12))
+#Test set
+product.test&lt;-window(product,start=c(2013,1))
+#Range of time of test set
+period&lt;-(end(product.test)[1]-start(product.test)[1])*12 + #No of month * no. of yr
+(end(product.test)[2]-start(product.test)[2]+1) #No of months
+#Model using different method
+#arima, expo smooth, theta, random walk, structural time series
+models&lt;-list(
+#arima
+product.arima&lt;-forecast(auto.arima(product.mod),h=period),
+#exp smoothing
+product.ets&lt;-forecast(ets(product.mod),h=period),
+#theta
+product.tht&lt;-thetaf(product.mod,h=period),
+#random walk
+product.rwf&lt;-rwf(product.mod,h=period),
+#Structts
+product.struc&lt;-forecast(StructTS(product.mod),h=period)
+)
+
+##Compare the training set forecast with test set
+par(mfrow=c(2, 3))
+for (f in models){
+    plot(f)
+    lines(product.test,col='red')
+}
+
+##To see its accuracy on its Test set, 
+#as training set would be ""accurate"" in the first place
+acc.test&lt;-lapply(models, function(f){
+    accuracy(f, product.test)[2,]
+})
+acc.test &lt;- Reduce(rbind, acc.test)
+row.names(acc.test)&lt;-c(""arima"",""expsmooth"",""theta"",""randomwalk"",""struc"")
+acc.test &lt;- acc.test[order(acc.test[,'MASE']),]
+
+##Look at training set to see if there are overfitting of the forecasting
+##on training set
+acc.train&lt;-lapply(models, function(f){
+    accuracy(f, product.test)[1,]
+})
+acc.train &lt;- Reduce(rbind, acc.train)
+row.names(acc.train)&lt;-c(""arima"",""expsmooth"",""theta"",""randomwalk"",""struc"")
+acc.train &lt;- acc.train[order(acc.train[,'MASE']),]
+
+ ##Note that we look at MAE, MAPE or MASE value. The lower the better the fit.
+</code></pre>
+
+<p>This is the plot of my different forecasting, which doesn't seem very reliable/accurate, through the comparison of the red""test set"", and blue""forecasted"" set.
+<strong>Plot of different forecast</strong>
+<a href=""http://i.stack.imgur.com/WZSNq.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/WZSNq.jpg"" alt=""Different forecast""></a></p>
+
+<p><strong>Different accuracy of the respective models of test and training set</strong></p>
+
+<pre><code>Test set
+                    ME      RMSE       MAE        MPE     MAPE      MASE      ACF1 Theil's U
+theta      -0.07408833 0.2277015 0.1881167 -0.6037191 1.460549 0.2944165 0.1956893 0.8322151
+expsmooth  -0.12237967 0.2681452 0.2268248 -0.9823104 1.765287 0.3549976 0.3432275 0.9847223
+randomwalk  0.11965517 0.2916008 0.2362069  0.8823040 1.807434 0.3696813 0.4529428 1.0626775
+arima      -0.32556886 0.3943527 0.3255689 -2.5326397 2.532640 0.5095394 0.2076844 1.4452932
+struc      -0.39735804 0.4573140 0.3973580 -3.0794740 3.079474 0.6218948 0.3841505 1.6767075
+
+Training set
+                     ME      RMSE       MAE         MPE     MAPE      MASE    ACF1 Theil's U
+theta      2.934494e-02 0.2101747 0.1046614  0.30793753 1.143115 0.1638029  0.2191889194        NA
+randomwalk 2.953975e-02 0.2106058 0.1050209  0.31049479 1.146559 0.1643655  0.2190857676        NA
+expsmooth  1.277048e-02 0.2037005 0.1078265  0.14375355 1.176651 0.1687565 -0.0007393747        NA
+arima      4.001011e-05 0.2006623 0.1079862 -0.03405395 1.192417 0.1690063 -0.0091275716        NA
+struc      5.011615e-03 1.0068396 0.5520857  0.18206018 5.989414 0.8640550  0.1499843508        NA
+</code></pre>
+
+<p>From the models accuracy, we can see that the most accurate model would be theta model.
+I am not sure why is the forecast very inaccurate, and I think that one of the reasons would be that, I did not treat the ""outliers"" in my data set, resulting in a bad forecast for all model.</p>
+
+<p><strong>This is my outliers plot</strong></p>
+
+<p><strong>Outliers Plot</strong>
+<a href=""http://i.stack.imgur.com/bZDQv.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/bZDQv.jpg"" alt=""Outliers""></a></p>
+
+<p><strong>tsoutliers output</strong></p>
+
+<pre><code>ARIMA(0,1,0)(0,0,1)[12]                    
+
+Coefficients:
+        sma1    LS46    LS51    LS61    TC133   LS181   AO183   AO184   LS185   TC186    TC193    TC200
+      0.1700  0.4316  0.6166  0.5793  -0.5127  0.5422  0.5138  0.9264  3.0762  0.5688  -0.4775  -0.4386
+s.e.  0.0768  0.1109  0.1105  0.1106   0.1021  0.1120  0.1119  0.1567  0.1918  0.1037   0.1033   0.1040
+       LS207    AO237    TC248    AO260    AO266
+      0.4228  -0.3815  -0.4082  -0.4830  -0.5183
+s.e.  0.1129   0.0782   0.1030   0.0801   0.0805
+
+sigma^2 estimated as 0.01258:  log likelihood=205.91
+AIC=-375.83   AICc=-373.08   BIC=-311.19
+
+ Outliers:
+    type ind    time coefhat  tstat
+1    LS  46 1996:10  0.4316  3.891
+2    LS  51 1997:03  0.6166  5.579
+3    LS  61 1998:01  0.5793  5.236
+4    TC 133 2004:01 -0.5127 -5.019
+5    LS 181 2008:01  0.5422  4.841 
+6    AO 183 2008:03  0.5138  4.592
+7    AO 184 2008:04  0.9264  5.911
+8    LS 185 2008:05  3.0762 16.038
+9    TC 186 2008:06  0.5688  5.483
+10   TC 193 2009:01 -0.4775 -4.624
+11   TC 200 2009:08 -0.4386 -4.217
+12   LS 207 2010:03  0.4228  3.746
+13   AO 237 2012:09 -0.3815 -4.877
+14   TC 248 2013:08 -0.4082 -3.965
+15   AO 260 2014:08 -0.4830 -6.027
+16   AO 266 2015:02 -0.5183 -6.442
+</code></pre>
+
+<p>I would like to know how can I further ""analyse""/forecast my data, with these relevant data set and detection of outliers, etc.
+Please do help me in treatment of my outliers as well to do my forecasting as well . </p>
+
+<p>Lastly, I would like to know how to combined the different model forecasting together, as from what @forecaster had mentioned in link no.1, combining the different model will most likely result in a better forecasting/prediction.</p>
+
+<p><strong>EDITED</strong></p>
+
+<p>I would like to incorporate the outliers in other models are well.</p>
+
+<p>I have tried some codes, eg. </p>
+
+<pre><code>forecast.ets( res$fit ,h=period,xreg=newxreg)
+    Error in if (object$components[1] == ""A"" &amp; is.element(object$components[2], : argument is of length zero
+
+forecast.StructTS(res$fit,h=period,xreg=newxreg)
+Error in predict.Arima(object, n.ahead = h) : 'xreg' and 'newxreg' have different numbers of columns
+</code></pre>
+
+<p>There are some errors produced, and I am unsure about the correct code to incorporate the outliers as regressors.
+Furthermore, how do I work with thetaf or rwf, as there are no forecast.theta or forecast.rwf?</p>
+"
+"0.157134840263677","0.160128153805087","175085","<p>I'm using model trees to forecast sales data. I've developed a pretty good model but I'm concerned about some of the models predictions. I'm working with R and using the M5P algo in the RWeka package. </p>
+
+<p>I'm forecasting revenues so I never have negative numbers but my model predicts negative numbers. That makes me think I'm doing something incorrectly. Here is the shape of my data<a href=""http://i.stack.imgur.com/8f7j7.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/8f7j7.png"" alt=""enter image description here""></a></p>
+
+<p>What should I do to make sure my model doesn't predict meaningless values?</p>
+"
+"0.157134840263677","0.160128153805087","176352","<p>Is this a legit way to make a variable/predictor/dummy selection? </p>
+
+<p>(My goal is forecasting with the selected variables)   </p>
+
+<pre><code>fit &lt;- train(train.values ~ .,data=train.data, method='glmnet') # train.data includes all variables
+
+#getting the coefficients of the final model
+coefficients &lt;- coef(fit$finalModel, fit$bestTune$lambda)
+
+#create a list of the selected coefficients
+variables &lt;- names(coefficients[which(Coefficients != 0),])
+</code></pre>
+
+<p>Due to reading lots of stuff on this platform i am aware of the fact that <code>stepAIC()</code> is not that great of a choice for a variable selection.
+After the variable selection is done i would use those variables for predictions with glmnet as well as for a linear model.</p>
+"
+"0.111111111111111","0.11322770341446","186190","<p>I am trying to make a prediction of imbalance prices in the elctricity market. My dataset consists of data for every 15 minutes (this is the time period in which a price is determined) during 11 months. I have several exogenous factors (like the spot market price) included mentioned here as x1 etc.</p>
+
+<p>In forecasting the price I am using the following code: </p>
+
+<pre><code>lag &lt;- function(x, k){c(rep(NA, k), x)[1 : length(x)]}
+mydata$y_lag1 &lt;- lag(mydata$y, 1)
+mydata$y_lag2 &lt;- lag(mydata$y, 2)
+mydata$x1_lag1 &lt;- lag(mydata$x1, 1)
+mydata$x2_lag1 &lt;- lag(mydata$x2, 1)
+mydata$x3_lag1 &lt;- lag(mydata$x3, 1
+
+f&lt;- y ~ y_lag1 + y_lag2 + x1_lag1 + x2_lag1 + x3_lag1
+fit &lt;- lm(formula = f, data = mydata)
+mydata$P_imb_pred &lt;- predict(fit, newdata = mydata)
+
+pred &lt;- data.frame(time=mydata$time, price=mydata$P_imb_pred)
+</code></pre>
+
+<p>My code works, but I am unsure if it does wat I want it to. I am trying to predict the price only 1 time unit (so 15 minutes) ahead. That's why I have lagged variables in the function. Can someone help me out? Should I additionally specify how much time ahead I want to forecast? If so, can you tell me how?</p>
+
+<p>Thanks for your help! </p>
+"
+"0.111111111111111","0.11322770341446","193550","<p>How can we decide the size or portion of the data given to get the ARIMA that has the best forecasting properties?</p>
+
+<p>I mean, for example, we have a hourly series with over 28.000 elements.</p>
+
+<p>Which is the criteria that tells us: do ARIMA over last 100 elements, or 250 last elements, so the ARIMA we get is better for forecasting?
+I am interested in short time prediction, like for 24 hours.</p>
+
+<p>I read everywhere but found no criterion yet.</p>
+"
+"0.368513865595044","0.375533808099405","198315","<p>I am currently getting slightly confused with how a rolling forecast should be setup in R, as in how the data should be organised in order to <em>train</em> and <em>test</em> my model. I feel there is a large gap in my understanding somewhere.</p>
+
+<p>I have seen many examples of forecasting methods, but not many on time-series (using lagged variables) that go into detail, i.e. perform everything manually using <code>predict()</code>. Instead it normally just points to a built in R package. <strong>My question has to do with the training of the model - the alignment of the data for the training.</strong></p>
+
+<p>I know that the regression equation (assuming I am performing a linear regression) looks like this:</p>
+
+<p>$$ y_t = \beta_1 y_{t-1} + \beta_2 y_{t-2} + \beta_3 x_{t-1} + \beta_4 x_{t-2} + \varepsilon_t $$ </p>
+
+<p>So I have my outcome variable, $y$, being explained by two of its own lagged values, plus two lagged values of a second variable, $x$. Each variable has its own coefficient, all of which my model is estimating.</p>
+
+<p>Let's say I have a <em>data.table</em> (or data.frame), where each row consists of the data aligned according to the equation above. Each row is one day, and represents the given equation. I have five columns, and for this example say 200 rows/days.</p>
+
+<blockquote>
+  <p>Day  |  $y_t$  |  $y_{t-1}$  |  $y_{t-2}$  |  $x_{t-1}$  |  $x_{t-2}$</p>
+  
+  <p>001  | <em>Values</em> --></p>
+  
+  <p>002  | <em>Values</em> --></p>
+  
+  <p>003  | <em>Values</em> --></p>
+</blockquote>
+
+<p>I use the above equation as the formula to fit my model to obtain estimates for the four coefficients (neglecting $\varepsilon$) using a fixed 40-day time frame.</p>
+
+<pre><code>model &lt;- lm(y ~ y_1 + y_2 + x_1, x_2,            ## my regression formula
+            data = input_data[1:40])             ## my data.table 
+</code></pre>
+
+<p>Now I want to make a prediction using the fitted <code>model</code>.
+I do this by using <code>predict()</code> in <strong>R</strong> as follows:
+I take the next (41st) row of data, minus the outcome variable</p>
+
+<pre><code>my_pred &lt;- predict(model, newdata = input_data[41][, outcome := NULL])
+</code></pre>
+
+<p>And then calculate my error:</p>
+
+<pre><code>my_error &lt;- input_data[41, outcome] - my_pred
+</code></pre>
+
+<p>I then shift everything forward one row, so still a 40-day frame <code>input_data[2:41]</code> updating the coefficients for all variables and predicting the following outcome variable, <code>input_data[42]</code>. This is yielding terrible results for my model, with overall accuracies not much better than a naÃ¯ve forecast, i.e. random guessing.</p>
+
+<p>Should I realign the data for the training segment, so that each row rather represents the data I had on that day? This would mean adding one more column, $x_t$.</p>
+
+<p>Any other suggestions or comments?</p>
+
+<p>Thanks.</p>
+"
+"0.351364184463153","0.358057437019716","198844","<p>I'm trying to understand how <code>auto.arima</code> with covariates in the xreg parameter works. I'm familiar with regression and I'm starting to work on forecasting.</p>
+
+<p>My understanding of forecasting is that you look for patterns in the past time series and then project those paterns onto the future.  </p>
+
+<p>My uderstanding of regression is that you use predictors to try to generate an output value and minimize the difference between your created value and the real value.  </p>
+
+<p>So how does forecasting <code>auto.arima</code> with <code>xreg</code> work? Do you create a forecast for a timeseries based on past data and regression model based on the input time series and input <code>xreg</code>, and then forecast each data point in the time series and for each forecasted data point use the regression model you built and future <code>xreg</code> values to adjust the forecasted values?</p>
+
+<p>I'm a former physics grad student, so I'm not allergic to math but I'm just looking for a high level overview of the process here to understand how forecasting <code>auto.arima</code> works.  </p>
+
+<p>For example like, </p>
+
+<ul>
+<li><p>step 1: build forecast model on input time series, and regression model on input time series and input <code>xreg</code> values</p></li>
+<li><p>step 2: forecast model into future one step, and predict value with regression model and future <code>xreg</code> values</p></li>
+<li><p>step 3: algorithm combines forecasted value and regression model prediction to get combined value</p></li>
+</ul>
+
+<p>This is just a guess at how it works, but it's an example of the kind of high level explanation I'm looking for.</p>
+
+<p>I've included some code below that I've been working on trying to forecast time in to out <code>TiTo</code> for customers at a restaurant with predictor count of customers in the restaurant <code>CustCount</code>.</p>
+
+<pre><code>OV&lt;-zoo(SampleData$TiTo, 
+    order.by=SampleData$DateTime)
+
+
+eDate &lt;- ts(OV, frequency = 24)
+
+Train &lt;-eDate[1:15000]
+Test &lt;- eDate[15001:22773]
+
+xregTrain &lt;- SampleData[1:15000,]$CustCount
+    xregTest &lt;- SampleData[15001:22773,]$CustCount
+
+Arima.fit &lt;- auto.arima(Train, xreg = xregTrain)
+
+Acast&lt;-forecast(Arima.fit, h=7772, xreg = xregTest)
+
+accuracy(Acast$mean,Test)
+</code></pre>
+"
+"0.484322104837853","0.493548116792825","200598","<p>This is a follow up question <a href=""http://stats.stackexchange.com/questions/191851/var-forecasting-methodology"">the question that can be found here</a>, and is a result of me having implemented (after as careful evaluation as I'm capable of) the alterations and changes suggested.</p>
+
+<p>Below is my method and should be replicable. </p>
+
+<p>My question relates to the implementation of k-fold cross validation and whether the code produces a mean average error value that is reliable and whether there are some aspects of k-fold cross validation I may have neglected, thus skewing any results.</p>
+
+<p>Otherwise any comments, both as to the method as it stands or the logic behind their inclusion (see above link) is welcome.</p>
+
+<pre><code>library(plyr)
+library(forecast)
+library(vars)
+
+#Read Data
+da=read.table(""VARdata.txt"", header=T)
+dac &lt;- c(2,3) # Select variables
+x=da[,dac]
+
+plot.ts(x)
+summary(x)
+
+#Run Augmented Dickey-Fuller tests to determine stationarity and
+#differences to achieve stationarity.
+adf1 &lt;- ur.df(x[,""VAR1""], type = ""drift"", lags = 10, selectlags = ""AIC"")
+adf2 &lt;- ur.df(x[,""VAR2""], type = ""drift"", lags = 10, selectlags = ""AIC"")
+
+summary(adf1)
+summary(adf2)
+
+#Difference to achieve stationarity
+d.x1 = diff(x[, ""VAR1""], differences = 1)
+d.x2 = diff(x[, ""VAR2""], differences = 1)
+
+
+#Check if differenced variables are stationary
+adf1b &lt;- ur.df(d.x1, type = ""drift"", lags = 10, selectlags = ""AIC"")
+adf2b &lt;- ur.df(d.x2, type = ""drift"", lags = 10, selectlags = ""AIC"")
+
+summary(adf1b)
+summary(adf2b)
+
+#If variable is stationary I(0), do not difference
+#Shorten undifferenced variable by n, so as to make all variables same length
+# d.x2 = (x[, ""VAR2""])
+# d.x2 = d.x2[-c(1:1)]
+
+#Bind variables in time series
+dx = cbind(d.x1, d.x2)
+dx = as.ts(dx)
+plot.ts(dx)
+
+summary(dx)
+
+#Lag optimisation
+VARselect(dx, lag.max = 10, type = ""both"")
+
+#Run VAR 
+var = VAR(dx, p=2)
+
+#Test for serial autocorrelation using the Portmanteau test
+#Rerun var model with other suggested lags if H0 can be rejected at 0.05
+serial.test(var, lags.pt = 10, type = ""PT.asymptotic"")
+
+#ARCH test (Autoregressive conditional heteroscedasdicity)
+arch.test(var, lags.multi = 10)
+
+summary(var)
+
+#Forecasting
+prd &lt;- forecast(var, h = 12)
+
+print(prd)
+plot(prd)
+
+# Forecast Accuracy
+data &lt;- as.data.frame(dx)
+
+k = 10 #Folds
+
+# sample from 1 to k, nrow times (the number of observations in the data)
+data$id &lt;- sample(1:k, nrow(data), replace = TRUE)
+list &lt;- 1:k
+
+# prediction and testset data frames that we add to with each iteration over
+# the folds
+
+prediction &lt;- data.frame()
+testsetCopy &lt;- data.frame()
+
+#Creating a progress bar to know the status of CV
+progress.bar &lt;- create_progress_bar(""text"")
+progress.bar$init(k)
+
+for (i in 1:k){
+  # remove rows with id i from dataframe to create training set
+  # select rows with id i to create test set
+  trainingset &lt;- subset(data, id %in% list[-i])
+  trainingset &lt;- as.ts(trainingset)
+  testset &lt;- subset(data, id %in% c(i))
+
+  # run a VAR model
+  mymodel &lt;- VAR(trainingset, p = 2)
+
+  # remove response column 1
+  temp &lt;- forecast(mymodel, h = nrow(testset))
+  temp &lt;- do.call('cbind', temp[['mean']])
+  temp &lt;- as.data.frame(temp)
+
+  # append this iteration's predictions to the end of the prediction data frame
+  prediction &lt;- rbind(prediction, temp)
+
+  # append this iteration's test set to the test set copy data frame
+  # keep only the desired Column
+  testsetCopy &lt;- rbind(testsetCopy, as.data.frame(testset[,1]))
+
+  progress.bar$step()
+}
+
+# add predictions and actual values
+result &lt;- cbind(prediction, testsetCopy[, 1])
+names(result) &lt;- c(""Predicted"", ""Actual"")
+result$Difference &lt;- abs(result$Actual - result$Predicted)
+
+# As an example use Mean Absolute Error as Evalution 
+summary(result$Difference)
+result
+</code></pre>
+
+<p><strong>Edit based on answer below:</strong></p>
+
+<p>As per the answer below I have changed the code for the cross validation to this (full test code included for ease):</p>
+
+<pre><code>library(forecast)
+library(vars)
+library(plyr)
+
+x &lt;- rnorm(70)
+y &lt;- rnorm(70)
+
+dx &lt;- cbind(x,y)
+dx &lt;- as.ts(dx)
+
+j = 12  #Forecast horizon
+k = nrow(dx)-j #length of minimum training set
+
+prediction &lt;- data.frame()
+actual &lt;- data.frame()
+
+for (i in j) { 
+  trainingset &lt;- window(dx, end = k+i-1)
+  testset &lt;- window(dx, start = k-j+i+1, end = k+j)
+  fit &lt;- VAR(trainingset, p = 2)                       
+  fcast &lt;- forecast(fit, h = j)
+  fcastmean &lt;- do.call('cbind', fcast[['mean']])
+  fcastmean &lt;- as.data.frame(fcastmean)
+
+  prediction &lt;- rbind(prediction, fcastmean)
+  actual &lt;- rbind(actual, as.data.frame(testset[,1]))
+}
+
+# add predictions and actual values
+result &lt;- cbind(prediction, actual[, 1])
+names(result) &lt;- c(""Predicted"", ""Actual"")
+result$Difference &lt;- abs(result$Actual - result$Predicted)
+
+# Use Mean Absolute Error as Evalution 
+summary(result$Difference)
+</code></pre>
+
+<p>Would this be a better application of cross validation? I realize that it is no longer k-fold, but is based on the link provided in the answer.</p>
+"
+"NaN","NaN","203605","<p>I have name of incident and date, which is not univariate. I need to do prediction/forecasting for upcoming event based on date. I have tried to do it by using average of date difference between consecutive dates. Also tried to do it by using <code>rollmean</code> for latest trend.</p>
+
+<pre><code>&gt; head(df1$Date)
+[1] ""2014-01-20"" ""2014-01-22"" ""2014-03-10"" ""2014-04-10"" ""2014-04-15"" ""2014-04-15""
+</code></pre>
+
+<p>I was wondering is there any other way to do it?</p>
+"
+"0.333333333333333","0.301940542438559","213192","<p>I have half-hourly electricity data of several homes for a duration of one month. Also, I have ambient temperature at same sampling rate. Now, I need to make half-hourly forecasts using historical electricity data and forecasted temperature for coming day.</p>
+
+<p>Currently, I am facing a problem with seasonality, i.e., in some homes I observe (via visual inspection) day-wise seasonality and in some other homes no pattern is found. <a href=""http://stats.stackexchange.com/a/212797/60072"">Stephan</a> suggested to check for weekly seasonality as well, but visually I do not find any. So, I thought to try models with different forced seasonalities to find the prediction accuracy. I can think of two options:</p>
+
+<ol>
+<li>Model_1 with daily seasonality (frequency = 48 observations)</li>
+<li>Model_2 with weekly and daily seasonality (48, 7*48)</li>
+</ol>
+
+<p>Keeping the above approach in mind, I am facing the following issue:</p>
+
+<ol>
+<li>For Model_1, I can use <code>auto.arima()</code> with <code>xreg</code> option to specify an extra <code>temperature</code> predictor. However, this only works for a single seasonality.</li>
+<li>For Model_2, I tried to use the <code>tbats()</code> forecasting function, which models multiple seasonalities, but does not allow extra predictor variables. </li>
+</ol>
+
+<p>Is there a forecasting function which allows <em>both</em> multiple predictors and multiple seasonalities?</p>
+
+<p>Here is the electricity data of one month. </p>
+
+<pre><code>    data &lt;- structure(c(1642.8, 1467.1, 165.57, 1630.99, 1618.65, 1629.29, 
+        1598.93, 1839.9, 1604.52, 1606.73, 1473.82, 1669.17, 1698.9, 
+        2111.21, 2056.41, 3671.29, 2808.01, 1336.15, 794.11, 1212.15, 
+        377.36, 888.54, 174.58, 218.54, 420.76, 389.58, 397.77, 395.31, 
+        359.11, 364.8, 376.13, 389.37, 929.5, 1702.38, 519.65, 2452.28, 
+        1354.45, 1842.96, 725.41, 661.11, 528.44, 733.4, 429.51, 310.47, 
+        279.72, 407.83, 1791.1, 1754.53, 1536.73, 1608.37, 1432.23, 1401.72, 
+        1582.14, 1558.75, 1536.24, 1745.59, 1375.61, 1556.71, 1671.12, 
+        1206.77, 1391.84, 876.23, 1617.3, 1638.99, 1833.61, 1591.42, 
+        1455, 183.87, 177.55, 184.36, 332.99, 352.95, 425.1, 945.67, 
+        342.3, 348.45, 227.18, 382.15, 268.91, 335.88, 326.94, 233.23, 
+        169.71, 179.51, 195.3, 207.23, 1681.9, 1493.32, 941.52, 980.36, 
+        924.31, 379.02, 1229.89, 1590.21, 1250.92, 1149.24, 1124.04, 
+        993.78, 883.98, 860.69, 934.17, 969.31, 1049.55, 1104.94, 904.3, 
+        1220.23, 1183.9, 891.26, 825.33, 787.77, 1060.93, 1029.1, 982.25, 
+        193.13, 182.65, 181.75, 167.68, 165.89, 291.02, 300.2, 418.4, 
+        297.66, 231.89, 305.66, 701.18, 338.5, 337.24, 332.11, 332.66, 
+        187.8, 179.03, 130.22, 177.73, 172.24, 173.45, 334.23, 810.53, 
+        359.41, 330.23, 333.29, 568.85, 2462.46, 1660.32, 1156.13, 1136.2, 
+        1189.07, 832.73, 181.91, 185.93, 1076.77, 672.78, 1376.71, 1020.17, 
+        382.18, 1160.74, 791.36, 1569.4, 817.78, 850.71, 747.21, 826.12, 
+        1306.46, 506.23, 140.05, 132.6, 304.19, 308.14, 406.13, 290.73, 
+        188.9, 165.59, 174.56, 145.97, 151.83, 142.29, 443.58, 799.9, 
+        279.36, 223.88, 221.03, 291.26, 374.97, 431.36, 598.98, 625.82, 
+        1052.02, 2036.83, 1230.03, 1429.81, 1099.34, 1646.03, 1668.56, 
+        1631.79, 1604.04, 2849.49, 2998.63, 2476.96, 1601.04, 1216.42, 
+        2004.2, 1868.51, 1961.91, 1813.35, 1500.22, 1276.94, 1369.29, 
+        632.43, 238.15, 488.76, 467.6, 330.27, 144.67, 153.36, 924.12, 
+        1348.18, 799.01, 524.3, 420.5, 264.34, 283.86, 198.95, 206.52, 
+        217.33, 356.16, 207.83, 197.6, 194.03, 193.01, 249.85, 271.22, 
+        244.25, 442.5, 660.49, 245.66, 356.13, 443.32, 336.15, 849.74, 
+        1709.21, 1542.09, 1315.69, 2628.6, 2261.8, 1576.42, 1776.48, 
+        1239.64, 1401.12, 1106.17, 1378.55, 1315.57, 1141, 1642.63, 2484.13, 
+        1968.94, 3059.42, 1317.32, 905.05, 484.42, 486.86, 96.79, 183.45, 
+        173.94, 342, 255.96, 320.54, 106.19, 147.88, 150.77, 176.17, 
+        344.75, 371.73, 309.46, 237.86, 187.32, 202.61, 292.5, 248.28, 
+        259.3, 283.67, 365.09, 230.47, 326.15, 350.92, 335.42, 419.39, 
+        345.31, 1093.22, 1392.87, 1298.11, 919.16, 1654.53, 1045.99, 
+        558.42, 437.29, 857.9, 758.34, 1220.04, 1390.62, 956.74, 909.93, 
+        584.67, 409.87, 387.3, 387.93, 1276.28, 871.06, 413.8, 313.2, 
+        199.5, 330.21, 210.9, 358.28, 352.13, 233.62, 259.18, 123.57, 
+        255.58, 411.78, 427.65, 318.95, 298.5, 283.23, 279.85, 200.45, 
+        205.97, 254.24, 307.98, 1090.53, 289.71, 215.14, 286.63, 328.55, 
+        288.96, 1281.19, 1354.8, 1302.05, 1254.46, 261.95, 270.09, 243.28, 
+        696.61, 314.27, 241.73, 245.68, 157.74, 222.55, 294.36, 185.46, 
+        203.49, 182.14, 246.69, 178.26, 397.5, 330.2, 212.02, 248.72, 
+        265.48, 249.37, 130.59, 248.97, 279.94, 319.07, 358.5, 278.98, 
+        251.92, 304.66, 455.05, 365.95, 340.93, 287.51, 264.82, 260.18, 
+        34.35, 35.11, 184.09, 247.18, 160.9, 139.27, 284.96, 296.31, 
+        252.3, 342.65, 353.03, 380.52, 346.19, 350.06, 218.52, 133.94, 
+        173.7, 128.26, 167.8, 112.77, 147.8, 129, 170.54, 89.88, 243.08, 
+        97.61, 190.31, 193.94, 268.17, 233.5, 205.27, 92.29, 167.43, 
+        168.34, 151.99, 193.84, 379.1, 318.69, 327.28, 487.39, 414.01, 
+        336.06, 278.02, 168.05, 155.6, 236.4, 264.94, 296.05, 326.46, 
+        357.43, 356.31, 340.29, 319.81, 312.79, 341.53, 317.36, 309.62, 
+        440.6, 285.5, 282.06, 288.99, 334.48, 196.54, 144.24, 218.55, 
+        173.64, 242.29, 251.78, 186.81, 184.36, 141.62, 208.91, 157.53, 
+        154.03, 139.44, 137.66, 256.75, 1202.05, 177.36, 177.93, 72.83, 
+        252.9, 231.35, 1090.39, 442.91, 363.12, 248.96, 478.75, 249.64, 
+        297.29, 227.28, 365.82, 879.7, 488.93, 184.79, 138.13, 151.77, 
+        123.18, 175.76, 251.84, 208.06, 126.68, 246.3, 307.34, 319.79, 
+        324.3, 379.6, 309.53, 253.17, 221.91, 228.42, 150.24, 148.59, 
+        118.79, 86.89, 140.51, 200.43, 212.15, 276.14, 441.81, 125.77, 
+        152.42, 329.28, 269.21, 177.35, 1106.29, 128.92, 96.35, 63.53, 
+        520.62, 940.25, 1014.34, 314.99, 390.2, 330.1, 377.04, 341.35, 
+        342.79, 241.79, 249.9, 391.92, 292.68, 105.02, 179.99, 118.53, 
+        154.17, 90.53, 206.7, 345.33, 244.75, 291.68, 820.57, 1777.84, 
+        1805.83, 1753.73, 1416.7, 279.2, 262.82, 1345.88, 467.98, 1136.66, 
+        170.02, 159.96, 1478.8, 1414.12, 1347.93, 1505.59, 1341.69, 445.53, 
+        277.59, 1609.61, 1476.45, 244.08, 192.57, 213.55, 439.02, 112.86, 
+        128.54, 376.09, 251.15, 116.27, 254.82, 302.56, 304.6, 198.5, 
+        240.05, 219.35, 70.3, 190.96, 211.95, 328.53, 714.62, 3176.56, 
+        2604.09, 191.65, 145.25, 93.93, 83.6, 81.13, 146.12, 331.75, 
+        250.24, 1144.53, 1616.47, 1008.7, 316.65, 311.46, 1152.99, 1504.86, 
+        1543.21, 1081.54, 1428.07, 1358.23, 1349.75, 190.23, 2398.92, 
+        2196.11, 1466.94, 2249.77, 2150.2, 2542.25, 618.03, 453.22, 880.99, 
+        1497.86, 440.96, 161.85, 324.88, 434.11, 316.33, 444.66, 359.14, 
+        277.41, 1237.28, 761.41, 183.53, 309.44, 213.48, 121.64, 346.7, 
+        149.86, 2060.39, 1102.13, 347.97, 600.24, 912.6, 590.77, 1805.76, 
+        1673.93, 1573.91, 505.74, 446.76, 1033.41, 1668.68, 1293.9, 383.81, 
+        1419.99, 1349.4, 711.55, 218.63, 182, 401.93, 1876, 1486.34, 
+        1543.11, 2313.8, 478.57, 615.19, 542.68, 971.98, 531.11, 766.21, 
+        489.76, 344.47, 319.86, 321.26, 311.41, 288.67, 310.67, 305.15, 
+        419.33, 422.84, 950.08, 2188.88, 3454.92, 1989.54, 590.33, 327.05, 
+        354.78, 578.41, 1583.29, 2016.66, 1481.03, 293.21, 1864.84, 399.65, 
+        366.76, 357.7, 2074.97, 1626.86, 1133, 1624.61, 1506.93, 628.4, 
+        1405.68, 217.8, 1223.11, 1356.97, 1171.72, 1182.86, 1642.11, 
+        2289.02, 814.39, 595.76, 542.78, 1596.41, 884.97, 235.25, 1540.68, 
+        781.95, 115.71, 1204.98, 718.66, 452.09, 305.58, 444.67, 356.76, 
+        182.54, 674.47, 153.8, 862.25, 1322.88, 323.33, 1659.64, 496.72, 
+        304.74, 246.6, 327.12, 239.31, 246.72, 225.72, 234.7, 324.07, 
+        304.27, 171.86, 97.64, 242.69, 295, 324.53, 513.81, 1100.65, 
+        1151.77, 231.56, 189.88, 786.3, 1164.87, 676.09, 882.82, 1496.3, 
+        1027.91, 872.92, 809.1, 840.31, 1302.18, 2055.87, 677.74, 934.66, 
+        263.91, 186.68, 248.5, 214.62, 371.54, 298, 294.52, 304.86, 1295.77, 
+        942.5, 305, 265.78, 255.89, 255.63, 151.54, 108.16, 116.81, 100.19, 
+        224.75, 84.11, 1143.89, 262.15, 784.21, 1728.29, 1506.79, 434.94, 
+        374.29, 265.43, 560.74, 1651.49, 1063.07, 1054.69, 1298.4, 1261.59, 
+        1132.75, 692.82, 660.57, 198.25, 97.81, 1258.67, 833.64, 796.35, 
+        868.76, 999.86, 2240.02, 885.72, 1317.52, 1267.18, 167.93, 133.22, 
+        364.44, 267.17, 406.13, 412.52, 1036.04, 779.34, 655.43, 1901.2, 
+        270.18, 266.31, 284.21, 288.66, 135.38, 176.11, 154.86, 160.21, 
+        146.28, 163.72, 139.75, 278.12, 253.51, 319.62, 396.39, 1662.69, 
+        1577.09, 1059.71, 241.64, 407.54, 290.49, 846.17, 1325.31, 1418.23, 
+        1432.5, 1412.6, 1015.87, 1619.88, 1426.58, 1333.32, 1963.35, 
+        1638.11, 1081.89, 285.56, 1084.58, 2038.77, 1022.39, 1145.92, 
+        513.87, 107.7, 176.19, 143.77, 374.3, 373.99, 221.76, 148.3, 
+        331.01, 2323.12, 1502.09, 347.17, 296.7, 306.06, 313.03, 221.69, 
+        295.35, 301.95, 250.92, 231.54, 140.6, 717.63, 863.5, 402.15, 
+        1337.78, 1575.44, 1738.49, 1675.57, 1617.66, 1365.58, 242.8, 
+        286.29, 712.34, 1559.59, 1600.34, 3447.88, 3432.89, 3337.23, 
+        1472.21, 1323.76, 1265.31, 1221.65, 1312.63, 2016.09, 2972.13, 
+        1451.67, 735.67, 130.13, 379.87, 162.21, 226.48, 417.18, 357.51, 
+        346.37, 200.89, 190.15, 276.05, 942.74, 1471.99, 1047.53, 1240.06, 
+        742.62, 169.34, 144.28, 220.58, 165.23, 344.8, 227.47, 254.64, 
+        742.37, 1809.01, 436.11, 1692.87, 1697.74, 1474.91, 1635.68, 
+        1664.2, 1489.85, 1316.4, 1364.07, 1510.02, 1497.89, 1709.17, 
+        2846.71, 2736.08, 1015.43, 1017.08, 1195.21, 751.18, 523.89, 
+        199.69, 2148.71, 1151.39, 1182.84, 788.91, 259.31, 146.29, 141.09, 
+        299.38, 349.53, 404.08, 449.9, 391.77, 251.89, 222.25, 281.04, 
+        565.4, 371.24, 219.75, 324.45, 227, 157.67, 212.48, 201.69, 140.84, 
+        220.67, 187.64, 399.79, 157.92, 275.49, 326.99, 1340.51, 1578.68, 
+        1599.41, 1667.74, 1129.07, 1312.55, 1393.09, 1368.69, 1130.85, 
+        968.71, 1130.2, 1223.1, 1124.5, 1077.09, 1052.42, 1255.31, 918.21, 
+        1263.93, 706.21, 3080.29, 1620.18, 1122.48, 750.06, 262.89, 110.02, 
+        236.83, 413, 227.53, 355, 277.51, 258.03, 368.44, 656.68, 1808.17, 
+        1493.41, 1272.21, 330.67, 1674.18, 719.45, 1089.68, 784.01, 275.73, 
+        312.69, 345.11, 761.8, 1020.11, 259.16, 345.98, 270.23, 580.15, 
+        1303.68, 1659.7, 1732.94, 204.9, 373.58, 373.36, 1381.52, 1437.74, 
+        1262.78, 1264.6, 1184.54, 1175.12, 857.09, 1428.34, 841.92, 232.47, 
+        223.22, 473.24, 382.7, 189.84, 1737.48, 1689.34, 378.48, 872.56, 
+        180.12, 363.03, 301.38, 412.57, 401.17, 387.35, 417.63, 300.61, 
+        376.82, 284.31, 232.31, 269.96, 188.41, 203.79, 134.88, 193.66, 
+        57.86, 89.71, 167.66, 60.84, 197.03, 703.66, 1638.7, 1467.03, 
+        347.22, 1397.23, 1511.92, 1362.25, 1397.18, 1106.19, 826.5, 1033.04, 
+        1039.46, 584.98, 706.35, 548.07, 373.39, 681.6, 1231.28, 288.94, 
+        649.36, 79.28, 209.23, 290.75, 304.12, 132.57, 91.2, 355.37, 
+        197.45, 343.17, 339.2, 284.65, 229, 234.73, 322.36, 323.43, 295.1, 
+        197.03, 308.17, 223.88, 235.08, 225.16, 172.83, 236.26, 135.17, 
+        394.89, 479.2, 315.34, 280.9, 282.36, 204.78, 367.24, 1712.29, 
+        1521, 1686.09, 960.19, 1019.12, 1062.77, 851.88, 1369.98, 689.2, 
+        580.5, 751.74, 547.67, 556.64, 493.85, 404.15, 428.07, 716.2, 
+        1442.05, 1045.81, 1497.07, 567.59, 155.07, 537.72, 446.03, 282.57, 
+        642.88, 409.37, 338.91, 173.89, 358.63, 195.42, 209.95, 186.44, 
+        152.34, 105.51, 132.26, 82.14, 122.88, 149.38, 211.42, 350.17, 
+        429.72, 336.4, 982.21, 1436.25, 1726.87, 1830.42, 1282.05, 1293.4, 
+        1121.01, 946.2, 707.1, 154.53, 767.56, 607.78, 448, 288.23, 270.32, 
+        223.93, 166.22, 262.45, 223.74, 159.31, 210.44, 257.94, 183.99, 
+        151.38, 206.11, 193.43, 388.95, 577.98, 304.64, 285.13, 256.59, 
+        420.26, 289.34, 356.02, 358.08, 325.22, 275.95, 164.46, 213.23, 
+        142.99, 221.66, 270.61, 206.56, 213.68, 254.33, 250.15, 267.99, 
+        403.95, 671.2, 1574.11, 396.34, 477.88, 631.08, 618.25, 1366.88, 
+        298.19, 287.05, 290.38, 332.44, 235.9, 229.79, 831.6, 1320.86, 
+        477.31, 944.84, 547.33, 411.21, 705.43, 873.49, 572.81, 585.36, 
+        1229.69, 701.01, 653.49, 74.81, 162.47, 179.54, 330.27, 544.51, 
+        332.41, 296.66, 130.66, 1055.61, 556.79, 265.43, 383.44, 398.22, 
+        362.66, 223.99, 130.35, 193.67, 217.68, 273.3, 247.84, 161.66, 
+        320.08, 322.52, 274.61, 811.44, 353.85, 323.41, 383.61, 389.5
+        ), .Dim = c(1248L, 1L), .Dimnames = list(NULL, ""power""))
+</code></pre>
+
+<p>Temperature predictor values are:</p>
+
+<pre><code>temp&lt;-structure(c(31, 31, 31, 31, 30, 29, 28, 27.5, 27, 26, 26, 26, 
+26, 26, 26, 28, 29, 29, 30, 31, 32, 33, 33, 34, 34, 35, 36, 36, 
+36.5, 37, 38, 38, 39, 39, 39, 38, 37, 36, 36, 35, 34, 33, 33, 
+33, 32.5, 32, 32, 31, 30, 26, 24, 24, 24, 24, 24, 24, 25, 25, 
+25, 25, 26, 26, 26, 27, 28.3, 29.7, 31, 32, 33, 33, 34, 34, 34, 
+35, 35, 35, 36, 37, 38, 39, 39, 39, 39, 38.5, 38, 37, 36, 35, 
+34, 34, 33, 32.5, 32, 30, 30, 30, 28, 28, 27, 25, 25, 24, 24, 
+24, 24, 24, 25, 25, 25, 25, 25, 27, 28, 30, 31, 33, 34, 37, 37, 
+38, 38, 39, 39.3, 39.7, 40, 40, 40, 40, 41, 40, 40, 38, 38, 36, 
+35, 34, 33, 31, 31, 30, 31, 30, 30, 29, 28, 28, 28, 27, 27, 28, 
+27, 24, 24, 24, 23, 23, 23, 24, 24, 26, 27, 28, 29.7, 31.3, 33, 
+34, 35.3, 36.7, 38, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 39, 
+39, 38, 37, 36, 34, 33, 32, 32, 30, 28.5, 27, 27, 27, 27, 27, 
+26, 26, 26, 25.3, 24.7, 24, 24, 24, 24, 23, 23, 24.5, 26, 28, 
+29.7, 31.3, 33, 34.5, 36, 37, 38, 39, 40, 40, 40.3, 40.7, 41, 
+41, 41, 41, 41, 41, 41, 39.5, 38, 37, 37, 35, 34, 34, 33, 33, 
+33, 32, 31, 31, 30, 30, 30, 29, 29, 28.5, 28, 28, 28, 29, 29, 
+28.5, 28, 29, 29, 30, 31, 31, 32.5, 34, 35, 37, 39.5, 42, 42, 
+42, 42, 42, 43, 44, 45, 45, 44, 43, 42, 42, 41, 39, 36.5, 34, 
+34, 33, 33, 33, 33, 33, 33, 32, 32, 32, 32, 31.5, 31, 30, 30, 
+30, 29, 29, 28, 27, 28, 29, 30, 31, 32.5, 34, 34, 35, 37, 40, 
+41, 41, 42, 42, 42.5, 43, 43, 43, 42, 42, 43, 42, 42, 41, 40, 
+39, 37.5, 36, 35, 35, 34, 34, 33, 32, 32, 32, 32, 31, 31, 31, 
+31, 31, 28, 28, 28, 28, 28, 28.5, 29, 30, 30.5, 31, 32, 33.5, 
+35, 36, 37, 38, 39, 38, 39, 40, 41, 42, 42, 43, 42, 42, 42, 41, 
+41, 40, 39, 38, 37, 36, 35, 34, 34, 33, 32, 32, 31, 30.5, 30, 
+30, 30, 30, 29, 29, 29, 28, 27, 27, 27, 27, 28.5, 30, 31.5, 33, 
+34, 35, 36, 37, 38, 38, 39, 40, 41, 42, 42, 42, 42, 42, 42, 42, 
+42, 42, 42, 42, 40, 40, 39, 37, 37, 36.5, 36, 35, 34, 34, 33, 
+33, 32, 32, 32, 32, 32, 32, 31, 31, 30, 30, 30, 30, 31, 31, 31, 
+32, 33.5, 35, 35.5, 36, 37, 37, 38, 39, 40, 41, 41, 42, 42, 42, 
+43, 43, 42, 41, 41, 40, 38, 36, 35, 34, 34, 35, 36, 36, 35, 35, 
+33, 33, 32, 31, 31, 30, 30, 29, 29, 29, 29, 29, 31, 31.5, 32, 
+31, 30, 31, 32, 33, 34, 34, 35, 36, 36, 37, 37, 38, 38, 38, 39, 
+39, 39, 39, 39, 39, 39, 38, 37, 37, 37, 37, 35, 33, 31, 31, 31, 
+30, 30, 30, 30, 30, 30, 30, 30, 29, 29, 28, 28, 27, 27, 26, 29, 
+29, 30, 31, 32, 32, 33, 33, 33, 34, 34, 35, 35, 37, 37, 37, 37, 
+37, 38, 38, 38, 38, 37, 37, 36, 35, 34.5, 34, 34, 33, 33, 32, 
+32, 32, 32, 32, 31, 31, 31, 31, 31, 31, 31, 30, 30, 29.5, 29, 
+29, 30, 30, 31, 32, 32, 33, 33.5, 34, 34, 34, 30.7, 27.3, 24, 
+24, 24, 24.7, 25.3, 26, 27, 28, 29, 29, 29, 28, 28, 27, 27, 26, 
+25, 25, 25, 24.5, 24, 24, 24, 24, 24, 24, 24, 24, 23, 23, 23, 
+23, 23, 23, 24, 24, 24, 25, 25, 26, 28, 29, 30, 31, 31, 32, 33, 
+34, 35, 35, 36, 37, 37, 37, 37, 37, 37, 37, 35, 34, 33, 33, 33, 
+32, 31.7, 31.3, 31, 31, 31, 31, 30, 30, 30, 30, 28, 28, 27, 27, 
+26, 26, 25, 25, 25, 25, 25, 26, 27, 28, 29.7, 31.3, 33, 34, 34, 
+35, 36, 37, 36, 36, 35, 35, 34, 32, 32, 33, 31.3, 29.7, 28, 28, 
+29, 29, 29, 29, 28, 27.5, 27, 26.5, 26, 26, 26, 26, 26, 26, 25, 
+25, 25, 25, 25, 24, 24, 23, 23, 23, 24.5, 26, 27, 28, 29, 30, 
+31, 32, 32, 32, 33, 34, 35, 36, 36, 36, 36, 36, 36, 36, 37, 37, 
+37, 36, 36, 34, 34, 33, 32, 32, 31, 31, 30, 28, 28, 28, 28, 27, 
+27, 27, 27, 27, 27, 27, 27, 26.5, 26, 26, 26, 26, 27, 28.8, 30.5, 
+32.2, 34, 34, 34, 35, 36, 37, 38, 38, 38, 39, 40, 39, 39, 39, 
+40, 40, 40, 39, 39, 38, 37, 35, 35, 34, 34, 34, 33, 32, 32, 32, 
+32, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 31, 32, 33, 34, 
+35, 37, 37, 37.3, 37.7, 38, 39, 40, 43, 43, 43, 44, 44, 43, 43, 
+43, 43, 43, 43, 42, 41, 40, 39, 38, 37, 36, 35, 35, 34, 34, 34, 
+34, 34, 33, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 33, 33, 34, 
+35, 36, 37, 38, 38, 40, 40.5, 41, 42, 42, 42, 42, 41, 40, 40, 
+39, 39, 37, 32, 27, 26, 26, 27, 28, 27, 27, 27, 26, 25, 25, 25, 
+25, 25, 25, 25, 25, 25, 25, 25, 24, 23, 23, 22.5, 22, 22, 23, 
+24, 25, 26.3, 27.7, 29, 30, 32, 33, 34, 36, 37, 37, 39, 40, 40.5, 
+41, 42, 42, 42, 43, 43, 42, 41.5, 41, 39, 38, 35, 35, 35, 34, 
+33, 33, 33, 33, 32, 32, 31, 31, 30, 30, 30, 29, 29, 28, 28, 28, 
+28.5, 29, 29, 29, 30, 32, 32, 34, 35, 37, 38, 39, 40, 41, 42, 
+42, 43, 44, 44, 44, 45, 45, 45, 44, 43, 43, 42, 40, 38.5, 37, 
+35, 35, 34, 34, 33, 34, 33, 33, 33, 33, 32, 32, 31, 32, 31, 30, 
+29, 29, 29, 29, 30, 30, 31, 32.7, 34.3, 36, 37, 38, 39, 40, 41, 
+41, 42, 42, 43, 44, 44, 44, 44, 44, 43.5, 43, 43, 42, 42, 40, 
+38, 38, 37, 36, 36, 36, 36, 35, 35, 34, 34, 34, 34, 32, 32, 31.5, 
+31, 31, 30, 30, 30, 30, 31, 33, 34, 35, 37, 38, 39, 40, 40, 42, 
+42, 43, 44, 44, 44, 44, 44, 44, 44, 44, 44, 44, 43, 42, 40, 40, 
+40, 39, 38, 38, 38, 37, 37, 36, 36, 35.5, 35, 34.5, 34, 33, 33, 
+32, 32, 31, 30, 30, 30, 31, 32, 33.5, 35, 36.5, 38, 38, 39, 40, 
+41, 41, 41, 42, 42, 42, 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, 
+42, 40.5, 39, 38, 38, 37, 37, 37, 36, 36, 36, 36, 36, 36, 36, 
+35, 35, 34, 34, 34, 32, 32, 31, 31, 33, 34, 35, 35, 36, 38, 39, 
+40, 41, 42, 42.5, 43, 43, 44, 44, 45, 45, 45, 45, 45, 45, 45, 
+44, 43.5, 43, 43, 42, 41, 40, 40, 39, 39, 38, 38, 37, 36, 36, 
+35, 34, 34, 34, 32, 32, 32, 32, 32, 32, 32, 34, 35, 35, 37, 38, 
+38, 39, 39, 40, 41, 42, 43, 44, 44, 44, 45, 45, 46, 46, 46, 45, 
+45, 45, 44, 42, 40, 38, 37, 37, 37, 37, 37, 36, 35), .Dim = c(1248L, 
+1L), .Dimnames = list(NULL, ""temperature""))
+</code></pre>
+
+<p>Forecasted temperature values are:</p>
+
+<pre><code>forecast_temp &lt;- structure(c(35, 34, 34, 33, 33, 30, 29.7, 29.3, 29, 28, 28, 27, 
+27.3, 27.7, 28, 29, 30.5, 32, 33.5, 35, 36, 36, 37, 39, 39.5, 
+40, 40, 41, 42, 42, 43, 43, 43, 44, 44, 44, 43, 42, 40, 39, 39, 
+38, 37, 37, 36, 35, 35, 34), .Dim = c(48L, 1L), .Dimnames = list(
+    NULL, ""temperature""))
+</code></pre>
+
+<h3><em>UPDATE-1</em></h3>
+
+<p>From @Stephan's suggestion, I followed the approach mentioned by Prof. Rob at <a href=""http://robjhyndman.com/hyndsight/dailydata/"" rel=""nofollow"">link1</a>, <a href=""http://robjhyndman.com/hyndsight/longseasonality/"" rel=""nofollow"">link2</a> as</p>
+
+<pre><code>library(forecast)
+tsob &lt;- ts(train_power,frequency = 48) #training electriciy data at daily frequency
+tsob_weekly &lt;- fourier(ts(train_power,frequency = 7*48),K=3) #training data at weekly frequency
+tempob &lt;- ts(train_temperature,frequency = 48) #Temperature, another predictor variable
+fit &lt;- auto.arima(tsob,xreg=cbind(tsob_weekly,tempob),seasonal=FALSE)
+tempob_forecast &lt;- ts(test_temperature,frequency = 48) #forecasted temperauture values
+forecast_val &lt;- forecast(fit,xreg=tempob_forecast,h=48*5) #forecast for coming 5 days
+</code></pre>
+
+<p>As evident from the code, I have used Fourier transformation suggested at above links to show weekly seasonal affect. Up to <code>auto.arima()</code>, it works properly but at forecast function an error is thrown as:</p>
+
+<pre><code>Error in forecast.Arima(fit, xreg = tempob_forecast, h = 48 * 5) : 
+  Number of regressors does not match fitted model
+</code></pre>
+
+<p>The error is clear, i.e., I do not provide the forecasted regressor values of <code>tsob_weekly</code>, which I don't have. How should I handle this issue? Prof. Rob has used the same value of regressor for both the <code>auto.arima</code> and <code>forecast</code> functions.</p>
+"
+"0.272165526975909","0.277350098112615","218525","<p>Let say that one wants to fit a model to a daily financial time series for prediction (e.g. ARIMA, SVM). If data are stationary, ideally the longer the time series, the better. In practice, I don't feel comfortable in blindly trusting stationarity tests (e.g. KPSS, ADF). For example, a 90% KPSS and ADF confirm that the following time series is stationary when it qualitatively doesn't seem to be homoscedastic.
+<a href=""http://i.stack.imgur.com/Qv8x2.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Qv8x2.png"" alt=""enter image description here""></a>
+Which quantitative methods exist to identify a reasonable starting date of the time series in terms of quality of the prediction (i.e. minimum test error, low variance of the prediction)? Please refer to R packages when possible.</p>
+
+<p>My attempts:</p>
+
+<p>(i) A brute force approach could consist in repeating the fitting for any length of the time series of interest (e.g. 1y, 1y+1d, ..., 5y). Anyway, this approach is too expensive.</p>
+
+<p>(ii) Perform stationarity tests (ADF, KPSS) to the time series of minimum allowed length and extend the length until the tests reject the stationarity. The problem of this approach are multiple:
+  (a) extremely dependent to the confidence of the test (e.g. 95% or 80%).
+  (b) stationarity tests are not able to identify change of regime that may occurs for long financial time series. </p>
+
+<p>Strictly related topic, but it doesn't provides automatic/quantitative procedures:
+<a href=""http://stats.stackexchange.com/questions/188868/length-of-time-series-for-forecasting-modeling"">Length of Time-Series for Forecasting Modeling</a></p>
+
+<p>EDIT (2/Jul/2016): After further thoughts, I think that an optimal approach could be to follow the principle ""the larger the dataset, the better"". After all, a model that is highly dependent on the length of the time series I guess that it could be considered a ""bad"" model. Rather than focusing on the selection of an optimal length, one could focus on the identification of features that are able to work well under different regimes of the time series.</p>
+"
+"0.248451997499977","0.202547873416733","232590","<p>I have a number of groups with monthly data from 2010 to 2016. It's over 80 groups. I succesfully ran an ARIMA model with the montly data but with the sales data summed up (without groups). </p>
+
+<p>Now I'd like to compare the performance with a per group model that runs an ARIMA model for each group and maybe later consider another type of grouping (geographical location, clustering, etc.)</p>
+
+<p>I ran my original model with the following code:</p>
+
+<pre><code>        Datos &lt;- read.csv(""C:/Users/borja.sanz/Desktop/Borja/Forecasting/V`enter code here`entas/Datos para Forecast.csv"")
+        options(scipen=999)
+        library(lubridate)
+        Datos$Fecha = dmy(Datos$Fecha)
+
+        #Declare time series
+        tsDatos&lt;-ts(Datos$VentaLocal,start = c(2010,1),frequency = 12)
+        plot(tsDatos)
+        library(forecast)
+        library(dplyr)
+
+        #AutoArima Model
+        m_aa = auto.arima(tsDatos)
+        f_aa = forecast(m_aa, h=36)
+        plot(f_aa)
+
+#Create the forecasts along with the lower and upper bound
+    forecast_df = data.frame(prediction=f_aa$mean,
+                             abajo=f_aa$lower[,2],
+                             arriba=f_aa$upper[,2],
+                             date=last_date + seq(1/12, 3, by=1/12))
+    forecast_df
+</code></pre>
+
+<p>This is how my data looks like:</p>
+
+<pre><code>       Group    Year    Month   Date    Sales
+1   2010    1   1/01/2010   134536.625
+1   2010    2   1/02/2010   117506.625
+1   2010    3   1/03/2010   132153.75
+1   2010    4   1/04/2010   129723.125
+1   2010    5   1/05/2010   135834.5
+1   2010    6   1/06/2010   130115.375
+1   2010    7   1/07/2010   144716
+1   2010    8   1/08/2010   137195
+1   2010    9   1/09/2010   137522.875
+1   2010    10  1/10/2010   187063
+1   2010    11  1/11/2010   162002.75
+1   2010    12  1/12/2010   262297.375
+1   2011    1   1/01/2011   177291.25
+1   2011    2   1/02/2011   154816
+1   2011    3   1/03/2011   171231.125
+1   2011    4   1/04/2011   217717
+1   2011    5   1/05/2011   178767.75
+1   2011    6   1/06/2011   180817.75
+1   2011    7   1/07/2011   216927.125
+1   2011    8   1/08/2011   204509.125
+1   2011    9   1/09/2011   199449.5
+1   2011    10  1/10/2011   243812.125
+1   2011    11  1/11/2011   232135.875
+1   2011    12  1/12/2011   330854.75
+1   2012    1   1/01/2012   217123.875
+1   2012    2   1/02/2012   200558
+1   2012    3   1/03/2012   215689.5
+1   2012    4   1/04/2012   245500.25
+1   2012    5   1/05/2012   219687.25
+1   2012    6   1/06/2012   243345.625
+1   2012    7   1/07/2012   249042
+1   2012    8   1/08/2012   198443.75
+1   2012    9   1/09/2012   209157.375
+1   2012    10  1/10/2012   234089
+1   2012    11  1/11/2012   237531
+1   2012    12  1/12/2012   365301.25
+1   2013    1   1/01/2013   211129.375
+1   2013    2   1/02/2013   185249.625
+1   2013    3   1/03/2013   256565.625
+1   2013    4   1/04/2013   183549.5
+1   2013    5   1/05/2013   189698.25
+1   2013    6   1/06/2013   207955.625
+1   2013    7   1/07/2013   230764.125
+1   2013    8   1/08/2013   212551.625
+1   2013    9   1/09/2013   201329.5
+1   2013    10  1/10/2013   242745.125
+1   2013    11  1/11/2013   261893.375
+1   2013    12  1/12/2013   418313.25
+1   2014    1   1/01/2014   205532.75
+1   2014    2   1/02/2014   170487.75
+1   2014    3   1/03/2014   196077
+1   2014    4   1/04/2014   221760.875
+1   2014    5   1/05/2014   198185
+1   2014    6   1/06/2014   204919.25
+1   2014    7   1/07/2014   218972.75
+1   2014    8   1/08/2014   221439.875
+1   2014    9   1/09/2014   195888.375
+1   2014    10  1/10/2014   234595.75
+1   2014    11  1/11/2014   259712.875
+1   2014    12  1/12/2014   355691.875
+1   2015    1   1/01/2015   205156.25
+1   2015    2   1/02/2015   185358.875
+1   2015    3   1/03/2015   218555.75
+1   2015    4   1/04/2015   204233.625
+1   2015    5   1/05/2015   212160.625
+1   2015    6   1/06/2015   207217.25
+1   2015    7   1/07/2015   225723.75
+1   2015    8   1/08/2015   205902.625
+1   2015    9   1/09/2015   196940.625
+1   2015    10  1/10/2015   250916
+1   2015    11  1/11/2015   236835.125
+1   2015    12  1/12/2015   358327.625
+2   2010    1   1/01/2010   227175.875
+2   2010    2   1/02/2010   205042
+2   2010    3   1/03/2010   239206.375
+2   2010    4   1/04/2010   212059.875
+2   2010    5   1/05/2010   232789
+2   2010    6   1/06/2010   247876.125
+2   2010    7   1/07/2010   278557
+2   2010    8   1/08/2010   270410.125
+2   2010    9   1/09/2010   251060.375
+2   2010    10  1/10/2010   302738.625
+2   2010    11  1/11/2010   266869.75
+2   2010    12  1/12/2010   272978.75
+2   2011    1   1/01/2011   238614.5
+2   2011    2   1/02/2011   224240.375
+2   2011    3   1/03/2011   245457.375
+2   2011    4   1/04/2011   238583.5
+2   2011    5   1/05/2011   252392.75
+2   2011    6   1/06/2011   256749.5
+2   2011    7   1/07/2011   264736.125
+2   2011    8   1/08/2011   256414
+2   2011    9   1/09/2011   242335.125
+2   2011    10  1/10/2011   305224.75
+2   2011    11  1/11/2011   289199.875
+2   2011    12  1/12/2011   281807.75
+2   2012    1   1/01/2012   244886.125
+2   2012    2   1/02/2012   232062.375
+2   2012    3   1/03/2012   264991.75
+2   2012    4   1/04/2012   232750.5
+2   2012    5   1/05/2012   248498.375
+2   2012    6   1/06/2012   264290.875
+2   2012    7   1/07/2012   272689.75
+2   2012    8   1/08/2012   260441.25
+2   2012    9   1/09/2012   251852.375
+2   2012    10  1/10/2012   305929.625
+2   2012    11  1/11/2012   276711.625
+2   2012    12  1/12/2012   278672.875
+2   2013    1   1/01/2013   242613.875
+2   2013    2   1/02/2013   227575.75
+2   2013    3   1/03/2013   250318.875
+2   2013    4   1/04/2013   250150.375
+2   2013    5   1/05/2013   258467.25
+2   2013    6   1/06/2013   261359.25
+2   2013    7   1/07/2013   279113.75
+2   2013    8   1/08/2013   258699
+2   2013    9   1/09/2013   244841.375
+2   2013    10  1/10/2013   308197.25
+2   2013    11  1/11/2013   284195.5
+2   2013    12  1/12/2013   287718.75
+2   2014    1   1/01/2014   239510.375
+2   2014    2   1/02/2014   216338.125
+2   2014    3   1/03/2014   245626.75
+2   2014    4   1/04/2014   230619.875
+2   2014    5   1/05/2014   251758.875
+2   2014    6   1/06/2014   254946.75
+2   2014    7   1/07/2014   276268.75
+2   2014    8   1/08/2014   266151.75
+2   2014    9   1/09/2014   245859.375
+2   2014    10  1/10/2014   317797.5
+2   2014    11  1/11/2014   283786.625
+2   2014    12  1/12/2014   289767.875
+2   2015    1   1/01/2015   244008
+2   2015    2   1/02/2015   228638
+2   2015    3   1/03/2015   260056
+2   2015    4   1/04/2015   232560.875
+2   2015    5   1/05/2015   252642.125
+2   2015    6   1/06/2015   249018.5
+2   2015    7   1/07/2015   278113.125
+2   2015    8   1/08/2015   255851
+2   2015    9   1/09/2015   263046.625
+2   2015    10  1/10/2015   344240.75
+2   2015    11  1/11/2015   295486.125
+2   2015    12  1/12/2015   293499.375
+</code></pre>
+
+<p>I only included two groups in the sample. I would like to use a function like one of the apply (tapply, lapply, sapply, etc.) that can run an AUTO.ARIMA model per group. Then I would like to obtain the forecast for each group for x number of months and also if I could visualize the model coefficients.</p>
+"
+"0.157134840263677","0.160128153805087","235422","<p>I am migrating from Weka+Pentaho forecasting and I am trying to get a regression model working in R.</p>
+
+<p>As for my data, it is a time series of network utilization (second column).  How to make sure that I make use of timestamp?</p>
+
+<p>I know that discretization becomes inconsistent at one point but this should not be related to the problem. In Weka I realigned discretization to appear linear. Need to fix this in R if this will cause issues.</p>
+
+<p>Here is two samples from a set of 22k+ records sitting in a list of two columns:</p>
+
+<p><code>2015-12-21 04:11:56          87
+ 2015-12-21 04:16:56          82
+ 2015-12-21 04:21:56          76
+ 2015-12-21 04:26:56          88
+ 2015-12-21 04:31:56          83</code></p>
+
+<p><code>21999 2016-03-03 23:03:16          59
+22000 2016-03-03 23:08:16          51
+22001 2016-03-03 23:13:16          58
+22002 2016-03-03 23:18:16          42
+22003 2016-03-03 23:23:16          56
+22004 2016-03-03 23:28:16          53
+22005 2016-03-03 23:33:16          61</code>
+I suspect I may confuse dimensions here... </p>
+
+<p>I succeeded with SVM and KNN models in Weka, So far, neither is working in R. Below is my attempt to predict with KKNN library which fails.</p>
+
+<p><code>library(kknn)
+ fit = train.kknn(utilization~., d)
+ predict(fit)
+</code></p>
+
+<p>The snippet above fails with the following message:
+<code>Error: C stack usage  7969804 is too close to the limit</code></p>
+
+<p>I need some guidelines on R pipeline to get at least a rough model and produce a prediction of N points, and calculate prediction performance metrics.</p>
+"

@@ -1,0 +1,124 @@
+"V1","V2","V3","V4"
+"1","1","175585","<p>I am trying to help a co-worker out with analysis. Currently he has normalized the dependent variable in his regression formula by another variable - in this case he has normalized brain region volume by intracranial volume (this is a normal thing to do in imaging analysis, but I'm pretty sure it can apply to other realms of research outside of brain imaging). However, he has also included this normalizing variable (ICV here) as an independent variable in the regression formula. While I can find papers looking at whether regressing out ICV or normalizing by it are better for your particular question, I can not clearly find anything that explains why you can't do both. I am pretty sure you can't, but I am unable find a good explanation as to why. I would appreciate any help on this!</p>
+
+<p>To be clear, the current formula can be approximated as:</p>
+
+<p><code>lm(Region.Volume/ICV ~ ICV + Gender + Age)</code></p>
+"
+"NaN","NaN","52860","<p>Attempting to do loess on two variables <code>x</code> and <code>y</code> in R using MA normalization(see <a href=""http://en.wikipedia.org/wiki/MA_plot"" rel=""nofollow"">MA-plot</a>; see also <a href=""http://en.wikipedia.org/wiki/Tukey_mean-difference_plot"" rel=""nofollow"">Bland-Altman or Tukey mean-difference plot</a>) like this:</p>
+
+<pre><code>&gt; x = rnorm(100) + 5
+&gt; y = x + 0.6 + rnorm(100)*0.8
+&gt; m = log(x/y)
+&gt; a = 0.5*log(x*y)
+</code></pre>
+
+<p>I want to normalize x and y in such a way that the average <code>m</code> is 0, as in standard MA normalization, and then back-calculate the correct x and y values. First running loess on MA:</p>
+
+<pre><code>&gt; l = loess(m ~ a)
+</code></pre>
+
+<p>What is the way to get corrected <code>m</code> values then? Is this correct?</p>
+
+<pre><code>&gt; mc &lt;- predict(l, a)
+# original MA plot
+&gt; plot(a,m)
+# corrected MA plot
+&gt; plot(a,m-mc)
+</code></pre>
+
+<p>not clear to me what <code>predict</code> actually does in the case of <code>loess</code> objects and how it's different from using <code>l$residuals</code> in the object <code>l</code> returned by <code>loess</code> - can someone explain?
+finally, how can I back calculate new <code>x</code> and <code>y</code> values based on this correction?</p>
+
+<p>Attempt to back-calculate <code>x</code> and <code>y</code>: the corrected <code>m</code> is, </p>
+
+<pre><code>new_m = m - mc
+</code></pre>
+
+<p>so <code>x,y</code> can be derived from the definition of <code>m</code>:</p>
+
+<pre><code>m = log(x/y) = log(x) - log(y)
+</code></pre>
+
+<p>therefore,</p>
+
+<pre><code>x = exp(new_m + log(y))
+y = exp(-1*(new_m - log(x)))
+</code></pre>
+
+<p>but this is wrong; there's a missing scaling factor of a half and I'd like to see a derivation of where that comes from. Probably from the definition of <code>A</code> but I don't see why I can't get the same be rewriting <code>x,y</code> in terms of <code>A</code></p>
+
+<p><strong>edit</strong> if someone can explain where the half correction factor comes in when back calculating <code>x</code> -- i.e. why the formula <code>x = exp(new_m + log(y))</code> is wrong -- i'd appreciate it.  </p>
+"
+"NaN","NaN","208367","<p>I'm intended to run a linear regression model (Rain~dBZ) for my data set.</p>"
+"NaN","NaN","<p>I would like to know how to transform non-normal set of Rain column in to a normal distribution.</p>",""
+"NaN","NaN","<p>I would really appreciate it to have your kindly assistant.</p>",""
+"NaN","NaN","<p>I attach the data-set in the following link:</p>",""
+"NaN","NaN","<p><a href=https://drive.google.com/file/d/0B7aMnS118Vltd19UdThrNVVVcDg/view?usp=sharing rel=nofollow>https://drive.google.com/file/d/0B7aMnS118Vltd19UdThrNVVVcDg/view?usp=sharing</a></p>",""
+"NaN","NaN","","<r><regression><normal-distribution><normalization>"
+"0.707106781186547","0.707106781186547","175263","<p>[<a href=""https://www.biostars.org/p/160147/"" rel=""nofollow"">Cross posted from Biostars forum by same author</a>]</p>
+
+<p>I am trying to compare RNA-seq read counts from normal tissue samples from GTEx to tissue-level matched TCGA tumor samples. Since TCGA has also a few normals, I am trying to merge those adjacent tissue normals (for solid tumors) with matched tissue from GTEx. While merging normals from GTEx with TCGA normals, I want to remove batch effects (? library preparation, protocol and sequencing platform between GTEx and TCGA, assuming intra-group variation is minimal)and make GTEx samples serve as normals for matching TCGA tumor types.</p>
+
+<p>For breast cancer set, I have taken read count level data for total of 72 normals (6 from TCGA BRCA, remaining GTEx) and 100 BRCA tumor samples, ran DESeq2 as per <a href=""http://www.bioconductor.org/help/workflows/rnaseqGene/#construct"" rel=""nofollow"">http://www.bioconductor.org/help/workflows/rnaseqGene/#construct</a> In brief,</p>
+
+<ol>
+<li><p>merge count level data from GTEx and TCGA, keep only matching genes (gencode v19) in both sets.</p></li>
+<li><p>sample info has <code>group</code> factor with two levels: gtex (66) and pcawg (106) and <code>sample_type</code> factor with two levels: normal (72) and tumor (100).</p></li>
+<li><p>My DESeqDataset is like this.</p>
+
+<pre><code>dds &lt;- DESeqDataSetFromMatrix(countData = pcawg_data,
+               colData = pcawg_id,
+               design = ~ group + sample_type)
+
+dds
+nrow(dds)
+
+dds &lt;- dds[ rowSums(counts(dds)) &gt; 1, ]
+nrow(dds)
+
+rld &lt;- rlog(dds, blind = FALSE, fast = TRUE)
+head(assay(rld), 3)
+
+dds &lt;- DESeq(dds, parallel = T)
+</code></pre></li>
+<li><p>PCA plot following rlog transform were not able fix batch effect and TCGA normals are far distant from GTEx normals.</p></li>
+</ol>
+
+<p><img src=""https://dl.dropboxusercontent.com/u/7271943/cms87y2q!jdwjd/batch_effect_mds_brca.png"" alt=""PCA plot"" title=""PCA Plot""></p>
+
+<ol start=""5"">
+<li><p>I also tried correcting batch effect using surrogate variable analysis package, SVA but no luck.</p>
+
+<pre><code>mod &lt;- model.matrix(~ sample_type, colData(dds))
+mod0 &lt;- model.matrix(~ 1, colData(dds))
+svseq &lt;- svaseq(dat, mod, mod0, n.sv=2)
+</code></pre></li>
+</ol>
+
+<p><img src=""https://dl.dropboxusercontent.com/u/7271943/cms87y2q!jdwjd/sva_analysis_brca.png"" alt=""Surrogate Variables"" title=""Surrogate Variables""></p>
+
+<p>This is true for a few other tumor types too.</p>
+
+<p><img src=""https://dl.dropboxusercontent.com/u/7271943/cms87y2q!jdwjd/batch_effect_five_tumors.png"" alt=""PCA plots""></p>
+
+<p>I have read few of recently published best practices for RNA-seq normalization and will run RUVSeq for fpkm level data. However, this seems challenging to me given normal samples originating from two different studies and no common samples in between. Good to get comments from experts here and get optimal normalization approach, if any for these datasets.</p>
+
+<p>Thanks,</p>
+
+<p>Samir</p>
+"
+"1","1","178974","<p>I have a dataset with 100 predictor variables (95 continuous, and 5 categorical) and 1 target variable (continuous). After plotting the density plots of the continuous predictor variables, they are all normally distributed. </p>
+
+<p>My goal is to build a linear regression model, as a start, and use the 100 predictor variables to predict the target variable. </p>
+
+<ol>
+<li>How do I know if I need to ""normalize"" my data (the predictor variables that are continuous)?</li>
+<li>If I determine that I need to normalize my predictor variables, do I also need to normalize my target variable? </li>
+<li>How do I determine which method of normalization is appropriate? Is this a local (per variable) decision or global (one normalization approach for all variables)? </li>
+</ol>
+
+<p>I am using R, if there are any packages that can help, please let me know. </p>
+
+<p>I am not sure if I should make the decision to normalize values before or after the regression model is built. For example, I could forgo data normalization, build the model, and cross-validate it, and if I don't like the results, repeat the process by tinkering with data normalization. To me, this approach would seem like fudging the process until I get a reasonable result. </p>
+"

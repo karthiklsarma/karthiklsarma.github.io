@@ -1,0 +1,176 @@
+"V1","V2","V3","V4"
+"0.353553390593274","0.353553390593274"," 41247","<p>I am interested in how uncertainty can be accounted for when considering the risk of extinction of a species. Forgive me for extending a rather tired thought experiment, but at least it's familiar territory and I hope it illustrates what I am trying to understand.</p>
+
+<p>Let's say that SchrÃ¶dinger was not satisfied with killing and not killing only one cat, so he went out and collected the last 15 remaining Himalayan Snow-Cats. He put each one in a box with a vial of poison, hammer, and a trigger device for releasing the hammer. Each trigger device has a known probability of releasing the hammer within any given hour, and the poison will take 5 hours to kill a cat (things got a bit trippy when he used radioactive decay, so this time he steers clear of quantum mechanics). After one hour, SchrÃ¶dinger receives a notice from the ethics board telling him he's nuts and ordering him to release the cats immediately. He pushes a button which opens a cat-flap at the back of each box, thus releasing them all back into the wild. By the time the humane society check the boxes, all the cats have bolted. Before anyone can restrain him, SchrÃ¶dinger detonates the remaining triggers, so nobody knows how many of the cats were poisoned.</p>
+
+<p>The probability that each of the cats is poisoned is as follows:</p>
+
+<ol>
+<li>0.17</li>
+<li>0.46</li>
+<li>0.62</li>
+<li>0.08</li>
+<li>0.40</li>
+<li>0.76</li>
+<li>0.03</li>
+<li>0.47</li>
+<li>0.53</li>
+<li>0.32</li>
+<li>0.21</li>
+<li>0.85</li>
+<li>0.31</li>
+<li>0.38</li>
+<li>0.69</li>
+</ol>
+
+<p>After 5 hours have elapsed and all poisoned cats have died, what is the probability that there are:</p>
+
+<ul>
+<li>(A) More than 10 Himalayan Snow-Cats still alive </li>
+<li>(B) 10 or less still alive</li>
+<li>(C) 5 or less still alive</li>
+<li>(D) 2 or less still alive</li>
+</ul>
+"
+"0.707106781186547","0.707106781186547"," 49408","<p>I'd like to plot the probability distribution for a set of binomial trials in R, the catch is that each trial has an independent probability of success (which I have in vector form).</p>
+
+<p>So, in R if I were doing this with coin tosses: <code>plot(x,dbinom(x,10,.5))</code> would work, where <code>x</code> is <code>0:10</code>. This shows the probability distribution by plotting number of successful trials on the x-axis with percent of the time that specific results is achieved as the <code>y</code> (4 successes is 20.5%).</p>
+
+<p>That said, how do I plot the same graph for 10 discrete trials with varying probabilities. For instance if <code>odds&lt;-c(.1,.8,.2,.2,.3,.7,.9,.99,.05,.5)</code>, was the probability of success for each independent toss, and I wanted to see a probability distribution?</p>
+"
+"NaN","NaN","125477","<p>This question was given in class and I was wondering how to do this in R:</p>
+
+<p><em>""Sixty percent of a large lot of old spark plugs are still usable, and they can be individually tested to determine this. Let Y be the number plugs to be tested in order to find 5 usable items.""</em></p>
+
+<pre><code>Find the probability P[Y&lt;=10]
+</code></pre>
+
+<p>I wish to apply the Negative Binomial distribution. I know the answer to be 0.834. This is the R code that I was working on. This returns the wrong answer.</p>
+
+<pre><code>sum(dnbinom(x=0:10,size=10,prob=0.6))
+[1] 0.8724788
+</code></pre>
+
+<p>This set of parameters seem to return the correct answer, but I don't know why it is correct.</p>
+
+<pre><code>sum(dnbinom(x=0:5,size=5,prob=0.6))
+[1] 0.8337614
+</code></pre>
+"
+"NaN","NaN","139769","<p>I ran the following R code: </p>
+
+<pre><code>library(Hmisc)
+binconf(x=1, n=70)
+#   PointEst         Lower      Upper
+# 0.01428571  0.0007327613 0.07658187
+</code></pre>
+
+<p>Which is the confidence interval with 95% confidence.</p>
+
+<p>But when I try to find the probability:</p>
+
+<pre><code>pbinom(0.07658187*70, 70, 1/70)-pbinom(0.0007327613*70, 70, 1/70))
+# [1] 0.634254
+</code></pre>
+
+<p>It gives <code>0.63</code>; that is, 63%.  Why is this so far from 95%?</p>
+"
+"0.666666666666667","0.666666666666667","130264","<p>We conducted a study to predict deleterious mutations from a list of around 5000 mutations (which contains both neutral and deleterious mutations; the real state of each mutation is unknown), using four publicly available SNP classifiers (prediction tools) e.g. Classifier_1, Classifier_2, Classifier_3 and Classifier_4.   </p>
+
+<p>Let's say, 
+       Classifier_1 predicted 100 mutations as deleterious (i.e. remaining 4900 mutations as neutral) from the given 5000 mutations;  classifier_2 predicted 80 SNPs as deleterious (i.e. remaining 4920 mutations as neutral) from the given 5000 mutations; classifier_3 predicted 75 SNPs as deleterious (i.e. remaining 4925 mutations as neutral) from the given 5000 mutations, and classifier_4 predicted 95 SNPs as deleterious (i.e. remaining 4905 mutations as neutral) from the given 5000 mutations. </p>
+
+<p>Then we calculated the prediction of deleterious SNPs from a combination of any two tools (e.g. deleterious SNPs from: classifier_1 &amp; classifier_2), any three tools (e.g. deleterious SNPs from: classifier_1 &amp; classifier_2 &amp; classifier_3), and a combination of all four tools (e.g. deleterious SNPs from: classifier_1 &amp; classifier_2 &amp; classifier_3 &amp; classifier_4). Predicted deleterious SNPs from these combinations are:</p>
+
+<pre><code>   classifier_1 = 100 deleterious SNPs,
+   classifier_2 = 80 deleterious SNPs,
+   classifier_3 = 75 deleterious SNPs,
+   classifier_4 = 95 deleterious SNPs,
+   classifier_1&amp;2 = 44 deleterious SNPs,
+   classifier_1&amp;3 = 27 deleterious SNPs,
+   classifier_1&amp;4 = 32 deleterious SNPs,
+   classifier_2&amp;3 = 38 deleterious SNPs,
+   classifier_2&amp;4 = 32 deleterious SNPs,
+   classifier_3&amp;4 = 20 deleterious SNPs,
+   classifier_1&amp;2&amp;3 = 18 deleterious SNPs,
+   classifier_1&amp;2&amp;4 = 17 deleterious SNPs,
+   classifier_1&amp;3&amp;4 = 11 deleterious SNPs,
+   classifier_2&amp;3&amp;4 = 13 deleterious SNPs,
+   classifier_1&amp;2&amp;3&amp;4 = 10 deleterious SNPs.
+</code></pre>
+
+<p>Under this scenario, we want to calculate the probability of selecting these deleterious SNPs, in each level of prioritization (i.e. using one tool, a combination of two tools, a combination of three tools, and a combination of all four tools), simply by chance. </p>
+
+<p>This analysis will assist us in inferring whether our prioritization scheme (i.e. application of one prediction tool, a combination of two tools, a combination of three tools, and a combination of all four tools) is effective or not.  </p>
+
+<p>We tried pbinom(x, n, p) and binom.test(x, n, p) where x = number of predicted deleterious SNPs e.g. 100 SNPs by classifier_1, n = total number of SNPs considered e.g. 5000, and p = 0.5 (i.e. random guessing); but not sure whether it is correct or not, and how to address all the situations.  </p>
+
+<blockquote>
+  <p>##Example: </p>
+</blockquote>
+
+<pre><code> Classifier_1 = binom.test(c(100, 4900), p = 0.5)
+   Classifier_1     
+   Exact binomial test
+
+   data:  c(100, 4900)
+   number of successes = 100, number of trials = 5000, p-value &lt; 2.2e-16
+   alternative hypothesis: true probability of success is not equal to 0.5
+   95 percent confidence interval:
+     0.01630168 0.02427257
+   sample estimates:
+   probability of success 
+         0.02 
+
+  Classifier_1 = pbinom(100, 5000, p = 0.5)
+  Classifier_1
+  [1] 0
+</code></pre>
+
+<p>I will really appreciate, if you guide me - how to calculate the probability of selecting these SNPs (from each tools, and a combination of all) simply by chance (i.e. prediction scheme is not effective).</p>
+
+<p>Thank you all for your kind help .</p>
+"
+"0.5","0.5"," 41885","<p>I am trying to generate binomial probabilities (in R) as follows:</p>
+
+<p>${N \choose{k}} p^{k} (1-p)^{(n-k)}$</p>
+
+<p>My problem is given $p \approx 0.03$, and $N =400$, $k&gt;270$, I get the probability equal to $0$. I am actually evauating all the $k$'s up to $n$, so a high $n$ returns a probability matrix that has $0$'s for $k &gt;270$. </p>
+
+<p>I was wondering if there is a function in R / or an approximation (binomial or normal) that you would recommend in this case? </p>
+
+<h2>Edit</h2>
+
+<p>I ve tried dbinom function in R as well - <code>dbinom(400,280,0.03) = 0</code>. So that does not help.. What I am after is a non-zero approximation..</p>
+"
+"0.5","0.5"," 44271","<p>I have an infinite population with unknown mean of successes and failures. I'm drawing 400 times from the population and get 400 successes. Now I want to generate random estimates for the true mean of the population from which I have drawn the 400 successes. Can anyone tell me which probability distribution I have to use, respectively how the function to use in R would look like?</p>
+
+<p>I thought that</p>
+
+<pre><code>rbeta(1,400+1,400-400+1)
+</code></pre>
+
+<p>might be the right function, but even if I perform this one 10 000 000 times I never get the result 1 (and the same accounts for <code>rbeta(10000000,0+1,400-0+1)</code> and the result 0). So I ask myself why isn't it possible to have a population which consists only of successes or only of failures? </p>
+
+<p>Many thanks in advance!</p>
+"
+"0.707106781186547","0.707106781186547","154637","<p>I'm reading this book (Implementation: How Great Expectations in Washington Are Dashed in Oakland. 1973) and they discuss how hard it is to gain agreement of actors.  </p>
+
+<p>They set up a conceptual problem to illustrate this.  </p>
+
+<p>Assume that in any chain of decisions, the contracting parties have an 80% probability of reaching an agreement to proceed. Now assume that there are 70 separate agreements that much be reached.  What is the probability that all 70 agreements will be successful.  </p>
+
+<p>They report that with an 80% probability of agreement, the probability of success after 70 agreements is 0.000000125 and that the number of agreements that reduce the probability to below 50 percent is 4.  </p>
+
+<p>The thing is: they do not really explain how they arrive at these probabilities.  So, that's why I'm turning to you.</p>
+
+<p>It seems like what is going on here is an exercise in the binomial distribution.  Given an 80% probability of a successful trial, what is the probability that 70 trials will return all successes? </p>
+
+<p>To put this in the language of coin tosses: If we assume a coin has a probability of turning up heads of 80%, and we flip the coin 70 times, what is the probability that you would get heads 70 straight times?</p>
+
+<p>Have I got this right?</p>
+
+<p>Thanks for any insight. Thanks, Simon </p>
+
+<p>I hope I've explained myself</p>
+"

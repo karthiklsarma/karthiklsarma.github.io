@@ -1,0 +1,529 @@
+"V1","V2","V3","V4"
+"0.162221421130763","0.288675134594813"," 79399","<p>I have run a multiple regression in which the model as a whole is significant and explains about 13% of the variance. However, I need to find the amount of variance explained by each significant predictor. How can I do this using R?</p>
+
+<p>Here's some sample data and code:</p>
+
+<pre><code>D = data.frame(
+    dv = c( 0.75, 1.00, 1.00, 0.75, 0.50, 0.75, 1.00, 1.00, 0.75, 0.50 ),
+    iv1 = c( 0.75, 1.00, 1.00, 0.75, 0.75, 1.00, 0.50, 0.50, 0.75, 0.25 ),
+    iv2 = c( 0.882, 0.867, 0.900, 0.333, 0.875, 0.500, 0.882, 0.875, 0.778, 0.867 ),
+    iv3 = c( 1.000, 0.067, 1.000, 0.933, 0.875, 0.500, 0.588, 0.875, 1.000, 0.467 ),
+    iv4 = c( 0.889, 1.000, 0.905, 0.938, 0.833, 0.882, 0.444, 0.588, 0.895, 0.812 ),
+    iv5 = c( 18, 16, 21, 16, 18, 17, 18, 17, 19, 16 ) )
+fit = lm( dv ~ iv1 + iv2 + iv3 + iv4 + iv5, data=D )
+summary( fit )
+</code></pre>
+
+<p>Here's the output with my actual data:</p>
+
+<pre><code>Call: lm(formula = posttestScore ~ pretestScore + probCategorySame + 
+    probDataRelated + practiceAccuracy + practiceNumTrials, data = D)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.6881 -0.1185  0.0516  0.1359  0.3690 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)
+ (Intercept)        0.77364    0.10603    7.30  8.5e-13 ***
+ iv1                0.29267    0.03091    9.47  &lt; 2e-16 ***
+ iv2                0.06354    0.02456    2.59   0.0099 **
+ iv3                0.00553    0.02637    0.21   0.8340
+ iv4               -0.02642    0.06505   -0.41   0.6847
+ iv5               -0.00941    0.00501   -1.88   0.0607 .  
+--- Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 0.18 on 665 degrees of freedom
+ Multiple R-squared:  0.13,      Adjusted R-squared:  0.123
+ F-statistic: 19.8 on 5 and 665 DF,  p-value: &lt;2e-16
+</code></pre>
+
+<p>This question has been answered <a href=""http://stats.stackexchange.com/questions/60872/how-to-split-r-squared-between-predictor-variables-in-multiple-regression"">here</a>, but the accepted answer only addresses uncorrelated predictors, and while there is an additional response that addresses correlated predictors, it only provides a general hint, not a specific solution. I would like to know what to do if my predictors are correlated.</p>
+"
+"NaN","NaN","205227","<p>I'm a little new to R and I haven't done stats in a while. I know a one way ANOVA is the same as a linear regression, but is there a difference between a two way ANOVA and a linear regression with two covariates? And if they are different I'm not sure which one I performed. Below is my sample code:</p>
+
+<pre><code>data.frame[[""Acute""]] = factor(data.frame[[""Acute""]])
+data.frame[[""Frequency""]] = factor(data.frame[[""Frequency""]])
+DishMortalityVsTime.Total.Acute.Freq = aov(Dish.Mortality ~ Time * Acute * Frequency, data=data.frame)
+summary(DishMortalityVsTime.Total.Acute.Freq)
+</code></pre>
+
+<p>and the output</p>
+
+<pre><code>                      Df Sum Sq Mean Sq F value               Pr(&gt;F)    
+Days                   1  1.352  1.3524  65.189  0.00000000000000429 ***
+Acute                  2  5.885  2.9423 141.822 &lt; 0.0000000000000002 ***
+Frequency              3  0.539  0.1795   8.653  0.00001279126504853 ***
+Days:Acute             2  1.672  0.8361  40.302 &lt; 0.0000000000000002 ***
+Days:Frequency         3  0.050  0.0165   0.796                0.496    
+Acute:Frequency        6  0.787  0.1311   6.320  0.00000192315201011 ***
+Days:Acute:Frequency   6  0.038  0.0064   0.309                0.932    
+Residuals            552 11.452  0.0207 
+</code></pre>
+
+<p>Any help would be appreciated, Thanks!</p>
+"
+"0.324442842261525","0.288675134594813"," 82277","<h3>Background</h3>
+
+<p>I have a data set of patients who were operated on at two different hospitals, A and B. Lymph nodes were removed from each patient during the operation and counted, this is saved as <code>LN_reviewed</code> for each patient. I want to know how much variability there is in the lymph node number that is <strong>not</strong> accounted for by gender, the year of the operation, or the age of the patient when operated on. My assumption (hypothesis) is that any additional variability is likely due to the pathologist at the institution (this was not actually measured in my study).</p>
+
+<h3>My question</h3>
+
+<p>What is the best way to go about estimating the variability in lymph node number that is not accounted for by gender (a factor), year (a continuous variable), or age (a continuous variable)?</p>
+
+<h3>My initial attempt at answering this question</h3>
+
+<p>I built a linear regression model using the number of lymph nodes as the response variable and the gender, operation year, and operation age as predictors. I am not sure how to interpret the results to answer my specific question. Should I be looking at the R squared? If so, is there a way to get a confidence interval for it? Thanks to anyone who can help. If you think I am going about this the wrong way, please let me know.</p>
+
+<pre><code>Call:
+lm(formula = LN_reviewed ~ Gender + Operation__year + Operation__age, data = sample_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-49.436 -15.280  -0.495  13.450  61.564 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)     -1.190e+04  1.459e+03  -8.159 9.95e-14 ***
+GenderMALE      -5.542e+00  4.685e+00  -1.183    0.239    
+Operation__year  5.980e+00  7.296e-01   8.196 8.01e-14 ***
+Operation__age  -2.524e-01  1.675e-01  -1.507    0.134    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 22.46 on 158 degrees of freedom
+Multiple R-squared:  0.2999,    Adjusted R-squared:  0.2866 
+F-statistic: 22.56 on 3 and 158 DF,  p-value: 3.268e-12
+</code></pre>
+"
+"0.397359707119513","0.353553390593274","228238","<p>I'm having a strange problem running a meta-regression using the function <code>rma.mv()</code> in the 'metafor' package in R.</p>
+
+<p>Since some of my data are from multiple-endpoint studies, I have calculated the variance-covariance matrix so that correlations between outcomes are taken into account. I'm also using random effects at study and treatment level. As far as I'm aware, I have now covered all issues with regard to dependent effect sizes.</p>
+
+<p>The model looks like this:</p>
+
+<pre><code>cov_mod &lt;- rma.mv(Hedges_g, cov, mods = ~ days, random = ~ treatment | study, data = rev)
+</code></pre>
+
+<p>When running the code, it gives this error message:</p>
+
+<pre><code>Error in rma.mv(Hedges_g, cov9, mods = ~days, random = ~1 | treatment/study,  : 
+  Error during optimization.
+In addition: Warning message:
+In rma.mv(Hedges_g, cov9, mods = ~days, random = ~1 | treatment/study,  :
+  V appears to be not positive definite.
+</code></pre>
+
+<p>I have discovered that the problem lies with one particular study (9 effect sizes in total, coming from 3 treatment groups that were each tested at 3 moments in time). When I remove this study from the data set, the code runs without problem.</p>
+
+<p>Thus, apparently this particular study causes the matrix to be 'not positive definite'. I have read that this likely means that ""at least one of [the] variables can be expressed as a linear combination of the others"" (<a href=""http://stats.stackexchange.com/questions/30465/what-does-a-non-positive-definite-covariance-matrix-tell-me-about-my-data"">source</a>).</p>
+
+<p>However, here comes the strange thing: I have replaced all values in the variance-covariance matrix relating to this particular study with random numbers between 0-1 (maintaining the symmetry), and the error message remains unchanged. I am puzzled, because the matrix can no longer be linearly predictable if it contains random numbers.</p>
+
+<p>What could be the issue?</p>
+"
+"0.307793505625546","0.456435464587638"," 60872","<p>I have just read a paper in which the authors carried out a multiple regression with two predictors. The overall r-squared value was 0.65. They provided a table which split the r-squared between the two predictors. The table looked like this:</p>
+
+<pre><code>            rsquared beta    df pvalue
+whole model     0.65   NA  2, 9  0.008
+predictor 1     0.38 1.01 1, 10  0.002
+predictor 2     0.27 0.65 1, 10  0.030
+</code></pre>
+
+<p>In this model, ran in <code>R</code> using the <code>mtcars</code> dataset, the overall r-squared value is 0.76.</p>
+
+<pre><code>summary(lm(mpg ~ drat + wt, mtcars))
+
+Call:
+lm(formula = mpg ~ drat + wt, data = mtcars)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-5.4159 -2.0452  0.0136  1.7704  6.7466 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   30.290      7.318   4.139 0.000274 ***
+drat           1.442      1.459   0.989 0.330854    
+wt            -4.783      0.797  -6.001 1.59e-06 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 3.047 on 29 degrees of freedom
+Multiple R-squared:  0.7609,    Adjusted R-squared:  0.7444 
+F-statistic: 46.14 on 2 and 29 DF,  p-value: 9.761e-10
+</code></pre>
+
+<p>How can I split the r-squared value between the two predictor variables?</p>
+"
+"0.486664263392288","0.577350269189626","158366","<p>I'm trying to fit a multiple regression model with pairwise deletion in the context of missing data.  <code>lm()</code> uses listwise deletion, which I'd prefer not to use in my case.  I'd also prefer not to use multiple imputation or FIML.  How can I do multiple regression with pairwise deletion in R?</p>
+
+<p>I have tried the <code>mat.regress()</code> function of the <code>psych</code> package, which fits regression models to correlation/covariance matrices (which can be obtained from pairwise deletion), but the regression model does not appear to include an intercept parameter.</p>
+
+<p>Here's what I've tried (small example):</p>
+
+<pre><code>set.seed(33333)
+y &lt;- rnorm(1000)
+x1 &lt;- y*2 + rnorm(1000, sd=.2)
+x2 &lt;- y*5 + rnorm(1000, sd=.5)
+
+y[sample(1:1000, 10)] &lt;- NA
+x1[sample(1:1000, 10)] &lt;- NA
+x2[sample(1:1000, 10)] &lt;- NA
+
+mydata &lt;- data.frame(y, x1, x2)
+covMatrix &lt;- cov(mydata, use=""pairwise.complete.obs"")
+
+#Listwise Deletion
+listwiseDeletion &lt;- lm(y ~ x1 + x2, data=mydata)
+observations &lt;- length(listwiseDeletion$na.action) #30 rows deleted due to listwise deletion
+
+coef(listwiseDeletion)
+(Intercept)          x1          x2 
+0.001995527 0.245372245 0.100001989
+
+#Pairwise Deletion --- but missing intercept
+pairwiseDeletion &lt;- mat.regress(y=""y"", x=c(""x1"",""x2""), data=covMatrix, n.obs=observations)
+pairwiseDeletion$beta
+       y
+x1 0.1861277
+x2 0.1251995
+
+#Pairwise Deletion --- tried to add intercept, but received error when fitting model
+mydata$intercept &lt;- 0
+covMatrixWithIntercept &lt;- cov(mydata, use=""pairwise.complete.obs"")
+
+pairwiseDeletionWithIntercept &lt;- mat.regress(y=""y"", x=c(""intercept"",""x1"",""x2""), data=covMatrixWithIntercept, n.obs=observations)
+Something is seriously wrong the correlation matrix.
+In smc, smcs were set to 1.0
+Warning messages:
+1: In cov2cor(C) :
+  diag(.) had 0 or NA entries; non-finite result is doubtful
+2: In cor.smooth(R) :
+  I am sorry, there is something seriously wrong with the correlation matrix,
+cor.smooth failed to  smooth it because some of the eigen values are NA.  
+Are you sure you specified the data correctly?
+</code></pre>
+
+<p>So, how can I obtain an intercept parameter using <code>mat.regress</code>, or how can I obtain parameter estimates from pairwise deletion using another method or package in R?  I've seen <a href=""https://stats.stackexchange.com/questions/107597/is-there-a-way-to-use-the-covariance-matrix-to-find-coefficients-for-multiple-re"">matrix calculations</a> to do this, but, ideally, there'd be a package that also outputs regression diagnostics, fit stats, etc.  Also, preferably, the method would be able to fit interaction terms.</p>
+"
+"NaN","NaN"," 12438","<p>How can I obtained the estimated variance of a linear model when using R, i.e.</p>
+
+<p>\begin{equation}
+\widehat{var(y)}.
+\end{equation}</p>
+"
+"0.229415733870562","0.204124145231932"," 76089","<p>My data has at least 5 variables with a significant response, with one variable having the highest regression co-efficient. I want to find those observations where that variable did <em>not</em> behave as expected, to better understand the other contributors to the outcome.</p>
+"
+"0.324442842261525","0.288675134594813","202032","<p>I have the following data that I wish to analyze using R:</p>
+
+<pre><code>     Resilience     PartsA       PartsB
+1   4.805032           1           1
+2   4.657384           1           2
+3   4.703198           1           3
+4   3.993497           1           4
+5   4.645764           1           5
+6   4.603158           1           1
+7   4.811521           1           2
+8   4.682717           1           3
+9   4.728485           1           4
+10  4.734114           1           5
+11  4.532497           1           1
+12  4.885308           1           2
+13  4.702712           1           3
+14  4.692207           1           4
+15  4.740994           1           5
+16  4.572724           1           1
+17  4.919445           1           2
+18  4.650043           1           3
+19  4.761368           1           4
+20  4.790507           1           5
+21  4.653509           2           1
+22  4.720434           2           2
+23  4.833647           2           3
+24  4.997706           2           4
+25  4.630829           2           5
+26  4.690605           2           1
+27  4.681007           2           2
+28  4.784369           2           3
+29  4.704247           2           4
+30  4.575493           2           5
+31  4.553369           2           1
+32  4.758170           2           2
+33  4.855304           2           3
+34  4.903961           2           4
+35  5.002031           2           5
+36  4.769658           2           1
+37  4.651714           2           2
+38  4.929959           2           3
+39  4.648468           2           4
+40  4.788978           2           5
+41  4.812591           3           1
+42  4.877903           3           2
+43  4.928751           3           3
+44  4.925799           3           4
+45  4.005860           3           5
+46  4.662776           3           1
+47  4.896822           3           2
+48  4.904109           3           3
+49  4.971777           3           4
+50  4.832897           3           5
+</code></pre>
+
+<p>I want to perform some kind of analysis in order to understand which Parts from A and B (which combination, such as 1 from PartsA and 3 from PartsB) cause the most deviation from the mean in the final result (material resilience).</p>
+
+<p>From PartsA, 3 same parts are used, but from different sources (in the construction of a material), and PartsB that's used in the construction is brought in from 5 different sources.</p>
+
+<p>Basically I want to test to see whether or not using parts from different sources creates a significant difference on the results or if all parts render same results (null hypothesis). Essentially a test for the significance that PartsA and PartsB play in the final outcome.</p>
+
+<p>I've thought about using ANOVA, in order to analyze the variance but I am rather unsure about how to interpret the results. 
+Any help would be greatly appreciated. Many thanks </p>
+"
+"0.458831467741123","0.408248290463863","167014","<p>Lets say that you have access to a model that estimates the mean of four independent groups like m2 below, but these groups have been formed from two factors (a &amp; b) and you want to instead evaluate a model with two main effects (a &amp; b) and an interaction (aXb) like m1.  </p>
+
+<pre><code>n=10^3
+a=rnorm(n, 0, 1)&gt;0
+b=rnorm(n, 0, 1)&gt;0
+e=rnorm(n, 0, 1)
+y=1+a*.2 + b*-.2 + .3*a*b + e 
+
+aXb = a*b
+
+ai=a==TRUE &amp; b==FALSE
+bi=b==TRUE &amp; a==FALSE
+abi=a==TRUE &amp; b==TRUE
+
+m1 = lm(y~a+b+aXb)
+m2 = lm(y~ai+bi+abi)
+</code></pre>
+
+<p>Sample output below for m1 &amp; m2:</p>
+
+<pre><code>(Intercept)  0.85847    0.06396  13.423  &lt; 2e-16 ***
+aTRUE        0.37947    0.09180   4.134 3.87e-05 ***
+bTRUE        0.02101    0.08956   0.235    0.815    
+aXb          0.02870    0.12705   0.226    0.821    
+
+
+(Intercept)  0.85847    0.06396  13.423  &lt; 2e-16 ***
+aiTRUE       0.37947    0.09180   4.134 3.87e-05 ***
+biTRUE       0.02101    0.08956   0.235    0.815    
+abiTRUE      0.42918    0.08873   4.837 1.53e-06 ***
+</code></pre>
+
+<p>The two models are equivalent but parameterized differently and most estimtates are identical except <code>aXb</code> from m1 &amp; <code>abi</code> from m2. It is easy to calculate the point estimate of the interaction (aXb) in m1 from the independent groups modeled in m2 like this:</p>
+
+<pre><code> summary(m2)$coefficients[4,1]-summary(m2)$coefficients[3,1]-summary(m2)$coefficients[2,1]
+ [1] 0.0286971
+</code></pre>
+
+<p>And the other way around:</p>
+
+<pre><code> summary(m1)$coefficients[4,1]+summary(m1)$coefficients[3,1]+summary(m1)$coefficients[2,1]
+[1] 0.4291785
+</code></pre>
+
+<p>But how can I calculate the variance/standard error of the interaction term in m1 using only information from m2 (and vice versa)?</p>
+"
+"0.264906471413009","0.353553390593274","167324","<p>I'm trying to obtain the variance-covariance matrix of a logistic regression:</p>
+
+<pre><code>mydata &lt;- read.csv(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+mylogit &lt;- glm(admit ~ gre + gpa, data = mydata, family = ""binomial"")
+</code></pre>
+
+<p>through matrix computation. I have been following the example published <a href=""http://www.ats.ucla.edu/stat/r/library/matrix_alg.htm"" rel=""nofollow"">here</a> for the basic linear regression</p>
+
+<pre><code>X &lt;- as.matrix(cbind(1, mydata[,c('gre','gpa')]))
+beta.hat &lt;- as.matrix(coef(mylogit))
+Y &lt;- as.matrix(mydata$admit)
+y.hat &lt;- X %*% beta.hat
+
+n &lt;- nrow(X)
+p &lt;- ncol(X)
+
+sigma2 &lt;- sum((Y - y.hat)^2)/(n - p)        
+v &lt;- solve(t(X) %*% X) * sigma2
+</code></pre>
+
+<p>But then my var/cov matrix doesn't not equals the matrix computed with <code>vcov()</code></p>
+
+<pre><code>v == vcov(mylogit)
+
+1   gre   gpa
+1   FALSE FALSE FALSE
+gre FALSE FALSE FALSE
+gpa FALSE FALSE FALSE
+</code></pre>
+
+<p>Did I miss some log transformation?</p>
+"
+"NaN","NaN"," 83712","<p>I have five groups of data and I want to test if their variance is significantly different or not.  The data are normally distributed and I do not have any repeated measurements in any groups.  What sort of analysis should I use?</p>
+
+<p>Tukey's test compares the means, but how can I compare their variances?</p>
+
+<p>For example I have 3 groups A, B and C. In groups A, B and C I have  30, 50 and 20 observations (which are stored as double-precision numeric variables in R).  </p>
+"
+"0.324442842261525","0.288675134594813"," 91682","<p>Suppose I fitted a logistic model and get the estimates as well as their <code>vcov</code> matrix. I would realize this: draw length($\beta_s$) independent $\mathcal N(0,1)$ values to create a random vector $z$, then $\beta^*$=$\hat{\beta}+Az$ where $A$ is the upper triangular matrix of the Cholesky decomposition matrix ($\hat{V}=A'A$). How can I draw the $\beta^*$ using the <code>vcov</code> matrix? Here is an example:</p>
+
+<pre><code>set.seed(123)
+df &lt;- data.frame(y=rbinom(100,1,0.5),
+                 x1=rnorm(100,10,2),
+                 x2=rbinom(100,20,0.6))
+
+fit &lt;- glm(y~x1+x2, data=df, family=""binomial"")
+</code></pre>
+
+<p>$\hat{\beta}$:</p>
+
+<pre><code>coef(summary(fit))
+            Estimate Std. Error  z value Pr(&gt;|z|)
+(Intercept)   0.1482    1.57451  0.09413   0.9250
+x1           -0.1710    0.10962 -1.55984   0.1188
+x2            0.1181    0.09047  1.30567   0.1917
+</code></pre>
+
+<p>vcov matrix:</p>
+
+<pre><code>vcov(fit)
+(Intercept)      2.4791 -0.1225802 -0.1020612
+x1              -0.1226  0.0120164  0.0003505
+x2              -0.1021  0.0003505  0.0081844
+</code></pre>
+
+<p>Would somebody know how to draw new $\beta^*$ using the <code>coef</code> and <code>vcov</code>?</p>
+"
+"0.229415733870562","0.204124145231932","136696","<p>I'm currently working on the Breusch-Pagan Test using RStudio through the command <code>ncvTest</code>. I've used the dataset <code>pipeline.txt</code> in the <code>alr3</code> package; the model I've fit is: </p>
+
+<pre><code>mod1 &lt;- lm(Lab~Field)
+</code></pre>
+
+<p>I've also done the residual plot to look at the shape of residuals to have information about the variance and I've obtained that there should be some trace of non constant variance. To sustain this assumption, I've performed the <code>ncvTest</code> and these are my results:</p>
+
+<pre><code> ncvTest(mod1)    
+ Non-constant Variance Score Test   
+ Variance formula: ~ fitted.values    
+ Chisquare = 29.58568    Df = 1     p = 5.349868e-08
+</code></pre>
+
+<p>My question is: how do I read these results? </p>
+"
+"0.229415733870562","0.204124145231932","167947","<p>I understand total variance and R squared in linear regression outputs, but I have difficulty to understand the percent of variation explained by each covariates in a multiple regression analysis. I have two question.
+1. How could I explaine the %var explained by one covariates in multiple regression?. 
+2. Above all how could implement this in Stata or R?. A paper on Table 4, page 7 of the link below has provided such output.  Could anyone explain the 1.3%  output of Gas stove?  The adjusted R squared for the whole regression is 0.79 and the % variance explained by the covariates is 56.8. What does explain the rest?</p>
+
+<p><a href=""http://www3.imperial.ac.uk/portal/pls/portallive/docs/1/7292108.PDF"" rel=""nofollow"">http://www3.imperial.ac.uk/portal/pls/portallive/docs/1/7292108.PDF</a></p>
+
+<p>Thanks</p>
+"
+"0.324442842261525","0.288675134594813","144076","<p>I have a bunch of data that I fit a linear regression to, and now I need to find the variance of my slope. Is there an analytical way to get this?</p>
+
+<p>If an example is necessary, consider this my data in R:</p>
+
+<pre><code>x &lt;- c(1:6)
+y &lt;- c(18, 14, 15, 12, 7, 6)
+lm(y ~ x)$coefficients
+</code></pre>
+
+<p>So I have a slope estimate of <code>-2.4</code>, but I want to know the variance of that estimate.</p>
+
+<p>After looking at previous questions, I've seen a few equations for estimating the slope parameter, but I'm a little confused about what the differences between equations are and what approach is valid for my problem.</p>
+
+<p>For example, the answers in <a href=""http://stats.stackexchange.com/questions/122406/the-variance-of-linear-regression-estimator-beta-1"">this question</a> say that $\newcommand{\Var}{\rm Var}\newcommand{\slope}{\rm slope}\Var[\slope] = \frac{V[Y]}{\sum\left(\frac{x_i-\bar{x}}{\sum(x_i-\bar{x})^2}\right)}$.</p>
+
+<p><a href=""http://stats.stackexchange.com/questions/12186/expected-value-and-variance-of-estimation-of-slope-parameter-beta-1-in-simple"">This question</a> says that $\Var[\slope] = \frac{V[Y]}{\sum(x_i-\bar{x})^2}$.</p>
+
+<p>And if I look at the output in R (as a ""check"" mechanism), I'm given two other ways I could potentially calculate the slope variance (one using the standard error, another given the covariance matrix). I feel like I'm missing something key because all these estimates give me similar (but not the same) answer.</p>
+"
+"0.229415733870562","0.204124145231932"," 99626","<p>I'm trying to show a correlation between growth in a petri dish of some fungi and its effect on a plant. I have ten strains of fungi which I tested in the plant and in petri dishes. I can put data from both experiments into linear models (lm) to get estimated means and variances. If I run a regression on the estimated means for each strain I find a significant correlation, but this doesn't take uncertainty in the strain means into account.
+So far I've tried a parametric bootstrap, but I'm having a hard time figuring out the ultimate test statistic. I've included the parameter estimates and my R code. At the moment it generates simulated strain means from the estimated parameters. I need a p value for the covariance between growth and virulence. Any help would be greatly appreciated! My specific questions are:
+1) Is a parametric boostrap the right way to go about analyzing this?
+2) How would one go about doing this in R?</p>
+
+<pre><code>Strain  MeanVirulence MeanGrowth    VirulenceVarGrowthVar  
+1  -5.26064 0.066716    0.67834 0.053247  
+2   -4.05482    -0.055524   0.68385 0.047111  
+3   -5.47282    0.029047    0.68385 0.046739  
+4   -3.50632    -0.161811   0.68385 0.047083  
+5   -4.94051    -0.224949   0.68385 0.04727  
+6   -4.04982    -0.062938   0.68385 0.047647  
+7   -4.53178    -0.142985   0.68385 0.04788  
+8   -3.01697    -0.199349   0.68385 0.047255  
+9   -3.81093    -0.254793   0.68385 0.047255  
+10  -1.61882    -0.325289   0.68385 0.0469
+</code></pre>
+
+<p>And here is my R code:</p>
+
+<pre><code>gendata&lt;-function(par,npar=TRUE,print=TRUE){
+    n     = 10
+    k     = 2
+    x=matrix(data=NA, nrow=n, ncol=k)
+    for(i in 1:n){
+      x[i,1] = rnorm(1,mean=par[i,2],sd=par[i,4])
+      x[i,2] = rnorm(1,mean=par[i,3],sd=par[i,5])
+    }
+    return(x)
+}
+
+lmp &lt;- function (modelobject) {
+    f &lt;- summary(modelobject)$fstatistic
+    p &lt;- pf(f[1],f[2],f[3],lower.tail=F)
+    attributes(p) &lt;- NULL
+    return(p)
+}
+
+
+samp=20000
+rescor=matrix(data=NA, samp)
+resvar=matrix(data=NA, samp)
+pvals=matrix(data=NA, samp)
+numsig = 0
+numnotsig = 0
+for (i in 1:samp){
+    x&lt;-gendata(parameters)
+    rescor[i]&lt;-cor(x[,1],x[,2], method = ""pearson"")
+    resvar[i]&lt;-var(x[,1])
+    a&lt;-lm(x[,1]~x[,2])
+    pvals[i]&lt;-lmp(a)
+    if (pvals[i] &lt; 0.05){
+        numsig = numsig + 1
+    }
+    if (pvals[i] &gt; 0.05){
+        numnotsig = numnotsig + 1
+    }    
+}
+
+Strain Plate Growth  
+1      1     200   
+1      2     210  
+1      3     190  
+2      1     150   
+2      2     130  
+2      3     140  
+...  
+
+Strain Plant Growth  
+1      1     70  
+1      2     40  
+1      3     50  
+1      4     45  
+2      1     80  
+2      2     90  
+2      3     85  
+2      4     75  
+...
+</code></pre>
+"
+"NaN","NaN","224302","<p>I would like to know how the covariance matrix of estimated coefficients is actually calculated. The code uses QR-decomposition and inversion of some sort. I have an idea that it would go something like this:</p>
+
+<p>$(X'X)^{-1}=[(QR)'QR]^{-1}=(R'R)^{-1}=\Sigma$    </p>
+
+<p>Could someone explain the code?</p>
+
+<pre><code>p &lt;- object$rank    
+p1 &lt;- 1L:p
+Qr &lt;- qr.lm(object)
+covmat.unscaled &lt;- chol2inv(Qr$qr[p1, p1, drop = FALSE])
+covmat &lt;- dispersion * covmat.unscaled
+</code></pre>
+"

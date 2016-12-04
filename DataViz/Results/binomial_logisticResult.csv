@@ -1,0 +1,450 @@
+"V1","V2","V3","V4"
+"0.707106781186548","0.688247201611685","52206","<p>I have a data set which consists of binomial proportions, let's say the success rate of converting a customer depending on the advertisement, the customer age, and various other factors.</p>
+
+<p>For some common combinations of covariates, I have a lot of data, and therefore the binomial proportion of successes has low variance. For rare combinations of covariates, however, I have very little data, and therefore the variance of the proportion is high.</p>
+
+<p>The magnitude of differences is very large, for example I might have 1 million trials for some combinations of covariates, and only 50 for others. However, I want to include ALL data in my model and weight it appropriately to get the best model fit.</p>
+
+<p>I've tried to use R to do binomial (logistic) regression using a generalized linear model:</p>
+
+<pre><code>lrfit &lt;- glm ( cbind(converted,not_converted) ~ advertisement + age, family = binomial)
+</code></pre>
+
+<p>This is a good start because it automatically weights the observations by the number of trials.</p>
+
+<p>However, it's not good enough. Here's why: Let's say you have some observations with 100,000 trials and others with 1,000,000 trials. If you weight by number of trials the latter group is going to receive 10 times the weight. This seems nonsensical, however, because both observations are easily precise enough to receive equal treatment in the model. Clearly you want to penalize groups with only 10 or 100 trials, but as the number of trials gets larger, the weight should stop increasing.</p>
+
+<p>Since in weighted least squares the reciprocal of the error variance is used as the weight, my idea would be to use calculate the posterior variance of the proportion (using Jeffrey's prior), then add some constant term to it (this will make sure the variance stops increasing at a certain number of trials) and then use the reciprocal of the sum as the weight.</p>
+
+<p>Is this approach reasonable? Am I missing something? Can someone give me more information about this method?</p>
+"
+"NaN","NaN","5266","<p>I have a need to analyze an experiment that had a binomial outcome and categorical predictors. For context we sent out an email to our customers and encouraged them to register their account online (did register or did not register online). There are different nine groups that received the email. The groups are segmented based on their account opening date with our firm (1 week ago, 2 weeks ago, 3 weeks ago, etc...).</p>
+
+<p>What method would I use to determine if the response from each of the nine groups is significantly different? We have used R and ran ANOVA in the past when our dependent is continuous but I am not sure how to apply the same procedure with a binomial. </p>
+
+<p>Thank you in advance for any help!</p>
+"
+"0.623609564462324","0.606976978666884","118141","<p>I'm trying to fit a logistic curve to cumulative data, derived from satellite imagery. Previously, I have point observation data which were either 0s or 1s. Os being 'forest' and 1s being 'non-forest'. These point observations existed for multiple images/dates. So I had one csv file with 'observation date' in once column and 'state' in another. Weights were also included, but these aren't relevant here. </p>
+
+<p>This was the code I used:</p>
+
+<pre><code># Read in data
+data=read.csv(""C:\\Users\\Owner\\Desktop\\BV\\Deforestation_Analysis\\Ambaro_Ambanja\\Analysis\\CDM_Table_Final.csv"")
+
+head(data)
+attach(data)
+Time&lt;-strptime(Observation_Date, ""%m/%d/%Y"")
+Time2&lt;-as.Date(Time)
+Time2
+# Set project start date to zero
+Zero&lt;-as.Date(""2015/7/1"")
+temp.time&lt;-as.numeric(Zero-Time2)
+T.Time&lt;-temp.time*(-1)
+T.Time
+data2&lt;-cbind(data,T.Time)
+
+# Fit the model and summarise
+model.glm=glm(formula=State~T.Time,data=data2,weights=Weight,family=binomial(link=logit))
+summary(model.glm)
+</code></pre>
+
+<p>Now, rather than having multiple 0s and 1s for each date, I have simply number of non-forest pixels (and no weight). Here is the data I have:</p>
+
+<p><img src=""http://i.stack.imgur.com/oFFIe.jpg"" alt=""enter image description here""></p>
+
+<p>The 'State' field is literally the portion of non-forest pixels (18.6% of pixels were non-forest in 2014)</p>
+
+<p>I tried runnning the following adaption of the original script:</p>
+
+<pre><code># Read in data
+data=read.csv(""C:\\Users\\Leah\\Desktop\\BV\\AAB\\Geospatial\\Deforestation_Analysis\\Analysis\\For_R.csv"")
+
+head(data)
+attach(data)
+Time&lt;-strptime(Observation_Date, ""%d/%m/%Y"")
+Time2&lt;-as.Date(Time)
+Time2
+# Set project start date to zero
+Zero&lt;-as.Date(""2015/7/1"")
+temp.time&lt;-as.numeric(Zero-Time2)
+T.Time&lt;-temp.time*(-1)
+T.Time
+data2&lt;-cbind(data,T.Time)
+
+# Fit the model and summarise
+model.glm=glm(formula=State~T.Time,data=data2,family=binomial(link=logit))
+summary(model.glm)
+</code></pre>
+
+<p>I fully expected it to fail, because the data is no longer binomial. But while it did throw up a warning ('In eval(expr, envir, enclos) : non-integer #successes in a binomial glm!'), the coefficients it spat out formed a curve which looked perfect. But I wasn't overly confident in this hash.</p>
+
+<p>I've read that you can still use the binomial glm family if you feed R with a table containing successes (non-forest) and failures. So I came up with this adapted data:</p>
+
+<p><img src=""http://i.stack.imgur.com/CMSd3.jpg"" alt=""enter image description here""></p>
+
+<p>and the following adapted script:</p>
+
+<pre><code># Read in data
+data=read.csv(""C:\\Users\\Leah\\Desktop\\BV\\AAB\\Geospatial\\Deforestation_Analysis\\Analysis\\For_R_Final.csv"")
+
+head(data)
+attach(data)
+Time&lt;-strptime(Observation_Date, ""%d/%m/%Y"")
+Time2&lt;-as.Date(Time)
+Time2
+# Set project start date to zero
+Zero&lt;-as.Date(""2015/7/1"")
+temp.time&lt;-as.numeric(Zero-Time2)
+T.Time&lt;-temp.time*(-1)
+T.Time
+data2&lt;-cbind(data,T.Time)
+
+# Fit the model and summarise
+model.glm=glm(formula=cbind(Deforested, Total-Deforested)~T.Time,data=data2,family=binomial(link=logit))
+summary(model.glm)
+</code></pre>
+
+<p>It ran fine with no errors, but the trend it generated doesn't fit the data anywhere near as well as the hashed version:</p>
+
+<p><img src=""http://i.stack.imgur.com/FXL6I.jpg"" alt=""Blue line is hased version; Grey line is adapted script; Red points are the data I&#39;m using to fit the model""></p>
+
+<p>The blue line is hased version; grey line is adapted script; red points are the data I'm using to fit the model.</p>
+
+<p>Why does the adapted version fit the point worse than the hashed version? Is R so clever that it just uses my fractional values how I want it to in the glm(family=binomial)?</p>
+
+<p>Any advice greatly appreciated! Am not happy with how I got the blue trend and this work is very important to our study.</p>
+
+<p>THANK YOU!!</p>
+"
+"0.166666666666667","0.324442842261525","91747","<p>I have a logistic regression with data that are kind of like this:</p>
+
+<pre><code>y &lt;- rep(c(""A"", ""A"", ""B""), each = 30)
+x &lt;- c(     rep(1, 12), rep(2, 18), rep(3, 16), rep(4, 12), rep(5, 2),
+            rep(1, 3), rep(2, 5), rep(3, 8), rep(4, 10), rep(5, 4)  )
+
+da &lt;- data.frame(y = y, x = x)
+table(da)
+   x
+y    1  2  3  4  5
+  A 12 18 16 12  2
+  B  3  5  8 10  4
+</code></pre>
+
+<p>I'd like to show that there are more A's than B's in <code>y</code> (instead of a Bernoulli with <code>p</code> = 0.5), even after controlling for <code>x</code>, so I fitted two logistic regression models and used an ANOVA to compare them.</p>
+
+<pre><code>mlogis.x              &lt;- glm(y ~ x,     family = binomial, da)
+mlogis.x.no_intercept &lt;- glm(y ~ x + 0, family = binomial, da)
+
+summary(mlogis.x.no_intercept)
+summary(mlogis.x)
+
+anova(mlogis.x.no_intercept, mlogis.x, test = ""Chisq"")
+</code></pre>
+
+<p>I have a few questions:</p>
+
+<ul>
+<li>Does what I did make sense overall?</li>
+<li>Is it okay to not have an intercept in the more basic model and then add it to the full(er) model?</li>
+<li>The coefficient for <code>x</code> changes sign between the two models, how should I interpret this?</li>
+</ul>
+"
+"0.471404520791032","0.458831467741123","100700","<p>I counted the number of birds in a flock, which gave counts like these:</p>
+
+<pre><code>set.seed(1)
+number.birds.in.flock &lt;- sample(51:500, 10)
+number.birds.in.flock
+# [1] 170 218 307 456 140 450 470 343 329  78
+</code></pre>
+
+<p>I recorded the species that formed each flock:</p>
+
+<pre><code>species &lt;- c(rep(""species.x"", 5), rep(""species.y"", 5))
+</code></pre>
+
+<p>I then counted the number in the flock that were feeding:</p>
+
+<pre><code>set.seed(1)
+number.birds.feeding &lt;- number.birds.in.flock - sample(1:50, 10)
+</code></pre>
+
+<p>And the number of birds in the flock that were vigilant:</p>
+
+<pre><code>number.birds.vigilant &lt;- number.birds.in.flock - number.birds.feeding
+</code></pre>
+
+<p>I then went on to model the number of the flock that were feeding. First I converted <code>number.birds.feeding</code> to a proportion:</p>
+
+<pre><code>proportion.feeding &lt;- number.birds.feeding/number.birds.in.flock
+</code></pre>
+
+<p>I used a binomial generalised linear model, with <code>number.birds.in.flock</code> as a weight:</p>
+
+<pre><code>glm(proportion.feeding ~ species, weights = number.birds.in.flock, family = ""binomial"")
+</code></pre>
+
+<p>Here's my question, can I also <code>number.birds.in.flock</code> as both a weight and a explanatory variable like this:</p>
+
+<pre><code>glm(proportion.feeding ~ species + number.birds.in.flock, weights = number.birds.in.flock, family = ""binomial"")
+</code></pre>
+"
+"0.52704627669473","0.512989176042577","34930","<p>I have a large set of data for 37 different clinical units (all oncology) in their respective 37 hospitals. There are two specific outcome variables that I need to analyse:</p>
+
+<p>First, drug usage for specific drugs types and classes (aggregated drugs) that are expressed as a rate â€“  DDD (Defined Daily Doses) per 100 patient days. There are individual patient drug use figures for this set.</p>
+
+<p>Question1: Which regression approach should I take? From what I can gather I can use a Poisson regression model. IF there is overdispersion in the outcome I could resort to a negative binomial model.</p>
+
+<p>Second: I have antibiotic resistance data that is expressed as proportion in the range 0 â€“ 1.These are not available as individual patient data points but aggregated to each of the 37 hospitals.</p>
+
+<p>Question 2: Again, which approach? From what I have read I can use a logistic regression model. I have been advised by another statistician to initiall use a logit model and then use a probit model and compare goodness of fit for each model.</p>
+
+<p>Does this sound like a reasonable approach? Is there a specific text that you could direct me to in order to upgrade my basic regression modelling skills. I will be using R for the analysis.</p>
+
+<p>Thanks in advance.</p>
+"
+"0.707106781186548","0.688247201611685","141412","<p>I am very confused with how weight works in glm with family=""binomial"". In my understanding, the likelihood of the glm with  family = ""binomial"" is specified as follows:
+$$
+f(y) = 
+{n\choose{ny}} p^{ny} (1-p)^{n(1-y)} = \exp \left(n \left[ y \log \frac{p}{1-p} - \left(-\log (1-p)\right) \right] + \log {n \choose ny}\right)
+$$
+where $y$ is the ""proportion of observed success"" and $n$ is the known number of trials.</p>
+
+<p>In my understanding, the probability of success $p$ is parametrized with some linear coefficients $\beta$ as $p=p(\beta)$ and glm function with family = ""binomial"" search for:
+$$
+\textrm{arg}\max_{\beta} \sum_i \log f(y_i).
+$$ 
+Then this optimization problem can be simplified as:</p>
+
+<p>$$
+\textrm{arg}\max_{\beta} \sum_i \log f(y_i)= 
+\textrm{arg}\max_{\beta} \sum_i n_i \left[ y_i \log \frac{p(\beta)}{1-p(\beta)} - \left(-\log (1-p(\beta))\right) 
+\right] + \log {n_i \choose n_iy_i}\\
+=
+\textrm{arg}\max_{\beta} \sum_i n_i \left[ y_i \log \frac{p(\beta)}{1-p(\beta)} - \left(-\log (1-p(\beta))\right) 
+\right] \\
+$$<br>
+Therefore if we let $n_i^*=n_ic$ for all $i=1,...,N$ for some constant $c$, then it must also be true that:
+$$
+\textrm{arg}\max_{\beta} \sum_i \log f(y_i)
+=
+\textrm{arg}\max_{\beta} \sum_i n^*_i \left[ y_i \log \frac{p(\beta)}{1-p(\beta)} - \left(-\log (1-p(\beta))\right) 
+\right] \\
+$$
+From this, I thought that <strong>Scaling of the number of trials $n_i$ with a constant does NOT affect the maximum likelihood estimates of $\beta$ given the proportion of success $y_i$</strong>. </p>
+
+<p>The help file of glm says:</p>
+
+<pre><code> ""For a binomial GLM prior weights are used to give the number of trials 
+  when the response is the proportion of successes"" 
+</code></pre>
+
+<p>Therefore I expected that the scaling of weight would not affect the estimated $\beta$ given the proportion of success as response. However the following two codes return different coefficient values:</p>
+
+<pre><code> Y &lt;- c(1,0,0,0) ## proportion of observed success
+ w &lt;- 1:length(Y) ## weight= the number of trials
+ glm(Y~1,weights=w,family=binomial)
+</code></pre>
+
+<p>This yields:</p>
+
+<pre><code> Call:  glm(formula = Y ~ 1, family = ""binomial"", weights = w)
+
+ Coefficients:
+ (Intercept)  
+      -2.197     
+</code></pre>
+
+<p>while if I multiply all weights by 1000, the estimated coefficients are different:</p>
+
+<pre><code> glm(Y~1,weights=w*1000,family=binomial)
+
+ Call:  glm(formula = Y ~ 1, family = binomial, weights = w * 1000)
+
+ Coefficients:
+ (Intercept)  
+    -3.153e+15  
+</code></pre>
+
+<p>I saw many other examples like this even with some moderate scaling in weights. 
+What is going on here?</p>
+"
+"0.235702260395516","0.229415733870562","64352","<p>I'm facing a problem with a binomial <code>glmer</code> model. I want to find if differences in flower presence in pine trees is due to procedence of the tree.
+My model is as follows: <code>FlorMas ~ Proc + (1|Blq)</code>.
+Proc is a factor with nine levels, one of it (<code>TAMR</code>) presents no flower at all (variable value for all <code>TAMR</code> trees is 0).
+This model gives me this output:</p>
+
+<pre><code>Generalized linear mixed model fit by the Laplace approximation 
+Formula: FlorMas ~ Proc + (1 | Blq) 
+   Data: flower.data 
+ AIC   BIC logLik deviance
+ 593 647.7 -285.5      571
+Random effects:
+ Groups Name        Variance Std.Dev.
+ Blq    (Intercept) 0.18476  0.42983 
+Number of obs: 1067, groups: Blq, 8
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -1.7668     0.2958  -5.974 2.32e-09 ***
+ProcTAMR     -16.8758  1080.5608  -0.016  0.98754    
+ProcARMY      -0.3543     0.3910  -0.906  0.36490    
+ProcASPE      -1.4891     0.5260  -2.831  0.00464 ** 
+ProcCOCA      -2.4947     0.7619  -3.274  0.00106 ** 
+ProcMIMI      -1.2040     0.4930  -2.442  0.01459 *  
+ProcORIA      -1.5360     0.5739  -2.676  0.00744 ** 
+ProcPLEU      -1.9437     1.0538  -1.845  0.06511 .  
+ProcPTOV       0.1693     0.3508   0.483  0.62945    
+ProcSCRI       0.5060     0.3346   1.512  0.13050    
+
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I don't understand that values for <code>TAMR</code> procedence, as if it has all zero values it should be different from the others.
+Any help will be appreciated.</p>
+"
+"0.52704627669473","0.512989176042577","86351","<p>I'm quite new on this with binomial data tests, but needed to do one and now IÂ´m not sure how to interpret the outcome. The y-variable, the response variable, is binomial and the explanatory factors are continuous. This is what I got when summarizing the outcome:</p>
+
+<pre><code>glm(formula = leaves.presence ~ Area, family = binomial, data = n)
+
+Deviance Residuals: 
+Min      1Q  Median      3Q     Max  
+-1.213  -1.044  -1.023   1.312   1.344  
+
+Coefficients:
+                        Estimate Std. Error z value Pr(&gt;|z|) 
+(Intercept)           -0.3877697  0.0282178 -13.742  &lt; 2e-16 ***
+leaves.presence        0.0008166  0.0002472   3.303 0.000956 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+(Dispersion parameter for binomial family taken to be 1)
+
+Null deviance: 16662  on 12237  degrees of freedom
+Residual deviance: 16651  on 12236  degrees of freedom
+(314 observations deleted due to missingness)
+AIC: 16655
+Number of Fisher Scoring iterations: 4
+</code></pre>
+
+<p>There's a number of things I don't get here, what does this really say:</p>
+
+<pre><code>                        Estimate Std. Error z value Pr(&gt;|z|) 
+(Intercept)           -0.3877697  0.0282178 -13.742  &lt; 2e-16 ***
+leaves.presence        0.0008166  0.0002472   3.303 0.000956 ***
+</code></pre>
+
+<p>And what does AIC and Number of Fisher Scoring iterations mean?</p>
+
+<pre><code>&gt; fit
+Call:  glm(formula = LÃ¶vfÃ¶rekomst ~ Areal, family = binomial, data = n)
+
+Coefficients:
+(Intercept)        Areal  
+-0.3877697    0.0008166  
+
+Degrees of Freedom: 12237 Total (i.e. Null);  12236 Residual
+(314 observations deleted due to missingness)
+Null Deviance:      16660 
+Residual Deviance: 16650        AIC: 16650
+</code></pre>
+
+<p>And here what does this mean:</p>
+
+<pre><code>Coefficients:
+(Intercept)        Areal  
+-0.3877697    0.0008166 
+</code></pre>
+"
+"NaN","NaN","86732","<p>I divided my dataset into Test and Validation (50-50 split).</p>"
+"NaN","NaN","<p>I ran glm function (link=binomial) on Test dataset and got the parameter estimates.</p>",""
+"NaN","NaN","<p>How do I score the Validation dataset based on these parameter estimates (beta) that I got from Test dataset. I know it has something to do with apply () but I am not sure. please advise.</p>",""
+"NaN","NaN","","<r><regression><logistic><binomial>"
+"0.235702260395516","0.229415733870562","91724","<p>I'm hoping someone can provide an intuitive overview of what quasibinomial distribution is and what it does. I'm particularly interested in these points:</p>
+
+<ol>
+<li><p>How quasibinomial differs to the binomial distribution.</p></li>
+<li><p>When the response variable is a proportion (example values include 0.23, 0.11, 0.78, 0.98), a quasibinomial model will run in R but a binomial model will not. </p></li>
+<li><p>Why quasibinomial models should be used when a TRUE/FALSE response variable is overdispersed.</p></li>
+</ol>
+"
+"0.235702260395516","0.229415733870562","48485","<p>Suppose I have 10 students, who each attempt to solve 20 math problems.  The problems are scored correct or incorrect (in longdata) and each student's performance can be summarized by an accuracy measure (in subjdata).  Models 1, 2, and 4 below appear to produce different results, but I understand them to be doing the same thing.  Why are they producing different results?  (I included model 3 for reference.)</p>
+
+<pre><code>library(lme4)
+
+set.seed(1)
+nsubjs=10
+nprobs=20
+subjdata = data.frame('subj'=rep(1:nsubjs),'iq'=rep(seq(80,120,10),nsubjs/5))
+longdata = subjdata[rep(seq_len(nrow(subjdata)), each=nprobs), ]
+longdata$correct = runif(nsubjs*nprobs)&lt;pnorm(longdata$iq/50-1.4)
+subjdata$acc = by(longdata$correct,longdata$subj,mean)
+model1 = lm(logit(acc)~iq,subjdata)
+model2 = glm(acc~iq,subjdata,family=gaussian(link='logit'))
+model3 = glm(acc~iq,subjdata,family=binomial(link='logit'))
+model4 = lmer(correct~iq+(1|subj),longdata,family=binomial(link='logit'))
+</code></pre>
+"
+"0.577350269189626","0.561951486949016","225283","<p>Iâ€™m analyzing crowdsourced Twitter data, where workers labeled tweets. Within my dataset (N=2,400), I have one IV (call it â€˜dsâ€™) with 2 levels that differentiates which dataset the workers labeled. I have four factors of interest (what workers labeled) -- these are my DVs (let's call them f1, f2, f3, f4). Three of those factors are binomial &lt;0,1>, and one multinomial &lt;0, 1, 2>. Even though the latter can be treated as ordinal, I'm working under the assumption it is nominal. Finally, my datasets are of unequal lengths.</p>
+
+<p>My goal is to analyze the relationship between each of the labeled factors for each level of the IV. More specifically, <strong>I want to tease out the different contributions of each of those factors on each dataset quantitatively, i.e., show amount of variance explained</strong> (e.g., ds1 influenced f1 more than f2, while the inverse for ds2). The end game is to model each factor into a scoring function, which allows me to compute a unified score. Hence, I need to back up the parameter weights for this function.</p>
+
+<p>A snippet of my data frame looks like this:</p>
+
+<pre><code>   f1 f2 f3 f4 ds
+1   1  0  1  0  1
+2   0  0  0  2  1
+3   0  0  1  1  2
+4   1  1  0  2  2
+</code></pre>
+
+<p>What I initially did was to compute correlations between each factor, and used the strengths of those correlations to back up my scoring function. However, given the many posts and tutorials I've been reading, it seems I need to make use of a mix of logistic and multinomial regression. What I have done so far is run binomial logit (using ?glm with class â€˜binomial') on the first 3 factors, and multinomial regression (using ?nnet) on f4. However, it seems I can only assess one outcome variable at a time.</p>
+
+<p>For f1-f3, I have run the following R code:</p>
+
+<pre><code>fit &lt;- glm(f1 ~ ds, data = xx, family = ""binomial"")
+summary(fit)
+confint.default(fit)
+wald.test(b = coef(fit), Sigma = vcov(fit), Terms = 2)
+</code></pre>
+
+<p>For f4:</p>
+
+<pre><code>fit &lt;- multinom(f4 ~ ds, data = xx)
+summary(fit)
+z &lt;- summary(fit)$coefficients/summary(fit)$standard.errors
+p &lt;- (1 - pnorm(abs(z), 0, 1))*2
+</code></pre>
+
+<p>My questions:</p>
+
+<p><strong>1.</strong> Is running such logistic regression analyses appropriate for what I want to do, namely to tease out contributions of each factor? If so, is it meaningful to compare the coefficients of each factor with the other, when computed separately? Or is simply showing a correlation matrix sufficient in my case?</p>
+
+<p><strong>2.</strong> Are there alternative techniques to assess all outcome variables/DVs at once, with respect to each level of my IV? If so, could you please provide me with some pointers (ideally for R)? I'm now looking into hierarchical multinomial marginal (HMM) models... </p>
+
+<p>If something is unclear above, Iâ€™d be happy to clarify.</p>
+"
+"NaN","NaN","195516","<p>I hope to compare the proportion of IN &amp; OUT outcomes in my data. I would have used a simple binomial test (our hypothesis is that the subjects are more likely to endorse OUT than IN) but the outcomes are nested within each subject so I'm thinking there should be a more appropriate way to analyze this data.</p>"
+"NaN","NaN","<p>Here's a snippet of my data: </p>",""
+"NaN","NaN","<pre><code>ID  Age Sex Outcome",""
+"NaN","NaN","1   19  M   IN",""
+"NaN","NaN","1   19  M   OUT",""
+"NaN","NaN","1   19  M   IN",""
+"NaN","NaN","1   19  M   IN",""
+"NaN","NaN","8   21  M   OUT",""
+"NaN","NaN","8   21  M   OUT",""
+"NaN","NaN","8   21  M   OUT",""
+"NaN","NaN","8   21  M   OUT",""
+"NaN","NaN","10  28  M   OUT",""
+"NaN","NaN","10  28  F   OUT",""
+"NaN","NaN","10  28  F   OUT",""
+"NaN","NaN","10  28  F   OUT",""
+"NaN","NaN","15  32  F   IN",""
+"NaN","NaN","15  32  F   IN",""
+"NaN","NaN","15  32  F   OUT",""
+"NaN","NaN","15  32  F   OUT",""
+"NaN","NaN","22  21  F   OUT",""
+"NaN","NaN","22  21  F   OUT",""
+"NaN","NaN","22  21  F   OUT",""
+"NaN","NaN","22  21  F   IN",""
+"NaN","NaN","</code></pre>",""
+"NaN","NaN","<p>Does anyone have any suggestions? </p>",""
+"NaN","NaN","","<r><logistic><binomial><nested>"

@@ -1,0 +1,3065 @@
+"V1","V2","V3","V4"
+"NaN","NaN","  2234","<p>I would like as many algorithms that perform the same task as logistic regression.  That is  algorithms/models that can give a prediction to a binary response (Y) with some explanatory variable (X).</p>
+
+<p>I would be glad if after you name the algorithm, if you would also show how to implement it in R.  Here is a code that can be updated with other models:</p>
+
+<pre><code>set.seed(55)
+n &lt;- 100
+x &lt;- c(rnorm(n), 1+rnorm(n))
+y &lt;- c(rep(0,n), rep(1,n))
+r &lt;- glm(y~x, family=binomial)
+plot(y~x)
+abline(lm(y~x),col='red',lty=2)
+xx &lt;- seq(min(x), max(x), length=100)
+yy &lt;- predict(r, data.frame(x=xx), type='response')
+lines(xx,yy, col='blue', lwd=5, lty=2)
+title(main='Logistic regression with the ""glm"" function')
+</code></pre>
+"
+"0.0936585811581694","0.0947027447620757","  4830","<p>Full Disclosure: This is homework. I've included a link to the dataset ( <a href=""http://www.bertelsen.ca/R/logistic-regression.sav"">http://www.bertelsen.ca/R/logistic-regression.sav</a> )</p>
+
+<p>My goal is to maximize the prediction of loan defaulters in this data set.  </p>
+
+<p>Every model that I have come up with so far, predicts >90% of non-defaulters, but &lt;40% of defaulters making the classification efficiency overall ~80%. So, I wonder if there are interaction effects between the variables? Within a logistic regression, other than testing each possible combination is there a way to identify potential interaction effects? Or alternatively a way to boost the efficiency of classification of defaulters. </p>
+
+<p>I'm stuck, any recommendations would be helpful in your choice of words, R-code or SPSS syntax. </p>
+
+<p>My primary variables are outlined in the following histogram and scatterplot (with the exception of the dichotomous variable)</p>
+
+<p>A description of the primary variables: </p>
+
+<pre><code>age: Age in years
+employ: Years with current employer
+address: Years at current address
+income: Household income in thousands
+debtinc: Debt to income ratio (x100)
+creddebt: Credit card debt in thousands
+othdebt: Other debt in thousands
+default: Previously defaulted (dichotomous, yes/no, 0/1)
+ed: Level of education (No HS, HS, Some College, College, Post-grad)
+</code></pre>
+
+<p>Additional variables are just transformations of the above. I also tried converting a few of the continuous variables into categorical variables and implementing them in the model, no luck there. </p>
+
+<p>If you'd like to pop it into R, quickly, here it is: </p>
+
+<pre><code>## R Code
+df &lt;- read.spss(file=""http://www.bertelsen.ca/R/logistic-regression.sav"", use.value.labels=T, to.data.frame=T)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/aVqtZ.jpg"" alt=""alt text"">
+<img src=""http://i.stack.imgur.com/VQJDg.jpg"" alt=""alt text""></p>
+"
+"0.148087219439773","0.119790549647096"," 11457","<p>is it possible to do stepwise (direction = both) model selection in nested binary logistic regression in R? I would also appreciate if you can teach me  how to get:</p>
+
+<ul>
+<li>Hosmer-Lemeshow statitistic,</li>
+<li>Odds ratio of the predictors, </li>
+<li>Prediction success of the model.</li>
+</ul>
+
+<p>I used lme4 package of R. This is the script I used to get the general model with all the independent variables:</p>
+
+<pre><code>nest.reg &lt;- glmer(decision ~ age + education + children + (1|town), family = binomial, data = fish)
+</code></pre>
+
+<p>where:</p>
+
+<ul>
+<li>fish -- dataframe</li>
+<li>decision -- 1 or 0, whether the respondent exit or stay, respectively.</li>
+<li>age, education and children -- independent variables.</li>
+<li>town -- random effect (where our respondents are nested)</li>
+</ul>
+
+<p>Now my problem is how to get the best model. I know how to do stepwise model selection but only for linear regression. (<code>step( lm(decision ~ age + education + children, data = fish), direction +""both"")</code>). But this could not be used for binary logistic regression right? also when i add <code>(1|town)</code> to the formula to account for the effects of town, I get an error result. </p>
+
+<p>By the way... I'm very much thankful to Manoel Galdino <a href=""http://stackoverflow.com/questions/5906272/step-by-step-procedure-on-how-to-run-nested-logistic-regression-in-r"">who provided me with the script on how to run nested logistic regression</a>. </p>
+
+<p>Thank you very much for your help.</p>
+"
+"0.21964884255349","0.222097623265288"," 13172","<p>I would like to use a binary logistic regression model in the context of streaming data (multidimensional time series) in order to predict the value of the dependent variable of the data (i.e. row) that just arrived, given the past observations. As far as I know, logistic regression is traditionally used for postmortem analysis, where each dependent variable has already been set (either by inspection, or by the nature of the study). </p>
+
+<p>What happens in the case of time series though,  where we want to make prediction (on the fly) about the dependent variable in terms of historical data (for example in a time window of the last $t$ seconds) and, of course, the previous estimates of the dependent variable?</p>
+
+<p>And if you see the above system over time, how it should be constructed in order for the regression to work? Do we have to train it first by labeling, let's say, the first 50 rows of our data (i.e. setting the dependent variable to 0 or 1) and then use the current estimate of vector ${\beta}$ to estimate the new probability of the dependent variable being 0 or 1 for the data that just arrived (i.e. the new row that was just added to the system)?</p>
+
+<p>To make my problem more clear, I am trying to build a system that parses a dataset row by row and tries to make prediction of a binary outcome (dependent variable) , given the knowledge (observation or estimation) of all the previous dependent or explanatory variables that have arrived in a fixed time window. My system is in Rerl and uses R for the inference. </p>
+"
+"0.0936585811581694","0.0947027447620757"," 13469","<p>Tools such as random forests or adaboost are powerful at solving cross-sectional binary logistic problems or prediction problems where there are many weak learners. But can these tools be adapted to solve panel regression problems? </p>
+
+<p>One could naively introduce a time index as an independent variable but all this does is to provide an additional degree of freedom to the fitting algorithm. What we would like is a solution that allows information from period T-1 to have bearing on period T. </p>
+
+<p>If there is not a straightforward way to do this using these algorithms, is there an alternative algorithm that can perform a panel regression making use of the information in both the cross-section and time-series?</p>
+"
+"0.175219161012616","0.177172612243394"," 14206","<p>I am using SVM to predict diabetes. I am using the <a href=""http://www.cdc.gov/BRFSS/"">BRFSS</a> data set for this purpose. The data set has the dimensions of $432607 \times 136$ and is skewed. The percentage of <code>Y</code>s in the target variable is $11\%$ while the <code>N</code>s constitute the remaining $89\%$.</p>
+
+<p>I am using only <code>15</code> out of <code>136</code> independent variables from the data set. One of the reasons for reducing the data set was to have more training samples when rows containing <code>NA</code>s are omitted.</p>
+
+<p>These <code>15</code> variables were selected after running statistical methods such as random trees, logistic regression and finding out which variables are significant from the resulting models. For example, after running logistic regression we used <code>p-value</code> to order the most significant variables.</p>
+
+<p>Is my method of doing variable selection correct? Any suggestions to is greatly welcome. </p>
+
+<p>The following is my <code>R</code> implementation. </p>
+
+<pre><code>library(e1071) # Support Vector Machines
+
+#--------------------------------------------------------------------
+# read brfss file (huge 135 MB file)
+#--------------------------------------------------------------------
+y &lt;- read.csv(""http://www.hofroe.net/stat579/brfss%2009/brfss-2009-clean.csv"")
+indicator &lt;- c(""DIABETE2"", ""GENHLTH"", ""PERSDOC2"", ""SEX"", ""FLUSHOT3"", ""PNEUVAC3"", 
+    ""X_RFHYPE5"", ""X_RFCHOL"", ""RACE2"", ""X_SMOKER3"", ""X_AGE_G"", ""X_BMI4CAT"", 
+    ""X_INCOMG"", ""X_RFDRHV3"", ""X_RFDRHV3"", ""X_STATE"");
+target &lt;- ""DIABETE2"";
+diabetes &lt;- y[, indicator];
+
+#--------------------------------------------------------------------
+# recode DIABETE2
+#--------------------------------------------------------------------
+x &lt;- diabetes$DIABETE2;
+x[x &gt; 1]  &lt;- 'N';
+x[x != 'N']  &lt;- 'Y';
+diabetes$DIABETE2 &lt;- x; 
+rm(x);
+
+#--------------------------------------------------------------------
+# remove NA
+#--------------------------------------------------------------------
+x &lt;- na.omit(diabetes);
+diabetes &lt;- x;
+rm(x);
+
+#--------------------------------------------------------------------
+# reproducible research 
+#--------------------------------------------------------------------
+set.seed(1612);
+nsamples &lt;- 1000; 
+sample.diabetes &lt;- diabetes[sample(nrow(diabetes), nsamples), ]; 
+
+#--------------------------------------------------------------------
+# split the dataset into training and test
+#--------------------------------------------------------------------
+ratio &lt;- 0.7;
+train.samples &lt;- ratio*nsamples;
+train.rows &lt;- c(sample(nrow(sample.diabetes), trunc(train.samples)));
+
+train.set  &lt;- sample.diabetes[train.rows, ];
+test.set   &lt;- sample.diabetes[-train.rows, ];
+
+train.result &lt;- train.set[ , which(names(train.set) == target)];
+test.result  &lt;- test.set[ , which(names(test.set) == target)];
+
+#--------------------------------------------------------------------
+# SVM 
+#--------------------------------------------------------------------
+formula &lt;- as.formula(factor(DIABETE2) ~ . );
+svm.tune &lt;- tune.svm(formula, data = train.set, 
+    gamma = 10^(-3:0), cost = 10^(-1:1));
+svm.model &lt;- svm(formula, data = train.set, 
+    kernel = ""linear"", 
+    gamma = svm.tune$best.parameters$gamma, 
+    cost  = svm.tune$best.parameters$cost);
+
+#--------------------------------------------------------------------
+# Confusion matrix
+#--------------------------------------------------------------------
+train.pred &lt;- predict(svm.model, train.set);
+test.pred  &lt;- predict(svm.model, test.set);
+svm.table &lt;- table(pred = test.pred, true = test.result);
+print(svm.table);
+</code></pre>
+
+<p>I ran with $1000$ (training = $700$ and test = $300$) samples since it is faster in my laptop. The confusion matrix for the test data ($300$ samples)  I get is quite bad.</p>
+
+<pre><code>    true
+pred   N   Y
+   N 262  38
+   Y   0   0
+</code></pre>
+
+<p>I need to improve my prediction for the <code>Y</code> class. In fact, I need to be as accurate as possible with <code>Y</code> even if I perform poorly with <code>N</code>. Any suggestions to improve the accuracy of classification would be greatly appreciated.</p>
+"
+"0.162221421130763","0.164029965544142"," 20001","<p>I am trying to cross validate a logistic regression model with probability sampling weights (weights representing number of subjects in the population).  I am not sure how to handle the weights in each of the 'folds' (cross-validation steps).  I don't think it is as simple as leaving out the observations, I believe the weights need to be rescaled at each step.</p>
+
+<p>SAS has an option in proc surveylogistic to get cross validated (leave one out) prediction probabilities.  Unfortunately I cannot find in the documentation any details on how these were calculated.  I would like to reproduce those probabilities in R.  So far I have not had success and am not sure if my approach is correct.  </p>
+
+<p>I hope someone can recommend an appropriate method to do the cross validation with the sampling weights.  If they could match the SAS results that would be great too.</p>
+
+<p>R code for leave-one-out cross validated probabilities (produces error):</p>
+
+<pre><code>library(bootstrap)
+library(survey)
+fitLogistic = function(x,y){
+  tmp=as.data.frame(cbind(y,x))
+  dsn=svydesign(ids=~0,weights=wt,data=tmp)
+  svyglm(y~x1+x2, 
+         data=tmp,family = quasibinomial,design=dsn)
+} 
+predict.logistic = function(fitLog,x){
+  pred.logistic=predict(fitLog,newdata=x,type='response')
+  print(pred.logistic)
+  ifelse(pred.logistic&gt;=.5,1,0)
+} 
+CV_Res= crossval(x=data1[,-1], y=data1[,1], fitLogistic, predict.logistic, ngroup = 13)
+</code></pre>
+
+<p>Sample Data Set:</p>
+
+<pre><code>y   x1  x2  wt
+0   0   1   2479.223
+1   0   1   374.7355
+1   0   2   1953.4025
+1   1   2   1914.0136
+0   0   2   2162.8524
+1   0   2   491.0571
+0   0   1   1842.1192
+0   0   1   400.8098
+0   1   1   995.5307
+0   0   1   955.6634
+1   0   2   2260.7749
+0   1   1   1707.6085
+0   0   2   1969.9993
+</code></pre>
+
+<p>SAS proc surveylogistic leave-one-out cross validated probabilities for sample data set:</p>
+
+<p>.0072, 1 .884, .954, ...</p>
+
+<p>SAS Code:</p>
+
+<pre><code>proc surveylogistic;
+model y=x1 x2;
+weight wt;
+output out=a2 predprobs=x;
+run;
+</code></pre>
+"
+"0.132453235706504","0.133929906036485"," 23248","<p>I have a problem of the form ""what is the probability that a user will 'like' a certain movie?"" For a bunch of users, I know the movies each has watched historically, and the movies each has liked. Additionally, for each movie I know the name of the director.</p>
+
+<p>I calibrated a logistic regression for each user of the form:</p>
+
+<p><code>glm(liked_by_user_1 ~ liked_by_user_2 + ... + liked_by_user_k + factor(director), family=binomial, data = subset(MovieWatchings, user_id == 1))</code></p>
+
+<p>But my problem is: say that in the past, user 1 has watched movies from directors <code>D1</code> through <code>DM</code>, but next month <code>U1</code> watches a movie directed by <code>DN</code>? In that case the R <code>predict()</code> function will give an error, because the glm model for user 1 doesn't have an estimated parameter for the case of <code>director = DN</code>. But I must know something about <code>U1's</code> probability of liking the new movie, because I still know which other users have seen and liked this movie, and that has some predictive power.</p>
+
+<p>How can I set up my model so that I can take into account other users' liking behavior, AND user 1's director preferences, but still have sensible predictions when user 1 sees his first movie from a new director? Is logistic regression even the right type of model for this case?</p>
+"
+"0.162221421130763","0.164029965544142"," 26568","<p>I would like to understand how to generate <em>prediction intervals</em> for logistic regression estimates. </p>
+
+<p>I was advised to follow the procedures in Collett's <em>Modelling Binary Data</em>, 2nd Ed p.98-99. After implementing this procedure and comparing it to R's <code>predict.glm</code>, I actually think this book is showing the procedure for computing <em>confidence intervals</em>, not prediction intervals.</p>
+
+<p>Implementation of the procedure from Collett, with a comparison to <code>predict.glm</code>, is shown below.</p>
+
+<p>I would like to know: how do I go from here to producing a prediction interval instead of a confidence interval?</p>
+
+<pre><code>#Derived from Collett 'Modelling Binary Data' 2nd Edition p.98-99
+#Need reproducible ""random"" numbers.
+seed &lt;- 67
+
+num.students &lt;- 1000
+which.student &lt;- 1
+
+#Generate data frame with made-up data from students:
+set.seed(seed) #reset seed
+v1 &lt;- rbinom(num.students,1,0.7)
+v2 &lt;- rnorm(length(v1),0.7,0.3)
+v3 &lt;- rpois(length(v1),1)
+
+#Create df representing students
+students &lt;- data.frame(
+    intercept = rep(1,length(v1)),
+    outcome = v1,
+    score1 = v2,
+    score2 = v3
+)
+print(head(students))
+
+predict.and.append &lt;- function(input){
+    #Create a vanilla logistic model as a function of score1 and score2
+    data.model &lt;- glm(outcome ~ score1 + score2, data=input, family=binomial)
+
+    #Calculate predictions and SE.fit with the R package's internal method
+    # These are in logits.
+    predictions &lt;- as.data.frame(predict(data.model, se.fit=TRUE, type='link'))
+
+    predictions$actual &lt;- input$outcome
+    predictions$lower &lt;- plogis(predictions$fit - 1.96 * predictions$se.fit)
+    predictions$prediction &lt;- plogis(predictions$fit)
+    predictions$upper &lt;- plogis(predictions$fit + 1.96 * predictions$se.fit)
+
+
+    return (list(data.model, predictions))
+}
+
+output &lt;- predict.and.append(students)
+
+data.model &lt;- output[[1]]
+
+#summary(data.model)
+
+#Export vcov matrix 
+model.vcov &lt;- vcov(data.model)
+
+# Now our goal is to reproduce 'predictions' and the se.fit manually using the vcov matrix
+this.student.predictors &lt;- as.matrix(students[which.student,c(1,3,4)])
+
+#Prediction:
+this.student.prediction &lt;- sum(this.student.predictors * coef(data.model))
+square.student &lt;- t(this.student.predictors) %*% this.student.predictors
+se.student &lt;- sqrt(sum(model.vcov * square.student))
+
+manual.prediction &lt;- data.frame(lower = plogis(this.student.prediction - 1.96*se.student), 
+    prediction = plogis(this.student.prediction), 
+    upper = plogis(this.student.prediction + 1.96*se.student))
+
+print(""Data preview:"")
+print(head(students))
+print(paste(""Point estimate of the outcome probability for student"", which.student,""(2.5%, point prediction, 97.5%) by Collett's procedure:""))
+manual.prediction
+print(paste(""Point estimate of the outcome probability for student"", which.student,""(2.5%, point prediction, 97.5%) by R's predict.glm:""))    
+print(output[[2]][which.student,c('lower','prediction','upper')])
+</code></pre>
+"
+"0.280975743474508","0.284108234286227"," 29690","<p>I would like to construct predictions for a mixed model (logistic via glmer) on a new data set using only the fixed effects, holding the random effects to 0.    But I am having trouble setting up the model matrix to be able to calculate them.</p>
+
+<p>Since the mer class doesn't have a predict method, and since I want to omit the random effects for predictions on the new data set, I think I need to construct a model matrix for the fixed effects of the same structure used in the original model, but using the new data. Then multiply by the fixed effect coefficients in the model.  </p>
+
+<p>The fixed effect portion of my model formula contains factors and interaction terms between numeric fixed effects, so it's a little more complicated than just extracting the fixed variables from the matrix.  e.g. I need to ensure the factor contrast expansion is the same as the original, interaction terms are properly listed, etc.</p>
+
+<p>So my question is: what is the more straightforward general approach for constructing a new model matrix that mimics the structure of the original model matrix used in creating the model?</p>
+
+<p>I've tried model.matrix(my.model, data=newdata) but that seems to return the original model matrix, not one based on newdata.</p>
+
+<p>Sample code:</p>
+
+<pre><code>library(lme4)
+
+cake2 &lt;- head(cake) # cake2 is ""new"" data frame for future predictions
+
+# recipe is a fixed effect factor, temp is fixed effect numeric, replicate is random effect
+m &lt;- lmer(angle ~ temp + recipe + (1 | replicate), data=cake)
+summary(m)
+
+nrow(cake2)         # but new data frame has 6 rows
+nrow(cake)          # original data frame has 270 rows
+
+# attempt to make new model matrix using different data frame
+mod.mat.cake2 &lt;- model.matrix(m, data=cake2)
+nrow(mod.mat.cake2) # 270 rows, same as orig data frame
+</code></pre>
+
+<p>I tried other methods like extracting the terms from the formula and building a new formula from that, but it seemed overly convoluted, and brittle in handling factors and interaction terms.</p>
+
+<p>How can I get mod.mat.cake2 to be a fixed effect model matrix based on the formula in m, but using values from cake2?  Or is there an easier way to go about getting fixed-effect only predictions from an lmer model?</p>
+
+<p>All help is appreciated.  Thank you.</p>
+"
+"0.0936585811581694","0.0947027447620757"," 37714","<p>I would like to make a prediction for a (new) subject to have a certain outcome given the historical data and the model:</p>
+
+<pre><code>glm(outcome ~ age + treatment + history, family=binomial, ...) 
+</code></pre>
+
+<p>however in the historical data that will be fitted by the model, I have some sort of repeated measurements on some of the subjects (and I don't know if repeated measures is the appropriate term to be used here, hence using lmer etc is doubtful); example:<br></p>
+
+<pre><code>subject_ID    age    treatment    history    outcome
+S_1           33      T_1         H_1        0
+S_2           27      T_2         H_2        1
+S_2           27      T_3         H_2        1
+S_3           56      T_1         H_11       0
+etc...
+</code></pre>
+
+<p>In this example subject_2 (S_2) has two rows because he had simultaneously two different treatments at the same time. could a logistic regression still be used or should cases like subject_2 be removed from the analysis?</p>
+"
+"NaN","NaN"," 43785","<p>If I have a set of continuous predictors $X$ and a binary outcome $Y$ and I wanted to build a predictive model of $P(Y|X)$, I would start with a logistic regression model.</p>
+
+<p>However, in my particular case, my $Y$ isn't binary, it's continuous between 0 and 1.  Is there a similar Generalized Linear Model that can be applied in this case?  My optimistic/naive attempt in R reveals that </p>
+
+<pre><code>set.seed(123)
+df &lt;- data.frame(y=runif(8), x1=rnorm(8), x2=rnorm(8))
+mod &lt;- glm(y ~ ., data=df, family=binomial('logit'))
+
+# Warning message:
+# In eval(expr, envir, enclos) : non-integer #successes in a binomial glm!
+
+rbind(yhat=predict(mod, newdata=df), y=df$y)
+#              1         2          3         4         5          6         7           8
+# yhat 0.7461449 0.4869853 -0.1092115 1.9854276 0.8328304 -1.3708688 1.0150934 -0.03496334
+# y    0.2875775 0.7883051  0.4089769 0.8830174 0.9404673  0.0455565 0.5281055  0.89241904
+</code></pre>
+
+<p>Note that some of the predictions are outside of $(0,1)$.  Any suggestions?</p>
+"
+"0.114707866935281","0.115986700954059"," 47348","<p>I am trying to run a logistic regression in R on my data where my independent variables are 13 continuous variables and my dependent variable is binary.  I want to segment my data so that I train on the first 80% and test on the last 20%.  I have a total of 3750 rows of data so I utilize the first 3000 for training.  I have written the following:  </p>
+
+<pre><code>mydata&lt;-totaldata[1:3000,2:15]
+mylogit&lt;-glm(mydata$TARGET ~ mydata$VAR1+mydata$VAR2+mydata$VAR3+mydata$VAR4+ #$
+                             mydata$VAR5+mydata$VAR6+mydata$VAR7+mydata$VAR8+
+                             mydata$VAR9+mydata$VAR10+mydata$VAR11+mydata$VAR12+
+                             mydata$VAR13, family=""binomial"")
+
+predictdata=totaldata[3001:3751,3:15]
+in_frame&lt;-data.frame(predictdata)
+predictions=predict(mylogit,in_frame,type=""response"")
+</code></pre>
+
+<p>However I get the following warning message: 
+Warning message:
+'newdata' had 751 rows but variable(s) found have 3000 rows </p>
+
+<p>Then when I look at predictions there are 3000 predictions not the 751 that I wanted.  What can I do to fix this?</p>
+"
+"0.132453235706504","0.100447429527364"," 49141","<p>My predictions coming from a logistic regression model (glm in R) are not bounded between 0 and 1 like I would expected. My understanding of logistic regression is that your input and model parameters are combined linearly and the response is transformed into a probability using the logit link function. Since the logit function is bounded between 0 and 1, I expected my predictions to be bounded between 0 and 1.</p>
+
+<p>However that's not what I see when I implement logistic regression in R:</p>
+
+<pre><code>data(iris)
+iris.sub &lt;- subset(iris, Species%in%c(""versicolor"",""virginica""))
+model    &lt;- glm(Species ~ Sepal.Length + Sepal.Width, data = iris.sub, 
+                family = binomial(link = ""logit""))
+hist(predict(model))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/0BHU5.png"" alt=""enter image description here""></p>
+
+<p>If anything the output of predict(model) looks normal to me. Can anyone explain to me why the values I get are not probabilities?</p>
+"
+"0.114707866935281","0.115986700954059"," 56440","<p>So I'm working with logistic regression models in R. Though I'm still new to statistics I feel like I got a bit of an understanding for regression models by now, but there's still something that bothers me:</p>
+
+<p>Looking at the linked picture, you see the summary R prints for an example model I created. The model is trying to predict, if an email in the dataset will be refound or not (binary variable <code>isRefound</code>) and the dataset contains two variables closely related to <code>isRefound</code> , namely <code>next24</code> and <code>next7days</code> - these are also binary and tell if a mail will be clicked in the next 24hrs / next 7 days from the current point in the logs.</p>
+
+<p>The high p-value should indicate, that the impact this variable has on the model prediction is pretty random, isn't it? 
+Based on this I don't understand why the precision of the models predictions drops below 10% when these two variables are left out of the calculation formula. If these variables show such a low significance, why does removing them from the model have such a big impact?</p>
+
+<p>Best regards and thanks in advance,
+Rickyfox</p>
+
+<p><img src=""http://i.stack.imgur.com/oiCrN.png"" alt=""enter image description here""></p>
+
+<hr>
+
+<h2>EDIT:</h2>
+
+<p>First I removed only next24, which should yield a low impact because it's coef is pretty small. As expected, little changed - not gonna upload a pic for that. </p>
+
+<p>Removing next7days tho had a big impact on the model: AIC 200k up, precision down to 16% and recall down to 73%</p>
+
+<p><img src=""http://i.stack.imgur.com/583nx.png"" alt=""enter image description here""></p>
+"
+"0.0936585811581694","0.0947027447620757"," 56871","<p>I have a dataset from a bank with demographic data and one variable telling if the customer is a good customer or not (binary variable). I would like to do prediction on if the customer is good or not based on this demographic data.</p>
+
+<p>I managed to do it with a logistic regression, but would like now to compare the result (classification rate) with neural networks. </p>
+
+<p>I found 2 functions from different packages doing that:
+- nnet()
+- neuralnet()
+But those functions seem to be conceived for numerical dependent variables.</p>
+
+<p>Thus my question: is there a possibility to use these functions for a categorical numerical variable (by estimating a posteriori probabilities for instance) or is there another function doing that?</p>
+
+<p>Thanks a lot!</p>
+
+<p>Robin</p>
+"
+"0.132453235706504","0.133929906036485"," 61344","<p>In a paper by <a href=""http://www.ncbi.nlm.nih.gov/pubmed/23628224"" rel=""nofollow"">Faraklas et al</a>, the researchers create a Necrotizing Soft-Tissue Infection Mortality Risk Calculator. They use logistic regression to create a model with mortality from necrotizing soft-tissue infection as the main outcome and then calculate the area under the curve (AUC). They use the bootstrap method to find the ""bootstrap optimism-corrected ROC area.""</p>
+
+<p>If I were to do this in <code>R</code>, how would it look like? The code I have been toying with looks something like below:</p>
+
+<pre><code>library(boot)
+library(ROCR)
+
+auc_calc &lt;- function(data, indices, outcomes) {
+  d &lt;- data[indices,]
+  # Using glm for logistic regression
+  # Do I recreate the glm model for each dataset?
+  fit &lt;- glm(outcomes[indices,] ~ X1 + X2 + X3, data=d, family=binomial)
+  fit.predict &lt;- predict(fit, type=""response"")
+
+  # Using ROCR to calculate AUC
+  pred &lt;- prediction(fit.predict, outcomes[indices,])
+  perf &lt;- performance(pred, ""auc"")
+
+  # Returning the AUC
+  return(perf@y.values[[1]])
+}
+
+boot.results &lt;- boot(data=my.data, statistic=auc_calc, R=10000, outcomes=my.outcomes)
+</code></pre>
+
+<p>Is this correct? Or am I doing something wrong - namely should I be passing in a glm model rather than recalculating it each time? As always thanks for the help.</p>
+"
+"0.198679853559757","0.200894859054728"," 65690","<p>I fit a logistic on three numeric continuous variables, followed by a categorical factor [Y, N].</p>
+
+<pre><code>logit2A &lt;- glm(DisclosedDriver ~ VehDrvr_Dif+POL_SEQ_NUM+PRMTOTAL+SAFE_DRVR_PLEDGE_FLG, data = DF, family = ""binomial"") 
+</code></pre>
+
+<p>Fit looks wonderful.</p>
+
+<pre><code>Coefficients:
+                    Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)           -2.204e+00  2.253e-01  -9.782  &lt; 2e-16 ***
+VehDrvr_Dif            2.918e-01  1.026e-01   2.845 0.004440 ** 
+POL_SEQ_NUM           -1.893e-01  5.617e-02  -3.370 0.000751 ***
+PRMTOTAL               1.109e-04  5.526e-05   2.006 0.044804 *  
+SAFE_DRVR_PLEDGE_FLGY -7.220e-01  1.633e-01  -4.422 9.76e-06 ***
+</code></pre>
+
+<p>So obviously R took the Safe_Drvr_Pledge_Flg categorical factor variable and placed all 'N' values in reference or intercept as opposed to the listed 'Y'.</p>
+
+<p>Now I want to take my fit and calculate the probabilities that my model determines. And here comes the error:</p>
+
+<pre><code>&gt; DF$P_GLM&lt;- predict.glm(logit2A, DF, type=""response"", se.fit=FALSE)
+    Error in model.frame.default(Terms, newdata, na.action = na.action, xlev = object$xlevels) : 
+factor SAFE_DRVR_PLEDGE_FLG has new levels 
+</code></pre>
+
+<p>Umm... no it doesn't, because I just fit the model with the exact same data I'm trying to use for the prediction. What's the problem?</p>
+
+<p>Trying to respond to first comment:
+Don't know what you mean. I've got 3500 rows of data... It's a logistic regression on 4 continuous variables and one categorical. The categorical has two values, Y or N. My glm fit give the numbers given. I just want to plug it all back in with the predict function and it gives me that error. Here's the categorical variable:</p>
+
+<pre><code> &gt; DF$SAFE_DRVR_PLEDGE_FLG
+ [1] Y Y Y Y Y Y Y N Y Y Y Y Y Y Y Y Y Y Y N Y Y N Y Y N Y Y N Y Y Y Y Y Y Y Y Y Y N Y Y N Y Y Y N Y Y Y Y Y N Y Y Y Y Y Y
+ [60] Y Y Y Y N Y Y Y Y Y Y Y Y N Y Y Y N N Y N Y Y Y Y Y N Y Y N Y N N Y Y Y N Y Y Y Y N Y Y Y Y Y N Y N Y N Y Y Y Y Y N Y
+ [119] N Y Y Y Y Y Y Y Y N Y Y Y Y Y Y N Y Y Y N Y Y Y N Y Y Y N N Y N N N Y N Y Y Y N N Y Y N Y Y Y Y N N Y Y Y Y N N Y N N
+ Levels:  N Y
+</code></pre>
+
+<p>What do you mean by a working example? The fit works. The probability output of the predict function doesn't...</p>
+"
+"NaN","NaN"," 66946","<p>When you predict a fitted value from a logistic regression model, how are standard errors computed?  I mean for the <em>fitted values</em>, not for the coefficients (which involves Fishers information matrix).</p>
+
+<p>I only found out how to get the numbers with <code>R</code> (e.g., <a href=""https://stat.ethz.ch/pipermail/r-help/2010-August/248241.html"">here</a> on r-help, or <a href=""http://stackoverflow.com/questions/14423325/confidence-intervals-for-predictions-from-logistic-regression"">here</a> on Stack Overflow), but I cannot find the formula.</p>
+
+<pre><code>pred &lt;- predict(y.glm, newdata= something, se.fit=TRUE)
+</code></pre>
+
+<p>If you could provide online source (preferably on a university website), that would be fantastic.</p>
+"
+"0.229415733870562","0.212642285082441"," 73165","<p>I have a logistic regression model (fit via glmnet in R with elastic net regularization), and I would like to maximize the difference between true positives and false positives.  In order to do this, the following procedure came to mind:</p>
+
+<ol>
+<li>Fit standard logistic regression model</li>
+<li>Using prediction threshold as 0.5, identify all positive predictions</li>
+<li>Assign weight 1 for positively predicted observations, 0 for all others</li>
+<li>Fit weighted logistic regression model</li>
+</ol>
+
+<p>What would be the flaws with this approach?  What would be the correct way to proceed with this problem?</p>
+
+<p>The reason for wanting to maximize the difference between the number of true positives and false negatives is due to the design of my application.  As part of a class project, I am building a autonomous participant in an online marketplace - if my model predicts it can buy something and sell it later at a higher price, it places a bid.  I would like to stick to logistic regression and output binary outcomes (win, lose) based on fixed costs and unit price increments (I gain or lose the same amount on every transaction).  A false positive hurts me because it means that I buy something and am unable to sell it for a higher price.  However, a false negative doesn't hurt me (only in terms of opportunity cost) because it just means if I didn't buy, but if I had, I would have made money.  Similarly, a true positive benefits me because I buy and then sell for a higher price, but a true negative doesn't benefit me because I didn't take any action.</p>
+
+<p>I agree that the 0.5 cut-off is completely arbitrary, and when I optimized the model from step 1 on the prediction threshold which yields the highest difference between true/false positives, it turns out to be closer to 0.4.  I think this is due to the skewed nature of my data - the ratio between negatives and positives is about 1:3.</p>
+
+<p>Right now, I am following the following steps:</p>
+
+<ol>
+<li>Split data intto training/test</li>
+<li>Fit model on training, make predictions in test set and compute difference between true/false positives</li>
+<li>Fit model on full, make predictions in test set and compute difference between true/false positives</li>
+</ol>
+
+<p>The difference between true/false positives is smaller in step #3 than in step #2, despite the training set being a subset of the full set.  Since I don't care whether the model in #3 has more true negatives and less false negatives, is there anything I can do without altering the likelihood function itself?</p>
+"
+"NaN","NaN"," 76155","<p>I'm dealing with some data where there are some infrequently occuring categorical variables related to a binary prediction target. </p>
+
+<p>For example marketing partners... some send 1000s of leads but many others send less than 10 a minuscule number in a data set with 20K+ examples.</p>
+
+<p>Typically, we deal with this by grouping all the infrequently occurring partners under the variable ""Else"" and using this as the reference category in logistic regression.</p>
+
+<p>I'm wondering what the pros and cons are of handling the issue like this and if there is a better way to deal with it in pre-processing phase.</p>
+"
+"0.21964884255349","0.201906930241171"," 90906","<p>I'm new to R and logistic regression and have to admit that I don't really know how to interpret the result. I'm trying to compute a pretty simple model with 2 predictors (A and B). When I first try to compute models with the predictors one by one they are both significant. When I put them together and add an interaction term they lose their significance (but the interaction term is weakly significant). I interpret this as A and B are overlapping and no longer significant when the oter parameter is hold constant. Right?</p>
+
+<p>But now to the part I don't know how to interpret. I make predictions from my models (see code below) and then run t-tests for the predictions vs. the depending variable. I think this should give a hint on how good the model is (is there a better way?). When I do it this way I get a much lower p-value for the model with both A and B. I think this is contradictory. The first part tells me that A doesn't provide any significant information to the model when combined with B, but on the other hand I get much better predictions. I guess something is really wrong, but I can't figure out what. Can you help me?</p>
+
+<pre><code>model1=glm(f~A, , family=binomial(link=""logit""))
+model2=glm(f~B,   family=binomial(link=""logit""))
+model3=glm(f~A*B, family=binomial(link=""logit""))
+summary(model1)
+summary(model2)
+summary(model3)
+p1=predict(model1, newdata=data, type=""response"", na.rm=TRUE)
+p2=predict(model2, newdata=data, type=""response"", na.rm=TRUE)
+p3=predict(model3, newdata=data, type=""response"", na.rm=TRUE)
+t.test(p1~f)
+t.test(p2~f)
+t.test(p3~f)
+</code></pre>
+
+<p>Part of the output:  </p>
+
+<pre><code>&gt; summary(model1)
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.9756     0.3499  -5.647 1.64e-08 ***
+A            -0.5898     0.2119  -2.784  0.00537 ** 
+
+&gt; summary(model2)
+              Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)  8.354e-01  1.309e+00   0.638   0.5234  
+B           -1.028e-04  5.122e-05  -2.007   0.0447 *
+
+&gt; summary(model3)
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)  1.254e+00  1.705e+00   0.735    0.462  
+A            1.589e+00  9.743e-01   1.631    0.103  
+B           -1.324e-04  7.333e-05  -1.805    0.071 .
+A:B         -9.418e-05  4.632e-05  -2.033    0.042 *
+
+&gt; t.test(p1~f)
+t = -2.614, df = 11.83, p-value = 0.02286
+
+&gt; t.test(p2~f)
+t = -1.8702, df = 15.679, p-value = 0.08024
+
+&gt; t.test(p3~f)
+t = -4.9777, df = 17.344, p-value = 0.0001084
+</code></pre>
+"
+"NaN","NaN"," 91847","<p>Suppose I have a logistic regression model such like this:</p>
+
+<pre><code>set.seed(123)
+df&lt;-data.frame(
+y=rbinom(100,1,0.5),
+x1=rnorm(100,10,2),
+x2=rbinom(100,20,0.6))
+
+fit&lt;-glm(y~x1*x2,data=df,family=""binomial"")
+coef(summary(fit))
+               Estimate Std. Error    z value  Pr(&gt;|z|)
+(Intercept)  5.08314564 6.43692399  0.7896855 0.4297115
+x1          -0.66691041 0.64071095 -1.0408912 0.2979260
+x2          -0.28338654 0.51254819 -0.5528974 0.5803337
+x1:x2        0.04037126 0.05100223  0.7915588 0.4286180
+</code></pre>
+
+<p>Does somebody know how to get the prediction matrix in a format like this:</p>
+
+<pre><code>    intercept x1       x2  x1:x2
+1   1        10.506637 10  105.06637
+2   1        9.942906  17  169.02941
+3   1        9.914259  10  99.14259
+4   1        12.737205 11  140.10925
+</code></pre>
+"
+"0.187317162316339","0.165729803333632"," 91903","<p>Is the probability calculated by a logistic regression model (the one that is logit transformed) the fit of cumulative distribution function of successes of original data (ordered by the X variable)?</p>
+
+<p><strong>EDIT:</strong> In other words - how to plot the probability distribution of the original data that you get when you fit a logistic regression model?</p>
+
+<p>The motivation for the question was Jeff Leak's example of regression on the Raven's score in a game and whether they won or not (from Coursera's Data Analysis course). Admittedly, the problem is artificial (see @FrankHarrell's comment below). Here is his data with a mix of his and my code:</p>
+
+<pre><code>download.file(""http://dl.dropbox.com/u/7710864/data/ravensData.rda"", 
+              destfile=""ravensData.rda"", method=""internal"")
+load(""ravensData.rda"")
+
+plot(ravenWinNum~ravenScore, data=ravensData)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/Cr5ka.png"" alt=""enter image description here"">  </p>
+
+<p>It doesn't seem like good material for logistic regression, but let's try anyway:</p>
+
+<pre><code>logRegRavens &lt;- glm(ravenWinNum ~ ravenScore, data=ravensData, family=binomial)
+summary(logRegRavens)
+# the beta is not significant
+
+# sort table by ravenScore (X)
+rav2 = ravensData[order(ravensData$ravenScore), ]
+
+# plot CDF
+plot(sort(ravensData$ravenScore), cumsum(rav2$ravenWinNum)/sum(rav2$ravenWinNum), 
+         pch=19, col=""blue"", xlab=""Score"", ylab=""Prob Ravens Win"", ylim=c(0,1), 
+         xlim=c(-10,50))
+# overplot fitted values (Jeff's)
+points(ravensData$ravenScore, logRegRavens$fitted, pch=19, col=""red"")
+# overplot regression curve
+curve(1/(1+exp(-(logRegRavens$coef[1]+logRegRavens$coef[2]*x))), -10, 50, add=T)
+</code></pre>
+
+<p>If I understand logistic regression correctly, R does a pretty bad job at finding the right coefficients in this case.  </p>
+
+<p><img src=""http://i.stack.imgur.com/Cb6o8.png"" alt=""enter image description here""></p>
+
+<ul>
+<li>blue = original data to be fitted, I believe (CDF)  </li>
+<li>red = prediction from the model (fitted data = projection of original data onto regression curve)</li>
+</ul>
+
+<p><strong>SOLVED</strong><br>
+ - lowess seems to be a good non-parametric estimator of the original data = what is being fitted (thanks @gung). Seeing it allows us to choose the right model, which in this case would be adding squared term to the previous model (@gung)<br>
+ - Of course, the problem is pretty artificial and modelling it rather pointless in general (@FrankHarrell)<br>
+ - in regular logistic regression it's not CDF, but point probabilities - first pointed out by @FrankHarrell; also my embarrassing inability to calculate CDF pointed out by @gung.</p>
+"
+"0.148087219439773","0.119790549647096"," 92935","<p>I'm making a project connected with identifying the dynamics of sales. My database concerns 26 weeks (so equally in 26 time-series observations) after launching the product.</p>
+
+<p>This is what my database looks like: <a href=""https://imageshack.com/i/0yyh6ij"" rel=""nofollow"">https://imageshack.com/i/0yyh6ij</a> </p>
+
+<p>I want to make forecast based on S-curve for clusters of time-series. The main aim was to compare two methods of forecasting:</p>
+
+<ol>
+<li>based on parameters of logistic curve</li>
+<li>based on ARIMA</li>
+</ol>
+
+<p>However, I do not know how to compare these two methods = measure their performance.</p>
+
+<p>That's a plot with prediction based on S-curve</p>
+
+<p><a href=""http://imageshack.com/a/img850/6600/rzkp.jpg"" rel=""nofollow"">http://imageshack.com/a/img850/6600/rzkp.jpg</a></p>
+
+<p>So my questions are:</p>
+
+<ol>
+<li>How to measure performance=forecast errors based on logistic curve?</li>
+<li>How to compare forecasting based on logistic curve and ARIMA - what is the main difference between these two approaches if I base on one variable - units_sold_that_week?</li>
+</ol>
+
+<p>I would be grateful for any explanation.</p>
+"
+"0.264906471413009","0.251118573818409"," 95378","<p>I am doing statistics for the first time in my life and I am not quite sure what to include and how to interpret the results. I am doing a logistic regression in R. Here is what I have so far:</p>
+
+<ol>
+<li><p><code>GLM</code> with family = binomial (dependent ~ indep1 + indep2 + ...+ indep7  +0)
+If I dont include the 0 I get NA for my last independent variable in the summary output..</p></li>
+<li><p><code>Update</code> the model (indep2 has a p-value > 0.05 and is left out)</p></li>
+<li><p>I am applying anova</p>
+
+<pre><code>anova(original_model,updated_model, test=""Chisq"")
+
+   Resid.Df  Resid.Dev Df Deviance Pr(&gt;Chi)
+1     34067      18078                     
+2     34066      18075  1   2.4137   0.1203
+</code></pre>
+
+<p>Here I am not sure how to interpret it. What tells me if the simplification of the model is significant? the p-value is with 0.12 bigger than 0.05, does this mean that the simplification is not significant? </p></li>
+<li><p>make a cross-table (compare predicted (probability >0.5) - observed)</p>
+
+<pre><code>fit
+      FALSE  TRUE
+  No  30572    68
+  yes  3407    31
+</code></pre>
+
+<p>I'd say that 31 values are predicted correctly (yes-true), resp 68 (no-true) but that most values are classified wrong, which means that the model is really bad?</p></li>
+<li><p>then I make a wald test for each independent variable for the first independent variable it would look like this:</p>
+
+<pre><code>&gt; wald.test(b = coef(model_updated), Sigma = vcov(model_updated), Terms
+&gt; = 1:1)
+</code></pre>
+
+<p>here I only look if the p-values are significant and if they are it means that all variables contribute significantly to the predictive ability of the model</p></li>
+<li><p>I calculate the odds with their confidence intervals (this is basically exp(estimate)</p>
+
+<pre><code>oddsCI &lt;- exp(cbind(OR = coef(model_updated), confint(model_updated)))
+</code></pre>
+
+<p>For all odds smaller than 1 i do 1/odd</p>
+
+<pre><code>Estimate        Odds Ratio      Inverse Odds
+-0.000203       0.999801041     1.000198999
+ 0.000332       1.000326571     odd bigger than 1
+-0.000133       0.999846418     1.000153605
+-3.48       0.008696665     114.9866056
+-4.85       0.029747223     33.61658319
+-2.37       0.000438382     2281.113996
+-8.16       0.110348634     9.062187402
+-2.93       0.062668509     15.95697759
+-3.65       0.020156889     49.61083057
+-5.45       0.033996464     29.41482359
+-4.02       0.004837987     206.6975334
+</code></pre>
+
+<p>This O would interpret like that for the ""odd bigger than 1""  the case is over 1 times more likely to occur. (Is is incorrect to say that, or not?) Or for the last row you could say that t for every subtraction of a unit, the odds for the case to appear decreases by a factor of 206.</p></li>
+<li><p>Then I look at </p>
+
+<pre><code>with(model_updated, null.deviance - deviance) #deviance
+with(model_updated, df.null - df.residsual) #degrees of freedom
+ # pvalue
+with(Amodel_updated, pchisq(null.deviance - deviance, df.null - df.residual, 
+lower.tail = FALSE))
+logLik(model_updated)
+</code></pre>
+
+<p>But I don't really know what this tells me.</p></li>
+<li><p>In a last step I do</p>
+
+<pre><code>stepAIC(model_updated, direction=""both"")
+</code></pre>
+
+<p>but also here I don't know how to interpret the outcome. I see that it looks at all interactions between my independent variables but I don't know what it tells me.</p></li>
+</ol>
+
+<p>After this, I can make a prediction by using the updated model and by separating it into training data and validation data I suppose?</p>
+"
+"0.175219161012616","0.177172612243394"," 95974","<p>This is a follow-up question from this post, here:
+<a href=""http://stackoverflow.com/questions/14423325/confidence-intervals-for-predictions-from-logistic-regression"">Confidence intervals for predictions from logistic regression</a></p>
+
+<p>The answer from @Gavin is excellent, but I have some additional questions which I think would be useful for others. I am working with a Poisson model, so basically it is the same approach described in the other post, only <code>family=poisson</code> instead of <code>family=binomial</code>.</p>
+
+<p>To my first question:
+@Gavin writes:</p>
+
+<pre><code>mod &lt;- glm(y ~ x, data = foo, family = binomial)
+preddat &lt;- with(foo, data.frame(x = seq(min(x), max(x), length = 100))
+preds &lt;- predict(mod, newdata = preddata, type = ""link"", se.fit = TRUE)
+</code></pre>
+
+<p>What is the point of the second line there? Is it necessary to create a data.frame with minimum and maximum of the explanatory variable? Could I not, for some explanatory variable(s) <code>x</code> (stored in some data frame <code>data</code>), just go from the first line and directly to the third?</p>
+
+<p>To my second question:
+In the beginning of his answer @Gavin writes:</p>
+
+<blockquote>
+  <p>The usual way is to compute a confidence interval on the scale of the
+  linear predictor, where things will be more normal (Gaussian) and then
+  apply the inverse of the link function to map the confidence interval
+  from the linear predictor scale to the response scale.</p>
+</blockquote>
+
+<p>Why are ""things"" more normal on the scale of the linear predictor(s)? Is this also the case when I do my Poisson regression?
+I assume the reason for using critical value 1.96 when constructing the CI's, is because of the assumptions that ""things"" are normal. Can somebody explain this further?</p>
+
+<p>My third question:</p>
+
+<p>Is there a relationship between the standard deviation which we get by using <code>se.fit=TRUE</code>  in predict() and the standard deviations of the coefficients of the explanatory variables, which we simply get from <code>summary(mod)</code>? (<code>mod</code> is some glm object)</p>
+"
+"0.132453235706504","0.133929906036485"," 97347","<p>How can I improve the accuracy of my logistic regression code, which tests the accuracy using the 10-fold cross-validation technique? I have implemented this code using <code>glmfit</code> and <code>glmval</code>. The desired accuracy is somewhat higher and it requires the parameters to be found using maximum likelihood estimator. Also, when I run this code in MATLAB, I get the following error</p>
+
+<blockquote>
+  <p>Warning: X is ill conditioned, or the model is overparameterized, and some coefficients are not identifiable. You should use caution in making predictions. In glmfit at 245 In LR at 8</p>
+</blockquote>
+
+<p>The code is:</p>
+
+<pre><code>function LR( X,y)
+y(y==-1)=0;
+X=[ones(size(X,1),1) X];
+disp(size(X,2));
+indices = crossvalind('Kfold',y,10);
+for i = 1:10
+    test = (indices == i); train = ~test;
+    b = glmfit(X(train,:),y(train),'binomial','logit');
+    y_hat= glmval(b,X(test,:),'logit');
+    y_true=y(test,:);
+    error(i)=mean(abs(y_true-y_hat));
+end
+accuracy=(1-error)*100;
+fprintf('accuracy= %f +- %f\n',mean(accuracy),std(accuracy));
+end
+</code></pre>
+"
+"0.198679853559757","0.178573208048647","102892","<p>My situation:</p>
+
+<ul>
+<li>small sample size: 116</li>
+<li>binary outcome variable</li>
+<li>long list of explanatory variables: 44</li>
+<li>explanatory variables did not come from the top of my head; their choice was based on the literature.</li>
+</ul>
+
+<p>Statistical test chosen: logistic regression</p>
+
+<p>I need to find the variables that best explain variations in the outcome variable (I am not interested in making predictions).</p>
+
+<p>The problem: This question is a follow-up on the 2 questions listed below. From them, I got that performing automated stepwise regression has its downsides. Anyway, it seems that my sample size would be too small for that. It seems that my sample is also too small to enter all variables at once (using the SPSS 'Enter' method). This leaves me with my issue unresolved: how can I select a subset of variables from my original long list in order to perform multivariate logistic regression analysis?</p>
+
+<p>UPDATE1: I am not an statistician, so I would appreciate if jargons can be reduced to the minimum. I am working with SPSS and am not familiar with other packages, so options that could be run with that software would be highly preferable.</p>
+
+<p>UPDATE2: It seems that SPSS does not support LASSO for logistic regression. So following one of your suggestions, I am now struggling with R. I have passed through the basics, and managed to run a univariate logistic regression routine successfully using the glm code. But as I tried glmnet with the same dataset, I am receiving an error message. How could I fix it? Below is the code I used, followed by the error message:</p>
+
+<pre><code>data1 &lt;- read.table(""C:\\\data1.csv"",header=TRUE,sep="";"",na.string=99:9999)
+
+y &lt;- data1[,1]
+
+x &lt;- data1[,2:45]
+
+glmnet(x,y,family=""binomial"",alpha=1)  
+
+**in lognet(x, is.sparse, ix, jx, y, weights, offset, alpha, nobs,  : 
+(list) object cannot be coerced to type 'double'**
+</code></pre>
+
+<p>UPDATE3: I got another error message, now related to missing values. My question concerning that matter is <a href=""http://stats.stackexchange.com/questions/104194/how-to-handle-with-missing-values-in-order-to-prepare-data-for-feature-selection"">here</a>. </p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/questions/88482/can-univariate-linear-regression-be-used-to-identify-useful-variables-for-a-subs"">Can univariate linear regression be used to identify useful variables for a subsequent multiple logistic regression?</a></li>
+<li><a href=""http://stats.stackexchange.com/questions/20836/algorithms-for-automatic-model-selection/20856#20856"">Algorithms for automatic model selection</a></li>
+</ul>
+"
+"0.187317162316339","0.189405489524151","102973","<p>I am using logistic regression to benchmark the performance of some students in different years. I created a scenario as below:</p>
+
+<pre><code>mydata &lt;- read.csv(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+benchmark.data &lt;- mydata[1:300,] # students form year 1990-1995 as benchmark
+compare.data &lt;- mydata[301:400,] # students from year 1996
+
+# logistic regression model created using benchmark student result
+temp.glm &lt;- glm(admit~gre+gpa+rank,data=benchmark.data,family=""binomial"")
+
+# using the regression model to predict how students in 1996 perform
+compare.data[,""predict""] &lt;- predict(temp.glm,newdata=compare.data,type=""response"")
+
+# making a threshold that if the predicted chance of admit &gt; 0.5, then it is asssumed that the student will get admitted
+compare.data[,""predict_admit""] &lt;- ifelse(compare.data[,""predict""]&gt;0.5,1,0)
+table(compare.data[,c(""admit"",""predict_admit"")])
+
+#      predict_admit
+# admit  0  1
+#     0 59  6
+#     1 26  9
+</code></pre>
+
+<p>From the table, it is seen that 15 students predicted to get admitted and actual number of students get admitted is 35, so the observed/expected ratio is <code>35/15=2.33</code>, as it is larger than <code>1</code>, so I will say that students in year 1996 is performing better than benchmark.</p>
+
+<p>Can I draw my conclusion using the method mentioned above?</p>
+
+<p>Besides, how should I set the threshold? Or should I <code>sum(compare.data[,""predict""])</code> and treat it as expected value?</p>
+
+<h3>Update 1</h3>
+
+<p>I tried and used ROC curve to determine the threshold:</p>
+
+<pre><code>library(ROCR)
+benchmark.data[,""predict""] &lt;- predict(temp.glm,newdata=benchmark.data,type=""response"")
+preds &lt;- prediction(benchmark.data[,""predict""],as.numeric(benchmark.data[,""admit""]))
+plot(performance(preds,""tpr"",""fpr""),print.cutoffs.at=seq(0,1,by=0.05))
+</code></pre>
+
+<p>And the charts suggests that threshold at 0.35 seems to give maximized sensitivity and specificity.</p>
+"
+"0.132453235706504","0.133929906036485","109851","<p>I am using logistic regression to predict likelihood of an event occurring. Ultimately, these probabilities are put into a production environment, where we focus as much as possible on hitting our ""Yes"" predictions. It is therefore useful for us to have an idea of what definitive ""hits"" or ""non-hits"" might be <em>a priori</em> (before running in production), in addition to other measures we use for informing this determination.</p>
+
+<p>My question is, what would be the proper way to predict a definitive class (1,0) based on  the predicted probability? Specifically, I use R's <code>glmnet</code> package for my modeling. This package arbitrarily picks .5 probability as threshold for a yes or no. I believe that I need to take the results of a proper scoring rule, based on predicted probabilities, to extrapolate  to a definitive class. An example of my modeling process is below:</p>
+
+<pre><code>mods &lt;- c('glmnet', 'scoring')
+lapply(mods, require, character.only = T)
+
+# run cross-validated LASSO regression
+fit &lt;- cv.glmnet(x = df1[, c(2:100)]), y = df1[, 1], family = 'binomial', 
+type.measure = 'auc')
+
+# generate predicted probabilities across new data
+df2$prob &lt;- predict(fit, type=""response"", newx = df2[, c(2:100)], s = 'lambda.min')
+
+# calculate Brier score for each record
+df2$propscore &lt;- brierscore(df2[,1] ~ df2$prob, data = df2)
+</code></pre>
+
+<p>So I now have a series of Brier scores for each prediction, but then how do I use the Brier score to appropriately weight each likelihood being a yes or no?</p>
+
+<p>I understand that there are other methods to make this determination as well, such as Random Forest.</p>
+"
+"0.175219161012616","0.177172612243394","110136","<p>I'm working on a prediction model for a continuous variable (amount of medicine injected) .I use R for modeling.My project flow is to multiply the prediction of a glm (logistic regression) model that is used to predict 0/1 if a medicine was injected at all with an lm (linear regression) model that is used predict amount of medicine injected - this model works rather good In R .My problem is that when I move this model to MSSQL I get different values for the prediction (i.e. for a random row the value in the R is 400 and in SQL the value for the same row is 640.The model in SQL is made by attaching the models coefficiants from the glm model to produce the glm prediction values and then multiplying it with the lm model prediction values. I don't understand why there is a difference if I use the same coefficients?</p>
+
+<p>Here is the code for the lm and glm models in r:</p>
+
+<pre><code>d7_lm&lt;-lm(Ttl_Inject~UserSource+IsNewIndividual+IsCross,data=train)
+d7_glm&lt;-glm(Is_Injected~UserSource+IsNewIndividual+IsCross,data=train)
+</code></pre>
+
+<p>Here is a part of the r code for the prediction:</p>
+
+<pre><code>demo$d7_lm_pred&lt;-predict(d7_lm,newdata=demo,type='response')
+    demo$d7_glm_pred_response&lt;-ifelse(predict(d7_glm,newdata=demo,type='response')&gt;0.5,1,0)
+demo$glm01_lm_response&lt;-demo$d7_lm_pred*demo$d7_glm_pred_response # this is used for a container of the prediction model's values.
+</code></pre>
+
+<p>Here is a part of the SQL code : </p>
+
+<pre><code>select TOP 1000*, InjectionAmount_pred= (-2.213e -1.180e+00*(case when User='IAF' then 1 else 0 end)-1.665e+00*(case when UserSource='Viral' then 1 else 0 end)
++IsNewIndividual  *  1.167e+00+IsCross )
+
+* IIF((1 / (1 + EXP(-(-1.346e-03+1.140e-02*(case when UserSource='IAF' then 1 else 0 end) -2.975e-03*(case when UserSource='Viral' then 1 else 0 end)
+-IsNewIndividual  * 1.503e-04 +IsCross ))))&gt;0.5,1,0) 
+</code></pre>
+"
+"0.132453235706504","0.133929906036485","113309","<p>Objective: To predict time to event of a customer using R
+I developed a Non parametric model but as per my understanding we cannot perform predictions from these models, so I have to build a model which can predict for any test data. I hope extended cox model will work for my case (we have time depended co variants)</p>
+
+<p>Questions:</p>
+
+<ol>
+<li><p>How the data structure would be for extended cox model?</p></li>
+<li><p>What we will predict from Cox model (In logistic model we will predict probability in the similar lines what is for survival model)?</p></li>
+<li>Variable Importance</li>
+<li><p>Can we predict time when a customer will leave from the study?</p></li>
+<li><p>How to validate the model?</p></li>
+</ol>
+
+<p>It would be great if someone provide the R code for the above questions 2, 3, and 4</p>
+
+<p>Thanks in advance.</p>
+"
+"0.0662266178532522","0.0669649530182425","114218","<p>After running a gradient boosted model with <code>n</code> data points using multinomial regression where the response variable (a factor, as required by the gbm function) has <code>k</code> levels with R package gbm, I see that the predictions are output as as a vector of length <code>n*k</code>. Predicted responses are from:</p>
+
+<pre><code>probs.var.multinom &lt;- predict.gbm(gbm.model.multinom, test.data, best.iter.gbm, 
+                                  type=""response"")
+</code></pre>
+
+<p>Note that this is different from the output of a logistic (distribution = ""bernoulli"") model, where the results are a vector the same length as the number of cases.</p>
+
+<p>How should this be interpreted? Specifically, how can I link the response vector back to the input data set to evaluate the classification?</p>
+"
+"NaN","NaN","120254","<p>I'm familiar with (some) approaches to evaluating the fit (or accuracy) of a binary (logistic) model (e.g. AUC). Are there methods/approaches that are particularly well-suited for a binomial (success vs. failure) model? </p>
+
+<p>If the suggestion is to use a variant of a (pseudo-) R-square, what are recommended approaches?  I can think of a few, using logit vs. response-scale predictions and with and without weighting by # of subjects, but am unsure of their appropriateness: </p>
+
+<p>[<code>s</code> = # of successes, <code>f</code> = # of failures]</p>
+
+<ol>
+<li><p><code>summary(lm(predict(model)~I(s/(s+f))))$r.square</code></p></li>
+<li><p><code>summary(lm(predict(model,type='response')~I(s/(s+f))))$r.square</code></p></li>
+<li><p><code>summary(lm(predict(model)~I(s/(s+f)),weights=s+f))$r.square</code></p></li>
+<li><p><code>summary(lm(predict(model,type='response')~I(s/(s+f)),weights=s+f))$r.square</code></p></li>
+<li><p><code>1-var(residuals(model))/(var(s/(s+f)))</code></p></li>
+</ol>
+"
+"0.229415733870562","0.212642285082441","122212","<p>I have been developing a logistic regression model based on retrospective data from a national trauma database of head injury in the UK. The key outcome is 30 day mortality (denoted as ""Survive"" measure). Other measures with published evidence of significant effect on outcome in previous studies include:</p>
+
+<pre><code>Year - Year of procedure = 1994-2013
+Age - Age of patient = 16.0-101.5
+ISS - Injury Severity Score = 0-75
+Sex - Gender of patient = Male or Female
+inctoCran - Time from head injury to craniotomy in minutes = 0-2880 (After 2880 minutes is defined as a separate diagnosis)
+</code></pre>
+
+<p>Using these models, given the dichotomous dependent variable, I have built a logistic regression using lrm.</p>
+
+<p>The method of model variable selection was based on existing clinical literature modelling the same diagnosis. All have been modelled with a linear fit with the exception of ISS which has been modelled traditionally through fractional polynomials. No publication has identified known significant interactions between the above variables.</p>
+
+<p>Following advice from Frank Harrell, I have proceeded with the use of regression splines to model ISS (there are advantages to this approach highlighted in the comments below). The model was thus pre-specified as follows:</p>
+
+<pre><code>rcs.ASDH&lt;-lrm(formula = Survive ~ Age + GCS + rcs(ISS) +
+    Year + inctoCran + oth, data = ASDH_Paper1.1, x=TRUE, y=TRUE)
+</code></pre>
+
+<p>Results of the model were:</p>
+
+<pre><code>&gt; rcs.ASDH
+
+Logistic Regression Model
+
+lrm(formula = Survive ~ Age + GCS + rcs(ISS) + Year + inctoCran + 
+    oth, data = ASDH_Paper1.1, x = TRUE, y = TRUE)
+
+                      Model Likelihood     Discrimination    Rank Discrim.    
+                         Ratio Test            Indexes          Indexes       
+Obs          2135    LR chi2     342.48    R2       0.211    C       0.743    
+ 0            629    d.f.             8    g        1.195    Dxy     0.486    
+ 1           1506    Pr(&gt; chi2) &lt;0.0001    gr       3.303    gamma   0.487    
+max |deriv| 5e-05                          gp       0.202    tau-a   0.202    
+                                           Brier    0.176                     
+
+          Coef     S.E.    Wald Z Pr(&gt;|Z|)
+Intercept -62.1040 18.8611 -3.29  0.0010  
+Age        -0.0266  0.0030 -8.83  &lt;0.0001 
+GCS         0.1423  0.0135 10.56  &lt;0.0001 
+ISS        -0.2125  0.0393 -5.40  &lt;0.0001 
+ISS'        0.3706  0.1948  1.90  0.0572  
+ISS''      -0.9544  0.7409 -1.29  0.1976  
+Year        0.0339  0.0094  3.60  0.0003  
+inctoCran   0.0003  0.0001  2.78  0.0054  
+oth=1       0.3577  0.2009  1.78  0.0750  
+</code></pre>
+
+<p>I then used the calibrate function in the rms package in order to assess accuracy of the predictions from the model. The following results were obtained:</p>
+
+<pre><code>plot(calibrate(rcs.ASDH, B=1000), main=""rcs.ASDH"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/HYTsp.png"" alt=""Bootstrap calibration curves penalized for overfitting""></p>
+
+<p>Following completion of the model design, I created the following graph to demonstrate the effect of the Year of incident on survival, basing values of the median in continuous variables and the mode in categorical variables:</p>
+
+<pre><code>ASDH &lt;- Predict(rcs.ASDH, Year=seq(1994,2013,by=1),Age=48.7,ISS=25,inctoCran=356,Other=0,GCS=8,Sex=""Male"",neuroYN=1,neuroFirst=1)
+Probabilities &lt;- data.frame(cbind(ASDH$yhat,exp(ASDH$yhat)/(1+exp(ASDH$yhat)),exp(ASDH$lower)/(1+exp(ASDH$lower)),exp(ASDH$upper)/(1+exp(ASDH$upper))))
+names(Probabilities) &lt;- c(""yhat"",""p.yhat"",""p.lower"",""p.upper"")
+ASDH&lt;-merge(ASDH,Probabilities,by=""yhat"")
+plot(ASDH$Year,ASDH$p.yhat,xlab=""Year"",ylab=""Probability of Survival"",main=""30 Day Outcome Following Craniotomy for Acute SDH by Year"", ylim=range(c(ASDH$p.lower,ASDH$p.upper)),pch=19)
+arrows(ASDH$Year,ASDH$p.lower,ASDH$Year,ASDH$p.upper,length=0.05,angle=90,code=3)
+</code></pre>
+
+<p>The code above resulted in the following output:</p>
+
+<p><img src=""http://i.stack.imgur.com/KGYcz.png"" alt=""Year trend with lower and upper""></p>
+
+<p><strong><em>My remaining questions are the following:</em></strong></p>
+
+<p><strong>1. Spline Interpretation</strong> - How can I calculate the p-value for the splines combined for the overall variable?</p>
+"
+"0.132453235706504","0.133929906036485","125764","<p>I'm trying to understand what factors contribute to the a certain outcome which is a ordered factor variable. In order to just understand which factor is statistically more significant than the others, I would like to build a model and given that my output variable is an ordered factorial variable - I thought I should go for Ordinal Logistic Regression. Given the tradeoff between interpretability and flexibility of models, in my case since I'm only making inferences and not predictions, should I rather go for a easier model to handle like Generalized Linear Models? It kind of boils down to me choosing the <code>polr</code> package in R versus the <code>glm</code> one.</p>
+"
+"0.162221421130763","0.164029965544142","126338","<p>I'm running a binary prediction using a supervised topic modeling package in R (<code>lda</code> package, using <code>slda.predict</code> function). The result of the prediction returns results in linear space. From Googling around, people say that I need to take a sigmoid  to convert the result to a logical value. I'm not really sure what this means. </p>
+
+<p>Basically I have list of documents, and their corresponding labels. What I am trying to do is set 80% of these documents and their labels, and train them using supervised LDA. The label of the document is 0 or 1. I manage to train the document just fine using this piece of code:</p>
+
+<pre><code>example &lt;- c(""I am the role model"",""I have a major crazy   headache"",""i don't have money"", ""you are money crazy major"")
+corpus = lexicalize(example, lower=TRUE)
+label = c(1,1,0,0)
+params &lt;- sample(c(1, 0), 2, replace=TRUE)
+result &lt;- slda.em(documents=corpus$documents,
+              K=2,
+              vocab=poliblog.vocab,
+              num.e.iterations=10,
+              num.m.iterations=4,
+              alpha=1.0, eta=0.1,
+              label,
+              params,
+              variance=0.25,
+              lambda=1.0,
+              logistic=TRUE,
+              method=""sLDA"")
+</code></pre>
+
+<p>for simplicity purpose, i'll try to predict the same document given the model above.</p>
+
+<pre><code>predictions &lt;- slda.predict(corpus$documents,
+                            result$topics, 
+                        result$model,
+                        alpha = 1.0,
+                        eta=0.1)
+</code></pre>
+
+<p>Now, my problem is, the result of the prediction isn't binary. it's continuous value. I need to convert it back to binary using some sort of sigmoid(according to an <a href=""https://lists.cs.princeton.edu/pipermail/topic-models/2012-June/001912.html"" rel=""nofollow"">article here</a>) </p>
+
+<p>The result i'm getting doesn't seem like a probability. For the 4 documents above, this is the output of the predictions variable</p>
+
+<pre><code>           [,1]
+[1,]  44.827420
+[2,]  53.895682
+[3,] -17.139034
+[4,]   1.299764
+</code></pre>
+
+<p>How do I do this in R?</p>
+"
+"0.148087219439773","0.14973818705887","129657","<p>What is the fastest algorithm for fitting a simple logistic 'random effects' type model, with only one level of categorical predictors? </p>
+
+<p>Another way of putting it might be a logistic regression with a Gaussian prior on the coefficients, or ""with shrinkage"".</p>
+
+<p>I'm looking for a very fast and reliable implementation to use in a production environment. This means that the algorithm would need to have a low risk of 'hanging', and a not-drastically-variable time to converge.</p>
+
+<p>There would be between 1 and 5000 data points per 'cell', and 5-100 groups/categories. It would need to exploit sufficient statistics (take counts of group data). Second-level nesting a bonus, but not essential.</p>
+
+<p>This could be done via <code>lme4</code> in <code>R</code>. However, is there a library (e.g. stand-alone C++) which is more efficient for this narrowly-defined type of model?</p>
+
+<p>EDIT: Goal is inference over prediction - specifically, comparison of group estimates (with standard errors), construction of confidence intervals etc.</p>
+
+<p>EDIT: Just to make it clear, I wouldn't be fitting a 'mixed model' so to speak - there would be no fixed effect. The data would be a very long two-column ('successes', 'failures') contingency table, with highly variable n counts.</p>
+
+<p>EDIT: I need the degree of 'shrinkage' in the individual estimates to be informed by the group level variance (as opposed to banging a Jeffery's prior on each individual estimate, or using an Agresti-Coull (1998) type interval).</p>
+"
+"0.0662266178532522","0.0669649530182425","133320","<p>I am using logistic regression to solve the classification problem.</p>
+
+<pre><code>g = glm(target ~ ., data=trainData, family = binomial(""logit""))
+</code></pre>
+
+<p>There are two classes (target): 0 and 1 </p>
+
+<p>When I run the prediction function, it returns probabilities.</p>
+
+<pre><code>p = predict(g, testData, type = ""response"")
+</code></pre>
+
+<p>However, it is not clear to me how to understand which class has been assigned?</p>
+
+<pre><code>Real  p 
+
+1   0.17568578
+1   0.41698474
+1   0.19151927
+1   0.25587242
+1   0.25604452
+0   0.39976069
+0   0.39910282
+0   0.16879320
+</code></pre>
+
+<p>I appreciate if someone can explain me how this works based on the above example. Thanks</p>
+"
+"0.256494588021289","0.259354147819215","138424","<p>My data is binary with two linear independent variables.  For both predictors, as they get bigger, there are more positive responses.  I have plotted the data in a heatplot showing density of positive responses along the two variables.  There are the most positive responses in the top right corner and negative responses in the bottom left, with a gradient change visible along both axes.</p>
+
+<p>I would like to plot a line on the heatplot showing where a logistic regression model predicts that positive and negative responses are equally likely.  (My model is of the form <code>response~predictor1*predictor2+(1|participant)</code>.)</p>
+
+<p>My question: How can I figure out the line based on this model at which the positive response rate is 0.5?</p>
+
+<p>I tried using predict(), but that works the opposite way; I have to give it values for the factor rather than giving the response rate I want.  I also tried using a function that I used before when I had only one predictor (<code>function(x) ((log(x/(1-x)))-fixef(fit)[1])/fixef(fit)[2]</code>), but I can only get single values out of that, not a line, and I can only get values for one predictor at a time.</p>
+
+<p>I am using R.</p>
+
+<p>Edit: I have added a contour plot over the heat plot (using geom_contour in ggplot2), which produces this:</p>
+
+<p><img src=""http://i.stack.imgur.com/qObZc.png"" alt=""Each cell represents the frequency of positive responses for a single stimulus.  I added the numbers for clarity.""></p>
+
+<p>I'd like to have a line that actually predicts the cutoff point in a fine-grained way; right now for the independent variables I have stimuli at points 40, 45, 50, etc. but I would like to see a line that predicts, e.g., that when x=32 and y=36 that's the threshold for 50% positive responses.  It could be a curve or it could even be a straight line (whose slope might help visualise the relative contributions of the two factors), but I'm not looking for a pure description of the cells which are >50 vs &lt;50, which is what I think this is doing, I'm looking for a way to plot the regression's predictions.</p>
+"
+"0.114707866935281","0.115986700954059","139653","<p>Original post on stackoverflow:
+<a href=""http://stackoverflow.com/questions/28773153/how-to-do-regression-model-selection-if-dummy-variables-are-involved"">http://stackoverflow.com/questions/28773153/how-to-do-regression-model-selection-if-dummy-variables-are-involved</a></p>
+
+<p>I am trying to do a logistic regression analysis in R with two continuous explanatory variables and six other explanatory categorical variables, and find a good regression model to do predictions. When I do step-wise model selections, there are always some levels of certain categorical variables identified as insignificant. I am just wondering how should I deal with this situation. Should I simply drop these levels, or I should force the program to keep all levels of the categorical variables and try to drop the relatively insignificant variables?</p>
+
+<p>Thanks a lot!</p>
+"
+"0.266556994991592","0.269528736705966","140600","<p>I'm running a fixed effects logistic regression in R. The model consists of a binary outcome and two binary predictors, with no interaction term. On the log-odds scale, and as an odds-ratio, the coefficient for one of the predictors (<code>carbf</code> in the mocked-up example below) indicates that the expected probability of Y=1 (""success"") is different between the two levels of the factor (i.e., the effect is significant). </p>
+
+<p>When I use the <code>effects</code> package to get marginal predicted probabilities, the 95% CIs for the two levels of <code>carbf</code> overlap considerably, indicating there is no evidence of a difference in the expected probability of Y=1 between the two factor levels.</p>
+
+<p>When I use the <code>mfx</code> package to get average marginal effects for the coefficients (i.e., for the expected <em>difference</em> in the probability of Y=1 between the two factor levels), I do get a significant difference.</p>
+
+<p><strong>I'm confused as to whether this discrepancy is because:</strong> </p>
+
+<p><strong>1) the output from the model and the <code>mfx</code> package is an expected <em>difference</em> in the probability of Y=1 between factor levels, rather than predicted probabilities for each level.</strong></p>
+
+<p><strong>2) of the way the <code>effects</code> package is calculating the marginal effect.</strong> </p>
+
+<p>In an effort to determine this, I modified the source code from the <code>mfx</code> package to give me average marginal effects for each level of the <code>carbf</code> factor. The 95% CIs for these predictions <em>do not</em> overlap, indicating a significant difference. This makes me wonder why I get such different results using the <code>effects</code> package. Or is it that I'm just confused about the difference between marginal effects for coefficients and for predicted probabilities?</p>
+
+<pre><code>#####################################
+# packages
+library(effects)
+library(mfx)
+library(ggplot2)
+
+# data
+data(mtcars)
+carsdat &lt;- mtcars
+carsdat$carb &lt;- ifelse(carsdat$carb %in% 1:3, 0, 1)
+facvars &lt;- c(""vs"", ""am"", ""carb"")
+carsdat[, paste0(facvars, ""f"")] &lt;- lapply(carsdat[, facvars], factor)
+
+# model
+m1 &lt;- glm(vsf ~ amf + carbf, 
+    family = binomial(link = ""logit""), 
+    data = carsdat)
+summary(m1)
+
+
+#####################################
+# effects package
+eff &lt;- allEffects(m1)
+plot(eff, rescale.axis = FALSE)
+eff_df &lt;- data.frame(eff[[""carbf""]])
+eff_df 
+
+#   carbf   fit    se  lower upper
+# 1     0 0.607 0.469 0.3808 0.795
+# 2     1 0.156 0.797 0.0375 0.469
+
+
+#####################################
+# mfx package marginal effects (at mean)
+mfx1 &lt;-logitmfx(vsf ~ amf + carbf, data = carsdat, atmean = TRUE, robust = FALSE)
+mfx1 
+
+#         dF/dx Std. Err.     z  P&gt;|z|
+# amf1    0.217     0.197  1.10 0.2697
+# carbf1 -0.450     0.155 -2.91 0.0037
+
+# mfx package marginal effects (averaged)
+mfx2 &lt;-logitmfx(vsf ~ amf + carbf, data = carsdat, atmean = FALSE, robust = FALSE)
+mfx2
+
+#         dF/dx Std. Err.     z  P&gt;|z|
+# amf1    0.177     0.158  1.12 0.2623
+# carbf1 -0.436     0.150 -2.90 0.0037
+
+
+#####################################
+# mfx source code
+fit &lt;- m1
+x1 = model.matrix(fit)  
+be = as.matrix(na.omit(coef(fit)))
+k1 = length(na.omit(coef(fit)))
+fxb = mean(plogis(x1 %*% be)*(1-plogis(x1 %*% be))) 
+vcv = vcov(fit)
+
+# data frame for predictions
+mfx_pred &lt;- data.frame(mfx = rep(NA, 4), se = rep(NA, 4), 
+    row.names = c(""amf0"", ""amf1"", ""carbf0"", ""carbf1""))
+disc &lt;- rownames(mfx_pred)
+
+# hard coded prediction estimates and SE  
+disx0c &lt;- disx1c &lt;- disx0a &lt;- disx1a &lt;- x1 
+disx1a[, ""amf1""] &lt;- max(x1[, ""amf1""]) 
+disx0a[, ""amf1""] &lt;- min(x1[, ""amf1""]) 
+disx1c[, ""carbf1""] &lt;- max(x1[, ""carbf1""]) 
+disx0c[, ""carbf1""] &lt;- min(x1[, ""carbf1""])
+mfx_pred[""amf0"", 1] &lt;- mean(plogis(disx0a %*% be))
+mfx_pred[""amf1"", 1] &lt;- mean(plogis(disx1a %*% be))
+mfx_pred[""carbf0"", 1] &lt;- mean(plogis(disx0c %*% be))
+mfx_pred[""carbf1"", 1] &lt;- mean(plogis(disx1c %*% be))
+# standard errors
+gr0a &lt;- as.numeric(dlogis(disx0a %*% be)) * disx0a
+gr1a &lt;- as.numeric(dlogis(disx1a %*% be)) * disx1a
+gr0c &lt;- as.numeric(dlogis(disx0c %*% be)) * disx0c
+gr1c &lt;- as.numeric(dlogis(disx1c %*% be)) * disx1c
+avegr0a &lt;- as.matrix(colMeans(gr0a))
+avegr1a &lt;- as.matrix(colMeans(gr1a))
+avegr0c &lt;- as.matrix(colMeans(gr0c))
+avegr1c &lt;- as.matrix(colMeans(gr1c))
+mfx_pred[""amf0"", 2] &lt;- sqrt(t(avegr0a) %*% vcv %*% avegr0a)
+mfx_pred[""amf1"", 2] &lt;- sqrt(t(avegr1a) %*% vcv %*% avegr1a)
+mfx_pred[""carbf0"", 2] &lt;- sqrt(t(avegr0c) %*% vcv %*% avegr0c)
+mfx_pred[""carbf1"", 2] &lt;- sqrt(t(avegr1c) %*% vcv %*% avegr1c)  
+
+mfx_pred$pred &lt;- rownames(mfx_pred)
+    mfx_pred$lcl &lt;- mfx_pred$mfx - (mfx_pred$se * 1.96)
+mfx_pred$ucl &lt;- mfx_pred$mfx + (mfx_pred$se * 1.96)
+
+#          mfx    se   pred     lcl   ucl
+# amf0   0.366 0.101   amf0  0.1682 0.563
+# amf1   0.543 0.122   amf1  0.3041 0.782
+# carbf0 0.601 0.107 carbf0  0.3916 0.811
+# carbf1 0.165 0.105 carbf1 -0.0412 0.372
+
+ggplot(mfx_pred, aes(x = pred, y = mfx)) +
+    geom_point() +
+    geom_errorbar(aes(ymin = lcl, ymax = ucl)) +
+    theme_bw()
+</code></pre>
+"
+"0.175219161012616","0.177172612243394","141603","<p>So I'm playing around with logistic regression in R, using the mtcars dataset, and I decide to create a logistic regression model on the 'am' parameter (that is manual or automatic transmission for those of you familiar with the mtcars-dataset).</p>
+
+<pre><code>Call:
+glm(formula = am ~ mpg + qsec + wt, family = binomial, data = mtcars)
+
+Deviance Residuals: 
+       Min          1Q      Median          3Q         Max  
+-4.484e-05  -2.100e-08  -2.100e-08   2.100e-08   5.163e-05  
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    924.89  883764.07   0.001    0.999
+mpg             20.65   18004.32   0.001    0.999
+qsec           -55.75   32172.52  -0.002    0.999
+wt            -111.33  103183.48  -0.001    0.999
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 4.3230e+01  on 31  degrees of freedom
+Residual deviance: 6.2903e-09  on 28  degrees of freedom
+AIC: 8
+
+Number of Fisher Scoring iterations: 25
+</code></pre>
+
+<p>Now, at first sight this looks like a terrible regression, right? The standard errors are HUGE, the z-values are all close to zero and the corresponding probabilities are all close to one. HOWEVER, the residual deviance is extremely small! </p>
+
+<p>I decide to check how well the model does as a classification model by running:</p>
+
+<pre><code>pred &lt;- predict(logit_fit, data.frame(qsec = mtcars$qsec, wt = mtcars$wt, mpg = mtcars$mpg), type = ""response"") # Make a prediction of the probabilities on our data
+mtcars$pred_r &lt;- round(pred, 0) # Round probabilities to closest 0 or 1
+table(mtcars$am, mtcars$pred_r) # Check if results of classification is any good.
+</code></pre>
+
+<p>Indeed, the model perfectly predicts the data:</p>
+
+<pre><code>     0  1
+  0 19  0
+  1  0 13
+</code></pre>
+
+<p>Have I completely misunderstood how to interpret model data? Am I overfitting massively or what's going on here? What's going on?</p>
+"
+"NaN","NaN","143328","<p>I am developing a logistic regression model where perfect variable separation occurs. I want to calculate a cutoff from this data. Interestingly, the length of the slot <code>cutoffs</code> of <code>pred.obj</code> is only 5, as well as the slots <code>fp</code>, <code>tp</code>, <code>tn</code>, <code>fn</code>, <code>n.pos.pred</code> and <code>n.neg.pred</code>. I expect it to have the same length as the observations. </p>
+
+<p>Has anybody an explanation for this? (And knows how to solve it?) </p>
+
+<p>MWE:</p>
+
+<pre><code> library(ROCR) # package for prediction/performance functions
+ y &lt;- c(0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 0)
+ x &lt;- c(-5, 5, 3, -2, 4, 3, -8, 2, 5, 3, -5, -3, -2)
+ model &lt;- glm(as.factor(y) ~ x, family = ""binomial"")
+ preds &lt;- predict(model, type = ""response"")
+ (pred.obj &lt;- prediction(preds, y))
+ perf &lt;- performance(pred.obj, ""acc"")
+ (cutoff &lt;- perf@x.values[[1]][which.max(perf@y.values[[1]])])
+</code></pre>
+"
+"0.132453235706504","0.133929906036485","143943","<p>I have a need to do realtime predictions for individual rows of data based on a previously computed randomForest algorithm.  How can I run the ""predict"" command without recomputing ""fit"" on the entire training data set each time?  </p>
+
+<p>I am using R and here's the line of code that computes ""fit"" by applying the randomForest algorithm on the training set.</p>
+
+<pre><code>fit &lt;- randomForest(formula2, data=training, importance=TRUE, ntree=2000, na.action = na.omit)
+</code></pre>
+
+<p>And here's the predict command - I want to be able to run this without having to recompute fit every time.  Is this possible?</p>
+
+<pre><code>outp_rf &lt;- predict(fit, testing)
+</code></pre>
+
+<p>For LogisticRegression, I know the coefficients so I can rerun the logistic function to compute the outcome.  However not sure how I can do it for RandomForest.</p>
+"
+"NaN","NaN","147793","<p>I would like to know the reason why we ignore those variables in logistic regression whose information value is more than 0.5 though it might carry high information about the prediction.</p>
+"
+"0.229415733870562","0.193311168256765","148699","<p>For a current piece of work Iâ€™m trying to model the probability of tree death for beech trees in a woodland in the UK. I have records of whether trees were alive or dead for 3 different census periods along with data on their diameter and growth rate. Each tree has an ID number so it can be identified at each time interval. However, the census intervals vary so that for the time between one survey and another is either 4, 12 or 18 years. Obviously the longer the census period the greater the probability a tree will have died by the time it is next surveyed. <strong>I had problems making a realistic reproducible example so you can find the <a href=""https://github.com/PhilAMartin/Denny_mortality/blob/master/Data/Stack_dead.csv"" rel=""nofollow"">data here</a>.</strong></p>
+
+<p>The variables in the dataset are:</p>
+
+<ol>
+<li>ID - Unique ID for tree</li>
+<li>Block - the ID for the 20x20m plot in which the tree was located</li>
+<li>Dead - Status of tree, either dead (1) or alive (0)</li>
+<li>GR - Annual growth rate from previous survey</li>
+<li>DBH - diameter of tree at breast height</li>
+<li>SL - Length of time between censuses in years</li>
+</ol>
+
+<p>Once a tree is recorded as dead it disappears from subsequent surveys.</p>
+
+<p>Ideally I would like to be able to estimate the annual probability of mortality of a tree using information on diameter and growth rate. Having searched around for quite a while I have seen that logistic exposure models appear able to account for differences in census periods by using an altered version of logit link for binomial models as detailed by Ben Bolker <a href=""https://rpubs.com/bbolker/logregexp"" rel=""nofollow"">here</a>. This was originally used by Shaffer to determine the daily probability of bird nest survival where the age (and therefore exposure) of the nest differed. I've not seen it used outside of the context of models of nest survival but it seems like I should be able to use it to model survival/mortality where the exposure differs.</p>
+
+<pre><code>require(MASS)
+logexp &lt;- function(exposure = 1)
+{
+  linkfun &lt;- function(mu) qlogis(mu^(1/exposure))
+  ## FIXME: is there some trick we can play here to allow
+  ##   evaluation in the context of the 'data' argument?
+  linkinv &lt;- function(eta)  plogis(eta)^exposure
+  logit_mu_eta &lt;- function(eta) {
+    ifelse(abs(eta)&gt;30,.Machine$double.eps,
+           exp(eta)/(1+exp(eta))^2)
+    ## OR .Call(stats:::C_logit_mu_eta, eta, PACKAGE = ""stats"")
+  }
+  mu.eta &lt;- function(eta) {       
+    exposure * plogis(eta)^(exposure-1) *
+      logit_mu_eta(eta)
+  }
+  valideta &lt;- function(eta) TRUE
+  link &lt;- paste(""logexp("", deparse(substitute(exposure)), "")"",
+                sep="""")
+  structure(list(linkfun = linkfun, linkinv = linkinv,
+                 mu.eta = mu.eta, valideta = valideta, 
+                 name = link),
+            class = ""link-glm"")
+}
+</code></pre>
+
+<p>At the moment my model looks like this, but I will incorporate more variables as I go along:</p>
+
+<pre><code>require(lme4)
+Dead&lt;-read.csv(""Stack_dead.csv"",)
+
+
+M1&lt;-glmer(Dead~DBH+(1|ID),data=Dead,family=binomial(logexp(Dead$SL))) 
+#I use (1|ID) here to account for the repeated measurements of the same individuals
+    summary(M1)
+
+plot(Dead$DBH,plogis(predict(M1,re.form=NA)))
+</code></pre>
+
+<p><strong>Primarily I want to know</strong>:</p>
+
+<ol>
+<li><strong>Does the statistical technique I am using to control for the difference in time between census seem sensible? If it isn't, can you think of a better way to deal with the problem?</strong></li>
+<li><strong>If the answer to the first question is yes, is using the inverse logit (plogis) the correct way to get predictions expressed as probabilities?</strong></li>
+</ol>
+
+<p>Thanks in advance for any help!</p>
+"
+"0.198679853559757","0.200894859054728","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.0662266178532522","0.0669649530182425","160495","<p>I working with R on a classification problem. My outcome variable is binary with two levels 1 and 2. 
+First of all I tried the logistic regression, which of all methods has the best performance, altough still poor. </p>
+
+<p>I tried nnet package, random forest, the fuzzy package frbs and decision trees. </p>
+
+<p>The nnet function gives me only one class - in this case 2.</p>
+
+<p>I had some hope with frbs package. See my code below:</p>
+
+<pre><code>obj &lt;- frbs.learn(train,method.type=""FRBCS.CHI"",control=list(num.labels=3,type.mf=""GAUSSIAN""))
+summary(obj)
+#test set without def 
+pred&lt;-predict(obj,newdata=test[,1:8])
+</code></pre>
+
+<p>But the predictions are wrong, the class 1 is completely missclassified</p>
+
+<pre><code>#percentage error
+tdef&lt;-test$def
+err = 100*sum(pred!=tdef)/ nrow(pred)
+print(err)
+[1] 16.93038
+</code></pre>
+
+<p>I'm wondering what I could improve to classify the output variable. Is something wrong with my data? 
+Are the parameters not right? </p>
+
+<p>Can someone please verifiy?  I'm at the end of my knowledge...</p>
+
+<p>You can find the (normalized) data here:
+<a href=""https://drive.google.com/open?id=1xrCXTLqKvGiGeo2X0Y1DvoSKvzbYFnyccLimceDIbZg"" rel=""nofollow"">https://drive.google.com/open?id=1xrCXTLqKvGiGeo2X0Y1DvoSKvzbYFnyccLimceDIbZg</a></p>
+"
+"0.21964884255349","0.222097623265288","160638","<h1>General question</h1>
+
+<p>When I perform a logistic regression using lrm and specify weights for the observations, I get the following warning message:</p>
+
+<blockquote>
+  <p>Warning message:
+  In lrm(Tag ~ DLL, weights = W, data = tagdata, x = TRUE, y = TRUE) :
+    currently weights are ignored in model validation and bootstrapping lrm fits</p>
+</blockquote>
+
+<p>My interpretation is that everything that the rms package will tell me regarding goodness-of-fit, notably using the residuals.lrm tool, is wrong. Is this correct?</p>
+
+<h1>Specific example</h1>
+
+<p>To be more specific, I have working example. All the code and output can be found in this <a href=""https://github.com/jwimberley/crossvalidated-posts/tree/master/lrm_gof"" rel=""nofollow"">GitHub repository</a>. I have two CSV tables of data, <a href=""https://raw.githubusercontent.com/jwimberley/crossvalidated-posts/master/lrm_gof/toystudy.csv"" rel=""nofollow"">toystudy.csv</a> and <a href=""https://github.com/jwimberley/crossvalidated-posts/raw/master/lrm_gof/realstudy.csv"" rel=""nofollow"">realstudy.csv</a>. There are three columns in each:</p>
+
+<ol>
+<li>The binomial response $y$ (0 or 1) [called Tag in code]</li>
+<li>The predictor $x$ [called DLL in code]</li>
+<li>The weight for the observation [called W in code]</li>
+</ol>
+
+<p>The former is simulated data, where all the weights are unity and where a logistic regression $log(\pi) = \theta_0 + \theta_1 x$ should fit the data perfectly. The latter is real data from my analysis, where the validity of this simple model is in question. The real data has weighted observations. (Some of the weights are negative, but there is a well-defined reason for this). The analysis code in contained completely in <a href=""https://raw.githubusercontent.com/jwimberley/crossvalidated-posts/master/lrm_gof/regressionTest.R"" rel=""nofollow"">regressionTest.R</a>; the meat of the code is</p>
+
+<pre><code>library(rms)
+fit &lt;- lrm(Tag ~ DLL, weights = W, data = tagdata, x=TRUE, y=TRUE)
+residuals(fit,""gof"")
+</code></pre>
+
+<p>Here are the results for the two tables of data.</p>
+
+<h3>Case 1: Toy data</h3>
+
+<p>The goodness-of-fit claimed by lrm (which is something called the le Cessie-van Houwelingen-Copas-Hosmer test, I understand?) is very good:</p>
+
+<p><img src=""https://raw.githubusercontent.com/jwimberley/crossvalidated-posts/master/lrm_gof/toy/residuals.png"" alt=""enter image description here""></p>
+
+<p>This is confirmed by grouping the data into 20 quantiles of the predictor and overlaying the predicted success rate over the average actual success rate:</p>
+
+<p><img src=""http://i.stack.imgur.com/hOEFs.png"" alt=""enter image description here""></p>
+
+<h3>Case 2: Real data</h3>
+
+<p>In this case, the goodness-of-fit reported by lrm is horrendous:</p>
+
+<p><img src=""https://raw.githubusercontent.com/jwimberley/crossvalidated-posts/master/lrm_gof/real/residuals.png"" alt=""enter image description here""></p>
+
+<p>However, I don't think it should be that bad. Again grouping the data into quantiles, and taking into account the weights when computing the average values in each bin:</p>
+
+<p><img src=""http://i.stack.imgur.com/mgzhc.png"" alt=""enter image description here""></p>
+
+<p>Comparing the prediction to the observed values and their standard errors, I don't think this is that bad (the error bars here depend on how the standard error on a weighted mean is computed, so they might not be 100% right, but should at least be close). On the other hand, if I produce the same plot while ignoring the weights:</p>
+
+<p><img src=""http://i.stack.imgur.com/dId9F.png"" alt=""enter image description here""></p>
+
+<p>I can definitely imagine this fit being as poor as the goodness-of-fit test says.</p>
+
+<h2>Conclusion</h2>
+
+<p>So, is residuals.rm simply ignoring the weights when it calculates its goodness-of-fit statistic? And if so, is there any R package that will do this correctly?</p>
+"
+"0.187317162316339","0.189405489524151","160709","<p>I am doing binary logistic regression in R and I need to calculate the Count R squared for various model specifications. Count R2 is the number of correctly predicted observations using the model divided by the total number of observations. It measures how well the model predicts the correct value of the dependent variable, using known values. I'm planning to use the model for prediction, so the percent of observations that are predicted correctly would be really useful for me. Creating a classification table is difficult because I have missing data, so the fitted table and the original table have different numbers of records. I'm pretty inexperienced with R, so I don't know if there's a straightforward way to get around that.</p>
+
+<p>My specific question is:</p>
+
+<p>Is there a command in R to get the Count R2, (and better yet, the adjusted count R2)?</p>
+
+<p>If not, is there an easy way to get R to put the predicted probabilities and the original dependent variable in a table together, when there are different numbers of records? This would allow me to calculate the Count R2 myself.</p>
+"
+"0.132453235706504","0.133929906036485","164912","<p>I am modelling invertebrate.biomass ~ habitat.type * calendar.day + habitat.type * calendar.day ^ 2, with a random intercept of transect.id (50 transects were repeated 5 times)</p>
+
+<p>My response is zero-heavy - about 25% are 0s - and the non-zeroes are strongly right-skewed. </p>
+
+<p>I understand a possible way of dealing with this is to construct 2 models - one modelling a binary response in a logistic regression and the other modelling the non-zero response in a (e.g.) Gamma regression. I'm working in R and following the ideas in <a href=""http://seananderson.ca/2014/05/18/gamma-hurdle.html"" rel=""nofollow"">this post</a>.</p>
+
+<p>I want to check the method of combining the results of these 2 models, in order to generate quantitative predictions (ultimately with CI). Am I correct in multiplying the predicted probabilities from the logistic regression with the predicted (non-zero) biomass from the Gamma regression? Thus, the predicted (non-zero) biomass gets down-weighted according to the probability of there actually being an invertebrate present at all. This makes sense in my head, but feels too easy to be true. </p>
+
+<p>See plots below which demonstrate my method in it's current form.
+<a href=""http://i.stack.imgur.com/MVmJc.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MVmJc.png"" alt=""Gamma hurdle model""></a></p>
+
+<p>Assuming I'm right so far, how would I then go about generating a SE / CI for the predictions combining two models? </p>
+"
+"0.209426954145848","0.190585597449432","166779","<p>Iâ€™ve seen some papers that present the idea of training classifiers such as logistic regression that are really meant to optimize a custom cost model (such as by maximizing profit given expect revenues for predictions depending on whether they are false positives, true negatives, true positives, or true negatives) not by optimizing the typical log-loss function and then looking for the optimal decision cut-off threshold, but by using different loss functions that weight differently the costs of each classification type or of each misclassification type (although I've seen that different authors propose different functions), and these seem to provide better results when evaluating them based on the customly-defined cost function.</p>
+
+<p>I was wondering if there are any implementations of such methods in R. Particularly, I'd like to try fitting a logistic regression treating the cost of misclassifying as false positive to be a multiple of the cost of misclassifying as false negative. I found a package that does just this for decision trees (although in that case it's based on the class proportions on the leaves rather than something like log-loss) and I see that there are some options for observation-specific weights in logistic regression, but not for error type weights.</p>
+"
+"0.264906471413009","0.251118573818409","168725","<p>This question relates to whether it is a good starting point for a cut point in binary classification with logistic regression to the use the mean of the binary response variable as the initial cut point rather than simply 0.5.</p>
+
+<p>Traditionally when people use logistic regression, people with use 0.5 as the threshold to determine when the model predicts YES/positive versus NO/negative.</p>
+
+<p>People may run into trouble when the model only predicts one ""answer"" when using an imbalanced training set.</p>
+
+<p>One way of dealing with this is to balance the training set via oversampling or under-sampling and keeping the test holdout set with the original balance.</p>
+
+<p>However, I suspect that a good starting point for a cut point appears to be the mean of the binary response variable.  Is this usually true?</p>
+
+<p>I created two models, one on a balanced training set and another on the original imbalanced training set.
+<code>print(table(actual=test$y, predicted=test$fit&gt;0.5))</code></p>
+
+<pre><code>       predicted
+ actual FALSE TRUE
+      0  2359  500
+      1    11  130
+</code></pre>
+
+<p>With the imbalanced training, I used the mean of the binary response variable:</p>
+
+<pre><code>print(table(actual=test$y, predicted=test$fit&gt;0.0496))
+
+       predicted
+ actual FALSE TRUE
+      0  2317  542
+      1     7  134
+</code></pre>
+
+<p>If one just uses 0.5, it looks like the model is a complete failure:</p>
+
+<pre><code>`print(table(actual=test$y, predicted=test$fit&gt;0.5))`
+
+       predicted
+ actual FALSE
+      0  2848
+      1   152
+</code></pre>
+
+<p>They both had a KS of 0.76, so it seems like sound advice.</p>
+
+<p>Example R code:</p>
+
+<pre><code>require(ROCR)
+require(lattice)
+#
+x=1:10000/10000;
+y=ifelse(runif(10000)-0.7&gt;jitter(x),1,0)
+#y=ifelse(rnorm(10000)-0.99&gt;x,1,0)
+mean(y)
+
+s=sample(length(x),length(x)*0.7);
+
+df=data.frame(x=x,y=y)
+
+
+##undersample
+train=df[s,]
+train=rbind(train[train$y==1,],train[sample(which(train$y==0),sum(train$y==1)),])
+    ##oversample
+    train=df[s,]
+    train=rbind(train[train$y==0,],train[sample(which(train$y==1),sum(train$y==0),replace = T),])
+mean(train$y) #now balanced
+    threshold=0.5
+    test=df[-s,] #unbalanced
+    mean(test$y)
+#
+
+ex=glm(y~x,train, family = ""binomial"")
+summary(ex)
+nrow(test)
+test$fit=predict(ex,newdata = test,type=""response"")
+    message(""threshold="",threshold)
+    print(table(actual=test$y, predicted=test$fit&gt;threshold)) 
+
+#+results
+pred&lt;-prediction(test$fit,test$y)
+perf &lt;- performance(pred,""tpr"",""fpr"")
+ks.sc=max(attr(perf,'y.values')[[1]]-attr(perf,'x.values')[[1]])
+plot(perf)
+print(ks.sc); #ks.score
+
+
+levelplot(fit~y+x,test,col.regions =  terrain.colors(100)[1:95]) 
+
+#+ imbalanced approach
+#############imbalance approach
+
+train=df[s,]
+threshold=mean(y)
+message(""threshold="",threshold)
+ex=glm(y~x,train, family = ""binomial"")
+summary(ex)
+test$fit=predict(ex,test,type = ""response"")
+    summary(test$fit)
+print(table(actual=test$y, predicted=test$fit&gt;threshold)) 
+
+print(table(actual=test$y, predicted=test$fit&gt;0.5)) 
+
+pred&lt;-prediction(test$fit,test$y)
+perf &lt;- performance(pred,""tpr"",""fpr"")
+ks.sc=max(attr(perf,'y.values')[[1]]-attr(perf,'x.values')[[1]])
+plot(perf)
+print(ks.sc); #ks.score
+
+
+levelplot(fit~y+x,test,col.regions =  terrain.colors(100)[1:95]) 
+</code></pre>
+
+<p>I noticed a similar question asked <a href=""http://stats.stackexchange.com/questions/91305/how-to-choose-the-cutoff-probability-for-a-rare-event-logistic-regression"">How to choose the cutoff probability for a rare event Logistic Regression</a></p>
+
+<p>I like the answer given here which states to maximize the specificity or sensitivity:
+<a href=""http://stats.stackexchange.com/questions/25389/obtaining-predicted-values-y-1-or-0-from-a-logistic-regression-model-fit/25398#25398"">Obtaining predicted values (Y=1 or 0) from a logistic regression model fit</a></p>
+
+<p>But I also suspect that the usual starting cut off of 0.5 is bad advice.</p>
+
+<p>Comments?</p>
+"
+"0.0936585811581694","0.0947027447620757","172889","<p>Recently I'm using R survival package to try to predict the probability of people going to churn. I found some <a href=""http://stackoverflow.com/questions/27408862/how-to-predict-survival-probabilities-in-r"">examples</a> on stack overflow and also tried that to my own data. Here is my prediction model and output:</p>
+
+<pre><code>&gt; Status_by_Time &lt;- Surv(time = Duration, event = Gift_Status_ind)
+&gt; model.fit2 &lt;- survreg(Status_by_Time ~ Age
+                + Gender_ind 
+                + Fundraiser_ind
+                + Monthly.Recurring.Amount
+                + Frequency_ind
+                + Monthly.first.gift.amount
+                + Monthly.last.gift.amount
+                #+ Duration
+                #+ Saved.
+                + Upgrade.first.time
+                + Upgrade.second.time,
+                dist = ""logistic""
+)
+
+&gt; summary(model.fit2)
+                            Value Std. Error      z         p
+(Intercept)                81.525    1.46725  55.56  0.00e+00
+Age                         0.156    0.01889   8.27  1.33e-16
+Gender_ind2                 2.278    0.55955   4.07  4.68e-05
+Gender_ind3                -9.514    1.09689  -8.67  4.18e-18
+Fundraiser_ind2            -8.798    0.69303 -12.70  6.25e-37
+Fundraiser_ind3             4.028    0.90970   4.43  9.52e-06
+Monthly.Recurring.Amount   -1.211    0.04856 -24.95 2.39e-137
+Frequency_ind2            257.319    0.00000    Inf  0.00e+00
+Frequency_ind3              8.562    2.71423   3.15  1.61e-03
+Frequency_ind4            -89.067    1.39379 -63.90  0.00e+00
+Monthly.first.gift.amount  -2.538    0.03721 -68.22  0.00e+00
+Monthly.last.gift.amount    1.827    0.04981  36.67 2.38e-294
+Upgrade.first.time          6.467    0.82381   7.85  4.15e-15
+Upgrade.second.time        10.849    2.72927   3.98  7.04e-05
+Log(scale)                  2.869    0.00841 341.02  0.00e+00
+
+Scale= 17.6 
+
+Logistic distribution
+Loglik(model)= -51841.8   Loglik(intercept only)= -55404
+Chisq= 7124.45 on 13 degrees of freedom, p= 0 
+Number of Newton-Raphson Iterations: 8 
+n= 18097 
+
+&gt; predicted.values &lt;- predict(model.fit2, newdata = churn.df.trim, type = ""quantile"", p = (1:9)/10) # 10 times event???
+&gt; head(predicted.values)
+            [,1]      [,2]     [,3]     [,4]     [,5]     [,6]     [,7]     [,8]     [,9]
+ [1,]   2.219425 16.513993 26.01508 33.80343 40.95072 48.09800 55.88635 65.38744 79.68201
+ [2,]  11.088257 25.382825 34.88392 42.67227 49.81955 56.96683 64.75518 74.25627 88.55084
+ [3,] -11.996590  2.297977 11.79907 19.58742 26.73470 33.88198 41.67033 51.17143 65.46599
+ [4,]   5.456971 19.751539 29.25263 37.04098 44.18826 51.33555 59.12390 68.62499 82.91955
+ [5,]  19.690749 33.985316 43.48641 51.27476 58.42204 65.56932 73.35767 82.85876 97.15333
+ [6,]  -8.187469  6.107099 15.60819 23.39654 30.54382 37.69111 45.47946 54.98055 69.27511
+</code></pre>
+
+<p>I reckon all these numbers are not probabilities. Is there some way to interpret these numbers or turn them into probabilities? Also if I use <code>p = (1:9)/10</code> does that mean I'm calculating the probability for the next 9 or 10 period?</p>
+
+<p>Much appreciate if someone could give me a straight forward explanation (none academic one). </p>
+"
+"0.21964884255349","0.222097623265288","173625","<p>I am new to bootstrapping. Let me explain my case, I ran logistic model (binomial) with 9 parameters. I divided complete dataset into train(70%) and test(30%). I checked stats for the model validity and then did bootstrapping over complete dataset. Now I have 3 sets of coefficients one from modeled train set, one from bootstrap original set (that ran on complete dataset) and last one bootstrapped coefficient. Now I am not sure which set of coefficients should I use while predicting in future? Below are all coefficient results where <code>prob_model$coefficient</code> is list fo coefficients from model trained on training set. In boot model result original is list of coefficient on complete data set and original + bias would give me list of bootstrapped coefficients. Now I am not sure which one should I use for future prediction. Please suggest.</p>
+
+<pre><code>Bootstrap Statistics :
+          original        bias     std. error
+t1*   0.9974316479  3.619136e-03 3.772206e-03
+t2*  -0.0001680308  1.082013e-06 1.595247e-05
+t3*  -0.0122041526 -2.240127e-05 6.932449e-05
+t4*  -0.2103373656 -1.739921e-03 1.102777e-02
+t5*  -0.0065004644 -2.184167e-05 1.525726e-04
+t6*   0.2189768454 -1.910363e-03 1.564095e-02
+t7*   0.0794606315 -5.810673e-04 1.066958e-03
+t8*   0.0015241943  3.244818e-06 5.442563e-05
+t9*   0.1165591650  7.599514e-04 5.028385e-03
+t10*  0.0010037383  2.001973e-05 1.115370e-04
+
+
+
+prob_model$coefficients
+           (Intercept)                    a b       c                   d 
+          0.9903145633          -0.0001745036          -0.0122231856          -0.2017792147          -0.0064298957 
+            e       f            g       h       i 
+          0.2032220963           0.0795136175           0.0015688575           0.1149821030           0.0011356770 
+</code></pre>
+"
+"0.0662266178532522","0.0669649530182425","179898","<p>I have a clinical dataset (1400 cases) and I applied 4 data mining techniques (ANN, Decision Tree, SVM, Logistic Regression) to predict the binary outcome (Yes, No).</p>
+
+<p>Now, I want to improve prediction accuracy through ensemble methods.<br>
+What are the criteria to choose which model can be combined with another model?
+And how can that be done in R? Can I use the ""caret"" package?</p>
+"
+"0.148087219439773","0.14973818705887","180135","<p>I have fit a generalized additive model (GAM) using the mgcv package in R. My model has a dichotomous response variable and so i've used the binomial family link function. After creating the model I would like to do a little post-estimation inference above and beyond the plot.gam graphs. </p>
+
+<p>I would like to take two x-values, for example, and calculate the risk ratio and 95% confidence intervals for that ratio. Obtaining the risk ratio seems fairly straightforward. I could transform the predictions into probabilities and simply divide the two probabilities corresponding to the x-values of interest in order to get the risk ratio. I am less certain how to get the confidence intervals.</p>
+
+<p>In this link here: <a href=""http://grokbase.com/t/r/r-help/125qbnw21a/r-mgcv-how-to-calculate-a-confidence-interval-of-a-ratio"" rel=""nofollow"">http://grokbase.com/t/r/r-help/125qbnw21a/r-mgcv-how-to-calculate-a-confidence-interval-of-a-ratio</a> Simon Wood, the author of the mgcv package explained how to get the CIs for a log ratio using a poisson model. I'm uncertain how I would need to change the code to get the risk ratios and 95% CIs from my logistic model. </p>
+
+<p>Here is a reproducible example provided by Simon Wood in the link above:</p>
+
+<pre><code>    library(mgcv)
+
+    ## simulate some data
+    dat &lt;- gamSim(1, n=1000, dist=""poisson"", scale=.25)
+
+    ## fit log-linear model...
+    b &lt;- gam(y~s(x0)+s(x1)+s(x2)+s(x3), family=poisson,
+    data=dat, method=""REML"")
+
+    ## data at which predictions to be compared...
+    pd &lt;- data.frame(x0=c(.2,.3),x1=c(.5,.5),x2=c(.5,.5),
+    x3=c(.5,.5))
+
+    ## log(E(y_1)/E(y_2)) = s(x_1) - s(x_2)
+    Xp &lt;- predict(b,newdata=pd,type=""lpmatrix"")
+
+    ## ... Xp%*%coef(b) gives log(E(y_1)) and log(E(y_2)),
+    ## so the required difference is computed as...
+    diff &lt;- (Xp[1,]-Xp[2,])
+    dly &lt;- t(diff)%*%coef(b) ## required log ratio (diff of logs)
+    se.dly &lt;- sqrt(t(diff)%*%vcov(b)%*%diff) ## corresponding s.e.
+    dly + c(-2,2)*se.dly ## 95%CI
+</code></pre>
+
+<p>Any help is greatly appreciated.</p>
+"
+"NaN","NaN","180337","<p>I always report odds ratios when using logistic regression for predictions. 
+I wanted know is it meaningful to report odds ratios when modeling with gradient boosting approach? 
+I am using gbm package in R to make the predictions.</p>
+
+<p>Thanks!</p>
+"
+"NaN","NaN","180580","<p>To understand my logistic regression fit and identify non linear effects, I plan to estimate the conditional density and then calculate the log odds comparing to log odds from logistic regression. To me  this is the equivalent of scatter plot of single  independent variable vs dependent and prediction. </p>
+
+<p>A) Does this seem like the right approach? </p>
+
+<p>B) I am using R, and I am surprised that there is no package already doing this? </p>
+"
+"0.0936585811581694","0.0947027447620757","182509","<p>I am using logistic regression (with R) for detecting fraudulent transactions. So far I am achieving a relatively good ratio of success (f-score).</p>
+
+<p>However I have noticed something, once I have my model built, the threshold that gives me the best f-score is to consider something as fraudulent if the logit function is bigger than 0.059 (I started with 0.5). </p>
+
+<p>For the record, I am using 7099 observations as training examples and 3042 as testing data, in total I am using 6 features/columns for prediction (planning to add a couple more)</p>
+
+<p>Now my questions are the following</p>
+
+<ol>
+<li>Am I doing something terribly wrong so that I have to use such a low limit to start labeling transactions as fraudulent?</li>
+<li>That said, the vast majority of transaction are legitimate, does it justify the low threshold for the labeling (again, 0.059) ?</li>
+<li>Would it be worth to explore other algs such random forest or neuronal networks?</li>
+</ol>
+"
+"0.198679853559757","0.200894859054728","184712","<p>I am trying to </p>
+
+<p>1) classify a bunch of [0,1] ratios into two groups  Group 0: Ratio = 0, Group 1: Ratio != 0.</p>
+
+<p>2) predict the actual response with multiple predictors in R.</p>
+
+<p>My question would then be:</p>
+
+<p>Q1: Can I use the scaled predicted probability as the predicted response? </p>
+
+<p>Q2: Should I classify the group before the regression before running the regression to solve the warning message? Would the data structure/predicted be affected?</p>
+
+<p>I thought of achieving Goal 1 and Goal 2 separately but I can't seem to find a way to fit a unbalanced [0,1] non-censored data with good prediction.</p>
+
+<hr>
+
+<p>Basically my response is something like this</p>
+
+<pre><code>y&lt;-c(rep(0,100),0.3,0.4,0.8,1.0)
+x&lt;-cbind(rnorm(104,20,2),as.factor(c(rep(0,90),rep(1,5),rep(0,8),rep(1,1)))
+,as.factor(sample(c(1:3),104,TRUE,prob = c(0.6,0.3,0.1))))
+
+data&lt;-data.frame(cbind(y,x))
+</code></pre>
+
+<p>and y is strictly between 0 to 1.</p>
+
+<p>I then fit it with a logistic regression and get the predicted probability:</p>
+
+<pre><code>fit&lt;-glm(y~.,data=data, family = ""binomial"")  
+fit.prob&lt;-predict(fit,type=""response"")
+</code></pre>
+
+<p>I used the probability to make classification model (Goal 1)</p>
+
+<pre><code>class&lt;-y;class[y==0]=""0"";class[y!=0]=""1""
+
+cutoff&lt;-0.06
+fit.pred=rep(0,length(fit.prob)); fit.pred[fit.prob &gt;=cutoff]=1
+table(fit.pred,class)
+</code></pre>
+
+<p>However, I also want to predict y from new data set, this is probably wrong, but here's what I did</p>
+
+<pre><code>se&lt;-fit.prob&lt;-predict(fit,type=""response"",se=T)$se.fit
+scaled.fit&lt;-fit.prob/max(fit.prob)
+scale.fit.UL&lt;-scaled.fit+1.96*se
+scale.fit.LL&lt;-scaled.fit-1.96*se
+</code></pre>
+
+<p>and I used this to be the prediction interval for y. Is there any other way to do it other than this?</p>
+"
+"0.148087219439773","0.14973818705887","185800","<p>I try to find a model using logistic regression. More precisely, what I did so far, is using stepwise regression and subset selection (although I know, it is often a bad idea) to find the ""best"" model. Clearly, depending on the information criteria I used, I got different results. </p>
+
+<p>Now, I found an interesting example on page 250 in the book <a href=""http://www-bcf.usc.edu/~gareth/ISL/ISLR%20First%20Printing.pdf"" rel=""nofollow"">""An Introduction to Statistical Learning""</a>. They chose among the models of different sizes using cross-validation, that is they make predictions for each model and compute the test errors. Eventually, the compute the cross validation error and choose the model corresponding to the minimal average cross-validation error. </p>
+
+<p>However, the function <code>regsubsets</code> of the R package ""leaps"" is only working for linear models. How can I implement this for logistic regression or glm models in general? </p>
+
+<p>My idea was, to just estimate the models within a cross-validation using the <code>step</code> function of the ""stats"" package and then kind of take the average number of features (which is determined by minimum AIC, for example). Is this a legitimate approach?</p>
+"
+"0.148087219439773","0.14973818705887","186265","<p>I am currently working on some research and we are trying to do some Time-Series prediction using neural networks. To get started, I was using the paper published by G. Peter Zhang (<a href=""http://cs.uni-muenster.de/Professoren/Lippe/diplomarbeiten/html/eisenbach/Untersuchte%20Artikel/Zhan03.pdf"" rel=""nofollow"">Time Series forcasting using a hybrid ARIMA and NN model</a>) since I am no expert in either R or statistics, I could really do with some help. </p>
+
+<p>I got R and the neuralnet lib setup and then took the Lynx dataset, then created a data-frame with the data long with the lags to set as input. My data now looks something like this (this is only for t, t-1, and t-2 lags) </p>
+
+<pre><code>     x     x1    x2
+1   269    NA    NA
+2   321   269    NA
+3   585   321    269
+</code></pre>
+
+<p>Now I want to train a NN with input x1 and x2 and get output at x.</p>
+
+<p>I do the training with the following code </p>
+
+<pre><code>nn &lt;- neuralnet(x~x1+x2, data=dat, hidden = 2, linear.output = T) # I am using t-1 ... t-4 so using hidden layer of 2
+</code></pre>
+
+<p>This does train the model, but the error is really high, and when I use it to do any computation the results of the second layer neuron is alway 1. I was discussing with some freinds and they said that its because I am maybe using the wrong activation function. I looked in the help for the act.fct and tried with both <code>logistic</code> and <code>tanh</code> but the results remain the same. </p>
+
+<p>I have been stuck on this for a few days now, so could really use some help. May I am doing something wrong? Or missing something? </p>
+
+<p>Thanks</p>
+"
+"NaN","NaN","187170","<p>If a logistic equation has already been given in the form of: 
+$$
+Y = \frac{1}{1+e^{-(a+\sum_k b_kx_k)}}
+$$
+How can I use this equation as a predictor to predict the class labels (binary) of data points in the test set?</p>
+
+<p>Is there any way to create a <code>glm</code> object based on an equation instead of giving a training set, and then use the <code>predict()</code> function in R to do a prediction?  </p>
+
+
+"
+"0.114707866935281","0.115986700954059","190403","<p>I am working on a dataset that has 300+ predictors and the dependent variables is very imbalanced (99:1). I need to have a prediction accuracy to show to my client.Here is my analytical process. </p>
+
+<ol>
+<li>clean data: remove incomplete columns and rows, then I have 80% of rows remaining and 100+ predictors. </li>
+<li>use LASSO: use LASSO with logistic regression to generate the model (by setting up train and testing sets).
+Then I have problem finding the best cut points. Below is the accuracy stats for the prediction in testing set if I set cut point as 50%:</li>
+</ol>
+
+<p><code>
+pred   0   1
+    0 825  36
+    1  23  43
+</code></p>
+
+<p>The prediction accuracy is too low and I am wondering if it could be improved by choosing different cut points.</p>
+
+<p>Appreciate any helps and suggestions.
+Thanks.</p>
+"
+"0.229415733870562","0.231973401908118","191916","<p>I have taken plenty of time to try and help myself, but I keep reaching dead ends. </p>
+
+<p>I have a dataset consisting of body measurements collected from a bird species, and the sex of each bird (known by molecular means). I built a logistic regression model (using the AIC information criterion) to assess which measurements explain better the sex of the birds. My ultimate goal is to have an equation which could be used by others under field conditions to predict reliably the sex of the birds by taking as few body measurements as possible. </p>
+
+<p>My final model includes four independent variables, namely ""Culmen"", ""Head-bill"", ""Tarsus length"", and ""Wing length"" (all continuous). I wish my model was a little more parsimonious, but all the variables seem to be important according to AIC criterion. Because the model produced should be used as prediction tool, I decided validate it using a leave-one-out cross validation approach. In my learning process, I first tried to complete the analyses (cross-validation and plotting) by including only one explanatory variable, namely ""Culmen"". </p>
+
+<p>The output of the cross validation (package ""boot"" in R) yields two values (deltas), which are the cross-validated prediction errors where the first number is the raw leave-one-out, or lieu cross-validation result, and the second one is a bias-corrected version of it. </p>
+
+<pre><code>model.full &lt;- glm(Sex ~ Culmen, data = my.data, family = binomial)
+summary(model.full.1)
+
+cv.glm(my.data, model.full, K=114)
+
+$call
+cv.glm(data = my.data, glmfit = model.full, K = 114)
+
+$K
+[1] 114
+
+$delta
+[1] 0.05941851 0.05937288
+</code></pre>
+
+<p>Q1. Could anyone expalin what do these two values represent and how to interpret them?    </p>
+
+<p>Following is the code as presented by Dr. Markus MÃ¼ller (Calimo) in a similar, albeit not identical, post (<a href=""http://stackoverflow.com/questions/20346568/feature-selection-cross-validation-but-how-to-make-roc-curves-in-r"">http://stackoverflow.com/questions/20346568/feature-selection-cross-validation-but-how-to-make-roc-curves-in-r</a>) which I tried to tweak to meet my data:</p>
+
+<pre><code>library(pROC)
+data(my.data)
+k &lt;- 114    # Number of observations or rows in dataset
+n &lt;- dim(my.data)[1]
+indices &lt;- sample(rep(1:k, ceiling(n/k))[1:n])
+
+all.response &lt;- all.predictor &lt;- aucs &lt;- c()
+for (i in 1:k) {
+test = my.data[indices==i,]
+learn = my.data[indices!=i,]
+model &lt;- glm(Sex ~ Culmen, data = learn, family=binomial)
+model.pred &lt;- predict(model, newdata=test)
+aucs &lt;- c(aucs, roc(test$Sex, model.pred)$auc)
+all.response &lt;- c(all.response, test$outcome)
+all.predictor &lt;- c(all.predictor, model.pred)
+}
+
+Error in roc.default(test$Sex, model.pred) : No case observation.
+
+roc(all.response, all.predictor)
+
+Error in roc.default(all.response, all.predictor) : No valid data provided.
+
+mean(aucs)
+</code></pre>
+
+<p>Q2. What's the reason for the first error message? I guess the second error is associated with the first one, and that it will be solved once I find a solution to the first one.</p>
+
+<p>I will appreciate very much any help!!</p>
+
+<p>Luciano </p>
+"
+"0.0662266178532522","0.0669649530182425","193166","<p>I have limited statistic knowledge but I am trying to conduct logistic regression by using a data with 300+ predictors. So I decided to use glmnet and LASSO. Below please see my code:</p>
+
+<pre><code>fit.lasso = glmnet(x, y,family=""binomial"",alpha = 1)
+    plot(fit.lasso, xvar = ""lambda"", label = TRUE)
+    cv.lasso = cv.glmnet(x,y,family=""binomial"",alpha = 1)
+    plot(cv.lasso)
+    coef(cv.lasso)
+    cv.lasso$lambda.min
+        bestlam = cv.lasso$lambda.min
+    lasso.pred=predict(fit.lasso,s=bestlam,newx = x,type = ""response"")
+</code></pre>
+
+<p>I have two questions and appreciate any helps.</p>
+
+<ol>
+<li>(removed since it was more related to purely programming question)</li>
+<li>I have used CV to select lambda but I didn't partition the data into training and testing. Is it necessary since I have already used CV? I will need the <code>lasso.pred</code> to compare with actual to calculate the prediction accuracy.</li>
+</ol>
+
+<p>Thank you in advance!</p>
+"
+"0.187317162316339","0.189405489524151","198268","<p>I'm am trying to predict disease states in a medical setting where I have three subject groups (1,2,3). I have cross-validated a multinomial logistic regression model using the following</p>
+
+<pre><code>cvfit=cv.glmnet(Xtrain, ytrain, family=""multinomial"", type.multinomial = ""grouped"", parallel = TRUE, standardize=TRUE)
+</code></pre>
+
+<p>where Xtrain is a 42x20 matrix with 42 observations and 20 predictors.</p>
+
+<p>If I run the following to get the coefficients of the model</p>
+
+<pre><code>coef(cvfit)
+</code></pre>
+
+<p>I get the following output</p>
+
+<pre><code>$`1`
+21 x 1 sparse Matrix of class ""dgCMatrix""
+                    1
+(Intercept)  2.519025
+V1           2.955347
+V2           .       
+V3           .       
+V4          -3.508274
+V5           .       
+V6           .       
+V7           .       
+V8           .       
+V9           .       
+V10          .       
+V11          .       
+V12          .       
+V13          .       
+V14          .       
+V15          .       
+V16          .       
+V17          .       
+V18          .       
+V19          .       
+V20         -2.108070
+
+$`2`
+21 x 1 sparse Matrix of class ""dgCMatrix""
+                     1
+(Intercept)  1.5460376
+V1          -5.2882709
+V2           .        
+V3           .        
+V4           0.4144632
+V5           .        
+V6           .        
+V7           .        
+V8           .        
+V9           .        
+V10          .        
+V11          .        
+V12          .        
+V13          .        
+V14          .        
+V15          .        
+V16          .        
+V17          .        
+V18          .        
+V19          .        
+V20          1.4674672
+
+$`3`
+21 x 1 sparse Matrix of class ""dgCMatrix""
+                     1
+(Intercept) -4.0650622
+V1           2.3329236
+V2           .        
+V3           .        
+V4           3.0938106
+V5           .        
+V6           .        
+V7           .        
+V8           .        
+V9           .        
+V10          .        
+V11          .        
+V12          .        
+V13          .        
+V14          .        
+V15          .        
+V16          .        
+V17          .        
+V18          .        
+V19          .        
+V20          0.6406032
+</code></pre>
+
+<p>I would like to be able to say something concerning the risk of being in one group compared to another based on increments in the predictors with non-zero coefficients, however, I cannot seem to find any information as to which class the cvglmnet() function uses as base in order to calculate the risks. </p>
+
+<p>Does anyone know this, or have an idea on how to interpret the results for use in a model?</p>
+
+<p><strong>EDIT:</strong></p>
+
+<p>I realize now that I may have overlooked a crucial detail. In ""The Elements of Statistical Learning: Data Mining, Inference, and Prediction"" by Hastie, T et al (2009), it is stated on page 657 that a multiclass logistic model can be described as</p>
+
+<p>$P(Y=k|X=x) = \frac{\exp{(\beta_{k0}+x^{T}\beta_{k})}}{\sum_{l=1}^{K}\exp{(\beta_{l0}+x^{T}\beta_{l})}}$</p>
+
+<p>where I can see that the denominator is just a normalization factor. I guess this means that I can interpret the obtained coefficients above directly for each subject group. Or is this wrongly interpreted?</p>
+"
+"0.21964884255349","0.222097623265288","198801","<p>Logistic Regression using R's <code>glm</code> package is giving me the following summary (snap of the few first variables). </p>
+
+<p><strong>My Data Set:</strong></p>
+
+<ul>
+<li>Dimensions: 1252 rows and 224 columns (after using model.matrix). The Data  has been standardized.</li>
+<li>Response variable is binary.</li>
+<li>Trying to predict if an employee will leave the company, based on employee attributes </li>
+</ul>
+
+<p><a href=""http://i.stack.imgur.com/Ai42v.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Ai42v.png"" alt=""enter image description here""></a></p>
+
+<p><strong>My Understanding:</strong></p>
+
+<p>The model does not give a good fit because:</p>
+
+<ol>
+<li>Residual Deviance > Null Deviance. </li>
+<li>p.value = 1 - pchisq(3676.5, 817) turns out to be 0.</li>
+<li>The first warning about 0 or 1 fitted probability message suggests that due to some predictor(s) the model might be giving perfect predictions </li>
+<li>Second warning on â€˜rank deficiencyâ€™ suggests that there might be predictors that are linearly dependent on one another.</li>
+</ol>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li>How can I improve the model? I would like to see Residual Deviance &lt; Null Deviance. I will invest time on dropping the linearly dependent variables in the model, but is there anything I should do first to test the â€˜modelâ€™ itself, before revisiting my data? I am asking this because SVM worked quite well on the same data set. </li>
+<li>Why do I have such extreme coefficient values?</li>
+<li>Many answers to other posts state that â€˜AICâ€™ is used to compare different</li>
+<li>The summary parameters (coefficients , std error and p-values) for many dummy factors obtained via model.matrix, like GSS_SEXM,  is shown as 'NA'. Why is it so? </li>
+<li>logistic models. What is meant by â€˜differentâ€™ here? Models trained on different data sets that bear different coefficients, like say different set of attributes? </li>
+</ol>
+"
+"0.114707866935281","0.115986700954059","200477","<p>I am conducting multiple imputation by chained equations in R using the MICE package, followed by a logistic regression on the imputed dataset.</p>
+
+<p>I need to compute a 95% confidence interval about the predictions for use in creating a plotâ€”that is, the grey shading in the image at this link.</p>
+
+<p><a href=""http://imgur.com/guLEyTQ"" rel=""nofollow"">http://imgur.com/guLEyTQ</a></p>
+
+<hr>
+
+<p>I followed the approach described in the answer to this question...</p>
+
+<p><a href=""http://stats.stackexchange.com/questions/66946/how-are-the-standard-errors-computed-for-the-fitted-values-from-a-logistic-regre"">How are the standard errors computed for the fitted values from a logistic regression?</a></p>
+
+<p>...which uses the following lines of code to yield the std.er of prediction for any specific value of the predictor:</p>
+
+<pre><code>o &lt;- glm(y ~ x, data = dat)
+C &lt;- c(1, 1.5)
+std.er &lt;- sqrt(t(C) %*% vcov(o) %*% C)
+</code></pre>
+
+<p>But of course <strong>I need to adapt this code to the fact that I am using a model resulting from multiple imputation</strong>.  In that context, I am not sure <strong><em>which</em></strong> variance-covariance matrix (corresponding to â€œvcov(o)â€ in the above example) I should be using in my equation to produce the ""std.er"".</p>
+
+<hr>
+
+<p>Based on the documentation for MICE I see three candidate matrices:</p>
+
+<ul>
+<li><p>ubar - The average of the variance-covariance matrix of the complete data estimates.</p></li>
+<li><p>b - The between imputation variance-covariance matrix.</p></li>
+<li><p>t - The total variance-covariance matrix.</p></li>
+</ul>
+
+<p><a href=""http://www.inside-r.org/packages/cran/mice/docs/is.mipo"" rel=""nofollow"">http://www.inside-r.org/packages/cran/mice/docs/is.mipo</a></p>
+
+<p>Based on trying all three, the b matrix seems patently wrong, but both the t and the ubar matrices seem plausible.  Can anybody confirm which one is appropriate?</p>
+
+<p>Thank you.</p>
+"
+"0.21964884255349","0.181716237217054","200703","<p>I'm using matched pairs logistic regression (1-1 matched case-control; Hosmer and Lemeshow 2000) to model differences between vegetation selected at nest sites vs. paired random sites. To do this, I created a data frame that contained the difference in vegetation measurements between nest and random sites (so nest minus random) and used R to fit a logistic regression model, using a vector of all 1's as the 'Response' and a no-intercept model.</p>
+
+<p>Here's the data frame (I only include 1 of the covariates, grass density, for the example):</p>
+
+<pre><code>nest&lt;-structure(list(VerGR = c(1.380952381, 1.952380953, 2.666666667, 
+-3.809523809, 2.428571428, 2.142857143, 0.142857143, 2.095238095, 
+1.952380952, 3.333333334, 3.190476191, -2.857142857, 2.857142858, 
+-1.666666667, 0.523809524, 4.761904762, 0.571428571, 2.238095238, 
+-2.809523809, 0.857142857, 1.523809524, -2.476190476, -0.428571428, 
+-5.190476191, 4.142857143, 2.857142858, -2.476190476, 4.095238096, 
+1.428571428, 1.714285714, -2.80952381, 3.142857143, 2.809523809, 
+7.238095238, 2.523809523, 2.333333333, -0.095238096, -0.095238096, 
+-0.142857143, 4.047619048, 4.761904759, -1.285714285, -1.190476191, 
+2.523809524, -2.095238095, -2, 4.761904761, 8.952380952, 1.095238096, 
+5.666666666, -0.714285714, 0, 2.809523809, -0.238095239, 3.666666667, 
+0.904761905, -4.952380952, -3.666666667, 2, -0.619047619, 4.523809524, 
+1.523809524, 4.619047619, 6.142857143, 3.19047619, -2.190476191, 
+-1.666666667, 2.714285714, -1.285714286, 2.857142857, 2.761904762, 
+2.809523809, -7.142857139, -5.952380949, -1.19047619, 1.523809524, 
+-0.38095238, 5.571428571, 5.238095239, 2.047619048, 7.857142857, 
+0.61904761, 2.523809524, -1.190476191), Response = c(1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L)), .Names = c(""VerGR"", ""Response""), class = ""data.frame"", row.names = c(NA, 
+-84L))
+</code></pre>
+
+<p>And the no-intercept logistic regression models I am running:</p>
+
+<pre><code>grass.mod &lt;- glm(Response ~ VerGR - 1, data=nest, family=""binomial"")
+grass2.mod &lt;- glm(Response ~ VerGR + I(VerGR^2) - 1, data=nest, family=""binomial"")
+</code></pre>
+
+<p>For the most part the models run fine, and give the same parameter estimates as models implemented using the 'clogit' function from the survival R package. The data set for the clogit models is slightly different, with Responses = 1 (nest) or = 0 (random point), and includes a column called 'PairID' to indicate nest-random pairs. Here's what the clogit models look like:</p>
+
+<pre><code>library(survival)
+grass.mod.clog &lt;- clogit(Response ~ VerGR + strata(PairID), data=full)
+grass2.mod.clog &lt;- clogit(Response ~ VerGR + I(VerGR^2) + strata(PairID), data=full)
+</code></pre>
+
+<p>But when I run the glm's, I get these 2 warnings if using a quadratic term:</p>
+
+<pre><code>Warning messages:
+1: glm.fit: algorithm did not converge 
+2: glm.fit: fitted probabilities numerically 0 or 1 occurred 
+</code></pre>
+
+<p>I'm able to satisfy the first warning if I use more iterations in the glm formula, but I'm not sure what is happening with the second warning. I would be glad to use the 'clogit' function (which works with quadratic terms), but I'm unsure how to create prediction plots to visually display the data when going that route. Any suggestions?</p>
+
+<p>Thanks,
+Jay</p>
+"
+"0.148087219439773","0.14973818705887","202028","<p>I have been provided a sample logistic regression as follows:</p>
+
+<p><code>glm(formula = output ~ X1 + X2 + X3 + X4 + X5 + X1:term + term:X5 - 1, family=""binomial"", data=mydata)</code></p>
+
+<p>I am not too familiar with logistic regression, so I have a few questions about how to properly predict on a new test set using this model:</p>
+
+<p>1) Unlike a regular regression, I cannot simply 'plug-in' the variables and get a meaningful numeric output. Instead, I must first set a threshold probability above which values will be 1 and below which values will be 0. Is this correct?</p>
+
+<p>2) I cannot make use of this sample model or get the same results as the person who provided it until I have the probability threshold that was used for prediction. Is this correct?</p>
+
+<p>3) If I wanted to split the outputs into tiers, would I use the probabilities for that and map them to some other value? How would that process work (feel free to let me know if this is out of scope).</p>
+
+<p>Thanks!</p>
+"
+"0.247797313891676","0.250559911115677","202973","<p>Suppose I have a data set of <code>N</code> observations <code>(n = 1...N)</code> for out-of-sample estimation and values of ($y_n$). I have also <code>I</code> statistical models <code>(i= 1...I)</code> which every model has its own estimate on each data point ($\hat{y}^i_n$).</p>
+
+<p>In addition I have a model selection method $\phi$ which would pick a model's estimate among the model set as its own according to its assessment on previous performance of the models ($\hat{y}^\phi_n = \min_i\{\hat{f_i}(y_n), i \in I\} $).</p>
+
+<p>My claim should be ""model selection's performance is better than all models it picks estimates from"". I am trying to find a proper method to describe the statistical power of the model selection method, compared to individual models in the model set.</p>
+
+<p>All individual models follow different assumptions, distributions and dependence structure. Some are iid, some have heteroskedasticity. Actually, there is no restriction on models except it should yield an estimate.</p>
+
+<p>Some The models are employed on time series but what they do is asset pricing on different assets and contracts. But for a broaded audience I will make the following analogy.</p>
+
+<p>Suppose you have a machine that predicts the scores on basketball matches. It does not only predict the final score, it also predicts a distribution of the scores throughout the time. It also predicts which player will score when.</p>
+
+<p>Suppose you have many machines of this sort and all have different predictions. All of them had been right on some occasion (That is what statistics is after all right? No model is perfect.). </p>
+
+<p>I am trying to figure out which machine is better at predicting what and when, using the previous performance of the machines. I can say stuff like 'oh machine A was good at predicting scores occured in the last 10 mins, but for the last 2 months model B became better'. </p>
+
+<p>It turns out my estimates using the machines are better than any machine could do it alone in the long run. I checked for several error terms starting with MAPE and MSE. But I want to show that it is not a coincidence but a statistically significant fact. I have a fair sample size (~100k) over a good enough time period (5 years).</p>
+
+<p>I fiddled with some thoughts about proportion of $\phi$ selecting the model with the lowest error and some logistic regression on that according to the criteria it uses to pick the models. But I lack the comprehensive knowledge on this domain of statistics.</p>
+
+<p>ps. R package suggestions are also appreciated.</p>
+"
+"0.175219161012616","0.177172612243394","206075","<p>I'm relatively new to machine learning (started about 5 months ago), and I'm looking at potentially implementing an ensemble classifier as part of my research. </p>
+
+<p>I have built 3 models that I use to classify whether sales data is going to win or lose. Each model produces the probability of the sale winning or losing, and then I apply thresholds to those to classify them as either a ""Win"", ""Loss"" or ""Borderline Loss"". There are 25 variables, all of which are discrete. </p>
+
+<p>The three models are Naive Bayes, Tree Augmented Naive Bayes (TAN) and Logistic Regression. I am using the bnlearn package for the bayesian classifiers, and a simple glm for the Logistic Regression. All models have high accuracy performances when tested on unseen data:</p>
+
+<p>Naive Bayes Accuracy: 88% </p>
+
+<p>TAN Accuracy: 91%</p>
+
+<p>Logistic Regression Accuracy: 92%</p>
+
+<p>I want to try implementing an ensemble classifier to see if I can get the best possible accuracy across all three models. My question is, how do I go about implementing something like this? I can't find too many examples online, at least not with these models for implementing one. From what I have read, one way to do it is to have a voting system, where if the 2 models predict the sale will win, but 1 predicts with will lose, then it is classified as a win. But what happens in this case if all 3 models had different predictions? I have all my prediction data ready, as in I have all the test data and each models prediction for each sale, my question so is, how would I proceed from here? </p>
+
+<p>If someone knows of any available resources or tutorials that may help, I would greatly appreciate it!</p>
+"
+"0.114707866935281","0.115986700954059","207177","<p>I am fitting a logistic regression model for the likelihood of patients suffering morbidity after surgery. The most commonly used prediction tool at the moment is POSSUM (Physiological and Operative Severity Score for the enUmeration of Mortality and Morbidity), which I would like to compare my model against.</p>
+
+<p>In terms of discrimination, I have the Area Under the ROC curves calculated for both and would like to compare the two. </p>
+
+<p>It seems in Stata that the command to use is <code>roccomp</code>. This produces a chi2 statistic and a p-value.</p>
+
+<p>The R equivalent seems to require the <code>pROC</code> package and the function to use is <code>roc.test()</code>. However this function returns a z-statistic and p-value.</p>
+
+<p>Looking at the documentation, both seem to be implementations of DeLong et al's methods of comparing AUROCs[1], but I cannot for the life of me understand why one gives a chi2 and the other a z-statistic. Are the tests equivalent?</p>
+
+<p><em>Reference</em>:
+1. Elisabeth R. DeLong, David M. DeLong and Daniel L. Clarke-Pearson (1988) â€œComparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approachâ€. Biometrics 44, 837--845.</p>
+
+<p><strong>EDIT</strong>: Does this have anything to do with the explanation: <a href=""http://stats.stackexchange.com/questions/173415/at-what-level-is-a-chi2-test-mathematically-identical-to-a-z-test-of-propo/173483#173483"">At What Level is a $\chi^2$ test Mathematically Identical to a $z$-test of Proportions?</a> ?</p>
+"
+"0.0936585811581694","0.0947027447620757","209747","<p>I am building CTR(<a href=""https://en.wikipedia.org/wiki/Click-through_rate"" rel=""nofollow"">https://en.wikipedia.org/wiki/Click-through_rate</a>)
+Click prediction model with different (61) variables.Dependent variable is weather 0/1( click).I have build logistic regression model and getting probabilities of click for different combination of independent variable.</p>
+
+<p>I am confused about model validation-</p>
+
+<p>1)  What are the parameters should I use for model validation?</p>
+
+<p>2) I am not classifying anything but using classification model for click through rate prediction so using Pseudo R square/ likelihood ration would work?</p>
+
+<p>3) Is there any strategy that I can use for model validation?</p>
+"
+"0.0936585811581694","0.0947027447620757","212027","<p>I am using <code>gbm</code> to predict an imbalanced binary outcome, with the intent of obtaining a ranking by class probability estimation that produces a strong class separation on out-of-sample data.  (I am combining this class probability with other predictions, including from logistic regression, in an ensemble model.)</p>
+
+<p>According to <a href=""http://bioconductor.wustl.edu/extra/vignettes/gbm/inst/doc/gbm.pdf"" rel=""nofollow"">this gbm vignette</a> (Ridgeway, 2007), under ""common user options"" for loss functions:</p>
+
+<blockquote>
+  <p>This should be easily dictated by the application.  For most
+  classification problems either <code>bernoulli</code> or <code>adaboost</code> will be
+  appropriate, the former being recommended. (p. 5)</p>
+</blockquote>
+
+<p>There's no explanation provided for favoring bernoulli over <a href=""http://stats.stackexchange.com/questions/37497/how-to-use-r-gbm-with-distribution-adaboost"">adaboost</a> nor any mention of the option for <a href=""https://en.wikipedia.org/wiki/Huber_loss"" rel=""nofollow""><code>huberized</code> loss function</a>, although this function may have been added at a later date.</p>
+
+<p>Related question, but broader than mine:  <a href=""http://stats.stackexchange.com/questions/112359/choosing-between-loss-functions-for-binary-classification"">Choosing between loss functions for binary classification</a>.  This answer references <a href=""http://www.eecs.berkeley.edu/~wainwrig/stat241b/bartlettetal.pdf"" rel=""nofollow"">Bartlett (2006)</a> which is a challenging read for me.</p>
+
+<p>Although performance is satisfactory under the bernoulli loss function, I am having a hard time understanding the justification for selecting one over another.  I'm trying all of them, but are there any theoretical justifications that are at least somewhat intuitive?</p>
+"
+"0.229415733870562","0.231973401908118","213531","<p>I am trying to analyse my data using bam. And I would greatly appreciate your advice as to the appropriate analyses.</p>
+
+<p>The experimental design is: 
+There are two groups of participants, ""CAT"" and ""PA"" coded in the factor ""group.""
+Within each group, there are two conditions, ""Label"" and ""Ideo"" coded in the factor ""cnd.""
+The prediction is that performance of participants in the Label condition would be higher compared to the Ideo condition, and that this difference would be greater in the CAT group compared to the PA group. So, my hypothesis forces me to test for an interaction of group by condition. The dependent variable is accuracy (so I need a logistic model) which greatly depends on time (coded as ""ctrial""). ""Sbj"" codes participants that will be treated as random effects. </p>
+
+<p>My understanding of gamms is that If I had two isotropic continuous variables I could use s(x1,x2) and If I had two non-isotropic variables I could use te(x1,x2) to model interaction. But this is not the case, because my variables of interest are factors.</p>
+
+<p>I believe that the standard approach is that I should create a variable with four levels (group by condition)</p>
+
+<pre><code>data$igc &lt;- as.factor(paste(as.character(data$group),as.character(data$cnd),sep=""."")) 
+</code></pre>
+
+<p>and use an additive model such as:</p>
+
+<pre><code>bam(acc~ 1 + igc + s(ctrial, by=igc) + s(sbj, bs = ""re""), data=data, family=binomial)
+</code></pre>
+
+<p>I could then inspect the plots and find out if CAT. label - CAT.ideo is greater compared to PA.label- PA.ideo.</p>
+
+<p>But do I really need the 4-level variable?
+I mean, is my 4-level model the most parsimonious one?</p>
+
+<p>If there is no differences between the two groups, wouldn't a model such as 
+    bam(acc~ 1 + cnd + s(ctrial, by=cnd) + s(sbj, bs =""re""), data=data, family=binomial)
+be more appropriate?</p>
+
+<p>[I believe that this question is not the same as the one posted here: <a href=""http://stats.stackexchange.com/questions/32730/how-to-include-an-interaction-term-in-gam"">How to include an interaction term in GAM?</a>, as my question is related to model comparison] </p>
+
+<p>My best guess is that I should do the following: </p>
+
+<pre><code>Analysis of Deviance Table
+
+Model 1: acc ~ 1 + igc + s(ctrial) + s(sbj, bs = ""re"")
+Model 2: acc ~ 1 + group + s(ctrial, by = group) + s(sbj, bs = ""re"")
+Model 3: acc ~ 1 + cnd + s(ctrial, by = cnd) + s(sbj, bs = ""re"")
+Model 4: acc ~ 1 + igc + s(ctrial, by = igc) + s(sbj, bs = ""re"")    
+  Resid. Df Resid. Dev     Df Deviance  Pr(&gt;Chi)    
+1     18350     8495.0                              
+2     18347     8497.3 2.1307   -2.262              
+3     18346     8474.8 1.3922   22.419 4.861e-06 ***
+4     18338     8456.5 7.7730   18.327   0.01667 *  
+</code></pre>
+
+<p>Is my understanding correct?
+And is this the correct way to ""justify"" the use of a 4-level variable?</p>
+
+<p>Thank you in advance for your time,</p>
+
+<p>Fotis</p>
+"
+"0.114707866935281","0.115986700954059","214892","<p>I'm trying to construct a univariate prediction model using logistic regression in order to predict credit default likelihood from overdue level in telecommunication companies:</p>
+
+<p><a href=""https://drive.google.com/open?id=0BzdYGYN6vfqBeDdKRDFpelFKbTg"" rel=""nofollow"">https://drive.google.com/open?id=0BzdYGYN6vfqBeDdKRDFpelFKbTg</a></p>
+
+<p>For this, I used the function glm and found two problematic ranks:
+        RANK_OVERDUE between S/. 3,000 and S/. 5,000 &amp; RANK_OVERDUE More than S/. 5,000.</p>
+
+<p>which have p-values of 0.946 and 0.473:</p>
+
+<pre><code>Call:
+glm(formula = impago ~ MONTO_VENCIDO_DOC_IMPAGOS, family = binomial, 
+    data = data)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.1355  -0.0569  -0.0569  -0.0569   3.5855  
+
+Coefficients:
+                                                  Estimate
+(Intercept)                                       -6.42627
+RANK_OVERDUE&lt;S/. 0 - S/. 500]         0.69763
+RANK_OVERDUE&lt;S/. 1,500 - S/. 3,000]   1.73952
+RANK_OVERDUE&lt;S/. 3,000 - S/. 5,000] -10.13980
+RANK_OVERDUE&lt;S/. 500 - 1,500]         1.13854
+RANK_OVERDUEMÃ¡s de S/. 5,000          0.71916
+</code></pre>
+
+<p></p>
+
+<pre><code>                                                 Pr(&gt;|z|)    
+(Intercept)                                       &lt; 2e-16 ***
+RANK_OVERDUE&lt;S/. 0 - S/. 500]       1.78e-15 ***
+RANK_OVERDUE&lt;S/. 1,500 - S/. 3,000] 2.51e-05 ***
+RANK_OVERDUE&lt;S/. 3,000 - S/. 5,000]    0.946    
+RANK_OVERDUE&lt;S/. 500 - 1,500]       1.23e-06 ***
+RANK_OVERDUEMÃ¡s de S/. 5,000           0.473    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 9683.9  on 345828  degrees of freedom
+Residual deviance: 9603.5  on 345823  degrees of freedom
+AIC: 9615.5
+
+Number of Fisher Scoring iterations: 15
+</code></pre>
+
+<p>I would need to know what options I have on order to deal with this situation. Should these ranks be included in the model? I tried to join them into one (overdue over S/. 3,000) but when applying again the model, it continued to be not significant (I obtained a p-value of 0.919).</p>
+"
+"0.114707866935281","0.115986700954059","217639","<p>Using the glmer() function in the LME4-library in R I computed logistic models, of the form: Y ~ cat1 * cont1 + (1|Subject) where, obviously, Y is the binomial outcome variable (0 or 1), cat1 is a categorial variable (0,1,2) and cont1 is a continuous variable). Then, using confint(model, method = ""boot"") I computed confidence interval on the variables.</p>
+
+<p>Now I would like to plot a graph of the chance P(Y==1), I want to plot P against cont1 for every cat1.</p>
+
+<p>So you'd say: X = B(0) + B(cont1) * cont1 + B(cat1:1) * (cat1==1) + .... + etc
+And then: P(Y==1) = 1/(1-exp(-X))</p>
+
+<p>Which does exactly what I expect. But now, I want to incorporate the bootstrapped confidence intervals (so not std. error * 1.96!!) in the graph. I have the numbers, I do not know how to interpret them, what would be the formula for e.g. the 97.5 % line and the 2.5 % line?</p>
+
+<p>Thanks in advance!</p>
+
+<p><strong>EDIT</strong>
+Is this the correct way?
+Basically taking 10000 samples with replacement, same size as original data, creating the model, computing the predictions, and taking the 97.5th and 2.5th intervals of the predictions.</p>
+
+<pre><code>prediction_pars = expand.grid(cont1= seq(-4,4,.05), cat1= as.factor(c(1,2,3)));
+
+predictions = array(dim = c(10000, dim(prediction_pars)[1]));
+
+for (i in 1:10000){
+  new_sample = data[sample(nrow(data), samplesize, replace = T) , ];
+  new_model  = glmer (Y ~ cont1 * cat1 + (1|Subject), dat=newdat, family=""binomial"");
+  predictions[i , ] = predict(new_model, newdat = new_sample, re.form = NA);
+}
+
+hi = lo = array(dim = dim(prediction_pars)[1]);
+for (i in (1, dim(prediction_pars)[1])){
+  hi[i] = sort(predictions[,1]) [9750];
+  lo[i] = sort(predictions[,1]) [ 250];
+}
+</code></pre>
+"
+"0.0662266178532522","0.0669649530182425","218842","<p>I'm using a random forest in R (randomForest) to predict a binary output (1,0) for a dataset that is heavily unbalanced. In this example let's assume the population has 1% 1's and 99% 0's.</p>
+
+<p>Building the random forest on such unbalanced data is difficult and I get much better results when building it on a 50:50 sample.  When predicting a validation set, I obtain the % of trees that predicted that data point to be a 1.  For example, customer A has a 75% probability of being a 1 (based on the # of trees that predicted 1)</p>
+
+<p>If I want to re-scale these predictions back to the original population ratio of 1:99, is there a good way to do this?</p>
+
+<p>In the past I've used logistic regression, and I can adjust the intercept accordingly to down-scale the predicted probability.</p>
+
+<p>Is there a good way to think about this from the RF point of view?  Can I simply just down-weight the predictions from the 50:50 sample by 50 (50% down to 1%)?</p>
+
+<p>Thanks in advance for any thoughts and help</p>
+"
+"0.23878346647046","0.204300099186878","221510","<p>I'm new to logistic regression analysis, and was unable to find an answer elsewhere in Cross Validated or Stack Overflow. </p>
+
+<p>Consider a standard logistic regression analysis of a binary outcome (admission to college) based on continuous covariates gre score and high school gpa, and ordinal categorical rank prestige of the undergraduate institution (data from the nice UCLA stats dept. logistic regression in R tutorial: <a href=""http://www.ats.ucla.edu/stat/r/dae/logit.htm"" rel=""nofollow"">http://www.ats.ucla.edu/stat/r/dae/logit.htm</a>)</p>
+
+<pre><code>&gt; admissions.data &lt;- read.csv(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+&gt; admissions.data$rank &lt;- as.factor(admissions.data$rank)
+&gt; summary(admissions.data)
+     admit             gre             gpa        rank
+ Min.   :0.0000   Min.   :220.0   Min.   :2.260   1: 61
+ 1st Qu.:0.0000   1st Qu.:520.0   1st Qu.:3.130   2:151
+ Median :0.0000   Median :580.0   Median :3.395   3:121
+ Mean   :0.3175   Mean   :587.7   Mean   :3.390   4: 67
+ 3rd Qu.:1.0000   3rd Qu.:660.0   3rd Qu.:3.670
+ Max.   :1.0000   Max.   :800.0   Max.   :4.000
+
+&gt; fit1 &lt;- glm(admit ~ gre + gpa + rank, data = admissions.data, family=""binomial"")
+&gt; summary(fit1)
+
+Call:
+glm(formula = admit ~ gre + gpa + rank, family = ""binomial"",
+    data = admissions.data)
+
+Deviance Residuals:
+    Min       1Q   Median       3Q      Max
+-1.6268  -0.8662  -0.6388   1.1490   2.0790
+
+Coefficients:
+             Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -3.989979   1.139951  -3.500 0.000465 ***
+gre          0.002264   0.001094   2.070 0.038465 *
+gpa          0.804038   0.331819   2.423 0.015388 *
+rank2       -0.675443   0.316490  -2.134 0.032829 *
+rank3       -1.340204   0.345306  -3.881 0.000104 ***
+rank4       -1.551464   0.417832  -3.713 0.000205 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 499.98  on 399  degrees of freedom
+Residual deviance: 458.52  on 394  degrees of freedom
+AIC: 470.52
+
+Number of Fisher Scoring iterations: 4
+
+# Odds Ratios
+&gt; exp(coef(fit1))
+(Intercept)         gre         gpa       rank2       rank3       rank4
+  0.0185001   1.0022670   2.2345448   0.5089310   0.2617923   0.2119375
+
+# 95% confidence intervals
+&gt; exp(confint(fit1))
+Waiting for profiling to be done...
+                  2.5 %    97.5 %
+(Intercept) 0.001889165 0.1665354
+gre         1.000137602 1.0044457
+gpa         1.173858216 4.3238349
+rank2       0.272289674 0.9448343
+rank3       0.131641717 0.5115181
+rank4       0.090715546 0.4706961
+</code></pre>
+
+<p>My questions are:</p>
+
+<p>1) In R, is there a straight-forward way to determine ORs with 95% CIs for specific values of the covariates? E.g., based on this model, what are the odds of college acceptance for students applying to a rank 2 schools with a gpa of 3 and a gre score of 750, compared with a student applying to a rank 3 school with the same gpa and gre score? I could calculate ORs by hand given the model coefficient estimates and these specific covariate values, but am unsure how to correctly propagate SEs to calculate 95% CIs.</p>
+
+<p>2) Would this particular example be considered a case-control study design, and therefore odds ratios could be estimated, but not predictions? (See: <a href=""http://stats.stackexchange.com/questions/69561/case-control-study-and-logistic-regression"">Case-control study and Logistic regression</a>)</p>
+"
+"0.229415733870562","0.231973401908118","222479","<p>I'm new in this area, hope my question is understandable.
+I need to fit conditional logistic regression model in R and use it for predictions on unseen data (output should be probability).
+My datasets are  quite large (over 150k rows) and contains many (~500) noisy features.
+I found package called <strong>clogitboost</strong> and tried to use it with relatively small number of boosting iterations (max 30, because with larger values it takes too long to compute and raises an error in the end - perhaps, it's resources limitations) - results are mediocre. I tried to use unconditional approach with regularization - <strong>glmnet</strong> and got better results, however, due nature of data I guess it will be better to use conditional regression with regularization similar to what is used in <strong>glmnet</strong> (tried to remove some features and apply <strong>clogitboost</strong> again and got slightly better results). There is package called <strong>clogitL1</strong> , which seems to do that, I tried to use it and it fits model quickly, but it doesn't provide <strong>predict()</strong> function, Usage described in  paper with attached R code here:
+<a href=""https://www.jstatsoft.org/article/view/v058i12"" rel=""nofollow"">https://www.jstatsoft.org/article/view/v058i12</a>, they made some predictions in some way, but I can't understand it. Can I somehow manually predict using  unseen data, just like it's possible with <strong>clogitboost</strong> <strong>predict()</strong> (parameters are Model, X and Strata column) using model that was fitted with <strong>clogitL1</strong>? Note: in description of package <strong>clogitL1</strong> - ""Tools for the fitting and cross validation of <strong><em>exact</em></strong> conditional logistic regression models"" - so I'm not sure about what ""exact"" means here and  if it makes sense to use that package for my purposes. If it's not possible to predict, then, should I manually select features by checking their ""importance"" that can be found in <strong>clogitL1</strong> model? </p>
+"
+"0.162221421130763","0.164029965544142","222544","<p>I used the package for random forest. It is not clear to me how to use the results. 
+In  logistic regression you can have an equation as an output, in standard tree some rules. If you receive a new dataset you can apply the equation on the new data and predict an outcome (like default/no default). Or saying the customers with characteristics a and characteristics b will have a default, so you can predict the outcome before it happens. That is the scoring tecnique.</p>
+
+<p>Is it possible to use random forest in a similar situation, or how would you use the results of a RF? </p>
+
+<p>my python code:</p>
+
+<pre><code>from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_auc_score
+
+#creating a test and train dataset
+
+from sklearn.cross_validation import train_test_split
+
+train, test = train_test_split(df, test_size = 0.3)
+
+clf = RandomForestClassifier(max_depth = 30, min_samples_split=2, n_estimators = 200, random_state = 1)
+
+#training the model
+clf.fit(train[columns], train[""churn""])
+
+#testing the model
+predictions = clf.predict(test[columns])
+
+print(predictions)
+
+print(roc_auc_score(predictions, test[""churn""]))
+</code></pre>
+"
+"0.148087219439773","0.14973818705887","224539","<p>I have a dataset with about 30 potential predictors and 115 observations. I'm looking into building a prediction model with the data using logistic regression.</p>
+
+<p>From what I have read - the typical rule of thumb to split the dataset is an 80/20 split, where 80 percent of the dataset will be used for training the model and the remaining 20 percent will be used for validation/testing. </p>
+
+<p>Using the Confusion Matrix from the Caret package in R, the accuracy of the model is 91%, No information Rate of .55, and a significant p value comparing the Accuracy to NIR (P&lt;.0001).</p>
+
+<p>I'm wary to trust these results, since only 92 observations were used for training and 23 observations for testing.</p>
+
+<p>Is the sample size enough to create a generalizable prediction model? If not, how do I determine the required sample size for model training and testing?</p>
+"
+"0.162221421130763","0.164029965544142","224947","<p>What are some of the best practices and steps to building models for prediction and or inferences? </p>
+
+<p>What have been taught to me during my classes was the steps outlined in Chapter 4 of Hosmer et al. for the ""Purposeful Selection of Covariates"". The method to screen a large dataset with many potential predictors is to use a algorithmic approach such as Stepwise, best subset regression, etc. Then verify the model after the fact for potential collinearity, confounders, etc.  However, I have read much criticism on this site in regards to those said steps and methods.</p>
+
+<p>For example - if I was provided a dataset with ~100 potential predictors, what would be the best practice to selecting those said predictors for inclusion or exclusion of the model for prediction/inference ? </p>
+
+<p>According to Hosmer et al., the steps would be to perform univariate analysis to screen for all of those potential predictors (p &lt; .25), then move to inclusion of those said predictors to a multivariate model. Take a stepwise approach to removing insignificant predictors, then add back and verify the significance of each non significant predictor. </p>
+
+<p>However - the more I've read on this site the more confused I've gotten about what is considered best practices, and I've come to question more and more of what was taught during my classes.</p>
+
+<p>Once again just to reiterate - </p>
+
+<ol>
+<li><p>What would be the best practices for building a model for obtaining unbiased measure of association for each individual predictors?</p></li>
+<li><p>What would be the best practices for building a model strictly for prediction?</p></li>
+</ol>
+
+<p>I'm still learning much about the world of data science and appreciate any help that is provided!</p>
+
+<p>""Hosmer, D. W., Lemeshow, S., &amp; Sturdivant, R. X. 2013. Applied Logistic Regression. Wiley, Chicester"".</p>
+"
+"0.264906471413009","0.251118573818409","226330","<p>Overall, I'd like to be able to say that, for the logistic prediction for this row, ColA was more influential in driving up the resultant probability (ie, y_hat) than ColB. (We'll use y_hat as it's usually defined for logistic.) But is this possible? Some data scientists I've talked to say yes, but I've also seen push-back.</p>
+
+<p>From what I've read, it seems that GLMs make it easiest to get at a per-row variable importance (see <a href=""http://stats.stackexchange.com/q/190482"">this limited discussion</a> on logit in particular, including push-back). But can they actually do it?</p>
+
+<p>If B1 and B2 are coefficients and the cols in X represent our features, it would seem that if <em>B1</em>*X1 is greater than <em>B2</em>*X2 then <em>B1</em>*X1 would drive the resultant probability towards 1 more than <em>B2</em>*X2. Here's an example (which brings in a factor col, for a full treatment).</p>
+
+<p>We create features X1 and X2, where X1 is random and X2 (I think we can agree) has a large positive impact on y:</p>
+
+<pre><code>set.seed(33)
+X1 &lt;- runif(10, 0.0, 1.0)
+X2 &lt;- c(1,0,1,0,1,0,1,0,1,0)
+y &lt;-  c(1,1,1,0,1,0,1,0,1,0)
+df &lt;- data.frame(X1,X2,y)
+dforig &lt;- df #Need a copy bc multiplying below doesn't work with factors
+df$X2 &lt;- as.factor(df$X2)
+</code></pre>
+
+<p>Now we create the logit model:</p>
+
+<pre><code>fit.logit = glm(
+formula = y~.,
+data = df,
+family = binomial(link = ""logit""))
+
+                         X1          X21  
+Coefficients:       -1.2353      22.0041
+Wald statistic:      -0.267        0.003
+</code></pre>
+
+<p>Now if we multiply <em>B1</em> and <em>B2</em> by <em>X1</em> and <em>X2</em> respectively and print the results:</p>
+
+<pre><code>coefftemp &lt;- fit.logit$coefficients
+coefficients &lt;- coefftemp[2:length(coefftemp)] # drop intercept
+multiply_res &lt;- sweep(dforig[,1:2], 2, coefficients, `*`)
+
+          X1       X2
+1  -0.55087679 22.00411
+2  -0.48751729  0.00000
+3  -0.59755734 22.00411
+4  -1.13510089  0.00000
+5  -1.04245907 22.00411
+6  -0.63908954  0.00000
+7  -0.53998690 22.00411
+8  -0.42395777  0.00000
+9  -0.01916833 22.00411
+10 -0.14575621  0.00000
+</code></pre>
+
+<p>We see that in the rows where X2 = 1 then <em>B2</em>*X2 (ie the second column) is much higher than <em>B1</em>*X1 (ie the first column). So it would seem that we could say that for those rows that X2 would be the dominant feature driving up the resultant prediction towards 1.</p>
+
+<p>If one reverses the y dependency on X2 by replacing zeros for ones in X2, then after doing the multiplication, <em>B2</em>*X2 has a much lower value than <em>B1</em>*X1 when X2 = 1, which makes sense (since X2 now pushes y_hat towards 0 when X2 = 1). Thus, for these rows, X1 is actually more ""responsible"" for driving y_hat towards 1. (Note that if both results are negative, then the least negative would be the feature more responsible for y_hat being as high as it is.) Because of this, it would seem that this method of per-row feature ranking still works. What am I missing? </p>
+
+<p>In case it helps, the code for the latter (reversed dependency) case is below: </p>
+
+<pre><code># Reverse y dependency on X2
+set.seed(33)
+X1 &lt;- runif(10, 0.0, 1.0)
+X2 &lt;- c(0,1,0,1,0,1,0,1,0,1)
+y &lt;-  c(1,1,1,0,1,0,1,0,1,0)
+df &lt;- data.frame(X1,X2,y)
+dforig &lt;- df #Need a copy bc multiplying below doesn't work with factors
+df$X2 &lt;- as.factor(df$X2)
+
+fit.logit = glm(
+  formula = y~.,
+  data = df,
+  family = binomial(link = ""logit""))
+
+                         X1          X21  
+Coefficients:        -1.235      -22.004
+Wald statistic:      -0.267       -0.003
+
+coefftemp &lt;- fit.logit$coefficients
+coefficients &lt;- coefftemp[2:length(coefftemp)] # drop intercept
+multiply_res &lt;- sweep(dforig[,1:2], 2, coefficients, `*`)
+multiply_res
+
+            X1        X2
+1  -0.55087679   0.00000
+2  -0.48751729 -22.00411
+3  -0.59755734   0.00000
+4  -1.13510089 -22.00411
+5  -1.04245907   0.00000
+6  -0.63908954 -22.00411
+7  -0.53998690   0.00000
+8  -0.42395777 -22.00411
+9  -0.01916833   0.00000
+10 -0.14575621 -22.00411
+</code></pre>
+
+<p>Overall, for logistic, can we accurately say (for example) that feature A drives y_hat toward 1 more than feature B, for this individual prediction? </p>
+
+<p>Thanks, all!</p>
+"
+"0.229415733870562","0.231973401908118","228316","<p>I want to predict a binary response variable <code>y</code> using logistic regression. <code>x1</code> to <code>x4</code> are the log  of continuous variables and <code>x5</code> to <code>x7</code> are binary variables. </p>
+
+<pre><code>Call:
+glm(formula = y ~ x1 + x2 + x3 + x4 + x5 + 
+    x6 + x7, family = binomial(), data = df)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.6604  -0.5712   0.4691   0.6242   2.4095  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -2.84633    0.31609  -9.005  &lt; 2e-16 ***
+x1             0.14196    0.04828   2.940  0.00328 ** 
+x2             4.05937    0.22702  17.881  &lt; 2e-16 ***
+x3            -0.83492    0.08330 -10.023  &lt; 2e-16 ***
+x4             0.05679    0.02109   2.693  0.00709 ** 
+x5             0.08741    0.18955   0.461  0.64467    
+x6            -2.21632    0.53202  -4.166  3.1e-05 ***
+x7             0.25282    0.15716   1.609  0.10769    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 1749.5  on 1329  degrees of freedom
+Residual deviance: 1110.5  on 1322  degrees of freedom
+AIC: 1126.5
+
+Number of Fisher Scoring iterations: 5
+</code></pre>
+
+<p>The output of the GLM shows that most of my variables are significant for my model, but the various goodness of fit test I have done:</p>
+
+<pre><code>anova &lt;- anova(model, test = ""Chisq"")   # Anova
+1 - pchisq(sum(anova$Deviance, na.rm = TRUE),df = 7) # Null Model vs Most Complex Model
+1 - pchisq(model$null.deviance - model$deviance, 
+           df = (model$df.null - model$df.residual )) # Null Deviance - Residual Deviance ~ X^2
+hoslem.test(model$y, model$fitted.values, g = 8)     # Homer Lemeshow test
+pR2(model)                                            # Pseudo-R^2
+</code></pre>
+
+<p>tell me that there is a lack of evidence to support my model.</p>
+
+<p>More over, I have a bimodal deviance plot. I suspect the bimodal distribution is caused by the sparsity of my binary variables.
+ <a href=""http://i.stack.imgur.com/J27fL.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/J27fL.png"" alt=""enter image description here""></a></p>
+
+<p>So I calculated the absolute error <code>abs(y - y_hat)</code>, and obtained the following:</p>
+
+<ul>
+<li>77% of my absolute errors were in [0;0.25], which I think is very good!</li>
+</ul>
+
+<p>On the following plot, Y=1 is red, and Y=0 is green. This model is better at predicting when Y will be 1 than 0.</p>
+
+<p><a href=""http://i.stack.imgur.com/ZEGuv.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ZEGuv.png"" alt=""enter image description here""></a></p>
+
+<p>My question is thus the following:</p>
+
+<p>The goodness of fit tests all assume that my null hypothesis follows a Chi square distribution of some sort. Is it correct to conclude that based on my absolute error, my model's prediction is OK, it's just that it doesn't follow a Chi square distribution and thus perform poorly with these tests? </p>
+"
+"0.209426954145848","0.211761774943813","230567","<p>I've been looking at measures of variable importance for a random forest model - and was wondering if there are ways in which you can track how the <strong>variable importance shifts</strong> as the model is applied to datasets in the <strong>future</strong>.</p>
+
+<p>The purpose of this question is to gain information as to whether a variable that was very important at model development is no longer that important when making predictions on future datasets either due to a change in population or a change in the variable itself (i.e. if this variable was somehow distorted and replaced with a column of missings it would no longer be important!).</p>
+
+<p>Some example code  (sourced from : <a href=""http://stats.stackexchange.com/questions/197827/how-to-interpret-mean-decrease-in-accuracy-and-mean-decrease-gini-in-random-fore"">How to interpret Mean Decrease in Accuracy and Mean Decrease GINI in Random Forest models</a>) may help illustrate the problem:</p>
+
+<pre><code>require(randomForest)
+data(iris)
+set.seed(1)
+dat &lt;- iris
+dat$Species &lt;- factor(ifelse(dat$Species=='virginica','virginica','other'))
+model.rf &lt;- randomForest(Species~., dat, ntree=25,
+importance=TRUE, nodesize=5)
+model.rf
+varImpPlot(model.rf)
+</code></pre>
+
+<p>It seems that the variable importance plot can only be created on the dataset in which the random forest model was trained on as the variable importance plot function can only be applied to a random forest object (which stays the same no matter what dataset it is trying to score in the future).</p>
+
+<p>Is there a built-in way (in Python or R) to compute variable importance over time, or is it not possible for some reason? My understanding is that if a new dataset possessed an outcome flag it would be possible to compute the mean decrease in gini.</p>
+
+<p>Edit: Would also like to slightly expand this question to discuss potential ways on measuring variable stability over time. For example, in a standard logistic scorecard one would compute a characteristic stability index using the pre-defined bins. However, as many random forests have continuous inputs the choice of bins isn't natural and potentially there should be an alternative method?</p>
+"
+"0.239394948819869","0.259354147819215","231066","<p>*EDIT: I ran test again with data set provided and realized that the cause of problem is definitely rank deficiency, because estimated values of parameters in nonlinear regression showed non existing p values and there was no way to create confidence intervals with this data. </p>
+
+<h2>Thank you all for reading and help! This question is closed.</h2>
+
+<p>I researched seed germination. I took 75 seed replicates and put them in  different ecological parameters (like temperature) and took data about sprouts in different time intervals. </p>
+
+<p>Reading statistical science papers about this topic, I found that I should analyze my data in a time-to-event model (dose response curve), where I can use log-logistic regression or nonlinear regression (Ritz et al., 2013 -<a href=""http://dx.doi.org/10.1016/j.eja.2012.10.003"" rel=""nofollow"">http://dx.doi.org/10.1016/j.eja.2012.10.003</a>). </p>
+
+<p>Two models (nonlinear and log-logistic) lead to quantitatively very similar fitted germination curves, i.e., similar parameter estimates, but qualitatively different statements about the precision of estimates. Nonlinear regression model yields an overly precise estimate of the proportion of seeds that germinated during the experiment, so the precision reported by the nonlinear regression is too high.</p>
+
+<p>Similarly, the 95% confidence intervals of the fitted curves also demonstrate the dramatic difference in precision of the two models: Accurate prediction of germination percentages is not warranted by the data unless very low percentages are of interest.</p>
+
+<p>Because of that I choose log-logistic regression as a model. First few data sets; treatments analyzed in R using analysis of Dose-Response Curves (drc package) went smooth, and I was able to plot and get final graph. Such data, which was successfully analyzed, contained treatments where max seeds germination was for example 50% of total seed number.</p>
+
+<p>Example:</p>
+
+<p><a href=""http://i.stack.imgur.com/yUqOu.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/yUqOu.jpg"" alt=""Example of successful data analysis""></a></p>
+
+<p>The problems arose when I entered the log-logistic model with treatment where all the seeds germinated in a short amount of time (meaning the treatment for this set of seeds is most adequate for their successful sprouting). For example, 100% of seeds germinated in only 5 days, so there are only two or three time intervals and a large number of sprouted seeds. The R program here reported  convergence error:</p>
+
+<pre><code>Error in optim(startVec, opfct, hessian = TRUE, method = optMethod, control = list(maxit = maxIt,  : 
+non-finite value supplied by optim
+Error in drmOpt(opfct, opdfct1, startVecSc, optMethod, constrained, warnVal,  : 
+Convergence failed 
+</code></pre>
+
+<p>Since I'm still a student in biology I have a very basic knowledge in statistics, so I tried to solve the problem with literature. </p>
+
+<p>At first I thought that convergence failed because of perfect or complete separation, but through longer research it seems that the problem lies in rank deficiency. </p>
+
+<p>When I analyzed the same data with nonlinear regression I've managed to fit curve and plot a graph without a problem.  </p>
+
+<p>So, is there a way to make log-logistic model work even though I have obviously small data in cases of 100% germination? Should I switch to nonlinear regression  even though the reported precision would be too high. </p>
+"
+"0.148087219439773","0.14973818705887","233178","<p>I have a database with 1200 observations and 14 variables and I'am trying to do a classification tree for my dependent nominal variable who hase 4 modality</p>
+
+<pre><code>    &gt; table(testarbre2$Q99)
+
+  Autres       Nahdha Ne pas voter Nidaa Tounes 
+     248          351          303          298 
+</code></pre>
+
+<p>at firt i tried to do a multinom logistic regression but i got the mojority of my predictor variables non significant. it seems that Even with 1200 people I was trying to fit a model for which I don't have sufficient data. 
+so i tried to do a classification tree using the package rpart from R 
+but the problem is that the error is so high about 65% and more, and the missclassification is about 70% 
+this is the code R that i used </p>
+
+<pre><code>   #preparation of the data
+   set.seed(26)
+   train=sample(1:nrow(testarbre2),nrow(testarbre2)*7/10)
+   test=-train
+   training_data=testarbre2[train,]
+   testing_data=testarbre2[test,]
+   testing_vote=vote[test]
+
+   #fitting the model
+   library(rpart)
+   library(rpart.plot)
+   Tree &lt;- rpart(Q99~.,data=training_data)
+   rpart.plot(Tree)
+   printcp(Tree)
+   plotcp(Tree)
+
+    #Construction of the complete tree
+  Tree &lt;-rpart(Q99~.,data=training_data,control=rpart.control(minsplit=50,cp=0))
+
+     #Prune the tree
+    treeOptimal &lt;- prune(Tree,cp=Tree$cptable[which.min(Tree$cptable[,4]),1])
+    rpart.plot(treeOptimal)
+
+   #Prediction
+   a=predict(ptitanicOptimal,testing_data2,type = ""class"")
+   mc=table(a,testing_vote2)
+</code></pre>
+
+<p>I don't know if i missed a step or i used a wrong approach in the construction of my classification tree or the database is causing the problem</p>
+
+<p>Please someone help me to understand what's wrong with my model</p>
+"
+"0.162221421130763","0.164029965544142","233366","<p>I am trying to use <code>lme4::glmer()</code> to fit a binomial GLMM with dependent variable that is not binary, but a continuous variable between zero and one. One can think of this variable as a probability; in fact it <em>is</em> probability as reported by human subjects (in an experiment that I help analyzing). The <code>glmer()</code> yields a model that is clearly off, and very far from the one I get with <code>glm()</code>, so something goes wrong. Why? What can I do? </p>
+
+<hr>
+
+<p><strong>More details</strong></p>
+
+<p>Apparently it is possible to use logistic regression not only for binary DV but also for continuous DV between zero and one. Indeed, when I run </p>
+
+<pre><code>glm(reportedProbability ~ a + b + c, myData, family=""binomial"")
+</code></pre>
+
+<p>I get a warning message</p>
+
+<pre class=""lang-none prettyprint-override""><code>Warning message:
+In eval(expr, envir, enclos) : non-integer #successes in a binomial glm!
+</code></pre>
+
+<p>but a very reasonable fit (all factors are categorical, so I can easily check whether model predictions are close to the across-subjects-means, and they are). </p>
+
+<p>However, what I actually want to use is</p>
+
+<pre><code>glmer(reportedProbability ~ a + b + c + (1 | subject), myData, family=""binomial"")
+</code></pre>
+
+<p>It gives me the identical warning, returns a model, but this model is clearly very much off; the estimates of the fixed effects are very far from the <code>glm()</code> ones and from the across-subject-means. (And I need to include <code>glmerControl(optimizer=""bobyqa"")</code> into the <code>glmer</code> call, otherwise it does not converge at all.)</p>
+"
+"0.0936585811581694","0.0947027447620757","233802","<p>I've been given a data set containing 155 training examples and 108 features.I removed the features with more than 79 NA values and brought then them down to 99. I trained using the first 140 examples and used the rest for testing the prediction.The target variable is a discrete value i.e 0,1,2,3,4 though not restricted to those. I tried using multinomial logistic regression and random forest and got poor accuracy. Is there an algorithm that performs well on small data sets? Decision trees and regression don't seem to be working well for this. I am using R for the data analysis</p>
+"
+"0.114707866935281","0.115986700954059","233827","<p>I have a record of data that contains 1.1 millions observations and 14 variables. The response is 0 or 1. It was suggested to me that I use Gradient Boosted Trees to build my logistic model.</p>
+
+<p>Using <code>xgb.cv</code> from <code>xgboost</code> in R, I'm attempting to estimate the best hyperparameters on a holdout of 2/3 of the data. However, the code takes forever to run. It took me 13 hours for learning rate = 0.5, depth = 7, number of folds = 5 and number of trees = 10000. I can't imagine the time it will take to loop over different learning rates and depths.</p>
+
+<p>How could I make the process faster? I guess that reducing the number of trees to 2500 would make sense, based on my error curve. Will reducing the number of folds help? Is it really necessary to do bootstrapping? </p>
+
+<p>My current code looks like this, for reference :</p>
+
+<pre><code>etas = c(0.75,0.5,0.1)
+max.depths = c(11,9,7,5,3)
+fitAssessmentLst = list()
+lstPos = 0
+for(eta in etas){
+  for(max.depth in max.depths){
+    lstPos = lstPos + 1
+    x = xgb.cv(params = list(objective=""binary:logistic"", eta=eta, 
+        max.depth=max.depth, nthread=3),
+        data = train_data.xgbdm,
+        nrounds = 10000,
+        prediction = FALSE,
+        showsd = TRUE, 
+        nfolds = 5,
+        verbose = 0,
+        print.every.n = 1,
+        early.stop.round = NULL
+        )
+    fitAssessmentLst[[lstPos]] = list(eta = eta, max.depth = max.depth, assessmentTbl = x)
+  }
+}
+</code></pre>
+"
+"0.162221421130763","0.164029965544142","234537","<p>I've split my data set into a training and test set. I've performed a principal component analysis on the training set and have used the first 3 principal components to generate a logistic regression model for my response.</p>
+
+<p>I now want to use this model to make predictions for my test data set and check if this is true. </p>
+
+<p>I've been trying to use the predict function but obviously the model uses the principal components of the training set as the predictors whereas my test set just has all the original predictors so obviously they're not compatible.</p>
+
+<p><strong>How do I go about 'projecting' my test data onto the principal components I've already generated so I can use my model to make predictions?</strong></p>
+
+<p>Ideally I'd like to do this without using any external packages (it's for university). I am working in R.</p>
+"
+"0.198679853559757","0.178573208048647","235174","<p>I use a logistic mixed model to analyze binary data (accuracy) of an experiment. In this experiment, there are two types of trials (congruent and incongruent) and the stimulus exposure time is manipulated (6 levels).</p>
+
+<p>Beyond global effects, I would like to estimate the exposure time necessary to be above chance level, and the exposure time necessary to observe a significant difference between congruent and incongruent trials.</p>
+
+<p>The structure of the best model obtained is the following:
+ Score~1+Cong x ExpTime+ ExpTime x Bloc for the fixed part, with by-subject random slopes for ExpTime and Cong, where</p>
+
+<ul>
+<li>The dependent variable is Score: 0 (incorrect); 1 (correct).</li>
+<li>Cong: -1 (Congruent); +1 (Incongruent) and Bloc (8levels) are categorical predictors </li>
+<li>ExpTime (from 0 to .833) is used as a continuous predictor: </li>
+</ul>
+
+<p>Actually, I am facing two issues. </p>
+
+<p>1Â°) If exposure time was used as a categorical predictor, then, Wald-tests on the intercept and on the fixed effect for Cong would reveal, respectively, whether where are above chance level and whether there is a congruency effect for the exposure time chosen as reference. However, this answer only holds for the block 1. How to test for the global experiment (i.e. the 8 blocks simultaneously) ?</p>
+
+<p>2Â°) Here, Exposure time is used as a continuous predictor. So I can model the prediction for the logit, averaged on all the blocks, for the two types of items, as a function of TempsCont. However, if I want to make inference, I need to evaluate SE on this prediction. So, how to compute SE(TempsCont|Cong), SE(TempsCont|Incong) in order to take into consideration the variance associated with the fixed effects but also with the random effects ? And then, how to test the existence of a congruency effect as a function of TempsCont ?</p>
+"

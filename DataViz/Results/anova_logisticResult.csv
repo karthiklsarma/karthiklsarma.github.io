@@ -1,0 +1,213 @@
+"V1","V2","V3","V4"
+"0.5","0.5"," 79348","<p>I'm using a GLM with logistic link function to try to predict Y (0 or 1) as a function of a ton of predictor variables (A, B, C, etc.). Some of the predictor variables (A*, B*, C*, etc.) have been shown in other studies to be significant predictors. I want to show essentially that Y is unrelated to all of the other predictor variables, and I thought the simplest way to do this would be to run the full model (Y ~ .) and the null model (Y ~ A* + B* + C* + ...), and then use anova() to compare the two and show that they aren't different (i.e. have equal predictive power).</p>
+
+<p>However, anova() only outputs p-values (type I error), but I need a type II error rate here (since I want to show that the models are the same, I need a false negative rate for that). Any ideas on how to approach this?</p>
+"
+"0.5","0.5","229343","<p>I've got a dataset with patients (n=50) with 10 readings each (so overall, n=500) who suffered syncope (1 or 0), and 2 continuous predictors (rate and doppler).</p>
+
+<p>I'm trying to see if 1 predictor is more effective than another. I'm currently synthesising data, then creating a model for each using glm(syncope~predictor,family=""binomial""), and then using an ANOVA on these. The code is as follows.</p>
+
+<pre><code>n_pts &lt;- 50
+n_reads_per_pt &lt;- 10
+intercept = log(0.2)
+gradient = 2.5
+x &lt;- rnorm(n_pts*n_reads_per_pt,mean=0,sd=1)
+
+x_doppler &lt;- x
+x_rate &lt;- x + (rnorm(n_pts*n_reads_per_pt)) #Add a second random factor to make rate a less good predictor
+
+y &lt;- intercept + gradient*x
+p &lt;- exp(y)/(1+exp(y))
+tmp &lt;- runif(n_pts*n_reads_per_pt)
+syncope &lt;- (tmp &lt; p)
+
+glm_rate &lt;- glm(syncope~x_rate,family=""binomial"")
+glm_doppler &lt;- glm(syncope~x_doppler,family=""binomial"")
+
+anova(glm_rate, glm_doppler,test=""Chisq"")
+</code></pre>
+
+<p>The problem is the output of the ANOVA is:</p>
+
+<pre><code>&gt; anova(glm_rate, glm_doppler,test=""Chisq"")
+Analysis of Deviance Table
+
+Model 1: syncope ~ x_rate
+Model 2: syncope ~ x_doppler
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       498     585.72                     
+2       498     386.71  0   199.01  
+</code></pre>
+
+<p>Note no p value. I assume this is because I have 0 Df left?</p>
+
+<p>How would you recommend I then compare such a dataset, where 2 continuous predictors are being compared to assess one binary outcome?</p>
+"
+"NaN","NaN","  5266","<p>I have a need to analyze an experiment that had a binomial outcome and categorical predictors. For context we sent out an email to our customers and encouraged them to register their account online (did register or did not register online). There are different nine groups that received the email. The groups are segmented based on their account opening date with our firm (1 week ago, 2 weeks ago, 3 weeks ago, etc...).</p>
+
+<p>What method would I use to determine if the response from each of the nine groups is significantly different? We have used R and ran ANOVA in the past when our dependent is continuous but I am not sure how to apply the same procedure with a binomial. </p>
+
+<p>Thank you in advance for any help!</p>
+"
+"0.408248290463863","0.408248290463863","176586","<p>This question stems from <a href=""http://stats.stackexchange.com/questions/175853/what-type-of-hypothesis-test-for-multivariate-testing-website"">another I asked last week</a>, where the person answering stated </p>
+
+<blockquote>
+  <p>""Finally, and this is very, very important: please don't just run the
+  code I've provided, and consider your job complete. If you don't
+  actually read up and understand some of how these analyses work, all
+  of this information will be less than useless.""</p>
+</blockquote>
+
+<p>This is my intention, to really understand what is going on as well as how to interpret.</p>
+
+<p>Context is website testing. Show people a different landing page, change the design and look of each page with a goal of getting more people to purchase online (""success"").</p>
+
+<p>Here is my data:</p>
+
+<pre><code>variant successes   failures
+Original    757 49114
+Date    553 41794
+Cranberry   494 41495
+Apple   546 41835
+</code></pre>
+
+<p>My script and output are below. I think I understand how to interpret it but just wanted to make sure. My questions:</p>
+
+<ol>
+<li>The first thing I want to do is check if there is a difference between the variance overall, or if it's just ebbs n flows. With a p-value of 8.55e-05 translates to 0.0000855 (right?) then yes, there is a meaningful variance between the groups. Is that a correct statement?</li>
+<li>Since I'm comparing each group to the original (It's really a case of ""which test can beat the original), then it looks like only first Vs. 4th (Original Vs. Apple) is the only real difference statistically because the p-value is 0.0098. Is this a correct statement?</li>
+<li>In my contrast function I have assumed data are read int he order they appear in test2. Is this correct?</li>
+<li>Reading more about logistic regression it seems to be used to measure the impact of incrementing a predictor up or down a unit (resulting in the log unit increase or decrease). But in the context of measuring a web page variant performance in this way, why is logistic regression an appropriate method of determining whether or not the variants are different? Put another way, I'm hypothesis testing rather than predicting the impact of each variant, since an observation can only be one variant, not a combination of 1 or more predictors (they can only ever see one of the test pages, not 2 or more test pages).</li>
+<li>I edited my data to include only visits from one state, just to experiment and play around. The output I got in this instance was a p-value of 0.001721 in the anova of m whereas the p-values for contrast where between 0.2 -0.3 (reject). If the script says overall there is a variance but at an individual test level there is not, how would I interpret that? I can provide the output if desired.</li>
+</ol>
+
+<p>Here is my script &amp; output:</p>
+
+<pre><code>&gt; test2 &lt;- read.csv(""test2.csv"")
+&gt; 
+&gt; m &lt;- glm(cbind(successes, failures) ~ variant, family=binomial, data=test2)
+&gt; anova(m, test='Chisq') # Tests if there's a difference between the variants
+Analysis of Deviance Table
+
+Model: binomial, link: logit
+
+Response: cbind(successes, failures)
+
+Terms added sequentially (first to last)
+
+
+        Df Deviance Resid. Df Resid. Dev Pr(&gt;Chi)    
+NULL                        3     21.435             
+variant  3   21.435         0      0.000 8.55e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+&gt; 
+&gt; library(lsmeans)
+&gt; #lsmeans(m, pairwise ~ variant) # Compares every variant to every other one
+&gt; 
+&gt; m.comparisons = lsmeans(m, specs = pairwise ~ variant)
+&gt; contrast(m.comparisons,
++          list(
++            first.vs.second = c(1,-1,0,0),
++            first.vs.third =  c(1,0,-1,0),
++            first.vs.fourth = c(1,0,0,-1)
++            ), adjust=""tukey"")
+ contrast           estimate         SE df    z.ratio p.value
+ first.vs.second  0.09192309 0.06248035 NA  1.4712319  0.3667
+ first.vs.third  -0.01371955 0.06072602 NA -0.2259254  0.9943
+ first.vs.fourth -0.16633346 0.05653998 NA -2.9418735  0.0098
+
+P value adjustment: sidak method for 3 tests 
+</code></pre>
+"
+"NaN","NaN"," 74627","<p>I have the following kind of data (coded in R):</p>
+
+<pre><code>v.a = c('cat', 'dog', 'dog', 'goat', 'cat', 'goat', 'dog', 'dog')
+v.b = c(1, 2, 1, 2, 1, 2, 1, 2)
+v.c = c('blue', 'red', 'blue', 'red', 'red', 'blue', 'yellow', 'yellow')
+set.seed(12)
+v.d = rnorm(8)
+aov(v.a ~ v.b + v.c + v.d) # Error
+</code></pre>
+
+<p>I would like to know if the value of <code>v.b</code> or the value of <code>v.c</code> has any ability to predict the value of <code>v.a</code>. I would run an ANOVA (as shown above) but I think it does not make any sense since my response variable is not ordinal (it is categorical). What should I do?</p>
+"
+"0.790569415042095","0.790569415042095"," 35428","<p>CrossValidated Community,</p>
+
+<p>I must mention that I am a first-time poster (and relatively new to both modelling and R), so please excuse any norms I may violate in my post and politely inform me.</p>
+
+<p>I have been attempting to determine if a treatment variable is significant in R and to find a package that will both 1) model my data appropriately for its structure, and 2) print me some measure of the significance of the treatment (e.g., a p-value)</p>
+
+<p>The experiment investigates whether or not a fish is sensitive to an odor stimulus. There are only 3 subjects (whale sharks are not easy to come by) and 3 treatment groups (pre-odor control, odor, post-odor control). Trials were performed opportunistically on the days they were conducted, meaning that there is not data for all treatment types for all animals on all days.</p>
+
+<p>In one subset of the experiment we recorded different behavioral responses. Originally this was recorded was recording as 0/1 for each response type, with 0 meaning it was not seen and 1 meaning it was seen. I also manipulated this data to give each response type a separate value (1-4), with higher values indicating more ""intense"" responses, and added a column to the data which sums these values for a final ""score"". Finally, I created a data frame that averages these scores over ""identical"" trials (i.e., same day, same animal, same treatment) Data looks like this:</p>
+
+<pre><code>DATE ID Treatment No.Response Open.Mouth Gulp Tail.down
+6/14/2011  2         1           1          0    0         0
+6/14/2011  2         1           1          0    0         0
+6/14/2011  2         2           1          0    0         0
+6/14/2011  1         2           1          0    0         0
+6/14/2011  2         2           0          1    0         1
+6/14/2011  2         3           1          0    0         0
+</code></pre>
+
+<p>And like this:</p>
+
+<pre><code>DATE ID Treatment No.Response Open.Mouth Gulp Tail.down score
+1  2         1           1          0    0         0     1
+1  2         1           1          0    0         0     1
+1  2         2           1          0    0         0     1
+1  1         2           1          0    0         0     1
+1  2         2           0          2    0         4     6
+1  2         3           1          0    0         0     1
+</code></pre>
+
+<p>And like this:</p>
+
+<pre><code>DATE ID Treatment No.Response Open.Mouth Gulp Tail.down score
+1  1         2         1.0          0    0         0   1.0
+1  2         1         1.0          0    0         0   1.0
+1  2         2         0.5          1    0         2   3.5
+1  2         3         1.0          0    0         0   1.0
+2  1         1         1.0          0    0         0   1.0
+2  1         2         1.0          0    0         0   1.0
+</code></pre>
+
+<p>I originally tried utilizing the EzMixed function in the ez package, but the printout is not desirable. My audience needs a more clear-cut indication of the significance of the treatment variable than an AIC comparing a model with/without the treatment variable included.</p>
+
+<p>I looked in to using the lme4 package, but my understanding is that ezMixed is essentially just a wrapper for this package and that I will likely get the same printout (AIC).</p>
+
+<p>Does anyone have any ideas for how I can find what I am looking for using any of the ways my data is formatted above? The ideal function would allow me to test for the significance of the treatment variable as well as any other variables (date, ID, interactions) and save all permutations of these models in a way that I can later compare by AIC.</p>
+
+<p>I would greatly appreciate any help you can give.</p>
+
+<p>This is the original ezmixed model I was running. I used the first data-type, with the exception that date was coded numerically 1-12. I tested each response individually.</p>
+
+<pre><code>mouth_mix = ezMixed(
+  data = new2response
+  , dv = .(Open.Mouth)
+  , random = .(DATE, ID)
+  , fixed = .(Treatment)
+  , family = binomial
+)
+mouth_mix
+print(mouth_mix$summary)
+
+&gt; print(mouth_mix$summary)
+     effect error warning     RLnLu     RLnLr DFu DFr   L10LRa   L10LRb
+1 Treatment FALSE   FALSE -55.52405 -62.21555   4   3 4.943573 3.517696
+</code></pre>
+
+<p>Another subset of the experiment utilized video recording data to determine speed changes after intersecting odor (or control) plumes in the water. The data looks like this:</p>
+
+<pre><code>DATE ID Treatment Speed.Before.Plume Speed.After.Plume Speed.difference
+6/14/2011  2         1           24.71041          27.85269        3.1422787
+6/14/2011  2         2           21.89439          22.04172        0.1473287
+6/14/2011  1         2           23.15754          26.64582        3.4882799
+6/14/2011  2         2           22.54465          14.15707       -8.3875764
+6/14/2011  2         3           25.80078          18.87284       -6.9279353
+6/14/2011  2         3           23.50434          17.67082       -5.8335139
+</code></pre>
+
+<p>Again, I tried using EzMixed but I want a more clear cut indication of significance for my audience. I am having the same problems modelling this unbalanced, repeated-measure data. The only difference is the dependent variable.</p>
+"

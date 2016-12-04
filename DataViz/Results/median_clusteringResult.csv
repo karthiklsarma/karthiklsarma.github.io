@@ -1,0 +1,515 @@
+"V1","V2","V3","V4"
+"NaN","NaN","  4694","<p><a href=""http://www.ambion.com/techlib/tn/95/954.html"" rel=""nofollow"">Here</a> is an example of hierarchical clustering of genes in the microarray data using the <strong>weighted pair gene method</strong> in <code>Spotfire</code>. I am not sure how to do this in <code>R</code>. In the <code>hclust</code> function, I see <code>ward"", ""single"", ""complete"", ""average"", ""mcquitty"", ""median"" or ""centroid""</code> as the methods. </p>
+
+<p>Also, lets say I have performed hierarchical clustering and found groups of genes using <code>cuttree</code> method. I wanted to plot the expression of genes in a group across columns (which may represent treatment, time, etc.). And I want to do this for all the groups separately. In a way similar to the <a href=""http://www.bioconductor.org/packages/release/bioc/html/Mfuzz.html"" rel=""nofollow"">Mfuzz</a> package's way of showing clusters.</p>
+
+<p>Can any one please help me?</p>
+
+<p>TIA for any pointers.</p>
+"
+"0.348155311911396","0.547722557505166","  7175","<p>I'm experimenting with classifying data into groups. I'm quite new to this topic, and trying to understand the output of some of the analysis.</p>
+
+<p>Using examples from <a href=""http://www.statmethods.net/advstats/cluster.html"">Quick-R</a>, several <code>R</code> packages are suggested. I have tried using two of these packages (<code>fpc</code> using the <code>kmeans</code> function,  and <code>mclust</code>). One aspect of this analysis that I do not understand is the comparison of the results.</p>
+
+<pre><code># comparing 2 cluster solutions
+library(fpc)
+cluster.stats(d, fit1$cluster, fit2$cluster)
+</code></pre>
+
+<p>I've read through the relevant parts of the <code>fpc</code> <a href=""http://cran.r-project.org/web/packages/fpc/fpc.pdf"">manual</a> and am still not clear on what I should be aiming for. For example, this is the output of comparing two different clustering approaches:</p>
+
+<pre><code>$n
+[1] 521
+
+$cluster.number
+[1] 4
+
+$cluster.size
+[1] 250 119  78  74
+
+$diameter
+[1]  5.278162  9.773658 16.460074  7.328020
+
+$average.distance
+[1] 1.632656 2.106422 3.461598 2.622574
+
+$median.distance
+[1] 1.562625 1.788113 2.763217 2.463826
+
+$separation
+[1] 0.2797048 0.3754188 0.2797048 0.3557264
+
+$average.toother
+[1] 3.442575 3.929158 4.068230 4.425910
+
+$separation.matrix
+          [,1]      [,2]      [,3]      [,4]
+[1,] 0.0000000 0.3754188 0.2797048 0.3557264
+[2,] 0.3754188 0.0000000 0.6299734 2.9020383
+[3,] 0.2797048 0.6299734 0.0000000 0.6803704
+[4,] 0.3557264 2.9020383 0.6803704 0.0000000
+
+$average.between
+[1] 3.865142
+
+$average.within
+[1] 1.894740
+
+$n.between
+[1] 91610
+
+$n.within
+[1] 43850
+
+$within.cluster.ss
+[1] 1785.935
+
+$clus.avg.silwidths
+         1          2          3          4 
+0.42072895 0.31672350 0.01810699 0.23728253 
+
+$avg.silwidth
+[1] 0.3106403
+
+$g2
+NULL
+
+$g3
+NULL
+
+$pearsongamma
+[1] 0.4869491
+
+$dunn
+[1] 0.01699292
+
+$entropy
+[1] 1.251134
+
+$wb.ratio
+[1] 0.4902123
+
+$ch
+[1] 178.9074
+
+$corrected.rand
+[1] 0.2046704
+
+$vi
+[1] 1.56189
+</code></pre>
+
+<hr>
+
+<p>My primary question here is to better understand how to interpret the results of this cluster comparison.</p>
+
+<hr>
+
+<p>Previously, I had asked more about the effect of scaling data, and calculating a distance matrix. However that was answered clearly by mariana soffer, and I'm just reorganizing my question to emphasize that I am interested in the intrepretation of my output which is a comparison of two different clustering algorithms.</p>
+
+<p><em>Previous part of question</em>: 
+If I am doing any type of clustering, should I always scale data? For example, I am using the function <code>dist()</code> on my scaled dataset as input to the <code>cluster.stats()</code> function, however I don't fully understand what is going on. I read about <code>dist()</code> <a href=""http://stat.ethz.ch/R-manual/R-patched/library/stats/html/dist.html"">here</a> and it states that:</p>
+
+<blockquote>
+  <p>this function computes and returns the distance matrix computed by using the specified distance measure to compute the distances between the rows of a data matrix.</p>
+</blockquote>
+"
+"0.615457454896664","0.645497224367903"," 10017","<p>I am trying to understand standard error ""clustering"" and how to execute in R (it is trivial in Stata). In R I have been unsuccessful using either <code>plm</code> or writing my own function. I'll use the <code>diamonds</code> data from the <code>ggplot2</code> package.</p>
+
+<p>I can do fixed effects with either dummy variables</p>
+
+<pre><code>&gt; library(plyr)
+&gt; library(ggplot2)
+&gt; library(lmtest)
+&gt; library(sandwich)
+&gt; # with dummies to create fixed effects
+&gt; fe.lsdv &lt;- lm(price ~ carat + factor(cut) + 0, data = diamonds)
+&gt; ct.lsdv &lt;- coeftest(fe.lsdv, vcov. = vcovHC)
+&gt; ct.lsdv
+
+t test of coefficients:
+
+                      Estimate Std. Error  t value  Pr(&gt;|t|)    
+carat                 7871.082     24.892  316.207 &lt; 2.2e-16 ***
+factor(cut)Fair      -3875.470     51.190  -75.707 &lt; 2.2e-16 ***
+factor(cut)Good      -2755.138     26.570 -103.692 &lt; 2.2e-16 ***
+factor(cut)Very Good -2365.334     20.548 -115.111 &lt; 2.2e-16 ***
+factor(cut)Premium   -2436.393     21.172 -115.075 &lt; 2.2e-16 ***
+factor(cut)Ideal     -2074.546     16.092 -128.920 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+</code></pre>
+
+<p>or by de-meaning both left- and right-hand sides (no time invariant regressors here) and correcting degrees of freedom.</p>
+
+<pre><code>&gt; # by demeaning with degrees of freedom correction
+&gt; diamonds &lt;- ddply(diamonds, .(cut), transform, price.dm = price - mean(price), carat.dm = carat  .... [TRUNCATED] 
+&gt; fe.dm &lt;- lm(price.dm ~ carat.dm + 0, data = diamonds)
+&gt; ct.dm &lt;- coeftest(fe.dm, vcov. = vcovHC, df = nrow(diamonds) - 1 - 5)
+&gt; ct.dm
+
+t test of coefficients:
+
+         Estimate Std. Error t value  Pr(&gt;|t|)    
+carat.dm 7871.082     24.888  316.26 &lt; 2.2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+</code></pre>
+
+<p>I can't replicate these results with <code>plm</code>, because I don't have a ""time"" index (i.e., this isn't really a panel, just clusters that could have a common bias in their error terms).</p>
+
+<pre><code>&gt; plm.temp &lt;- plm(price ~ carat, data = diamonds, index = ""cut"")
+duplicate couples (time-id)
+Error in pdim.default(index[[1]], index[[2]]) : 
+</code></pre>
+
+<p>I also tried to code my own covariance matrix with clustered standard error using Stata's explanation of their <code>cluster</code> option (<a href=""http://www.stata.com/support/faqs/stat/cluster.html"">explained here</a>), which is to solve $$\hat V_{cluster} = (X&#39;X)^{-1} \left( \sum_{j=1}^{n_c} u_j&#39;u_j \right) (X&#39;X)^{-1}$$ where $u_j = \sum_{cluster~j} e_i * x_i$, $n_c$ si the number of clusters, $e_i$ is the residual for the $i^{th}$ observation and $x_i$ is the row vector of predictors, including the constant (this also appears as equation (7.22) in Wooldridge's <em>Cross Section and Panel Data</em>). But the following code gives very large covariance matrices. Are these very large values given the small number of clusters I have? Given that I can't get <code>plm</code> to do clusters on one factor, I'm not sure how to benchmark my code.</p>
+
+<pre><code>&gt; # with cluster robust se
+&gt; lm.temp &lt;- lm(price ~ carat + factor(cut) + 0, data = diamonds)
+&gt; 
+&gt; # using the model that Stata uses
+&gt; stata.clustering &lt;- function(x, clu, res) {
++     x &lt;- as.matrix(x)
++     clu &lt;- as.vector(clu)
++     res &lt;- as.vector(res)
++     fac &lt;- unique(clu)
++     num.fac &lt;- length(fac)
++     num.reg &lt;- ncol(x)
++     u &lt;- matrix(NA, nrow = num.fac, ncol = num.reg)
++     meat &lt;- matrix(NA, nrow = num.reg, ncol = num.reg)
++     
++     # outer terms (X'X)^-1
++     outer &lt;- solve(t(x) %*% x)
++ 
++     # inner term sum_j u_j'u_j where u_j = sum_i e_i * x_i
++     for (i in seq(num.fac)) {
++         index.loop &lt;- clu == fac[i]
++         res.loop &lt;- res[index.loop]
++         x.loop &lt;- x[clu == fac[i], ]
++         u[i, ] &lt;- as.vector(colSums(res.loop * x.loop))
++     }
++     inner &lt;- t(u) %*% u
++ 
++     # 
++     V &lt;- outer %*% inner %*% outer
++     return(V)
++ }
+&gt; x.temp &lt;- data.frame(const = 1, diamonds[, ""carat""])
+&gt; summary(lm.temp)
+
+Call:
+lm(formula = price ~ carat + factor(cut) + 0, data = diamonds)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-17540.7   -791.6    -37.6    522.1  12721.4 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(&gt;|t|)    
+carat                 7871.08      13.98   563.0   &lt;2e-16 ***
+factor(cut)Fair      -3875.47      40.41   -95.9   &lt;2e-16 ***
+factor(cut)Good      -2755.14      24.63  -111.9   &lt;2e-16 ***
+factor(cut)Very Good -2365.33      17.78  -133.0   &lt;2e-16 ***
+factor(cut)Premium   -2436.39      17.92  -136.0   &lt;2e-16 ***
+factor(cut)Ideal     -2074.55      14.23  -145.8   &lt;2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+
+Residual standard error: 1511 on 53934 degrees of freedom
+Multiple R-squared: 0.9272, Adjusted R-squared: 0.9272 
+F-statistic: 1.145e+05 on 6 and 53934 DF,  p-value: &lt; 2.2e-16 
+
+&gt; stata.clustering(x = x.temp, clu = diamonds$cut, res = lm.temp$residuals)
+                        const diamonds....carat..
+const                11352.64           -14227.44
+diamonds....carat.. -14227.44            17830.22
+</code></pre>
+
+<p>Can this be done in R? It is a fairly common technique in econometrics (there's a brief tutorial in <a href=""http://sekhon.berkeley.edu/causalinf/sp2010/section/week7.pdf"">this lecture</a>), but I can't figure it out in R. Thanks!</p>
+"
+"0.452267016866645","0.632455532033676"," 26769","<p>I'm attempting to perform hierarchical agglomerative cluster analysis in R. </p>
+
+<p>However, when I use particular clustering methods, I get reversals (upward branching) in the resulting tree, which violates the ultrametric property.</p>
+
+<p><img src=""http://i.stack.imgur.com/WSPo2.jpg"" alt=""enter image description here""></p>
+
+<p>The two methods are: UPGMC and WPGMC (methods=""median"" and ""centroid"" in <code>hclust</code>).  Legendre &amp; Legendre in their Numerical Ecology book suggest some reasons why this may occur (Section 8.6).  However, they provide no solutions to rectify the issue and convert the trees to ultrametric.</p>
+
+<p>I'm curious: is this an unavoidable consequence of the data and the clustering method, or is there a way that I can produce a tree that satisfies the ultrametric property using these two methods?</p>
+
+<p>Here is an example data set and R code to play with:</p>
+
+<pre><code>#Generate data frame with mixed continuous and categorical trait data for 10 species
+set.seed(91)
+(df=data.frame(trait1=runif(10,0,10),trait2=runif(10,0,10),
+               trait3=sample(letters[1:3],10,replace=T),row.names=paste(""sp"",1:10,sep="""")))
+
+#Generate Gower dissimilarity matrix from trait data
+library(cluster)
+(dist.gower=daisy(df,metric=""gower""))
+
+#Create a vector of clustering methods
+tree.methods=c(""ward"",""single"",""complete"",""average"",""mcquitty"",""median"",""centroid"")  
+#Build the trees using each method
+trees=lapply(tree.methods,function(i) hclust(dist.gower,method=i))  
+#Plot the trees
+par(mfrow=c(4,2))
+for(i in 1:length(trees)) {plot(trees[[i]])}
+#The last two trees have reversals...cannot be converted to ultrametric!
+</code></pre>
+"
+"NaN","NaN"," 32239","<p>As described in Merlo et al (<a href=""http://www.ncbi.nlm.nih.gov/pubmed/16537344"" rel=""nofollow"">J Epidem Comm Health 2006</a>), the 95% credible interval for MOR is calculated using MCMC. MOR is defined as $\exp(\sqrt{2\sigma^2}\times 0.675)$, where $\sigma$ is the level-2 variance of the random intercept $u$ from a null model of a hierarchical logistic regression.  </p>
+
+<p>Does anyone have an idea of how to write a program for an Markov chain Monte Carlo to calculate the standard error of the  median odds ratio (MOR) using <a href=""http://cran.r-project.org/web/packages/rjags/index.html"" rel=""nofollow"">rjags</a>?<br>
+My dependent variable is outcome(alive/dead) and the clustering (level2)variable is Hospital. There are 140 hospitals and would like to see variations in outcome between hospitals. Other risk factors will be included later as independent level1 variables.</p>
+"
+"0.21320071635561","0.447213595499958"," 44640","<p>I am trying to cluster Facebook users based on their likes.</p>
+
+<p>I have two problems: First, since there is no dislike in Facebook all I have is having likes (1) for some items but for the rest of the items, the value is unknown and not necessarily zero (corresponding to a dislike). If use 0 for unknowns, then I think my clusters will be biased.
+Any suggestion?</p>
+
+<p>Second, supposed I assign 0 to unknown items and cluster them, using a hierarchichal clustering method using a binary measure distance such as Jaccard, Tanimoto,...</p>
+
+<p>How can I evaluate the clustering results? The within and outside SSE is not appropriate for binary data. If I use median centers, I m afraid most of them are going to be zero as I have a sparse feature matrix. So what would be a good way to evaluate the clusters?  </p>
+"
+"0","0.316227766016838"," 86318","<p>I have a semi-small matrix of <strong>binary features</strong> of dimension 250k x 100. Each row is a user and the columns are binary ""tags"" of some user behavior e.g. ""likes_cats"".</p>
+
+<pre><code>user  1   2   3   4   5  ...
+-------------------------
+A     1   0   1   0   1
+B     0   1   0   1   0
+C     1   0   0   1   0
+</code></pre>
+
+<p>I would like to fit the users into 5-10 clusters and analyze the loadings to see if I can interpret groups of user behavior. There appears to be quite a few approaches to fitting clusters on binary data - what do we think might be the best strategy for this data?</p>
+
+<ul>
+<li><p>PCA</p></li>
+<li><p>Making a <em>Jaccard Similarity</em> matrix, fitting a hierarchical cluster and then using the top ""nodes"".</p></li>
+<li><p>K-medians</p></li>
+<li><p>K-medoids</p></li>
+<li><p><a href=""http://en.wikibooks.org/wiki/Data_Mining_Algorithms_In_R/Clustering/Proximus"">Proximus</a>?</p></li>
+<li><p>Agnes</p></li>
+</ul>
+
+<p>So far I've had some success with using hierarchical clustering but I'm really not sure it's the best way to go..</p>
+
+<pre><code>tags = read.csv(""~/tags.csv"")
+d = dist(tags, method = ""binary"")
+hc = hclust(d, method=""ward"")
+plot(hc)
+cluster.means = aggregate(tags,by=list(cutree(hc, k = 6)), mean)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/cyT6t.png"" alt=""enter image description here""></p>
+"
+"0.21320071635561","0.447213595499958","109754","<p><img src=""http://i.stack.imgur.com/QbZ5T.png"" alt=""Consider the following plot.""></p>
+
+<p>I want to identify the regions that are considerably higher than the highest cluster. (The obvious regions which should be identified as their own clusters, notably at the x coordinate ~10 e+07. How would I be able to identify that using a clustering algorithm?</p>
+
+<p>I am using R algorithm kmeans in the picture above. with 6 centers:</p>
+
+<p><code>kmeans(numbers_vector, centers=6, nstart=10)</code></p>
+
+<p>What can I do to alleviate the inadequacy of this algorithm? Use a different clustering algorithm? Have more centers? But If I have more centers, it identifies many more regions in the center (namely clusters 3,5, and 6). Any ideas? </p>
+
+<p>Here is histogram and density. It is important to note that the histogram and density plot DO NOT show the spike ~x=10e+07, because the number of points involved in the spike ~20, perhaps are completely overshadowed by the ~107,350 points plotted.</p>
+
+<p><img src=""http://i.stack.imgur.com/1zrGE.png"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/Od8v7.png"" alt=""enter image description here""></p>
+
+<p>Data: x (88289 obs.);   Bandwidth 'bw' = 0.7574</p>
+
+<pre><code>   x                 y            
+</code></pre>
+
+<p>Min.   : -1.272   Min.   :0.000e+00<br>
+ 1st Qu.: 40.114   1st Qu.:4.110e-06<br>
+ Median : 81.500   Median :3.167e-05<br>
+ Mean   : 81.500   Mean   :6.035e-03<br>
+ 3rd Qu.:122.886   3rd Qu.:2.886e-03<br>
+ Max.   :164.272   Max.   :4.827e-02  </p>
+"
+"0.348155311911396","0.547722557505166","163162","<p>I am trying to do clustering on a distance matrix which contains numeric data. But I am not sure how to decide upon the number of clusters or value k for clara function in R. But after running it with some random number of clusters, I ran silhouette function on it and summary gives me like this:</p>
+
+<p>Cluster sizes and average silhouette widths:  </p>
+
+<pre><code>           7            3            4            5            7            4 
+ 0.222273330 -0.001592881  0.117937463  0.121326365  0.137911639  0.161932689 
+Individual silhouette widths:
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+-0.10410  0.08961  0.12500  0.14140  0.19840  0.30580 
+</code></pre>
+
+<p>This is the result for value of k=6. If I change it to say 5 or 4, I obtain silhouette for each cluster and also mean value. How do I decide upon the number of clusters? Do I need to plot like mean silhouette vs k? How do we do something like this in a large dataset with around million observations?</p>
+"
+"NaN","NaN","168784","<p>I am trying choose best $k$ from the consensus clustering using the Cophenetic Correlation Coefficient (CCC). I tried as follows. The correlation coefficients values are poor, i.e., <code>k=2 (0.2110048)</code>, <code>k=3 (0.1934558)</code>, <code>k=4 (0.175295)</code>. Please suggest whether am following correct method. </p>
+
+<pre><code># consensus clustering
+library(Biobase)
+data(geneData)
+d = geneData
+# median center genes
+dc = sweep(d, 1, apply(d,1,median))
+
+rcc = ConsensusClusterPlus(dc, maxK=4, reps=100, pItem=0.8, pFeature=1, title=""example"", 
+                           distance=""pearson"", innerLinkage=""ward.D"", 
+                           finalLinkage=""ward.D"", clusterAlg=""hc"")
+
+# Cophenetic Correlation Coefficient
+k2 &lt;- rcc[[2]]$consensusMatrix
+d1 &lt;- as.dist(t(k2))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.2110048
+
+k3 &lt;- rcc[[3]]$consensusMatrix
+d1 &lt;- as.dist(t(k3))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.1934558
+
+k4 &lt;- rcc[[4]]$consensusMatrix
+d1 &lt;- as.dist(t(k4))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.175295
+</code></pre>
+"
+"0.522232967867094","0.547722557505166","173951","<p>My data has 192 variables in total (30k rows) and most of the variables have missing values. I want to do a classification model on this data e.g.</p>
+
+<p>Only 3 dependent variables (excluding the customer ID) have 100% fill rate. Overall only 38 variables have less than 25% fill rate.</p>
+
+<pre><code>Code used:
+
+for(i in colnames(model_data)) {
+    NA_count[i] = sum(is.na(model_data[,i]))
+}
+
+per_NA = data.frame(NA_count/nrow(model_data))
+</code></pre>
+
+<p>I have never worked this sparse data before. In my earlier experiences, we used to do the imputation mostly by the mean/median. I have also heard people using clustering for imputation but this data is so sparse (for almost all variables) that i am not sure if clustering will help (neither will knn impute). Please advice what method should be used for the same.</p>
+
+<p>Also the predictor variable has 7% event rate</p>
+
+<pre><code>prop.table(table(model_data_final$dependent))
+         0          1 
+0.92813333 0.07186667 
+</code></pre>
+
+<p>Again this is a new territory for me as i have never worked with low event rate data. I read a lot of articles wherein people have mentioned various techniques such as weighted RF, oversampling etc. Can someone please give some intuition on the same?</p>
+
+<p>And why can't we just create a model on the data as is and then while validation decide the threshold of probability based on the performance on validation data?</p>
+
+<p>Can't post the data for privacy reasons.</p>
+
+<p>Thanks in advance</p>
+"
+"0.301511344577764","0.316227766016838","174476","<p>how to best predict data like this which contains multiple levels of nearly constant data?</p>
+
+<p>Simple linear models even with weights (exponential) did not cut it.</p>
+
+<p>I experimented with some clustering and then robust linear regression but my problem is that the relationship between these levels of constant data is lost.</p>
+
+<p>Here is the data from the picture:</p>
+
+<pre><code>structure(list(date = structure(c(32L, 10L, 11L, 14L, 5L, 6L, 
+1L, 2L, 12L, 9L, 19L, 13L, 4L, 17L, 15L, 3L, 18L, 7L, 8L, 21L, 
+16L, 22L, 28L, 29L, 30L, 26L, 27L, 31L, 20L, 23L, 24L, 25L), .Label = c(""18.02.13"", 
+""18.03.13"", ""18.11.13"", ""19.08.13"", ""19.11.12"", ""20.01.13"", ""20.01.14"", 
+""20.02.14"", ""20.05.13"", ""20.08.12"", ""20.09.12"", ""21.04.13"", ""21.07.13"", 
+""21.10.12"", ""21.10.13"", ""22.04.14"", ""22.09.13"", ""22.12.13"", ""23.06.13"", 
+""25.01.15"", ""25.03.14"", ""25.05.14"", ""26.02.15"", ""26.03.15"", ""26.04.15"", 
+""26.10.14"", ""26.11.14"", ""27.07.14"", ""27.08.14"", ""28.09.14"", ""28.12.14"", 
+""29.03.10""), class = ""factor""), amount = c(-4, -12.4, -9.9, -9.9, 
+-9.94, -14.29, -9.97, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, 
+-9.9, -9.9, -9.9, -4, -4, -11.9, -11.9, -11.9, -11.9, -11.98, 
+-11.98, -11.9, -13.8, -11.64, -11.96, -11.9, -11.9, -11.9)), .Names = c(""date"", 
+""amount""), class = ""data.frame"", row.names = c(NA, -32L))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DWypm.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DWypm.jpg"" alt=""regression for multiple levels""></a></p>
+
+<h1>revisiting rollmedian</h1>
+
+<p>@Gaurav - you asked: Have you tried building a model with moving averages? as ARIMA didn't work - I did not try it. But I have now.</p>
+
+<pre><code>zoo::rollmedian(rollTS, 5)
+</code></pre>
+
+<p>Seems to get the pattern of the data. However I wonder now how to reasonably forecast it. Is this possible?</p>
+
+<p><a href=""http://i.stack.imgur.com/dPhK8.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dPhK8.png"" alt=""rollmedian""></a></p>
+"
+"0.615457454896664","0.645497224367903","223035","<p>I am an ecology graduate with a decent practical familiarity with statistics in R, but limited experience of approaches such as PCA, and Cluster Analysis. 
+I am currently faced with the challenge of trying to apply my skills to an entirely unfamiliar problem:  my dad is writing a book on archaeological finds of blades, has collected data on 176 finds and has tasked me with analysing it.  </p>
+
+<p>The data selected for analysis is structured thus:   </p>
+
+<pre><code> Blade.length     Max.width     Max.thickness     Shape     Broken.back        Type   
+
+ Min.   :165.0   Min.   :20.00   Min.   : 3.500   A   :70   Min.   :0.0000   Cs   :39  
+ 1st Qu.:220.0   1st Qu.:28.75   1st Qu.: 5.000   B   : 8   1st Qu.:0.0000   Hbs  :15  
+ Median :270.0   Median :34.00   Median : 6.000   C   :14   Median :0.0000   Lbs  :17  
+ Mean   :311.5   Mean   :35.20   Mean   : 6.464   D   :14   Mean   :0.2686   Ls   :23  
+ 3rd Qu.:353.0   3rd Qu.:39.00   3rd Qu.: 7.875   E   :30   3rd Qu.:0.5000   Ns   :43  
+ Max.   :760.0   Max.   :62.00   Max.   :11.000   F   :12   Max.   :1.0000   Small:35  
+ NA's   :9       NA's   :4       NA's   :86       NA's:28   NA's   :1        NA's : 4 
+</code></pre>
+
+<p>Shape is a variable of categories pertaining to the shape of the tip of the blades - these categories are in no particular order.  Broken.back is a different way of looking at ""shape"", effectively binary, although some cases are ""in between"" and have been entered as 0.5.   ""Type"" is a supplementary variable referring to what each blade has been identified as, using a pre-existing typology. Part of the exercise is to examine if this pre-existing typology is fit for purpose. </p>
+
+<p>The dataset is, necessarily, incomplete, with NAs in all variables, although blades with lots of missing data have been excluded from the analysis.  Within the sample remaining, the most incomplete column is blade thickness, with 48% NAs.  </p>
+
+<p>So far I have attempted to visualise the data by means of factorial analysis of mixed data, with imputation, using packages MissMDA and FactoMineR.   However I've found myself bewildered by the number of options and what approach is appropriate for the sort of data I have. </p>
+
+<p>More importantly, I am looking to conduct hierarchical cluster analysis of the data to examine the relatedness of different finds and try and statistically define types (<a href=""http://www.r-bloggers.com/hierarchical-clustering-in-r-2/"" rel=""nofollow"">http://www.r-bloggers.com/hierarchical-clustering-in-r-2/</a>), so far using HCLUST, Dist, and vegdist (package: Vegan).   However, I am not clear as to;  </p>
+
+<ul>
+<li>How to manage, prepare or transform the types of data I have for this type of analysis.</li>
+<li>What dissimilarity index method would be most appropriate in this context.</li>
+<li>What type of clustering / linkage method would be most appropriate in this context. </li>
+</ul>
+
+<p>Sorry for the long question. As you can see I am quite bewildered and out of my depth.  Thanks in advance. </p>
+"
+"0.539359889970594","0.707106781186547","224543","<p>I use currently the function hclust() for Dendogram in R. It looks like:</p>
+
+<pre><code>res.hc &lt;- hclust(d, method = ""ward.D2"" )
+</code></pre>
+
+<p>My special interest is to understand, what the method I have to use for my data and where is a difference. 
+I already took a look to the R Documentation <code>?hclust</code></p>
+
+<p>The documentation is very poor, I could find only this part:</p>
+
+<blockquote>
+  <p>A number of different clustering methods are provided. Ward's minimum
+  variance method aims at finding compact, spherical clusters. The
+  complete linkage method finds similar clusters. The single linkage
+  method (which is closely related to the minimal spanning tree) adopts
+  a â€˜friends of friendsâ€™ clustering strategy. The other methods can be
+  regarded as aiming for clusters with characteristics somewhere between
+  the single and complete link methods. Note however, that methods
+  ""median"" and ""centroid"" are not leading to a monotone distance
+  measure, or equivalently the resulting dendrograms can have so called
+  inversions or reversals which are hard to interpret, but note the
+  trichotomies in Legendre and Legendre (2012).</p>
+  
+  <p>Two different algorithms are found in the literature for Ward
+  clustering. The one used by option ""ward.D"" (equivalent to the only
+  Ward option ""ward"" in R versions &lt;= 3.0.3) does not implement Ward's
+  (1963) clustering criterion, whereas option ""ward.D2"" implements that
+  criterion (Murtagh and Legendre 2014). With the latter, the
+  dissimilarities are squared before cluster updating. Note that
+  agnes(<em>, method=""ward"") corresponds to hclust(</em>, ""ward.D2"").</p>
+</blockquote>
+
+<p>Can anybody provide me better introduction to this method and probably try to explain, how I can select the right method for my data (my data is very similar to ibis setosa dataset).</p>
+"

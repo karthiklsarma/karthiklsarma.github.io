@@ -1,0 +1,2162 @@
+"V1","V2","V3","V4"
+"0.148556270541641","0.145574905049368","  5543","<p>I have found some distributions for which BUGS and R have different parameterizations: Normal, log-Normal, and Weibull.</p>
+
+<p>For each of these, I gather that the second parameter used by R needs to be inverse transformed (1/parameter) before being used in BUGS (or JAGS in my case). </p>
+
+<p>Does anyone know of a comprehensive list of these transformations that currently exists?</p>
+
+<p>The closest I can find would be comparing the distributions in table 7 of the <a href=""http://sourceforge.net/projects/mcmc-jags/files/Manuals/2.x/jags_user_manual.pdf"">JAGS 2.2.0 user manual</a> with the results of <code>?rnorm</code> etc. and perhaps a few probability texts. This approach appears to require that the transformations will need to be deduced from the pdfs separately. </p>
+
+<p>I would prefer to avoid this task (and possible errors) if it has already been done, or else start the list here.</p>
+
+<p><strong>Update</strong></p>
+
+<p>Based on Ben's suggestions, I have written the following function to transform a dataframe of parameters from R to BUGS parameterizations.</p>
+
+<pre><code>##' convert R parameterizations to BUGS paramaterizations
+##' 
+##' R and BUGS have different parameterizations for some distributions. 
+##' This function transforms the distributions from R defaults to BUGS 
+##' defaults. BUGS is an implementation of the BUGS language, and these 
+##' transformations are expected to work for bugs.
+##' @param priors data.frame with colnames c('distn', 'parama', 'paramb')
+##' @return priors with jags parameterizations
+##' @author David LeBauer
+
+r2bugs.distributions &lt;- function(priors) {
+
+  norm   &lt;- priors$distn %in% 'norm'
+  lnorm  &lt;- priors$distn %in% 'lnorm'
+  weib   &lt;- priors$distn %in% 'weibull'
+  bin    &lt;- priors$distn %in% 'binom'
+
+  ## Convert sd to precision for norm &amp; lnorm
+  priors$paramb[norm | lnorm] &lt;-  1/priors$paramb[norm | lnorm]^2
+  ## Convert R parameter b to JAGS parameter lambda by l = (1/b)^a
+  priors$paramb[weib] &lt;-   1 / priors$paramb[weib]^priors$parama[weib]
+  ## Reverse parameter order for binomial
+  priors[bin, c('parama', 'paramb')] &lt;-  priors[bin, c('parama', 'paramb')]
+
+  ## Translate distribution names
+  priors$distn &lt;- gsub('weibull', 'weib',
+                       gsub('binom', 'bin',
+                            gsub('chisq', 'chisqr',
+                                 gsub('nbinom', 'negbin',
+                                      as.vector(priors$distn)))))
+  return(priors)
+}
+
+##' @examples
+##' priors &lt;- data.frame(distn = c('weibull', 'lnorm', 'norm', 'gamma'),
+##'                     parama = c(1, 1, 1, 1),
+##'                     paramb = c(2, 2, 2, 2))
+##' r2bugs.distributions(priors)
+</code></pre>
+"
+"0.12456821978061","0.162757691754232","  8788","<p>I have a problem when I run the Komogorov-Smirnov test.</p>
+
+<p>I have to samples of daily prices distributions estimated with density(). Now I would like to compare these two distributions with each other.</p>
+
+<p>data.1:</p>
+
+<pre><code>Date           price
+01.01.2010     1.2
+02.01.2010     1.5
+etc.
+</code></pre>
+
+<p>data.2:</p>
+
+<pre><code>Date           price
+01.01.2009     0.1
+02.01.2009     0.05
+etc.
+</code></pre>
+
+<p>For the probability density, I calculated</p>
+
+<pre><code>density.1 &lt;- density(data.1$price)
+density.2 &lt;- density(data.2$price)
+</code></pre>
+
+<p>Now I wanted to run the KS-test:</p>
+
+<pre><code>ks &lt;- ks.test(density.1$x, density.2$x)
+</code></pre>
+
+<p>and got the results that p=1, hence the two distributions are the same. However, it is already observable from eye that they differ quite heavily from each other.</p>
+
+<p>Where is my mistake?
+Thank you, Dani</p>
+"
+"0.143838990445615","0.140952295720482"," 14832","<p>I am trying to learn how to fit a probability distribution to a vector of data, using the program R, but there are a lot of potential probability distributions to use!  So my question is, how do I find the best distribution for my data, and how do I prove that I have picked the right distribution?  Can I acquire AIC values for a whole set of different distributions?</p>
+
+<p>The data are observational count data of bees visiting flowers.  Each species has a certain number of visits, hence the differing frequencies.  The goal is to find the best distribution to describe the bee visitation, show that I have selected the right one, and then use that distribution to sample from randomly for a set of simulations.</p>
+
+<p>Here is what the data looks like, it is a vector of count observations.  It is zero inflated, with a long tailed distribution (maybe zero-inflated negative binomial?).</p>
+
+<pre><code>i.vec=c(0,63,1,4,1,44,2,2,1,0,1,0,0,0,0,1,0,0,3,0,0,2,0,0,0,0,0,2,0,0,0,0,
+0,0,0,0,0,0,0,0,6,1,11,1,1,0,0,0,2)
+</code></pre>
+
+<p>And here are some basic parameters that I have calculated.  I am using standard deviation for sigma, and phi is the proportion of zeroes in the data.</p>
+
+<pre><code>m=mean(i.vec)
+#[1] 3.040816
+sig=sd(i.vec)
+#[1] 10.86078
+tab&lt;-table(i.vec)
+zero.prop&lt;-as.numeric(tab[1])/sum(as.numeric(tab))
+#[1] 0.6122449
+</code></pre>
+
+<p>As you can see, the standard deviation is much greater than the mean, and I have a very high proportion of zeroes.</p>
+"
+"NaN","NaN"," 17160","<p>Is there a convenient way in R to calculate a <a href=""http://www.amstat.org/publications/jse/secure/v8n3/preston.cfm#Section2"" rel=""nofollow"">probability prediction interval</a>
+for a count sampled from Poisson($\lambda$), for known lambda? That is, for a given
+$\alpha$, find $a$ and $b$ such that $P(a\le X\le b)\ge1-\alpha$,
+where $X\sim\text{Pois}(\lambda)$. Is there a generic way to do this
+in R for any of its built-in distributions? </p>
+"
+"0.219717687201021","0.215308188172303"," 22200","<p>When creating a Monte Carlo simulation model for a variable, a critical step is to choose the distribution that best fits the variable's probability density. </p>
+
+<p>I generally do this by looking at the density plot and determining what distribution best fits the density shape. For (a very lame) example, thisâ€¦</p>
+
+<pre><code>x &lt;- rnorm(1000)
+plot(density(x))
+</code></pre>
+
+<p>â€¦ appears to be a normal distribution (but only because it's a random sample from the normal distribution).</p>
+
+<p>However, when dealing with real world data, it's difficult to know which of the 17 built-in distributions best represent the shape of the data. </p>
+
+<p>For example, this dataâ€¦</p>
+
+<pre><code>data &lt;- c(6.515, 0.243, 0.725, 2.276, 1.456, 4.047, 0.766, 0.29, 2.368, 
+0.543, 2.223, 0.488, 0.47, 3.511, 0.544, 4.191, 0.414, 0.704, 
+4.917, 0.434, 0.773, 0.477, 3.257, 0.415, 1.921, 0.278, 3.159, 
+4.193, 0.132, 1.109, 1.538, 4.088, 0.468, 0.047, 2.204, 3.765, 
+0.168, 2.231, 0.164, 0.371, 2.33, 4.458, 0.046, 1.195, 1.714, 
+1.046, 1.915, 2.66, 5.409, 0.466)
+
+plot(density(data))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/l9SWm.png"" alt=""Plot""></p>
+
+<p>â€¦ seems like it could be best modeled with the chi-squared distribution, but it could also be a gamma distribution.</p>
+
+<p>The only way I've found to fit the best type of model is to overlay a bunch of different possible distributions until I see one that visually matches (or comes close). But surely there's a more numerical, official way to do that, right?</p>
+
+<p>Is there a systematic, non-visual (and automated) way to find the best distribution for a given variable? Is there a function in some R function that runs through different distributions to check their goodness of fit, or is that terribly inefficient?</p>
+"
+"0.188329446172303","0.184549875576259"," 23201","<p>I have a task that is specific to inventory management that is currently driving me crazy. To summarize the problem: We regularly must monitor inventory settings to ensure that they represent true demand, to ensure that we are not overstocking nor understocking. The standard procedure is to schedule reviews, where high volume items get reviewed monthly, and low volume items quarterly. But the vast majority of SKUs don't get adjusted; less than 9% are adjusted after each review...meaning that 91% of SKUs do not have a significant change in their demand patterns to warrant any change in their inventory parameters. I'm trying to design a filter so that instead of reviewing every SKU, I only review the SKUs where demand patterns have likely changed from their previously implied demand.</p>
+
+<p>To give background into the domain of inventory management:</p>
+
+<p>1) Inventory SKUs have settings that manage their stock levels given a specified depletion rate and variability. There are practical parameters (eg. lead times) as well as calculated parameters (eg. avg daily demand), and often heuristic parameters (eg. targeted in stock rate). </p>
+
+<p>2) Generally speaking, if I know all of the currently used parameters (or even n-1), I know the implied demand distribution that results in those parameters. For example, if I have a safety stock of 96 units, avg daily demand of 10, lead time of 5 days, and a target in-stock rate of 98%, and demand is normally distributed, then I know that the implied demand can be represented by a normal distribution with mean of 10 and standard deviation of 10. </p>
+
+<p>I'm trying to find a method that can help me assign probabilities that a sample of demand came from an implied demand distribution with explicit parameters. Is there a way to calculate this probability? It sounds like a conditional probability problem, but I'm not sure how to construct a calculation to determine conditional probabilities using parameterized distributions. </p>
+
+<p>To phrase this question as an example: 
+If my last 10 days of demand are c(6,7,7,5,7,8,9,4,4,9), what is the probability that this sample came from a normally distributed population with mean of 5 and stdev of 3? </p>
+"
+"0.219717687201021","0.215308188172303"," 24129","<p>I have a distribution of observed measurements and I want to compare it to sampled distributions, using R. 
+I have a program that samples distributions, according to a certain low of probability / constraint. </p>
+
+<p>Suppose I have:</p>
+
+<ul>
+<li>$m$ observed measurements</li>
+<li>two sets of $n$ samples of $m$ measurements</li>
+</ul>
+
+<p>I'd like to compute:</p>
+
+<ul>
+<li>the average cumulative distribution function (a-cdf) of  the first set of samples (its value at each evaluation points is the mean value of the cdf of each sample at this evaluation point, and the evaluation points are the pooled $n\cdot m$ measurements)</li>
+<li>the 95% envelope of the first set of samples</li>
+<li>the spatial distribution index (sdi) of my observed measurements using the second set of $n$-samples. To compute the sdi, we compute all the maximum differences between the cdf of each new sample and the a-cdf, and the maximum difference between the observed cdf and a-cdf. That makes $n+1$ points, and the sdi is the rank of the observed difference among the $n+1$ differences. </li>
+</ul>
+
+<p>I'd like to know if thoses function exists in R, and if not, what would be the smartest way to implement them. 
+Hope i'm clear enough. </p>
+"
+"NaN","NaN"," 25620","<p>Is an implementation of a density function for a logit-normal distribution available in R?</p>
+
+<p>I have not found one in a package or in the CRAN task view of probability distributions.</p>
+
+<p>This is for a MLE fitting of a function to data.</p>
+"
+"0.444567940091874","0.462048720985847"," 31747","<p>I've got a problem that I think should be simple but can't quite figure it out.  I'm looking at seed pollination, I have plants (n=36) that flower in clusters, I sample 3 flower clusters from each plant, and 6 seed pods from each cluster (18 seed pods in total from each plant).  A pod can have between 0 to at most 4 seeds pollinated.  So, the data is count, with an upper bound. I'm finding an average of ~10% of seeds are pollinated, but anywhere between 1 - 30% on a given plant, so over dispersed data, and of course, there are 4 missing cluster replicates on 3 plants, so not perfectly symmetrical.  </p>
+
+<p>The question I'm asking is if this data supports the idea this plant requires pollinators for seed set.</p>
+
+<p>I'm finding that the distribution for the number of seeds in a pod looks like there are more 0 pollinated seed pods (6-9 pods out of 16) and more 3 and 4 pollinated seed pods (2-4 for each)  than would be expected if seeds in the population were just randomly pollinated.  Basically, I think this is classic example for zero inflated data, first a insect either does or does not visit the flower at all (one zero generator) and if it does, then pollinates 0-4 of the seeds in another distribution.  The alternative hypothesis is the plant is partially selfing, and it would then be expected that every seed would have the same probability of being pollinated (this data suggests a roughly 0.1 chance, which means 0.01 chance for two seeds in the same pod, etc).</p>
+
+<p>But I simply want to demonstrate the data best fits one or the other distribution, not actually DO an ZIP or ZINB on the data.  I think whatever method I use should take into account the actual number of pollinated seeds and the number of pods sampled on each plant.  The best thing I have come up with is to do some sort of boot strap thing where I just randomly assign the number of pollinated seeds for a given plant into the number of seed pods I sampled, do that 10,000 times and see how likely it is the experimental data for the given plant came out of that random distribution.</p>
+
+<p>I just feel there is something about this that should be a lot easier than brute force bootstrapping, but after days of thinking and searching Iâ€™m giving up.  I canâ€™t just compare to a Poisson distribution because itâ€™s upper bound, itâ€™s not binomial because I need to generate the expected distribution somehow 1st.   Any thoughts?  And Iâ€™m using R so advice there (especially how to most elegantly generate 10,000 random distributions of n balls into 16 boxes that can each contain at most 4 balls) would be most welcome.</p>
+
+<p>ADDED 9/07/2012
+First, thanks to you all for all the interest and help.  Reading over the answers has made me think to reword my question a bit.  What Iâ€™m saying is that I have one hypothesis (which for now I am thinking of as the null) that seeds are pollinated randomly across pods, and my alternative hypothesis is that a seed pod with at least 1 pollinated seed is more likely to have multiple pollinated seeds than would be expected by a random process.   Iâ€™ve provided real data from three plants as examples to illustrate what Iâ€™m talking about.  First column is the # of pollinated seeds in a pod, second column is the frequency of pods with that seed count.</p>
+
+<p>plant 1 (total 3 seeds: 4% pollination) </p>
+
+<p>num.seeds ::pod.freq</p>
+
+<p>0::16</p>
+
+<p>1::1</p>
+
+<p>2::1</p>
+
+<p>3::0</p>
+
+<p>4::0    </p>
+
+<p>plant 2 (total 19 seeds: 26% pollination)</p>
+
+<p>num.seeds::pod.freq </p>
+
+<p>0::12</p>
+
+<p>1::1</p>
+
+<p>2::1</p>
+
+<p>3::0</p>
+
+<p>4::4</p>
+
+<p>plant 3 (total 16 seeds: 22% pollination)</p>
+
+<p>num.seeds::pod.freq </p>
+
+<p>0::9</p>
+
+<p>1::4</p>
+
+<p>2::3</p>
+
+<p>3::2</p>
+
+<p>4::0</p>
+
+<p>In plant #1, only 3 seeds were pollinated in 18 pods, one pod had one seed, and one pod had two seeds.  Thinking about a process of adding one seed to the pods at random, the first two seeds each go into their own pod, but for the 3rd seed, there are 6 spots available in pods that already have one seed but 64 spots in the 16 pods with no seeds, so the highest probability of a pod with 2 seeds here is 6/64= 0.094.  Thatâ€™s a bit low, but not really extreme, so Iâ€™d say that this plant fits the hypothesis of random pollination across all seeds with a ~4% chance of pollination occurring. But plant 2 looks much more extreme to me, with 4 pods completely pollinated, yet 12 pods with nothing.  Iâ€™m not quite sure how to calculate the odds of this distribution directly (hence my bootstrap idea) but Iâ€™d guess the odds of this distribution occurring at random if each seed has a ~25% chance of pollination are quite low.  Plant #3 I really have no idea, I think there are more 0â€™s and 3â€™s than one should expect for a random distribution but my gut feeling is that this distribution for this number of seeds is much more likely than the distribution for plant #2, and may not be that unlikely.  But obviously I want to know for sure, and across all plants.  </p>
+
+<p>In the end Iâ€™m looking to write a statement like â€œThe distribution of pollinated seeds in seed pods fits (or does not fit) the hypothesis that plants are not simply partially self compatible, but require visitation of a pollinator to effect seed set. (results of statistical test).â€  This is really just part of my forward looking section, where Iâ€™m talking about what experiments to conduct next, so Iâ€™m not desperate for this to be one thing or the other, but I want to know for myself, if possible.  If I canâ€™t do what Iâ€™m trying to do with this data, Iâ€™d like to know that too!</p>
+
+<p>I did ask a rather broad question at first, since Iâ€™m curious as to whether or not there are any good tests to show if data should go into a zero inflated model in the first place.  All of the examples Iâ€™ve seen seem to say â€“â€œlook, there are a lot of zeros here, and there is a reasonable explanation for that, so letâ€™s use a zero inflated modelâ€.  Thatâ€™s what Iâ€™m doing right now on this forum, but I had an experience on my last chapter where I used a Poisson glm for count data and my one of my supervisors said â€œNo, glms are too complex and unnecessary, this data should go into a contingency tableâ€ and then sent me a data dump of the massive contingency table generated by their expensive stats package that gave the same p values for all my factors + interactions to three significant digits!!  So, Iâ€™m trying to keep the stats clear and simple, and make sure I understand them well enough to robustly defend my choices, which I donâ€™t feel I can do for a zero inflated model right now.  Iâ€™ve used both a quasibinomial (for whole plants to get rid of pesudoreplicaiton) and a mixed model for the above data to compare treatments and answer my main experimental questions, either seems to do the same job, but Iâ€™m going to also play around with ZINBâ€™s tonight, to see how well that performs.  Iâ€™m thinking if I can explicitly demonstrate that this data is strongly clustered (or zero inflated) at first, then provide a good biological reason for that occurring, Iâ€™ll be much better set up to subsequently pull out a ZINB, than to just compare one to a quasibinomial/mixed model and argue since it gives better results, thatâ€™s what I should use.  </p>
+
+<p>But I donâ€™t want to distract too much from my primary question, how can I determine if my data really is more zero inflated than expected from a random distribution?  In my case the answer to that is what is of real interest to me, with the possible benefit for model justification being a bonus.</p>
+
+<p>Thanks again for all your time and help!</p>
+
+<p>Cheers,
+BWGIA</p>
+"
+"0.203419051086243","0.199336648255529"," 35269","<p>I'm using R to test some distribution families to my data.
+I've done KS, AD tests and determined the loglike.</p>
+
+<p>For one of the data the indications given by KS and AD do not agree with the ones given by the loglike:</p>
+
+<pre><code>Table: p-values
+Test    Normal  Log-normal  Gamma   Logistic    Weibull Gumbel
+KS      0,16    0,00        0,00    0,26        0,00    0,49
+AD      0,17    0,00        0,00    0,27        0,00    -
+
+Measure Normal  Log-normal  Gamma   Logistic    Weibull Gumbel
+loglike 282,86  279,54      308,96  284,41      304,00  291,55
+</code></pre>
+
+<p>I've read that KS gives more emphasis to the middle part of the distributions and AD to the tails. On the loglike one maximizes the probability of a model fitting the data.
+The graphical analysis says to me that Log-normal, Gamma and Weibull only fit the data well at the left tail whereas the other distributions fit data quite well all over the domain....
+So why does these three dist. have a larger loglike than the others that seem to fit better the data? Thanks</p>
+"
+"0.08304547985374","0.0813788458771159"," 46182","<p>I have 5 different posterior distributions (mcmc samples) which all estimate the same parameter beta. The 5 models are all obtained from 5 independent standardized datasets but estimate the same parameter. What I want to obtain is a single posterior distribution, combining information of my five original distribution. By instinct, following the rules of probability, I would say I can obtain a joint posterior distribution simply as the product of my 5 different posterior distributions. Is this correct, and if yes, how to do this in practice? Is there any BUGS/JAGS or R code anybody is willing to share?</p>
+
+<p>Thanks a lot,
+achaz</p>
+"
+"0.361986854400295","0.35472216532032"," 48227","<h1>Background</h1>
+
+<p>Background: in <a href=""http://www.gwern.net/Conscientiousness%20and%20online%20education"" rel=""nofollow"">an essay of mine</a>, I point out that if a selection process (like higher education) requires successful applicants to be above the mean on 2 different variables, there will necessarily be fewer successful applicants than when successful applicants just had to be above the mean on just 1 variable. (The 2 different variables in this case are the <a href=""https://en.wikipedia.org/wiki/Big_Five_personality_traits"" rel=""nofollow"">Big Five</a> personality factor of <a href=""http://en.wikipedia.org/wiki/Conscientiousness"" rel=""nofollow"">Conscientiousness</a>, and IQ.) This reduction is most dramatic when the 2 variables have 0 correlation, but even a large correlation will still result in many applicants being filtered out. How many are filtered out, exactly?</p>
+
+<h1>Simple questions</h1>
+
+<p>Well, if the filter is for 2 standard deviations above the mean and the variables are correlated with 1, then 2.3% of the population will pass; if the variables are uncorrelated with 0, then 2.3% * 2.3% or 5.29e-4% of the population will pass.</p>
+
+<h1>Correlated</h1>
+
+<p>But what about intermediate values? For example, the psychology literature has reported a correlation of -0.21 between Conscientiousness &amp; IQ.</p>
+
+<p>I consulted <a href=""https://en.wikipedia.org/wiki/Multivariate_normal_distribution"" rel=""nofollow"">Wikipedia on bivariate normal distributions</a>, but I didn't understand much of it. The closest I found was <a href=""http://en.wikipedia.org/wiki/Sum_of_normally_distributed_random_variables#Correlated_random_variables"" rel=""nofollow"">sum of correlated normal random variables</a>, but in this case what I want is closer to a <code>min</code> function.</p>
+
+<h2>Simulation</h2>
+
+<p>I wa able to work up a R simulation to see how that worked, and it seemed in line with my intuitions:</p>
+
+<pre><code>install.packages(""fMultivar"")
+library (""fMultivar"")
+
+x &lt;- rnorm2d(10000000, rho=0.5)
+
+xgreater &lt;- length(subset(x, x[,1] &gt; mean(x[,1])+2*sd(x[,1])))
+xandygreater &lt;- length(subset(x, x[,1] &gt; mean(x[,1])+2*sd(x[,1]) &amp; x[,2] &gt; mean(x[,2])+2*sd(x[,2])))
+
+c(xgreater, xandygreater); c(xgreater / length(x), xandygreater / length(x), xgreater / xandygreater) * 100
+
+# example results for different values of 'rho='
+0.1
+[1] 454,664  17,570
+[1] 2.273e+00 8.785e-02 2.588e+03
+
+0.2
+[1] 458,284  82,552
+[1]   2.2914   0.4128 555.1458
+
+0.5
+[1] 454,484  80,872
+[1]   2.2724   0.4044 561.9794
+
+0.9
+[1] 455,242 267,912
+[1]   2.276   1.340 169.922
+
+0.95
+[1] 455,162 321,024
+[1]   2.276   1.605 141.784
+
+0.99
+[1] 455,260 394,448
+[1]   2.276   1.972 115.417
+</code></pre>
+
+<h2>Exact pdf calculation?</h2>
+
+<p>I really was hoping for more of a precise analytic solution, so some more searching eventually turned up a paper, <a href=""http://dl.dropbox.com/u/85192141/2008-nadarajah.pdf"" rel=""nofollow"" title=""Nadarajah &amp; Kotz 2008"">""Exact Distribution of the Max/Min of Two Gaussian Random Variables""</a>, which gives a definition for the min of 2 correlated normal variables. This seems to be what I want; top of pg1, second column:</p>
+
+<blockquote>
+  <p>...where $\phi(.)$ and $\Phi(.)$ are, respectively, the pdf and the cumulative distribution function (cdf) of the standard normal distribution. It is known that the <a href=""http://en.wikipedia.org/wiki/Probability_density_function"" rel=""nofollow"">pdf</a> of $Y = \min(X_1, X_2)$ is $f(y) = f_1(y) + f_2(y)$, where</p>
+  
+  <p>(3) $f_1(y) = \frac{1}{\sigma_1} \phi (\frac{y-\mu_1}{\sigma_1}) \times \Phi (\frac{p(y - \mu_1)}{\sigma_1 \sqrt{1 - p^2}} - \frac{y - \mu_2}{\sigma_2 \sqrt{1 - p^2}})$
+  (4) $f_2(y) = \frac{1}{\sigma_2} \phi (\frac{y-\mu_2}{\sigma_2}) \times \Phi (\frac{p(y - \mu_2)}{\sigma_2 \sqrt{1 - p^2}} - \frac{y - \mu_1}{\sigma_1 \sqrt{1 - p^2}})$</p>
+</blockquote>
+
+<p>They give an R implementation on pg6 (first column); it seems to have a <code>pnorm</code> typo, but I fixed that. Once it was working, I tried generating a slightly (0.1) correlated bivariate distribution, which look OK:</p>
+
+<pre><code>fmin&lt;-function (y,mu1,mu2,sigma1,sigma2,rho)
+     {t1&lt;-dnorm(y,mean=mu1,sd=sigma1)
+     tt&lt;-rho*(y-mu1)/(sigma1*sqrt(1-rho*rho))
+     tt&lt;-tt-(y-mu2)/(sigma2*sqrt(1-rho*rho))
+     t1&lt;-t1*pnorm(tt)
+     t2&lt;-dnorm(y,mean=mu2,sd=sigma2)
+     tt&lt;-rho*(y-mu2)/(sigma2*sqrt(1-rho*rho))
+     tt&lt;-tt-(y-mu1)/(sigma1*sqrt(1-rho*rho))
+     t2&lt;-t2*pnorm(tt)
+     return(t1+t2)}
+fmin(c(1:200),100,100,15,15,0.1)
+  [1] 1.849e-11 2.864e-11 4.418e-11 6.784e-11 1.037e-10 1.578e-10 2.392e-10 3.608e-10 5.418e-10
+ [10] 8.101e-10 1.206e-09 1.787e-09 2.636e-09 3.872e-09 5.663e-09 8.243e-09 1.195e-08 1.724e-08
+ [19] 2.476e-08 3.542e-08 5.043e-08 7.148e-08 1.009e-07 1.417e-07 1.982e-07 2.760e-07 3.827e-07
+ [28] 5.282e-07 7.257e-07 9.928e-07 1.352e-06 1.833e-06 2.475e-06 3.326e-06 4.449e-06 5.926e-06
+ [37] 7.859e-06 1.037e-05 1.364e-05 1.784e-05 2.324e-05 3.014e-05 3.891e-05 5.002e-05 6.401e-05
+ [46] 8.154e-05 1.034e-04 1.306e-04 1.641e-04 2.054e-04 2.558e-04 3.173e-04 3.917e-04 4.814e-04
+ [55] 5.889e-04 7.173e-04 8.696e-04 1.049e-03 1.261e-03 1.507e-03 1.794e-03 2.125e-03 2.506e-03
+ [64] 2.941e-03 3.435e-03 3.993e-03 4.620e-03 5.318e-03 6.093e-03 6.945e-03 7.878e-03 8.890e-03
+ [73] 9.982e-03 1.115e-02 1.239e-02 1.370e-02 1.506e-02 1.647e-02 1.791e-02 1.938e-02 2.084e-02
+ [82] 2.230e-02 2.371e-02 2.508e-02 2.636e-02 2.755e-02 2.863e-02 2.956e-02 3.034e-02 3.095e-02
+ [91] 3.138e-02 3.162e-02 3.165e-02 3.149e-02 3.112e-02 3.056e-02 2.981e-02 2.889e-02 2.781e-02
+[100] 2.660e-02 2.526e-02 2.383e-02 2.233e-02 2.077e-02 1.920e-02 1.762e-02 1.605e-02 1.452e-02
+[109] 1.305e-02 1.164e-02 1.031e-02 9.063e-03 7.912e-03 6.857e-03 5.899e-03 5.039e-03 4.272e-03
+[118] 3.595e-03 3.004e-03 2.491e-03 2.050e-03 1.675e-03 1.358e-03 1.093e-03 8.732e-04 6.923e-04
+[127] 5.447e-04 4.254e-04 3.297e-04 2.535e-04 1.935e-04 1.466e-04 1.102e-04 8.220e-05 6.085e-05
+[136] 4.470e-05 3.258e-05 2.357e-05 1.692e-05 1.205e-05 8.517e-06 5.973e-06 4.157e-06 2.870e-06
+[145] 1.966e-06 1.337e-06 9.018e-07 6.036e-07 4.008e-07 2.641e-07 1.727e-07 1.120e-07 7.210e-08
+[154] 4.604e-08 2.917e-08 1.834e-08 1.144e-08 7.078e-09 4.346e-09 2.647e-09 1.600e-09 9.594e-10
+[163] 5.708e-10 3.369e-10 1.973e-10 1.146e-10 6.607e-11 3.778e-11 2.143e-11 1.207e-11 6.737e-12
+[172] 3.733e-12 2.052e-12 1.119e-12 6.052e-13 3.248e-13 1.730e-13 9.137e-14 4.788e-14 2.489e-14
+[181] 1.284e-14 6.571e-15 3.336e-15 1.680e-15 8.393e-16 4.160e-16 2.046e-16 9.979e-17 4.830e-17
+[190] 2.319e-17 1.104e-17 5.218e-18 2.446e-18 1.137e-18 5.248e-19 2.402e-19 1.090e-19 4.911e-20
+[199] 2.194e-20 9.727e-21
+</code></pre>
+
+<p><img src=""http://i.imgur.com/10n1FuI.png"" alt=""Plotting the pdf""></p>
+
+<p>Now, I understand the PDF to be ""a function that describes the relative likelihood for this random variable to take on a given value. The probability for the random variable to fall within a particular region is given by the integral of this variableâ€™s density over the region"". So I suppose I should sum up every point in the pdf >130 (since 130 is 2 standard deviations up, by construction when I specified SD=15) and that's my probability that a random deviate will be <code>min(130,130)</code>. What's the total probability someone will be over 130 on both variables? I think that would be:</p>
+
+<pre><code>sum(fmin(c(1:200),100,100,15,15,0.1)[130:200])
+[1] 0.001004
+</code></pre>
+
+<p>If I increase the <em>r</em> to 0.9, the result is 0.01455 which is satisfyingly larger.</p>
+
+<p>A sanity check - as the correlation goes to 1.0, there should be no decrease. So we do the same question for a single normal distribution defined the same way:</p>
+
+<pre><code>sum(dnorm(c(1:200), 100, 15)[130:200])
+[1] 0.02459
+
+# the function blows NaN chunks on 1.0, so we'll try a lot of 9s:
+sum(fmin(c(1:200),100,100,15,15,0.9999999999)[130:200])
+[1] 0.02459
+</code></pre>
+
+<p>I guess that works too.</p>
+
+<h1>Problems</h1>
+
+<p>So my questions are:</p>
+
+<ol>
+<li>Is my R simulation right?</li>
+<li>Is my version and use of <code>fmin</code> right?</li>
+<li>Is there some more direct, possibly even pen-and-paper, avenue of calculating the answer to my original question?</li>
+</ol>
+"
+"0.143838990445615","0.140952295720482"," 53154","<p>Using R, what function(s) would I use to obtain the following probabilities? </p>
+
+<ul>
+<li>Roll at least one 1 when rolling 2 six-sided dice (2d6) = 11/36</li>
+<li>Roll at least one 1 when rolling 3 six-sided dice (3d6) = 91/216</li>
+<li>Roll at least one 1 when rolling 1d4, 1d6, 1d8, and 1d8 = 801/1536</li>
+</ul>
+
+<p>First I hope my answers above are correct!  I did these pretty much manually.</p>
+
+<p>I think I need to use binomial distributions and/or probability-generating functions, but not sure if I'm over-complicating things.  I've tried using R's *binom() functions but can't seem to arrive at the answers I need.</p>
+"
+"0.219717687201021","0.215308188172303"," 54781","<p>I fitted a gaussian mixture to my financial data. </p>
+
+<p>The values are:</p>
+
+<p>$\pi= 0.3$</p>
+
+<p>$\mu_1= -0.01$</p>
+
+<p>$\mu_2= 0.01$</p>
+
+<p>$\sigma_1=0.01$</p>
+
+<p>$\sigma_2=0.03$</p>
+
+<p>One can see, that both single distributions have a mean of almost zero, wherease one has a high volatility and the other a low volatility. The normal distribution 1, the green one with the high peak has the parameters $\mu_1$ and $\sigma_1$ and occurs (this is pi from output of normalmixEM) with a probability of 0.39. The normal distribution 2 with the smaller peak and the higher volatility has the parameters $\mu_2$ and $\sigma_2$ and a probability of $1-0.39$.</p>
+
+<p>I imagine the generating of the mixture density as follows:</p>
+
+<p>We have a distribution which is quite probable ($\pi=1-0.39)$ and has $\mu_2$., if the mixture density is done, we ""add"" a second distribution which is a bit shifted to the left (this one occurs with a probability of 0.39 and has a negative mean). Since the distribution we add lies a bit more to the left I would expect, that the mixture density has a negative skew, since the left tail of the resulting mixture will be heavier?</p>
+
+<p>I control this, which gives a positive skew of <code>0.7</code>. Now my question is: Why? I would expect a negative skew, since I thought the mixture density will have a a fatter left tail, since we add to the probable distribution with positive mean a second distribution which is a bit shifted to the left?</p>
+"
+"0.16609095970748","0.162757691754232"," 57933","<p>Using the following reference <a href=""http://books.google.com.au/books?id=ZUSsAAAAIAAJ&amp;lpg=PR1&amp;dq=Contributions%20to%20probability%20and%20statistics&amp;pg=PA460#v=onepage&amp;q&amp;f=false"" rel=""nofollow"">A survey of sampling from contaminated distributions</a>, I am trying to investigate the relative efficiency (RE) for the mean vs the trimmed mean, given the following contaminated exponential distribution
+\begin{align}
+F(x) = F_\lambda(x) + F_{k\lambda} (x) 
+\end{align}</p>
+
+<p>When trying to simulate the RE for the this distribution in R for trim = 0, 0.01, 0.03 and 0.05, I am getting the following plots</p>
+
+<p><img src=""http://i.stack.imgur.com/rSw4Y.png"" alt=""Plots for the Asymptotic Relative Efficiency of the trimmed mean""></p>
+
+<p>Unfortunately, like the reference above, I suspect that the plots should crossover each other at some point, but this is not happening. </p>
+
+<p>So far I have come up with the following code </p>
+
+<pre><code>number.of.simulations &lt;- 100
+n &lt;- 1000
+error &lt;- 0
+
+#using random uniform variables to create exponential distribution
+uniform.variables &lt;- runif(n)
+
+no.trim.mean &lt;- trim.mean &lt;- rep(0,number.of.simulations)
+
+uncensored &lt;- rep(0,n)
+fraction.of.trim &lt;- seq(from = 0 , to = 0.1, by = 0.001)
+
+amount.trim &lt;- c(0, 0.01, 0.03, 0.05)
+relative.efficiency &lt;- matrix(
+    NA,nrow= length(fraction.of.trim) , ncol = length(amount.trim)
+)
+
+for(i in 1:length(amount.trim)){
+  for(j in 1:length(fraction.of.trim)){
+     uncensored &lt;- matrix(
+        (uniform.variables &lt;= 1 - error) * rexp(n = n * number.of.simulations) + 
+        (uniform.variables &gt; 1  - error) * rexp(n = n * number.of.simulations),
+        ncol = number.of.simulations
+     )    
+    no.trim.mean &lt;- apply(uncensored, 2, mean, trim = amount.trim[i])
+    trim.mean &lt;- apply(uncensored, 2, mean, trim = fraction.of.trim[j])   
+    relative.efficiency[j,i] &lt;- mean((no.trim.mean - 1)^2)/mean((trim.mean - 1)^2)
+  }  
+}
+</code></pre>
+
+<p>What is it that I am missing or doing wrong with this simulation?</p>
+"
+"0.143838990445615","0.140952295720482"," 63943","<p>I would like to model the performance of a rainwater tank, which has a stochastic input (rainfall). The data are the empty volume in the tank at the end of each day. The values are skewed towards the extremes, and I am not sure how to model this or present it statistically. Reviewing various distributions in Wikipedia, I found that it seems like a Beta Distribution - but I am not sure whether it is one. I need to find a statistical method of representing the 'empty volume'.</p>
+
+<p>One friend suggested that I use binomial distribution of getting probability of tank being 25% empty, 50% empty or 75% empty and find confidence intervals associated with those values.</p>
+
+<p>Here is the distribution of my data:</p>
+
+<p><img src=""http://i.stack.imgur.com/yBg7d.png"" alt=""DataDist""></p>
+
+<p>EDIT - 11 July 7:28 GMT (following comments for clarification)</p>
+
+<p>The inflow into the tank occurs randomly due to the rainfall. There is regular abstraction from the tank if there is stored volume. </p>
+
+<p>I would like to estimate the probability of the empty volume in the tank on any random day in future based on the the historic data, and associated confidence of that probability. </p>
+
+<p>I would then like to use that 'empty volume' figure to estimate how much of a large storm rainfall it can a large number of such tanks hold back and reduce the flash flooding volumes. Possibly may need to present combined probabilities with the storm probability.</p>
+"
+"0.117444043902941","0.115087067529687"," 64194","<p>I hope you are very well. I have a big dataset (~9 million registries) and I have 2 variables $X$=purchase amount and $Y$=frequency of purchase. I would like to know what distribution should I use for each variable and fitting its distribution with <code>R</code>. For example, for $X$ I'm testing with package 'mixtools' but the results are not really good. I want to create a simulation model, that simulates that variables. First of all, I'm selecting appropriate probability distributions (and associated parameters) to describe the behavior of each uncertain input variable. Thanks.</p>
+
+<p>UPDATE: I have replaced the pdf with a histogram for each variable.</p>
+
+<p><a href=""http://imgur.com/WTcGoQZ"" rel=""nofollow""><img src=""http://i.imgur.com/WTcGoQZ.jpg?1"" title=""Hosted by imgur.com"" /></a></p>
+"
+"NaN","NaN"," 67116","<p>I have trouble understanding KL divergence, where P is probability mass function of true distribution of data and Q is the approximation of P. </p>
+
+<p>The definition of KL divergence is: </p>
+
+<p>$$D_{\mathrm{kl}}(P || Q) = \sum_i \ln\left( \frac{P_i}{Q_i}\right)P_i$$</p>
+
+<p>If I want a symmetrised KL divergence, should it look like the following ?</p>
+
+<p>$$D_{\mathrm{kl}}(P || Q) + D_{\mathrm{kl}}(Q||P) = \sum_i \ln\left( \frac{P_i}{Q_i}\right)P_i + \sum_i \ln\left( \frac{Q_i}{P_i}\right)Q_i$$</p>
+
+<p>Also, which package should I use in R to compute the KL divergence for <strong>discrete distributions</strong> ? Flexmix or FNN ? Or should I just write my own R function for this?</p>
+
+<p>And what if I don't really know  $P$, the true distribution of data?</p>
+"
+"0.332758124391665","0.345261202589062"," 71414","<p>I'm trying to use a zero-inflated gamma model (or a gamma 'hurdle' model). The model is a mixture of logistic regression and generalized linear modeling. I can do this analysis in two steps: 1) do a logistic regression against presence/absence data and then 2) Use a generalized linear model with a gamma distribution on the positive values. I'm trying to set the model up where, if y = 0, then E(y) = p, but if y > 0, then E(y) is gamma distributed.</p>
+
+<p>I'm trying to set this up in BUGS/JAGS, because I've seen these models <a href=""http://stats.stackexchange.com/questions/15967/how-can-i-set-up-a-zero-inflated-poisson-in-jags"">worked before for poisson-distributions</a>. I tried to adapt the code from that link into a gamma distribution, but I can't quite seem to get it to work. I know the code won't work because my data have zeroes, and the likelihood function can't be evaluated with zeroes. However, even when restricted to positive values, I get errors for invalid parent values. Even so, I'm not even sure the model is specified correctly.</p>
+
+<p>Here is the model:</p>
+
+<pre><code># For the ones trick
+C &lt;- 10000
+
+# for every observation
+for(i in 1:N){
+    # log-likelihood of the observation from the gamma likelihood
+    LogPos[i] &lt;- (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - N*shape[i]*log(scale[i]) - N*loggam(scale[i])
+    #likelihood
+    Lpos[i] &lt;- exp(LogPos[i])
+
+    # redefine the shape and rate parameters as a function of the mean and sd
+    shape[i] &lt;- pow(mu[i], 2) / pow(sd, 2)
+    scale[i] &lt;- mu[i] / pow(sd, 2)
+
+    # mu is a function of MTD: use the inverse link
+    #mu[i] &lt;- 1/eta[i]
+    mu[i] &lt;- beta0 + beta1*MTD[i]
+
+
+    # zero-inflated part, where w[i] is the probability of being zero
+    w[i] &lt;- exp(zeta[i]) / (1 + exp(zeta[i]))
+    zeta[i] &lt;- gamma0 + gamma1*MPD[i]
+
+    # ones trick
+    p[i] &lt;- Lpos[i] / C
+    ones[i] ~ dbern(p[i])
+
+    # Full likelihood
+    Lik[i] &lt;- Lpos[i]*(1 - w[i]) + equals(y[i], 0)*w[i]
+  } 
+
+# PRIORS
+beta0 ~ dnorm(0, 0.001)
+beta1 ~ dnorm(0, 0.001)
+
+gamma0 ~ dnorm(0, 0.001)
+gamma1 ~ dnorm(0, 0.001)
+
+sd ~ dunif(0, 100)
+</code></pre>
+
+<p>Has anyone set a model up like this or have any advice on how to set it up correctly?</p>
+
+<p><strong>UPDATE</strong></p>
+
+<p>I've tried a new set of code that's similar, but slight different. I still have not gotten it to work</p>
+
+<pre><code>model{
+
+  # For the ones trick
+  C &lt;- 10000
+
+  # for every observation
+  for(i in 1:N){
+
+    # make a dummy variable that is 0 if y is &lt; 0.0001 and 1 if y &gt; 0.0001. This is essentially a presence
+    # absence dummy variable
+    z[i] &lt;- step(y[i] - 0.0001)
+
+    # define the logistic regression model, where w is the probability of occurance.
+    # use the logistic transformation exp(z)/(1 + exp(z)), where z is a linear function
+    w[i] &lt;- exp(zeta[i]) / (1 + exp(zeta[i]))
+    zeta[i] &lt;- gamma0 + gamma1*MPD[i]
+
+    # define the gamma regression model for the mean. use the log link the ensure positive, non-zero mu
+    mu[i] &lt;- exp(eta[i])
+    eta[i] &lt;- beta0 + beta1*MTD[i]
+
+    # redefine the mu and sd of the continuous part into the shape and scale parameters
+    shape[i] &lt;- pow(mu[i], 2) / pow(sd, 2)
+    scale[i] &lt;- mu[i] / pow(sd, 2)
+
+    # for readability, define the log-likelihood of the gamma here
+    logGamma[i] &lt;- (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - shape[i]*log(scale[i]) - loggam(scale[i])
+
+    # define the total likelihood, where the likelihood is (1 - w) if y &lt; 0.0001 (z = 0) or
+    # the likelihood is w * gammalik if y &gt;= 0.0001 (z = 1). So if z = 1, then the first bit must be
+    # 0 and the second bit 1. Use 1 - z, which is 0 if y &gt; 0.0001 and 1 if y &lt; 0.0001
+    logLik[i] &lt;- (1 - z[i]) * log(1 - w[i]) + z[i] * ( log(w[i]) + logGamma[i] )
+
+    # Use the ones trick
+    p[i] &lt;- logLik[i] / C
+    ones[i] ~ dbern(p[i])
+  } 
+
+  # PRIORS
+  beta0 ~ dnorm(0, 0.001)
+  beta1 ~ dnorm(0, 0.001)
+
+  gamma0 ~ dnorm(0, 0.001)
+  gamma1 ~ dnorm(0, 0.001)
+
+  sd ~ dgamma(1, 2)
+
+}
+</code></pre>
+
+<p><strong>UPDATE 2</strong></p>
+
+<p>I've gotten it to run by deleting the definition of logGamma[i] and putting it directly into the likelihood function, which now reads:</p>
+
+<pre><code>logLik[i] &lt;- (1 - z[i]) * log(1 - w[i]) + z[i] * ( log(w[i]) + (shape[i] - 1)*log(y[i]) - y[i]/scale[i] - shape[i]*log(scale[i]) - loggam(scale[i]) )
+</code></pre>
+
+<p>The problem was that JAGS was trying to evaluate the log likelihood at all observations first, resulting in NA's for the 0's. In the new way, it only evaluates it if z = 1 (I think). I'm still having trouble getting the parameter estimates to line up. For example, the gamma's are almost identical to a logistic regression of the same form (hooray!). But the betas are pretty far off from a gamma GLM of the positive values. I don't know if this is normal or not, but I suspect there are still problems with my model specification.</p>
+"
+"0.143838990445615","0.140952295720482"," 74021","<p>I need to calculate the Probabilistic Sensitivity Analysis for a function.
+I was given this:</p>
+
+<p>beta distributions assigned to represent uncertainty<br>
+And have this parameter with this data:</p>
+
+<pre><code>variable = d_progress
+probability of variable : 0.1
+n = 100
+r = cases = 3
+</code></pre>
+
+<p>Now, I need to use this function or something?</p>
+
+<pre><code>p &lt;- rbeta(n, shape1=alpha, shape2=beta)
+</code></pre>
+
+<p>I already have the parameters so I can find <code>p</code>.
+If I have:</p>
+
+<pre><code>p&lt;-rbeta(100, 1, 99) 
+</code></pre>
+
+<p>What I do is I create a vector now? Of 100 values?
+So, I need to create a loop, 100 times for the following formula:</p>
+
+<pre><code>for each of 100 p generated (
+  EV = p*b_par
+  I then submit each EV in a vector or something...
+  I need to Find the different values of EV for different p,
+    so I just find the mean of all the 100 EV in the end
+)
+</code></pre>
+"
+"0.203419051086243","0.199336648255529"," 76554","<p>i have a vector of measurements from one to three classes, which can be modeled by gaussian distributions. There are some outliers in the data. I use the EM algorithm to learn the parameters of the components. One property of the algorithm is, that the incomplete likelihood of the data increases monotonically. My code works fine, but the parameters are heavily biased due to the outliers. Now i want an extra component, a uniform distribution, to model the outliers. And now the monotonicity is no longer guaranteed. As far as i know the new component only changes the E step of the algorithm. Does anyone know what my mistake is?</p>
+
+<pre><code>library(gtools)
+
+#create 200 data points from two components plus one outlier
+y = c(rnorm(n=100,mean=-4,sd=.5),rnorm(n=100,mean=0,sd=.5),4)
+stripchart(y,method='jitter',pch=4)
+
+
+em = function(x,maxit){
+
+K = 2 #number of components
+n = length(x) #size of dataset
+
+#start values
+p = 1 / (max(x)-min(x)) #probability for the uniform distribution
+pi = rdirichlet(n=1,alpha=c(rep(5,times=K),1))[1,] # mixing probabilities
+mu = sample(x,size=K) #vector of means
+sigma = .7 #standard deviation
+gamma = 0 # 
+
+#maximization
+m_step = function(){
+    pi = apply(gamma,2,sum)
+    mu = gamma[,1:K] * x
+    mu = apply(mu,2,sum)
+    mu = mu / pi[1:K]
+    pi = pi / n
+    sigma = t(sapply(x,`-`,mu))
+    sigma = gamma[,1:K] * sigma^2
+    sigma = sqrt(sum(sigma) / n)
+    pi &lt;&lt;- pi; mu &lt;&lt;- mu; sigma &lt;&lt;- sigma
+    return()
+}
+
+#expectation
+e_step = function(){
+    gamma = sapply(1:K,function(k){ dnorm(x,mean=mu[k],sd=sigma)},USE.NAMES=FALSE)
+    gamma = cbind(gamma,p)
+    gamma = t(t(gamma)*pi)
+    tmp = apply(gamma,1,sum)
+    gamma &lt;&lt;- gamma / tmp
+    loglik = sum(log(tmp))
+}
+
+loglik = rep(NA,times=maxit)
+
+loglik[1] = e_step()
+m_step()
+
+j = 1
+gain = Inf
+while(j &lt;= maxit &amp;&amp; gain &gt; 1e-8){
+    loglik[j+1] = e_step()
+    gain = loglik[j+1] - loglik[j]
+    m_step()
+    j = j+1
+}
+
+if(any(diff(loglik[1:j])&lt;0)){
+    print('Error: log likelihood not monotonic')
+    print(loglik[1:j])
+}
+
+return(list(pi=pi,mu=mu,sigma=sigma,loglik=loglik[j]))
+}
+
+print(em(y,200))
+</code></pre>
+
+<p>I found a solution. I introduced a new hidden binary variable with the meaning outlier/no outlier and now it works. I will try to write down the math and post it later.</p>
+"
+"0.16609095970748","0.162757691754232"," 81769","<p>I have two distributions: A, and B. Each distribution is filled with the numbers 1.0-10.0. These distributions are NOT simple functions, like the gaussian, but are merely empirical counts.</p>
+
+<p>Essentially, I want to create a model for the probability that any given number is A. 
+You can imagine that this is easy using histograms; we would create 1.0 sized bins, count the number of A in that bin Bin(A), count the number of B Bin(B) in that bin, and create a new bin for that range on a new histogram with the height value being the percentage Bin(A) / (Bin(A)+Bin(B)).</p>
+
+<p>My question is how to do this using continuous random distributions.
+Using either Python or R works fine. I feel as though there is something critical I am missing or failing to understand about this problem, because while it seems like a very trivial problem to me, I can find little information on how to solve it in either of those languages, both of which I am fairly experienced with</p>
+"
+"0.219717687201021","0.215308188172303"," 82659","<p>I am new to survival analysis and I've recently learned that there are different ways to do it given a certain goal. I am interested in actual implementation and appropriateness of these methods.</p>
+
+<p>I was presented with the traditional <em>Cox Proportional-Hazards</em>, <em>Accelerated failure time models</em> and <em>neural networks</em> (multilayer perceptron) as methods to get survival of a patient given their time, status and other medical data. The study is said to be determined in five years and the goal is to give survival risks each year for new records to be given.</p>
+
+<p>I found two instances where other methods where chosen over the Cox PH:</p>
+
+<ol>
+<li><p>I found ""<a href=""http://stats.stackexchange.com/a/79375/37466""><em>How to get predictions in terms of survival time from a Cox PH model</em></a>"" and it was mentioned that:</p>
+
+<blockquote>
+  <p>If you are particularly interested in obtaining estimates of the probability of survival at particular time points, I would point you towards <strong>parametric survival models (aka accelerated failure time models)</strong>. These are implemented in the survival package for R, and will give you parametric survival time distributions, wherein you can simply plug in the time you are interested in and get back a survival probability.</p>
+</blockquote>
+
+<p>I went to the recommended site and found one in the <a href=""http://cran.r-project.org/web/packages/survival/survival.pdf""><code>survival</code> package</a> - the function <code>survreg</code>. </p></li>
+<li><p>Neural networks were suggested in <a href=""http://stats.stackexchange.com/questions/80049/obtaining-r-pec-survival-patient-risk-percentage#comment156911_80049"">this comment</a>:</p>
+
+<blockquote>
+  <p>... One advantage of neural net approaches to survival analysis is that they do not rely on the assumptions that underlie Cox analysis...</p>
+</blockquote>
+
+<p>Another person with the question ""<a href=""http://stats.stackexchange.com/questions/81261/r-neural-network-model-with-target-vector-as-output-containing-survival-predicti""><em>R neural network model with target vector as output containing survival predictions</em></a>"" gave an exhaustive way of determining survival in both neural networks and Cox PH.</p>
+
+<p>The R code for getting the survival would be like this:</p>
+
+<pre><code>mymodel &lt;- neuralnet(T1+T2+T3+T4+T5~covar1+covar2+covar3+..., data=mydata, hidden=1)
+compute(mymodel,data=mydata)
+</code></pre></li>
+<li><p>I went to the R forums and found <a href=""http://r.789695.n4.nabble.com/predict-coxph-and-predict-survreg-tp3037408p3038065.html"">this answer in the question ""<em>predict.coxph and predict.survreg</em>""</a>:</p>
+
+<blockquote>
+  <p>Indeed, from the <code>predict()</code> function of the <code>coxph</code> you cannot get 
+  directly ""time"" predictions, but only linear and exponential risk  scores. This is because, in order to get the time, a baseline hazard has to be computed and it is not straightforward since it is implicit in the Cox model. </p>
+</blockquote></li>
+</ol>
+
+<p>I was wondering if which of the three (or two considering the arguments over Cox PH) is best for getting survival percentages for time periods of interest? I am confused which of them to use in survival analysis.</p>
+"
+"0.24913643956122","0.244136537631348"," 88697","<p>I have a probability density function in R and I want to draw a single sample from it. How do I do that?</p>
+
+<p>My current solution (and the one Google keeps giving me) is to evaluate the function for a dense set of values (<code>x</code>) giving the associated probabilities (<code>px</code>) and then draw a sample using <code>sample(x, size=1, prob=px)</code>. Since I draw thousands of samples this way, simulating the distribution is really computationally heavy and is discrete even though it should be continuous.</p>
+
+<p>Specifically, I'm writing my own Gibbs sampler to infer which means and standard deviations could have caused a vector of observations (bayesian inference). I sample from the distribution made up of likelihood * prior. Here's a minimal example of the loop-in-loop version I'm currently doing:</p>
+
+<pre><code># values to assign posterior probabilities to. here 1000 values are used to simulate continuity.
+mu.x = seq(from=0.001, to=20, length.out=1000)
+
+# the likelihood distribution which will be called for varying mu and a fixed sigma and fixed D.
+likelihoodMu =    function(mu, sigma, D) mu.likelihood = ((2 * pi * sigma^2) ^ (-length(D) / 2)) * exp(-1 / (2 * sigma^2) * sum((D - mu)^2))
+
+# will collect samples
+mySamples = rep(NA, length(mu.x))
+
+# Draw 5000 samples
+for(i in 1:5000) {
+   # Loop over mu.x and get likelihood for each value
+   mu.likelihoodDistribution = sapply(mu.x, likelihoodMu, sigma=2, D=c(1,2,3))
+
+   # Draw a sample from the likelihood distribution calculated above
+   mySample = sample(mu.x, size=1, prob=mu.likelihoodDistribution)
+}
+</code></pre>
+
+<p>I'm looking for a way to sample directly from the likelihood function in R instead of going through the discrete and computationally heavy seq-sapply-sample simulation. In the example above, something like sample('mu', FUN=likelihoodMu, sigma=2, D=c(1,2,3), size=1) would be nice. It should preferably be general, as I'm sampling from different kinds of distributions.</p>
+"
+"0.219717687201021","0.215308188172303"," 89394","<p>Chapter 11 of <a href=""http://jsresearch.net/"" rel=""nofollow"">Introduction to Data Science</a> is about Poisson distributions.</p>
+
+<p>One example sample has 58638 observations out of 100000 with a value less than or equal to 10.</p>
+
+<pre><code>&gt; sum(rpois(100000, lambda=10)&lt;=10)
+[1] 58638
+</code></pre>
+
+<p>I think I can read that as ""a 0.58638 probability that values observed from this distribution are 10 or less"".</p>
+
+<p>I'm comfortable with the fact that this is close to the theoretical probability, but not exactly the same.</p>
+
+<p>The book says R can show us how much variation there is around these probabilities using the R function <code>poisson.test</code>.</p>
+
+<pre><code>&gt; poisson.test(58638, 100000)
+
+    Exact Poisson test
+
+data:  58638 time base: 1e+05
+number of events = 58638, time base = 1e+05, p-value &lt; 2.2e-16
+alternative hypothesis: true event rate is not equal to 1
+95 percent confidence interval:
+ 0.5816434 0.5911456
+sample estimates:
+event rate 
+   0.58638 
+</code></pre>
+
+<p>The book's explanation confuses me. I've highlighted the part I don't get.</p>
+
+<blockquote>
+  <p>For 95% of the samples that we could generate using rpois(), using a sample size of 100,000, and a <strong>desired mean of 10</strong>, we will get a result that lies between 0.5816434 and 0.5911456</p>
+</blockquote>
+
+<p>It's confusing because I didn't tell the function that the desired mean is 10. How does it know? What if my desired mean is 3, like here?</p>
+
+<pre><code>&gt; sum(rpois(100000, lambda=3)&lt;=10)
+[1] 99970
+</code></pre>
+
+<p>When I set lambda (the mean) to 3, clearly there are a lot more observation with a value less than 10. How is the test relevant here?</p>
+"
+"NaN","NaN"," 91687","<p><img src=""http://i.stack.imgur.com/0jywZ.png"" alt=""enter image description here""></p>
+
+<p>I am trying to fit a model for the values plotted above. The explanatory variable represents amounts of compensation claim in an earthquake, and the response variable represents amounts of compensation awarded. Can someone tell me what probability distributions would be my possible options for these data? Thanks in advance.</p>
+"
+"0.16609095970748","0.162757691754232"," 92395","<p>The recent question ""<a href=""http://stats.stackexchange.com/questions/91631/why-does-my-bootstrap-interval-have-terrible-coverage"">Why does my bootstrap interval have terrible coverage?</a>"" has got me wondering if anybody has some really good examples of distributions in which bootstrapping standard errors systematically outperforms classic estimators (I am not sure what the right terminology for the classic set of estimators... perhaps moment approximation estimators?).</p>
+
+<p>In order to respond to the comment that bootstrapped estimators might be less biased by <a href=""http://stats.stackexchange.com/users/35131/ben-ogorek"">Ben Ogorek</a>, I have also modified the code (originally posted by <a href=""http://stats.stackexchange.com/users/13818/flounderer"">Flounderer</a>) to include an estimate of bias and mean squared error.  After repeating the simulation 10,000 times, it appears to me that the mean squared errors are statistically identical.</p>
+
+<p>Thanks for your consideration in this matter!</p>
+
+<pre><code>tCI.total &lt;- 0
+bootCI.total &lt;- 0
+m &lt;- 10 # sample size
+
+Trep &lt;- 10000 # number of repetitions of the proceedure
+Brep &lt;- 1000 # number of repetitions of the bootrap
+
+sampv &lt;- mbootv &lt;- rep(0,Trep)
+
+true.mean &lt;- exp(2) + 1
+
+# Clear the coverage index values.
+tCI.total &lt;- bootCI.total &lt;- 0
+
+for (i in 1:Trep){
+  samp &lt;- exp(rnorm(m,0,2)) + 1
+  sampv[i] &lt;- mean(samp)
+
+  tCI &lt;- mean(samp) + c(1,-1)*qt(0.025,df=9)*sd(samp)/sqrt(m)
+
+  boot.means &lt;- rep(0,Brep)
+  for (j in 1:Brep) boot.means[j] &lt;- mean(sample(samp,m,replace=T))
+
+  mbootv[i] &lt;- mean(boot.means)
+
+  bootCI &lt;- sort(boot.means)[c(0.025*length(boot.means), 0.975*length(boot.means))]
+
+  if (true.mean &gt; min(tCI) &amp; true.mean &lt; max(tCI)) tCI.total &lt;- tCI.total + 1
+  if (true.mean &gt; min(bootCI) &amp; true.mean &lt; max(bootCI)) bootCI.total &lt;- bootCI.total + 1 
+}
+tCI.total/Trep     # estimate of t interval coverage probability
+# 0.5634
+bootCI.total/Trep  # estimate of bootstrap interval coverage probability
+# 0.5416
+
+# Let's look at bias esimate for the sample mean and the bootrapped population mean estimate
+(true.mean - mean(mbootv)) # bias estimate of bootstrapped means
+# 0.170623
+(true.mean - mean(mbootv))^2 + sd(mbootv)^2 # mean squared error of bootstrapped means
+# 198.5914
+
+(true.mean - mean(sampv))  # bias estimate of sample means
+# 0.170475
+(true.mean - mean(sampv))^2 + sd(sampv)^2 # mean squared error of sample means
+# 198.4912
+</code></pre>
+"
+"0.24913643956122","0.244136537631348"," 94089","<p>I started to use the function <code>multinom</code> of <code>R</code> package <code>nnet</code> in order to fit several conditional probability distributions with the multinomial logistic model. I need the parameters of the fittings in order to pass them to a Java program, which will compute the probabilities and use them.</p>
+
+<p>My problem is that the probabilities computed with the parameters returned by <code>multinom</code>, following the usual <a href=""http://en.wikipedia.org/wiki/Multinomial_logistic_regression#As_a_set_of_independent_binary_regressions"" rel=""nofollow"">definition</a> of multinomial logistic model, are not the same as those directly computed in <code>R</code>, which are the correct ones. On Stack Overflow I have already asked a <a href=""http://stackoverflow.com/questions/22905807/how-does-the-function-multinom-from-r-package-nnet-compute-the-multinomial-proba"">question</a> about this issue, but I do not still know how the <code>R</code> function <code>multinom</code> computes these probabilities; my guess is that it relies on neural networks, since this function belongs to <code>R</code> package <code>nnet</code>, but I do not have any idea about the details, and an inspection of the code led to nowhere.</p>
+
+<p>Do you know an <code>R</code> package which fits conditional probabilities and returns the corresponding parameters of the model, so that we may easily compute the probabilities in another program? E.g., using the MARS model (<code>R</code> package <code>earth</code>) or Projection Pursuit Regression (<code>R</code> package <code>ppr</code>) is not feasible, since computing the probabilities from the parameters of these models would be a mess. Besides, the function <code>mlogit</code> from the <code>R</code> package with the same name is not applicable as well, since the dataset should be in a certain format (we would also need the predictors corresponding to the alternative, ""non-chosen"" response variable).</p>
+"
+"0.219717687201021","0.215308188172303"," 99935","<p>I understand that the probability density function, pdf, of a continuous random variable is the probability of the variable taking on a given value. I also thought that for a continuous random variable, the probability of it taking a specific value is always 0 i.e. P(X=x) = 0.</p>
+
+<p>Therefore, in R, I am wondering what does </p>
+
+<blockquote>
+  <p>dnorm(0)</p>
+</blockquote>
+
+<p>compute?</p>
+
+<p>I know it means the probability of obtaining a 0 from a normal distribution (which is one of the distributions a continuous random variable can take) with mean 0 and standard deviation 1. I had expected the output to be 0, since I am asking for the probability of a continuous random variable taking on a specific value. However, the output is 0.3989.</p>
+
+<p>What does 0.3989 represent and why isn't the output 0?</p>
+"
+"0.16609095970748","0.162757691754232","103296","<p>My question is almost identical to <a href=""http://stats.stackexchange.com/questions/41241/is-there-a-distribution-appropriate-for-a-continuous-variable-skewed-toward-zero"">this one</a>. Im searching for a probability distribution for skewed data that allows for zeros. The purpose is to fit a GLM model. My data on species-area distributions are heavy right skewed. Additional variables are ""partitioned area"" according to latitude- so area in tropical and temperate zones, thus the data now includes zeros. </p>
+
+<p>So my question is; is there a probability distribution, e.g. similar to the log-normal, but which allows for zeros?  </p>
+
+<p>Any pointers would be highly appreciated, thanks!</p>
+
+<p><strong>UPDATE</strong> </p>
+
+<p>Histograms of my area data</p>
+
+<p><img src=""http://i.stack.imgur.com/eNLv0.jpg"" alt=""enter image description here""></p>
+"
+"0.185695338177052","0.18196863131171","111077","<p>I'm trying to gain a better understanding of how null hypothesis testing works. </p>
+
+<p>I have 3 questions related to the code below:</p>
+
+<ol>
+<li><p>Am I right in saying the probability of each t value in <code>t_distribution</code> should follow the tables of critical values for t distributions found in statistical text books?</p></li>
+<li><p>If yes, how using R code, can I show <code>t_distribution</code> follows the tables of critical values  for t distributions found in statistical text books</p></li>
+<li><p>Who exactly made the tables of critical values for t distributions found in statistical text books?</p></li>
+</ol>
+
+<h1>make 2 populations with (almost) zero difference</h1>
+
+<pre><code>population1 &lt;- rnorm(10000, 3, 2)
+population2 &lt;- rnorm(10000, 3, 2)
+</code></pre>
+
+<h1>sample 100 values from each population</h1>
+
+<pre><code>library(plyr)
+population1_5000_samples &lt;- llply(1:5000, function(x) sample(population1, 100, replace = F))
+population2_5000_samples &lt;- llply(1:5000, function(x) sample(population2, 100, replace = F))
+</code></pre>
+
+<h1>do 5000 t-tests and extract t values</h1>
+
+<pre><code>t_distribution &lt;- laply(1:5000, function(x) t.test(population1_5000_samples[[x]], population2_5000_samples[[x]])$stat)
+</code></pre>
+
+<h1>distribution of t values</h1>
+
+<pre><code>library(ggplot2)
+ggplot(as.data.frame(t_distribution), aes(t_distribution)) + geom_histogram()
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/FrODv.jpg"" alt=""enter image description here""></p>
+"
+"0.262612865719445","0.257342506327489","112631","<p>As a part of my <em>exploratory data analysis (EDA)</em> prior to further analysis, I'm trying to determine a <em>probability distribution</em> of my pilot dataset's variables. A particular feature of this dataset is a significant share of <strong>missing values</strong>. I partially alleviated this problem by performing <em>multiple imputation (MI)</em>, using <code>Amelia</code> R package. The MI process resulted in reduction of missing values from 98% to 31%. If it's important, further analysis includes EFA, CFA and SEM-PLS modeling.</p>
+
+<p>I have several <strong>questions</strong> in this regard. First, and, probably, main, question is: What is the correct (or optimal) approach to distribution fitting in terms of using parametric versus non-parametric methods? Another question is: Does it makes sense to combine both approaches for validation? The final question is: How presence of missing data influences approaches for distribution fitting?</p>
+
+<p>The following are some of my <strong>thoughts</strong>, based on reading relevant discussions on <em>CrossValidated</em>. I apologize in advance, if they (thoughts) don't display high level of statistical rigor, as I'm not a statistician, but software developer turned social science researcher and aspiring data scientist.</p>
+
+<p>In his answer to <a href=""http://stats.stackexchange.com/questions/78349/determining-distribution-of-a-set-of-ordered-numbers"">this</a> question, @Glen_b suggests that, given large sample, non-parametric approach is easier and better, or, at least, not worse. However, it's not clear to me whether this rule of thumb has any ""contraindications"", so to speak. It is also not clear what is the consensus, if any, in regard to usefulness of performing <strong>automatic</strong> or semi-automatic process of distribution fitting.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/58220/what-distribution-does-my-data-follow"">this</a> great discussion, @Glen_b demonstrates investigating real data distribution via applying some <strong>transformations</strong>. In this regard, if the distribution is not multimodal, but just heavily skewed, it's not clear whether it makes sense to determine data distribution versus simply transforming data to conform normal distribution, using <em>Box-Cox transformation</em>.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/12787/how-do-i-determine-how-well-a-dataset-approximates-a-distribution"">this</a> discussion, @jpillow recommends, along with using <em>Q-Q plots</em>, <em>Kolmogorov-Smirnov</em> statistical test. However, in his <a href=""http://cran.r-project.org/doc/contrib/Ricci-distributions-en.pdf"" rel=""nofollow"">paper</a> ""Fitting distributions with R"", Vito Ricci states (p. 19): ""Kolmogorov-Smirnov test is more powerful than chi-square test when sample size is not too great. For large size sample both the tests have the same power. The most serious limitation of Kolmogorov-Smirnov test is that the distribution must be fully specified, that is, location, scale, and shape parameters canâ€™t be estimated from the data sample. Due to this limitation, many analysts prefer to use the Anderson-Darling goodness-of fit test. However, the Anderson-Darling test is only available for a few specific distributions."" Then, there are <em>Shapiro-Wilk</em> and <em>Lilliefors</em> tests. Then there is the above-mentioned <em>chi-square</em> test, which can be applied to non-continuous distributions. Again, I'm rather confused in terms of <em>decision-making process</em> for selecting tests that I should use.</p>
+
+<p>In terms of <strong>distribution fitting (DF)</strong>, I have discovered several R packages, in addition to the ones mentioned in the paper by Ricci and elsewhere, such as 'fitdistrplus' (<a href=""http://cran.r-project.org/web/packages/fitdistrplus"" rel=""nofollow"">http://cran.r-project.org/web/packages/fitdistrplus</a>) for <em>non- and parametric DF</em> and 'kerdiest' (<a href=""http://cran.r-project.org/web/packages/kerdiest"" rel=""nofollow"">http://cran.r-project.org/web/packages/kerdiest</a>) for <em>non-parametric DF</em>. This is an FYI, for people who haven't heard about them and are curious. Sorry about the long question and thank you in advance for your attention!</p>
+"
+"0.275430697209874","0.269903097646554","113145","<p>I am trying to estimate parameters and latent variables in a split Poisson model that describes observable and unobservable counts in time assuming the split probability is $\pi$. An observable event in time is denoted as $O_t$ while an unobservable event is denoted $U_t$. The distributions of $O_{t+1}$ and $U_{t+1}$ are assumed to follow the conditional distribution:</p>
+
+<p>$O_{t+1}|O_{t},U_{t}$ ~  Poisson$[\pi(\mu_{t}O_{t}+\mu U_{t})]$ </p>
+
+<p>$U_{t+1}|O_{t},U_{t}$ ~  Poisson$[(1-\pi)(\mu_{t}O_{t}+\mu U_{t})]$</p>
+
+<p>$\mu$ and $\mu_r$ are type specific rates  where $\mu_{t} = \mu$ if $t \le C$ and $\mu_t = \mu_r$ if $t \gt C$; $t=1,2,\ldots,C-1 , C, C+1, \ldots,N$.</p>
+
+<p>Data is available for all $O_t$. Each latent variable $U_t$ is to be updated using the relation above and assuming that $U_{t} = 0$. It is desired to estimate parameters $\pi$, $\mu$, $\mu_r$ and the latent variables $U_{t}$ for all $t$. Bayesian method is chosen to carry out these estimations and my code is given below:</p>
+
+<pre><code>    library(R2jags)
+    # sample observable data for 30 time points
+    o &lt;- c(1, 1, 2, 11, 15, 30, 60, 46, 60, 54, 51, 44, 27, 20, 16, 10, 7, 7, 4, 4, 6, 10, 8, 10, 2, 4, 4, 1, 0, 0)
+    # setting the input for jags model function
+    oo &lt;- data.frame(o)
+    datain &lt;- as.list(oo)
+    datain$n &lt;- nrow(oo)
+    datain$C &lt;- C
+    model &lt;- function() {
+        u[1] &lt;- 0    #bringing in the data through loop and minding the rate conditions
+        for (i in 2:C) {
+            o[i]~dpois(pi*(mu*o[i-1]+mu*u[i-1]))
+        }
+        for (i in (C+1):n){
+            o[i]~dpois(pi*(mur*o[i-1]+mu*u[i-1]))
+        }
+        pi~dunif(0,1)     # setting non-informative priors
+        mu ~ dunif(0,10)
+        mur ~ dunif(0,1)
+
+        for(j in 2:C){    # the priors for the latent variable are updated via the conditional relation
+            u[j]~dpois((1-pi)*(mu*o[j-1]+mu*u[j-1]))
+        }
+        for(j in (C+1):n){
+            u[j]~dpois((1-pi)*(mur*o[j-1]+mu*u[j-1]))
+        }
+
+    }
+
+    parameters &lt;- c('pi','mu','mur','u[10]','u[15]','u[20]') # usually we obtain distribution for all latent variables but only decide to choose these three.
+    jagsfit &lt;- jags(datain, model=model,parameters=parameters,
+            n.chains=2,n.iter=5000000,n.burnin=100000,n.thin=5000)
+    jagsfit
+                  mu.vect     sd.vect         2.5%          25%          50%                  75%
+    u[10]    1.402007e+04    2037.291 1.103313e+04 1.213150e+04 1.397350e+04 1.561675e+04
+    u[15]    1.251555e+06  130601.609 1.055833e+06 1.132489e+06 1.251471e+06 1.352963e+06
+    u[20]    1.136881e+08 7039334.938 1.028741e+08 1.072936e+08 1.138424e+08 1.191725e+08
+    mu       2.466000e+00       0.021 2.431000e+00 2.449000e+00 2.465000e+00 2.485000e+00
+    mur      1.860000e-01       0.157 8.000000e-03 6.500000e-02 1.470000e-01 2.570000e-01
+    pi       0.000000e+00       0.000 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
+    deviance 1.512097e+04     143.825 1.487507e+04 1.499773e+04 1.510491e+04 1.524422e+04
+                    97.5%  Rhat n.eff
+    u[10]    1.771087e+04 0.998   200
+    u[15]    1.488133e+06 0.997   200
+    u[20]    1.262587e+08 0.998   200
+    mu       2.499000e+00 0.997   200
+    mur      6.220000e-01 1.004   200
+    pi       0.000000e+00 1.001   200
+    deviance 1.534904e+04 0.997   200
+</code></pre>
+
+<p>I simulated the observed data above by fixing parameters and writing function below:</p>
+
+<pre><code>    set.seed(123)
+    C =7;mu=2;mur =0.4;pi=0.7
+    o &lt;- numeric(); u &lt;- numeric()
+    o[1] &lt;- 1; u[1] &lt;- 0
+    f &lt;- function(){
+        for(i in 2:30){
+            if(i &lt;= C){
+        o[i] &lt;&lt;- rpois(1,pi*(mu*o[i-1]+mu*u[i-1]))
+        u[i] &lt;&lt;- rpois(1,(1-pi)*(mu*o[i-1]+mu*u[i-1]))
+    }else{
+        o[i] &lt;&lt;- rpois(1,pi*(mur*o[i-1]+mu*u[i-1]))
+        u[i] &lt;&lt;- rpois(1,(1-pi)*(mur*o[i-1]+mu*u[i-1]))
+    }
+}
+return(list(o,u))
+}
+
+f()
+</code></pre>
+
+<p>In this case, the unobservable is:</p>
+
+<pre><code>u &lt;- c(0, 1, 3, 0, 7, 12, 31, 32, 26, 20, 22, 15, 13, 8, 4, 2, 4, 4, 3, 4, 4, 4, 5, 5, 4, 2, 1, 0, 0, 0)   
+</code></pre>
+
+<p>I want to recover the parameters and the latent variables back but the results I got were not OK and was thinking I have mis-specified some of the distributions. Can anyone please help look this problem? Thanks!</p>
+"
+"0.423741253887683","0.430616376344605","123123","<p>Say someone who is well practiced (appears to have reached a performance plateau) shoots 20 free throws on 15 different days and is successful the number of times shown in the upper histogram (<code>dat</code> in the code). </p>
+
+<ol>
+<li><p>My understanding is that the distribution of outcomes should be predicted by the binomial distribution. Is this correct?</p></li>
+<li><p>The expected variance is $np(1-p)$, where $n = 20$ (the number of trials per session) and $p = {\rm mean}/n =.65$ or the average percent of successes.</p></li>
+<li><p>I could not figure out how to theoretically calculate the distribution of <em>sample variances</em>, so ran a Monte Carlo simulation. These results are shown in the lower panel. the mean of these variances matches with the theoretical expected variance, but the variance of the data is much less.</p></li>
+</ol>
+
+<p><strong>R code:</strong></p>
+
+<pre><code>dat  &lt;- c(12,12,13,12,13,12,12,14,13,13,14,13,14,13,14)
+n    &lt;- 20
+p    &lt;- mean(dat)/n
+Nobs &lt;- length(dat)
+
+sim.vars = matrix(nrow=10000)
+for(s in 1:10000){
+  sim.vars[s] &lt;- var(rbinom(Nobs, n, p))
+}
+par(mfrow=c(2,1))
+hist(dat,      breaks=seq(0,20,by=1))
+hist(sim.vars, breaks=20)
+
+
+&gt; var(dat)       # Variance of Data
+[1] 0.6380952
+&gt; n*p*(1-p)      # Expected Variance given binomial model
+[1] 4.569778
+&gt; mean(sim.vars) # Mean of simulated sample variances
+[1] 4.542159
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/1arqJ.png"" alt=""enter image description here""></p>
+
+<p>@Whuber, I hit enter when the cursor was outside the text box and it submitted before completing the question. I apologize. The first thing I wanted to know if I have made some error anywhere in my thinking (choice of binomial model, simulation, calculation), which your comment suggests I have not. </p>
+
+<p>The second is what processes could possibly generate such data? I have >30 like this from multiple sources, so it is probably not data entry error or made up data. The actual task is not shooting free throws but you can take my word that it really is an equivalent situation. </p>
+
+<p>This peculiarity of the data has not been noted previously. Others have interpreted such data as representing the max performance level achieved, and compared group averages under different conditions. Difference between individuals have been interpreted as differences in skill level, somehow related to neurological characteristics. As far as I can tell, this interpretation (as plateau/ asymptote/ max performance) implies sampling from a binomial distribution, which is really inconsistent with the underdispersion.</p>
+
+<p>An analogous situation would be someone flipping a coin 20 times and always getting 9/10/11 heads. This is too consistent. The only mechanism I have thought of is introducing negative correlation between consecutive trials. Something like:</p>
+
+<pre><code>if(dat[t-1]=success){ p=0 }else{ p=0.95 } # Arbitrary probs used for example
+dat[t]=sample(c(miss,success),1,prob=c(1-p,p))
+</code></pre>
+
+<p>What other processes could result in this underdispersion? The literature on underdispersion appears to be very sparse. I found it consists mostly of simply finding distributions that can fit such data that lack any clear physical interpretation. That type of analysis is not of interest to me here. Perhaps I missed something due to using inappropriate terminology?</p>
+
+<p><strong>Edit2:</strong>
+@whuber In response to your second comment: It really is just like the free throws, almost any explanation that works for that will also apply. An exception is that a person may purposefully miss on the free throw task to maintain a certain score, while that is implausible here. </p>
+
+<p>The task requires motor coordination to attain a goal. A success requires performing a sequence of movements in the correct order, each in the correct fashion (of course with some level of variation). There may also be multiple strategies that can yield success with different/same probability (ie underhand vs overhand shots). It is possible these are used in different trials by the same subject. Unfortunately, the only data available is number of successes per session (20 trials). </p>
+
+<p>I do not think I am looking for ""ways to construct probability models of underdispersed phenomena"", at least not in general. I am not interested in only describing the data, rather for a process that can result in this type of data. The goal is to elucidate what may actually be being measured here if not max/asymptotic/plateau performance level.</p>
+
+<p>To clarify what I mean by ""process"", I am thinking that a monte carlo simulation can be created using some combination of if/then statements and (possibly multiple per trial) samples of correct/incorrect actions, states, and/or events that occur with various probabilities. However, there may be other ways of modeling this.</p>
+
+<p><strong>Edit3:</strong>
+@gung I do not think we will be able to <em>identify</em> a process/mechanism from this data alone, but we can hypothesize a few consistent with the data. These will then make predictions regarding other/more detailed measurements (eg trial-to-trial scores) before running the study. This is useful because it suggests what it is important to look for and record when performing the experiments.</p>
+
+<p>I thought of another possible mechanism. The model below simulates a situation where the subject is ""satisfied"" after a threshold # of successes (here thresh=12). The output shown had variance=0.495. If this model were accurate, rather than performance, these experiments appear to measure some kind of motivation threshold. This would be completely different than measuring a skill level, and really alter how these results are interpreted. However, this model predicts many more successes at the beginning of the session than the end. While I do not have actual data recorded regarding this, the prediction is inconsistent with my memory/impression of what unfolded. If anything, I suspect the opposite would be true.</p>
+
+<p>I am looking for further ideas on what the explanation may be as I could not find any hints in the literature.</p>
+
+<pre><code>p.motivated=.9; p.unmotivated=.1; n=20; thresh=12; sessions=15
+results&lt;-matrix(nrow=sessions)
+for(s in 1:sessions){
+  session.dat&lt;-matrix(nrow=n,0)
+  for(t in 1:n){
+    if(sum(session.dat)&lt;thresh){
+      session.dat[t]&lt;-sample(c(0,1),1,prob=c(1-p.motivated,p.motivated))
+    }else{
+      session.dat[t]&lt;-sample(c(0,1),1,prob=c(1-p.unmotivated,p.unmotivated))
+    }
+  }
+  results[s]&lt;-sum(session.dat)
+}
+
+hist(results,breaks=seq(0,20,by=1))
+var(results)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/QbkrR.png"" alt=""enter image description here""></p>
+"
+"0.12456821978061","0.162757691754232","133910","<p>I'm working with the <a href=""http://cran.r-project.org/web/packages/mclust/mclust.pdf"" rel=""nofollow"">mclust</a> package in R (specifically using <code>densityMclust</code>). As output, I have a file with mixing probabilities, variances, and means for each normal distribution. The general format is:</p>
+
+<pre><code>foo prob1 var1 mean1 prob2 var2 mean2...
+foo2 prob1 var1 mean1 prob2 var2 mean2...
+</code></pre>
+
+<p>for as many normal distributions as I can force.</p>
+
+<p>This is all I have; I don't even have access to the actual raw data. My goal is to identify relative maximas (peaks). Would I go about doing this by finding the largest means?</p>
+
+<p>I have a few more questions: </p>
+
+<ol>
+<li><p>I'm having trouble understanding what exactly a mixing probability is. If anyone could please direct me to a resource that I couldn't find, I'd really appreciate it.</p></li>
+<li><p>Since I only have the 3 data types listed above, how would I find standard deviation values without the range of raw data values?</p></li>
+<li><p>And also any better description for a Gaussian finite mixture model than mine: forces data into multiple bell curves...?</p></li>
+<li><p>Why are these mixture models called unsupervised learning? All the explanations I bumped into online were way too technical for me.</p></li>
+<li><p>As shown in the data above, I often have >2 peaks. However I'm only concerned with the first two. Can I ignore the rest and safely call that part a bimodal distribution?</p></li>
+</ol>
+"
+"0.143838990445615","0.140952295720482","146491","<p>I am trying to create a ""custom distribution"" in R based on historical data. </p>
+
+<p>More specifically, I have some 10 years of daily stock price and P/E data. What I want is to pull that data into R, create a custom distribution (in other words, find the probability of each P/E, without relying on any predetermined distribution function....much like creating custom distributions in Oracle Crystal Ball) and then use the resulting distribution for further analyses.</p>
+
+<p>Is there a way to do that in R?</p>
+"
+"0.143838990445615","0.140952295720482","149920","<p>I have 240 samples and their relative frequencies (calculated from empirical observations), hence I have the probability distribution. It looks like this (hypothetical values):</p>
+
+<pre><code>Sample    Number Of Occurrences    Probability
+----------------------------------------------
+  1               19                 0.00001 = 19/sum(occurrences)
+  2               1200               0.02
+ ...              ...                ...
+ 240              345                0.0003
+</code></pre>
+
+<p>How can I determine which distribution (beta, exponential, ...) fits my data the best and with which parameters? Or, on a higher level, how can I inspect my distribution and draw interesting conclusions about other distributions? I mean, I can plot the probabilities of the samples, but what else?</p>
+
+<p>I already came across this post but it doesn't really answer the question: <a href=""http://stats.stackexchange.com/questions/28292/does-my-data-come-from-a-gamma-or-beta-distribution"">Does my data come from a gamma or beta distribution?</a></p>
+
+<p>I am working with R so any information with regard to that is also very helpful.</p>
+"
+"0.219717687201021","0.215308188172303","156883","<p>What is the difference between the density and probability?</p>
+
+<p>I have tried R in which I can use both <code>pnorm</code> and <code>dnorm</code> for the normal distribution and <code>pbinom</code> and <code>dbinom</code> for the binomial distribution, etc.</p>
+
+<p>I have tried reading the documentation but I don't think it's quite clear what the difference is between those two functions. I know that <code>pnorm(x)</code> gives me $P(X \leq x)$.</p>
+
+<p>My guess is that the density is the value of $f(x)$ while the probability is $\int_\infty^x f(x) \, \mathrm{d}x$. If this is correct, I don't understand what the value of $f(x)$ gives me of information since only the area under the function gives me the probability.</p>
+
+<p>I know that the interesting values are pdf=probability density function and cdf=cumulative density function. So maybe the pdf is the value from <code>dnorm</code> and is the area at a specific x while cdf is the value from <code>pnorm</code> and is the area from $\infty$ to the specific x. But I have learned that you cannot get the probability at a specific $x$ in continuous distributions so that explanation does not make sense.</p>
+"
+"0.143838990445615","0.140952295720482","159700","<p>I need to check for goodness of fit using K-S test in R. I have a dataset (containing 50 data points) and a non-standard continuous probability distribution. Should I peform a one-sample or two-sample test ? In case of one sample test, I don't know if R allows non-standard probability distributions as one of the arguments in ks.test function. If R does allow, I'd like to know how to go about writing the code. If I need to perform a two sample test, then what should be the two datasets that I need to provide as arguments in ks.test function. Also, in both cases, do I have to specify or consider fixed values of the parameters of the distribution ? Is the choice arbitrary ?</p>
+"
+"0.16609095970748","0.162757691754232","166417","<p>I'm trying to generate a sample from a family of distributions. In particular I would like to be able to obtain a sample from the survival function:</p>
+
+<p>$$1-F(x) = c x^{-a}  \log^b(x)$$
+with a proper domain so that F is defined and it is a survival function, from different values of $c$, $b$ and $a$.</p>
+
+<p>For example:
+$$1-F(x) \approx  \tfrac{\log(x)}{x^2}, x&gt;\sqrt{e}$$</p>
+
+<p>Roughly speaking I need a function $F$ such that the distribution is heavy tailed and behaves like $1-F(x) = c x^{-a}  \log^b(x)$, as $x$ goes to $+ \infty$.</p>
+
+<p>I've tried many ways, because I found several examples:</p>
+
+<ul>
+<li>1 <a href=""http://stats.stackexchange.com/questions/12843/generating-random-samples-from-a-custom-distribution"">Generating random samples from a custom distribution</a></li>
+<li>2 <a href=""http://stackoverflow.com/questions/16134786/simulate-data-from-non-standard-density-function"">http://stackoverflow.com/questions/16134786/simulate-data-from-non-standard-density-function</a></li>
+<li>3 <a href=""http://stackoverflow.com/questions/23570952/simulate-from-an-arbitrary-continuous-probability-distribution"">http://stackoverflow.com/questions/23570952/simulate-from-an-arbitrary-continuous-probability-distribution</a></li>
+<li>4 <a href=""http://stackoverflow.com/questions/20508400/generating-random-sample-from-the-quantiles-of-unknown-density-in-r"">http://stackoverflow.com/questions/20508400/generating-random-sample-from-the-quantiles-of-unknown-density-in-r</a></li>
+<li>5 <a href=""http://stackoverflow.com/questions/1594121/how-do-i-best-simulate-an-arbitrary-univariate-random-variate-using-its-probabil"">http://stackoverflow.com/questions/1594121/how-do-i-best-simulate-an-arbitrary-univariate-random-variate-using-its-probabil</a></li>
+</ul>
+
+<p>But anytime, even for the simplest function with $b=1$ and $a=2$ errors come out. I think it's because maybe, due to the log, some algorithms work with all real numbers and cannot be confined to positive numbers.</p>
+
+<p>Which is the easiest way for a pdf/cdf with a log in it? Is it difficult due to the fact that it's hard to invert the function <code>xlogx</code>?</p>
+
+<p>If I have to use some of the previous methods I can show you my achivements and where I got stuck!</p>
+
+<p>EDIT 1
+Thanks to <code>whuber</code> I succeded in building the code, here you are:</p>
+
+<pre><code># Simulating data from G(x) = 1-F(x) = c * x^(-a) * (log(x))^b
+# Case: b &gt; 0
+pxlog &lt;- function(x, a=5, b=2, c=(a*exp(1)/b)^b) {((1-c*x^(-a)*(log(x))^b))}                 # G
+dxlog &lt;- function(x, a=5, b=2, c=(a*exp(1)/b)^b) {c*(x^(-1-a))*((log(x))^(-1+b))*(-b+a*log(x))}
+qxlog &lt;- function(y, a=5, b=2, c=(a*exp(1)/b)^b) {exp(-(b/a)*lambert_Wm1(-(a/b)*((1-y)/c)^(1/b)))}   # inversa di G
+
+# Domain for the functions: x &gt; exp(b/a)
+
+# Generating Samples
+rxlog &lt;- function(n, a=5, b=2, c=(a*exp(1)/b)^b) qxlog(runif(n),a,b,c)
+
+# Testing Samples
+hist(rxlog(10000, 2, 10), breaks=50, freq = F, col=""grey"", label=F)
+curve(dxlog(x, 2, 10), exp(10/2), add= TRUE, col=""red"")
+</code></pre>
+
+<p>The result is that it works... almost! If I use values of $b$ greater than $a$, or in general, if $b-a&gt;-1$, fitting density/histogram creates problem.</p>
+
+<p>For example $a=2, b=10$
+<a href=""http://i.stack.imgur.com/9wCGO.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/9wCGO.jpg"" alt=""enter image description here""></a></p>
+
+<p>or with $a=3, b=4$ (adjusting the breaks in hist)</p>
+
+<p><a href=""http://i.stack.imgur.com/SqZZw.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/SqZZw.jpg"" alt=""enter image description here""></a></p>
+
+<p>Which is the problem? And second question, how can I include, if it's possible, the domain information about $F$ in the definition of $F$ itself?
+Thanks!</p>
+
+<p>EDIT 2 For $b&gt;0$ the distribution I'm looking for can be assumed as the log gamma distribution. You can find it in the <a href=""https://cran.r-project.org/web/packages/actuar/index.html"" rel=""nofollow"">Actuar</a> library in R. Testing ""my"" distribution (the one with the code in EDIT 1) with that one there are some differences... but I think that it's just because I've made some mistakes!</p>
+"
+"0.203419051086243","0.199336648255529","169697","<h3>Problem</h3>
+
+<p>I would like to do some inference on a system analogous to die with an unknown number of sides. The die is rolled several times, after which I would like to infer a probability distribution over a parameter corresponding to the number of sides the die has, &theta;.</p>
+
+<h3>Intuition</h3>
+
+<p>If after 40 rolls you had observed 10 red's, 10 blues's, 10 greens's and 10 yellows's, it seems that &theta; should peak at 4, and the biases of rolling each side are distributions centred on 1/4.</p>
+
+<p>&theta; has a trivial lower bound, being the number of different sides observed in the data.</p>
+
+<p>The upper bound is still unknown. There could be a fifth side which would probably have a low bias. The more data you observe lacking a fifth category, the higher the posterior probability of &theta; = 4.</p>
+
+<h3>Approach</h3>
+
+<p>I've used JAGS for similar problems (via R and rjags) which seems appropriate here.</p>
+
+<p>With respect to the data, lets say <code>obs &lt;- c(10, 10, 10, 10)</code> to correspond to the observations in the example above.</p>
+
+<p>I think the observations should be modelled with a multinomial distribution <code>obs ~ dmulti(p, n)</code>, where <code>p ~ ddirch(alpha)</code> and <code>n &lt;- length(obs)</code>.</p>
+
+<p>&theta; is linked to the number of categories implied by <code>alpha</code>, so how can I model <code>alpha</code> to encompass different possible numbers of categories?</p>
+
+<h3>Alternatives?</h3>
+
+<p>I'm pretty new to Bayesian analyses so might be barking up the wrong tree entirely, are there alternative models which might provide different insights on this problem?</p>
+
+<p>Many thanks!
+David</p>
+"
+"0.205527076830146","0.230174135059374","173511","<p>I'm trying a simple Monte Carlo example which led to some confusion about ways of generating random Geometrically distributed values in R.</p>
+
+<p>""A supercomputer is shared by 250 independent subscribers. Each day, each subscriber uses the facility with probability 0.3. The number of tasks sent by each active user has Geometric distribution with parameter 0.15, and each task takes a Gamma(10, 3) distributed computer time (in minutes). Tasks are processed consecutively. What is the probability that all the tasks will be processed, that is, the total requested computer time is less than 24 hours? Estimate this probability, attaining the margin of error Â±0.01 with probability 0.99.""</p>
+
+<p>The solution is given in pure MATLAB and I will spare you everything unrelated to my question. The Geometric distribution is calculated as</p>
+
+<pre><code>Y=ceil( log(1-rand(X,1))/log(1-q) );
+</code></pre>
+
+<p>where <code>X</code> is a Binomial variable (the number of active subscribers a given day) and <code>q</code> is the parameter to the Geometric distribution. I translated this into R as</p>
+
+<pre><code>Y &lt;- ceiling(log(1-runif(X))/log(1-q))
+</code></pre>
+
+<p>and got the expected result (~0.17) when I ran the simulation. However, as I understand it, R, unlike pure MATLAB, can generate Geometrically distributed random variables directly, like so</p>
+
+<pre><code>Y &lt;- rgeom(X, q)
+</code></pre>
+
+<p>and when I tried that instead the simulation suddenly started returning values (~0.55).</p>
+
+<p>I'm probably missing something obvious but can anyone explain what's going on here? I tried plotting the different distributions given by the expected value of X and they look similar enough but the results are obviously not equal. If any necessary details are missing tell me, and I will add them.</p>
+"
+"0.16609095970748","0.162757691754232","176806","<p>My team is studying ways to improve pharmacy chain sales by using drug coupons. Each row in our dataset, which is just a 10,000-row sample that hopefully reflects the U.S. population --- represents a transaction at a pharmacy's counter. We hope to understand how explanatory variables such as drug price <em>E</em>, along with others such as the kind of illness that a patient has or his level of insurance coverage, could enhance the effectiveness of drug coupons at reducing the probability <em>R</em> that people return a bought item. </p>
+
+<p>It is necessary for the sample and population to have similar distribution of <em>E</em> to ensure validity of statistical models linking it to <em>R</em>.  Unfortunately, there is a significant discrepancy between the frequency distributions of <em>E</em> in the U.S. population and in the sample (see summary below). In particular, a normal distribution does not seem to describe well the population distribution.</p>
+
+<p><a href=""http://i.stack.imgur.com/vSMyt.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vSMyt.png"" alt=""Population vs Sample Distributions of E""></a></p>
+
+<p>What are good things to do in <em>R</em> to make the sample's <em>E</em>-distribution more akin to the population's, hopefully to match it? I have tried filtering off sample data with low <em>E</em> values to no avail. At the same time, I am not quite sure which transformations to use since most of the common transformations attempt to fit data to a normal distribution --- which does not seem applicable here. </p>
+
+<p>I myself think that transformations (possibly including weightings) of E are permissible, deletion of rows borderline acceptable, and creation of new rows forbidden --- but I would appreciate any input on what operations are usually considered permissible in contexts similar to mine. </p>
+
+<p>Thanks for your input.</p>
+
+<p>Best,</p>
+
+<p>PDE</p>
+"
+"0.08304547985374","0.0813788458771159","177147","<p>I just discovered when working on Copulae that it was common knowledge that if $X$ is a continuous random variable with probability density function $F_{X}$, then $Y=F_{X}(x)$ follows a uniform distribution.</p>
+
+<p>Before finding the <a href=""https://en.wikipedia.org/wiki/Probability_integral_transform"" rel=""nofollow"">proof</a> online I was trying to empirically verify the above statement in R, but couldn't seem to succeed. Could someone please tell me what is wrong in my approach? In the code below I am plotting the histograms (empirical PDFs) of $10^3$ values sampled from the Normal CDF and of $10^3$ values sampled from the Cauchy CDF. Instead of observing uniform distributions, here is what I am getting:</p>
+
+<pre><code>par(mfrow=c(1,2))
+hist(pnorm(ppoints(1e3)))
+hist(pcauchy(ppoints(1e3)))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/qWWkn.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/qWWkn.png"" alt=""enter image description here""></a></p>
+
+<p>I was not expecting perfectly uniform distributions, but $10^3$ values should be enough to at least approach something that looks uniform. So what is wrong?</p>
+"
+"0.148556270541641","0.18196863131171","183772","<p>I'm learning about Probability with Binomial, Poisson and Normal Distributions. I came across some study examples on-line that ask you to do it within R. I was given 10 exercises which were:</p>
+
+<p><a href=""http://i.stack.imgur.com/KRs1G.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/KRs1G.png"" alt=""enter image description here""></a></p>
+
+<p>I did all 10 within R with this code but I have no idea if the results are correct as I don't know how to check them. My code is: </p>
+
+<pre><code>round(pbinom(5, size = 10, prob = 0.65, lower = F), 4)
+round(1 - dbinom(30, size = 100, prob = .2), 4)                 
+round(dbinom(15:30, size = 50, prob = .32), 4)
+round(dpois(6, lambda = 6) - dpois(8, lambda = 6), 4)
+round(ppois(35, lambda = 41, lower = F), 4)
+round(sum(dpois(2:5, lambda = 1)), 4)
+round(pnorm(12, mean = 7, sd = 2.5, lower = F), 4)
+round(pnorm(9.8, mean = 10, sd = 1, lower = F), 4)
+round(1 - pnorm(38, mean = 50, sd = 5, lower = F), 4)
+round(pnorm(4, mean = 5, sd = 3.6, lower = F), 4)
+</code></pre>
+
+<p>and the results I got within R are as follows:</p>
+
+<p><a href=""http://i.stack.imgur.com/KVW9N.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/KVW9N.png"" alt=""enter image description here""></a></p>
+
+<p>If anyone can indicate if my code is actually correct and I'm studying it correctly, it would really help me. Thanks.</p>
+"
+"0.188329446172303","0.184549875576259","187347","<p>I read through some other forums with the same error but have not yet been able to figure out my case. When I run the model: </p>
+
+<pre><code>y &lt;- Fairfield$incidents
+n &lt;- Fairfield$population
+N &lt;- nrow(Fairfield)
+jData &lt;- list(""y"", ""n"", ""N"")
+
+model &lt;- function()
+{
+
+for(i in 1:N)
+{
+ y[i] ~ dbin(theta[i], n[i]) #y is incidents, n is population, theta is probability
+ logit(theta[i]) &lt;- logit.theta[i] # initialize for MCMC
+ logit.theta[i] ~ dnorm(mu, inv.omega.squared) # logit to connect thetas under one hyper-parameter
+}
+inv.omega.squared &lt;- 1/pow(omega,2)
+omega ~ dunif(0,100)
+mu ~ dunif(-100,100)
+alpha[3] ~ dnorm(2*alpha[2]-alpha[1],1000000*tau.a)
+alpha[4] ~ dnorm(2*alpha[3]-alpha[2],1000000*tau.a)
+alpha[5] ~ dnorm(2*alpha[4]-alpha[3],1000000*tau.a)
+alpha[6] ~ dnorm(2*alpha[5]-alpha[4],1000000*tau.a)
+alpha[7] ~ dnorm(2*alpha[6]-alpha[5],1000000*tau.a)
+alpha[8] ~ dnorm(2*alpha[7]-alpha[6],1000000*tau.a)
+alpha[9] ~ dnorm(2*alpha[8]-alpha[7],1000000*tau.a)
+alpha[10] ~ dnorm(2*alpha[9]-alpha[8],1000000*tau.a)
+alpha[11] ~ dnorm(2*alpha[10]-alpha[9],1000000*tau.a)
+alpha[1] ~ dnorm(0,1000000*tau.a)
+alpha[2] ~ dnorm(0,1000000*tau.a)
+beta[3] ~ dnorm(2*beta[2]-beta[1],1000000*tau.b)
+beta[4] ~ dnorm(2*beta[3]-beta[2],1000000*tau.b)
+beta[5] ~ dnorm(2*beta[4]-beta[3],1000000*tau.b)
+beta[6] ~ dnorm(2*beta[5]-beta[4],1000000*tau.b)
+beta[7] ~ dnorm(2*beta[6]-beta[5],1000000*tau.b)
+beta[1] ~ dnorm(0,1000000*tau.b)
+beta[2] ~ dnorm(0,1000000*tau.b)
+gamma[3] ~ dnorm(2*gamma[2]-gamma[1],1000000*tau.g)
+gamma[4] ~ dnorm(2*gamma[3]-gamma[2],1000000*tau.g)
+gamma[5] ~ dnorm(2*gamma[4]-gamma[3],1000000*tau.g)
+gamma[6] ~ dnorm(2*gamma[5]-gamma[4],1000000*tau.g)
+gamma[7] ~ dnorm(2*gamma[6]-gamma[5],1000000*tau.g)
+gamma[8] ~ dnorm(2*gamma[7]-gamma[6],1000000*tau.g)
+gamma[9] ~ dnorm(2*gamma[8]-gamma[7],1000000*tau.g)
+gamma[10] ~ dnorm(2*gamma[9]-gamma[8],1000000*tau.g)
+gamma[11] ~ dnorm(2*gamma[10]-gamma[9],1000000*tau.g)
+gamma[12] ~ dnorm(2*gamma[11]-gamma[10],1000000*tau.g)
+gamma[13] ~ dnorm(2*gamma[12]-gamma[11],1000000*tau.g)
+gamma[14] ~ dnorm(2*gamma[13]-gamma[12],1000000*tau.g)
+gamma[15] ~ dnorm(2*gamma[14]-gamma[13],1000000*tau.g)
+gamma[16] ~ dnorm(2*gamma[15]-gamma[14],1000000*tau.g)
+gamma[17] ~ dnorm(2*gamma[16]-gamma[15],1000000*tau.g)
+gamma[1] ~ dnorm(0,1000000*tau.g)
+gamma[2] ~ dnorm(0,1000000*tau.g)
+
+tau.a ~ dgamma(.001,.001)
+tau.b ~ dgamma(.001,.001)
+tau.g ~ dgamma(.001,.001)
+}
+
+require(R2jags); invisible(runif(1))
+fit &lt;- jags(model=model, param=c(""n"",""theta"",""mu"",""omega"",""alpha"",
+""beta"",""gamma"",""tau.a"",""tau.b"",""tau.g""), 
+data=jData, n.iter=10000, n.thin=1)
+</code></pre>
+
+<p>I get the error:</p>
+
+<p>Error: Error in node gamma[2]
+Invalid parent values</p>
+
+<p>I thought the issue might be in my tau's, as other answers have involved either accidentally having 0 as a gamma parameter or landing negative values for variance in normal distributions, but I can't figure out the issue with mine. Any help is greatly appreciated, I'm not great with JAGS (or Bayesian methods in general).</p>
+
+<p>***EDIT, updated the variance (or precision, technically) in the models and still get the error.
+***EDIT 2, removed the loop and expanded, still get invalid parent error with beta[2].</p>
+"
+"0.299424735808171","0.293415601548023","187888","<p>I am taking measurements of a computer system performance over time and I'd like to understand if the performance is degrading or improving as time passes..</p>
+
+<p>After doing some research, I picked the KS test for this comparison, and I'd like to confirm whether my understanding and application of the two-sample KS test to this problem is in fact correct or if I am doing it completely wrong.</p>
+
+<p>Anyway, I have some time-series data, measuring my system response time (in milliseconds) for the months of November and December. Here are the sample results, summarised for brevity:</p>
+
+<pre><code>Label: ""December 2015""
+Samples: 3082
+Percentiles:
+   0%     10%     50%     25%     50%     75%    90%     99%    100%
+   25.0   275.0   550.0   400.0   550.0   825.0  1425.0  9242.5 12500.0
+
+Label: ""November 2015""
+Samples: 3717
+Percentiles:
+   0%   10%   50%   25%   50%   75%   90%   99%  100%
+   25   275   550   375   550   775  1425 10346 11225
+</code></pre>
+
+<p>I generate ECDFs from the histograms and plot using <code>R</code>:</p>
+
+<pre><code>ggplot(data.frame, aes(x=value)) + stat_ecdf(aes(colour=label)) ...
+</code></pre>
+
+<p>The resulted plot looks like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/Nua3Q.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Nua3Q.png"" alt=""enter image description here""></a></p>
+
+<p>From visual inspection, it is evident, that December results are generally better than November's, especially in the top quartile.</p>
+
+<p>I run a two-sample KS test on the data as follows, using different alternative hypothesis:</p>
+
+<pre><code>ks.ts &lt;- ks.test(cdf_November, cdf_December, alternative = ""two.sided"")
+ks.lt &lt;- ks.test(cdf_November, cdf_December, alternative = ""less"")
+ks.gt &lt;- ks.test(cdf_November, cdf_December, alternative = ""greater"")
+</code></pre>
+
+<p>This results in the following:</p>
+
+<pre><code>Two-sample Kolmogorov-Smirnov test
+[1] ""CDF(x) =  November 2015""
+[1] ""CDF(y) =  December 2015""
+
+Hypothesis:  two-sided (equal)
+KS-statistic (D-value) =  0.0369063
+p-value =  0.02030601
+
+Hypothesis:  the CDF of x lies below that of y
+KS-statistic (D-value) =  0.01177649
+p-value =  0.6266612
+
+Hypothesis:  the CDF of x lies above that of y
+KS-statistic (D-value) =  0.0369063
+p-value =  0.01015301
+</code></pre>
+
+<p>If I understood the KS test and interpreted the results correctly, this is what the test is telling me about my data:</p>
+
+<p><strong>Hypothesis #1: two-sided (equal)</strong></p>
+
+<p>The probability that both distributions are the same is 2.03% (p-value = 0.02030601).</p>
+
+<p><strong>Hypothesis #2: the CDF of x lies below that of y</strong></p>
+
+<p>The probability that CDF(November) is worse that CDF(December) is 62.6% (p-value = 0.6266612).</p>
+
+<p><strong>Hypothesis #3: the CDF of x lies above that of y</strong></p>
+
+<p>The probability that CDF(November) is better that CDF(December) is 1.01% (p-value = 0.01015301).</p>
+
+<p>So from this I can say with some certainty, that November is worse that December.</p>
+
+<p>Have I interpreted the results correctly or have I completely miss-understood the test (and possibly the purpose/application of the test)?</p>
+
+<p>-- ab1</p>
+"
+"0.16609095970748","0.162757691754232","197255","<p><strong>Background:</strong></p>
+
+<p>I try to estimate the potential energy supply within a geographical area using spatially explicit data. </p>
+
+<p>For this purpose I use a Bayesian network and several spatial data layers as input data (e.g resource supply, conversion efficiency). The study area is devided into smaller area entities. For each entity my Bayesian network model reads the input data and computes the corresponding energy supply (MCMC simulations). As a result I obtain for each entity a probability distribution of the expected energy supply (e.g Distr or Distr 2).</p>
+
+<p>However, I am equally interested in the total supply within the study area. That means I need to aggregate (sum) the potential energy supply of all the individual entities in order to get the overall supply potential within the area (e.g. Distr 3). </p>
+
+<p><strong>Question:</strong>  </p>
+
+<p>I would like to combine several probability distributions by adding their values into one single probability distribution (see above).</p>
+
+<ul>
+<li>What is the correct mathematical/statistical term of the operation I want to do?</li>
+</ul>
+
+<p>Below I provide a graphical explanation of what I would like to do.</p>
+
+<p><a href=""http://i.stack.imgur.com/cXO11.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/cXO11.png"" alt=""simplyfied, graphical explanation""></a></p>
+"
+"0.432546846241593","0.438482165770493","199729","<p>I am exploring the use of product space methods, coded in JAGS within R, for Bayesian model selection/comparison. I am particularly interested in using this method to test hypotheses about random effects/hierarchical levels, e.g. should we use a model which includes a random intercept or slope versus one that does not. Some papers on this method in general are: </p>
+
+<p>Lodewyckxa et al. 2011
+A tutorial on Bayes factor estimation with the product space method
+<a href=""http://www.sciencedirect.com/science/article/pii/S0022249611000423"" rel=""nofollow"">http://www.sciencedirect.com/science/article/pii/S0022249611000423</a></p>
+
+<p>Tenan et al. 2014
+Bayesian model selection: The steepest mountain to climb
+<a href=""https://www.researchgate.net/publication/261714566_Bayesian_model_selection_The_steepest_mountain_to_climb"" rel=""nofollow"">https://www.researchgate.net/publication/261714566_Bayesian_model_selection_The_steepest_mountain_to_climb</a></p>
+
+<p>An intuitive explanation of model comparison as a case of hierarchical modelling can also be found in John K. Kruschke's <em>Doing Bayesian Data Analysis</em> (2nd edition) or in:</p>
+
+<p>Kruschke, 2011. 
+Bayesian Assessment of Null Values Via Parameter Estimation and Model Comparison
+<a href=""http://pps.sagepub.com/content/6/3/299.abstract"" rel=""nofollow"">http://pps.sagepub.com/content/6/3/299.abstract</a></p>
+
+<p>I would particularly like people's opinions about explicitly using model comparison approaches such as these for testing the importance of including random effects/hierarchical components into a model. I am not interested in a point null hypothesis approach (testing if the random effect is zero) due to well documented theoretical problems with this thinking. </p>
+
+<p>The basic idea (as I am aware!) is that all relevant models <em>M</em> = <em>1 ... j</em> one is interested in are estimated concurrently at each step of the MCMC chain, creating a mixture model, providing <em>P(Data | M=j)</em> and allowing the estimation of the probability model <em>j</em> was chosen over other models (e.g. in the form of a Bayes factor). </p>
+
+<p>To avoid autocorrelation in the chains, and to properly define the mixture model, pseudo priors are used for the 'unactivated' model at each step of the MCMC chain, such that when <em>M=1</em> is being estimated, <em>M=2</em> is still defined in the global product space but has no influence on the results computationally (see equation  6 in Lodewyckxa et al., 2011). However, they may influence the dynamics of MCMC convergence. </p>
+
+<p>The following approach can be coded in JAGS (or BUGS) using a top level hierarchical model index M,  that denotes which model should be estimated at each time, with each model given their own prior probabilities. </p>
+
+<p>I am interested in using this method to test whether certain hierarchical levels or classical 'random effects' are 'significant'. For instance, whether <em>M = 1</em> which estimates a certain hierarchical level (e.g. a random intercept) freely using an uninformative prior for the variance is chosen more often than a model <em>M = 2</em> that has its mass at or around zero. </p>
+
+<p>Here is some code below using the sleepstudy data from lme4 to estimate whether a model with freely estimated heterogeneous variances (i.e. heteroscedasticity) for each subject/id is better than a model where the heterogeneity of variance is a priori assumed to be around zero, i.e. zero for all practical purposes. I first ran the model with an uninformative prior on the heterogeneous variances to see what was estimated, and the Highest Density Interval was 0.22 - 0.64 (mode ~ 0.4) for the standard deviation. Let's say that we assume the prior probability of a model with heteroscedasticity 30% of the time, compared to a model with heteroscedasticity in the variances near zero, e.g. between 0 and 0.1 standard deviations in the code below. </p>
+
+<pre><code>library(rjags)
+library(runjags)
+library(coda)
+library(lme4)
+
+data(""sleepstudy"")
+
+modelString = "" 
+
+model { 
+
+
+ # Likelihood 
+ for( i in 1:length(y)) { 
+   y[i] ~ dnorm( mu[i] , 1 / (sigmaRes[i])^2 )
+    mu[i] &lt;- alpha[id[i]] + beta1 * days[i]
+    log(sigmaRes[i]) &lt;- delta[id[i]]     # sigmaRes assumed to be log-normally distributed
+  }
+
+ for( s in 1:Nid ) {
+  alpha[s] ~ dnorm( alphaMu , 1 / (alphaSigma)^2 )     # 'random' intercept
+  delta[s] ~  dnorm( deltaMu , 1 / (deltaSigma[M])^2 ) # 'random' heterogeneous variances
+                                                       # Model index in deltaSigma
+  }
+
+ # model 1: V stands for 'Variable'
+ deltaSigma[1] &lt;- deltaSigmaV[M]   # when deltaSigma[M = 1]
+ deltaSigmaV[1] &lt;- deltaSigmaV_prior # real prior
+ deltaSigmaV[2] &lt;- deltaSigmaV_pseudo # pseudo prior
+ deltaSigmaV_prior ~ dunif( 0.001 , 100 ) # variability estimated with an uninformative prior     
+ deltaSigmaV_pseudo ~ dunif( deltaSigmaV_psM , deltaSigmaV_psSig ) # set in dataList below
+
+ # model 2: NV stands for 'Non variable'
+ deltaSigma[2] &lt;- deltaSigmaNV[M] # when deltaSigma[ M = 2 ] 
+ deltaSigmaNV[1] &lt;- deltaSigmaNV_pseudo
+ deltaSigmaNV[2] &lt;- deltaSigmaNV_prior
+ deltaSigmaNV_prior ~ dunif( 0, 0.1 ) # a strong prior belief the variance is small  
+ deltaSigmaNV_pseudo ~ dunif( deltaSigmaNV_psM , deltaSigmaNV_psSig )
+
+ # other priors 
+ alphaSigma ~ dunif( .001 , 100 )
+ alphaMu ~ dnorm( 0 , .001 )
+ deltaMu ~ dnorm( 0 , .001 )
+ beta1 ~ dnorm( 0 , .001 )
+
+
+ # Model index
+ M ~ dcat( p[] )
+ p[1] &lt;- 0.3    # prior probabilities for models 
+ p[2] &lt;- 0.7
+ postr1 &lt;- 2 - M
+ postr2 &lt;- M - 1
+
+}
+
+""  
+writeLines( modelString , con=""fit1.txt"" )
+
+params = c( ""alphaMu"" , ""alphaSigma"" , ""deltaSigmaV"" , ""deltaSigmaNV"" , 
+            ""beta1"" , ""M"" , ""postr1"" , ""postr2"" ) 
+
+deltaSigmaV_psM &lt;- deltaSigmaNV_psM &lt;- 0 
+deltaSigmaV_psSig &lt;-deltaSigmaNV_psSig &lt;- 10 # not quite sure about the acceptability of these pseuodopriors
+
+
+dataList = list( y = sleepstudy$Reaction ,
+                     deltaSigmaV_psM = deltaSigmaV_psM,
+                     deltaSigmaNV_psM = deltaSigmaNV_psM ,
+                     deltaSigmaV_psSig = deltaSigmaV_psSig , 
+                     deltaSigmaNV_psSig = deltaSigmaNV_psSig ,
+                     days = sleepstudy$Days , 
+                     id = sleepstudy$Subject , 
+                     Nid = length(unique(sleepstudy$Subject))
+              )
+
+fit1 = run.jags( method = ""parallel"" ,
+                 model = ""fit1.txt"" ,
+                 data = dataList , 
+                 monitor = params,
+                 modules = ""glm"" ,
+                 n.chains = 3 , 
+                 adapt = 1000 , 
+                 burnin = 1000, 
+                 sample = 20000 ,
+                 thin = 1
+                )
+
+print(fit1)
+</code></pre>
+
+<p>The output of the above model is: </p>
+
+<pre><code>JAGS model summary statistics from 60000 samples (chains = 3; adapt+burnin = 2000):
+
+                   Lower95   Median  Upper95     Mean      SD    Mode     MCerr     MC%ofSD     SSeff      AC.20    psrf
+alphaMu            155.35   209.15   246.43   205.11  24.772  217.81       0.30236     1.2  6712  -0.004533  1.0004
+alphaSigma         33.996   58.677   97.907   61.564  18.454  49.739       0.23964     1.3  5930  0.0048678  1.0001
+deltaSigmaV[1]    0.18627  0.42297  0.75606  0.82805   2.269  0.3973      0.026096     1.2  7560    0.31051  1.2969
+deltaSigmaV[2]    0.10491   4.9789   9.5944   4.9932  2.8798  5.1943       0.01722     0.6 27970  0.0049252  1.0002
+deltaSigmaNV[1]   0.19409   4.9686   9.6706   4.9806  2.8778   4.786      0.017048     0.6 28494  0.0011323 0.99997
+deltaSigmaNV[2] 0.0049819 0.052105 0.099723 0.051497 0.02925 0.07688     0.0002117     0.7 19090   0.049137  1.0064
+beta1              9.1481   10.656   12.206   10.651 0.77986  10.669     0.0058312     0.7 17886 0.00086161   1.001
+M                       1        1        1    1.044  0.2051       1       0.10432    50.9     4         --       $
+postr1                  1        1        1    0.956  0.2051       1       0.10432    50.9     4         --       $
+postr2                  0        0        0    0.044  0.2051       0       0.10432    50.9     4         --       $
+
+Note: parameters marked with '$' were non-stochastic in some chains - these parameters can not be assumed to have converged!
+Total time taken: 12.6 Seconds
+</code></pre>
+
+<p>The means of <code>postr1</code> and <code>postr2</code> suggest that model 1 (uninformative prior) was chosen 95.6% of the time over model 2 (prior with its mass near zero). Model one estimates the SD of individuals' residual variation (deltaSigmaV[1]) as 0.19 - 0.76, close to the output of the non-model comparison case. Thus, modelling heterogeneous variances seems preferable. </p>
+
+<p>One problem with above approach is that I don't believe it takes parsimony into account, whereas a number of authors use model comparison, like that above, to test models with different numbers of parameters. In this situation, the model with fewer parameters has an inherent advantage. For instance, Kruschke (2015: 290) writes,</p>
+
+<blockquote>
+  <p>""Bayesian model comparison compensates for model complexity by the fact that each model must have a prior distribution over its parameters, and more complex models must dilute their prior distributions over larger parameter spaces than simpler models.""</p>
+</blockquote>
+
+<p>I am unsure how to create a model that does and does not have a term for the random individual variance component, and I am not sure whether this is desired at all, since it is like testing a point null hypothesis. </p>
+
+<p>I've already written too much, so my questions are:</p>
+
+<ul>
+<li>Is the above approach a viable option for testing the importance of a random effect?</li>
+<li>Does anyone have different coding options that would explicate the hypothesis that heterogeneous variances are importantly non-zero? </li>
+</ul>
+
+<p>Sorry if what is written above is neither clear nor specific enough. I will try to amend it if it is either!</p>
+"
+"0.219717687201021","0.215308188172303","206066","<p>Does anyone have any suggestions (short of transforming my data) on how to fit a mixed effect model to a continuous response variable that is left-skewed? Other words, what probability density function should be used? My ultimate goal is to fit a nice global model so I can perform model selection using maximum likelihood estimation. Because the data are so left skewed I'm assuming Gaussian is out of the question.   I've looked into skew-normal distributions but can't figure out how to incorporate it into a model in R. I'm using lme4 to analyze my data. I've also thought about using generalized linear mixed models with a Gamma distribution but everything I've looked at for gamma distributions are right skewed data. And when I do try to analyze with a Gamma distribution I get an error. Attached is a histogram of my distribution and also my residuals when I fit a linear mixed-effect model. Clearly the residuals are no good. Any advice would be awesome. Thanks!<img src=""http://i.stack.imgur.com/i0fRg.jpg"" alt=""Histogram of response variable""><a href=""http://i.stack.imgur.com/yW8O0.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/yW8O0.jpg"" alt=""Residuals from linear mixed-effect model""></a></p>
+"
+"0.117444043902941","0.115087067529687","207495","<p>Let's consider a dumb spam filter BN (see figure below) for which I've already calculated the a posteriori parameter distributions (see <strong>normalized</strong> table values). </p>
+
+<p>I want to <em>predict</em> if next email without the ""book"" word (Y1=F) and with the ""free"" word (Y2=T) is spam (X=T) or not spam (X=F).</p>
+
+<p>I guess the question can be written as <strong>P(X=T | Y1=F, Y2=T)</strong> ... you may confirm ...</p>
+
+<p>Here Y1 and Y2 are independant, I've been playing around with Bayes and Chain rules to get the right formulae for computation, without success.</p>
+
+<pre><code>P(X|Y1,Y2) = P(Y1,Y2|X) P(X) / P(Y1, Y2)
+
+           = P(Y1|X) P(Y2|Y1,X) P(X) / P(Y1|Y2)P(Y2)
+
+           = P(Y1|X) P(Y2|X) P(X) / P(Y1)P(Y2)
+</code></pre>
+
+<p>The R script below says that this probability is <strong>0.3034</strong>. Is this P(X=T | Y1=F, Y2=T) even though the function parameter ""type=marginal"" is used ?. </p>
+
+<p>Note: displayed conditional probability tables are not normalized (sum is not 1).</p>
+
+<pre><code>library(gRain)
+
+X &lt;- cptable(~ isSpam, values=c(0.33, 0.67),
+             levels=c(""true"", ""false""))
+
+Y1 &lt;- cptable(~ hasBook|isSpam, 
+              values=c(0.335, 0.165, 0.25, 0.25),
+              levels=c(""true"", ""false""))
+
+Y2 &lt;- cptable(~ hasFree|isSpam, 
+              values=c(0.335, 0.165, 0.25, 0.25),
+              levels=c(""true"", ""false""))
+
+plist &lt;- compileCPT(list(X, Y1, Y2))
+
+pn &lt;- grain(plist)
+pn[[""cptlist""]]
+
+#$isSpam
+#isSpam
+# true false 
+# 0.33  0.67 
+
+#$hasBook
+#       isSpam
+#hasBook true false
+#  true  0.67   0.5
+#  false 0.33   0.5
+
+#$hasFree
+       isSpam
+#hasFree true false
+#  true  0.67   0.5
+#  false 0.33   0.5
+
+pn1 &lt;- setEvidence(pn, evidence = list(hasBook = ""false"", hasFree = ""true""))
+
+# type = ""marginal"": marginal distribution for each node in nodes;
+(marginal.isSpam &lt;- querygrain(pn1, nodes = ""isSpam"", type = ""marginal""))
+# isSpam
+# true     false 
+# 0.3034271 0.6965729 
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/EgYe2.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/EgYe2.png"" alt=""enter image description here""></a></p>
+"
+"0.219717687201021","0.215308188172303","208229","<p>I have a dataset consisting of 4000 observation from each 324 continuous  features are extracted. Each observation has been labeled a class. Since each feature from that dataset is continuous, have I created a distribution describing how each feature is distributed for each class.</p>
+
+<p>I want to use the distribution i computed, for classification purposes.. Which Naive bayes method also do for continuous datasets. </p>
+
+<p>The reason why I want to compute is purely based on some observation I made with naive bayes. I created multiple models using naive bayes, and tried to predict the same sample, and for reason were the model favoring a specific class rather than the right one which the label says. </p>
+
+<p>I then made a plot of the distribution I computed earlier, and saw that one class in peticular, have a high density of occurring which also were the class which was favored in the test using naive bayes. </p>
+
+<p><a href=""http://i.stack.imgur.com/uKpSr.png"" rel=""nofollow"">http://i.stack.imgur.com/uKpSr.png</a></p>
+
+<p>I tried using the probabilities to get from the distributions to compute the probability of a sample belonging to the different class, but i am not getting any results which reside towards the class (class1) which was favored before, i think i may compute it incorrectly?</p>
+
+<p>This is how i Compute it : </p>
+
+<pre><code>for( i in 1:10)
+{
+  out &lt;- 0
+  for(j in 1:324 )
+  {
+    print(i)
+    est = norm_dist_res_fewer_muld[[paste0(i,""-"",j)]]$estimate
+        out&lt;-out + pnorm(G2M2$data[[500,j]], est[1],est[2])
+  }  
+  output[i] &lt;- out
+}
+</code></pre>
+
+<p>G2M2$data is just my test dataset. and norm_dist_res_fewer_muld  is an <code>fittest</code>object.  </p>
+"
+"0.250391542918067","0.269903097646554","211886","<p>I have two data sets. One with positive values and zeroes. The other with negative values and zeroes. Lets call them VP and VN respectively. I would like to find a best fit distribution for each. I am not aware of any one-sided distributions that work with zeroes, hence my question: are there any one-side distributions that are defined for zeroes? Thank you.</p>
+
+<hr>
+
+<p>Data sets details: VP and VN are ""relatively"""" symmetrical, yet are samples for different things, and not a data set split into two. The zeroes are actual zeroes. And the samples are not truncated. Vector elements are High prices minus prior Close prices and Low prices minus prior Close prices for publicly traded financial assets at certain time windows (e.g. prior close can be the 10:30 1 minute bar closing price, and the High would be the High price for the following 1 minute bar).</p>
+
+<p>Purpose: find best fit distribution for each, and use the CDF for looking at estimated probabilities. The data is discrete: the smallest value increment possible is 0.01. Yet I do not need to be very precise, so fitting a continuous distribution would be fine.</p>
+
+<p>Alternatives:</p>
+
+<ol>
+<li><p>Truncating symmetrical distributions. Doesn't work, as the mode
+for these samples is 0, and the highest probability bin is 0/0.1 for
+the VP and 0/-0.1 for VN.</p></li>
+<li><p>Adding infinitesimal values to all the zeroes. Inclined to do
+this in the absence of a better alternative, but rather not if can
+be avoided.</p></li>
+<li><p>Modifying the distribution functions such as done by someone in
+this post
+<a href=""http://stats.stackexchange.com/questions/19866/how-to-fit-a-weibull-distribution-to-input-data-containing-zeroes"">How to fit a Weibull distribution to input data containing zeroes?</a>.
+I do not have the necessary knowledge for achieving that.</p></li>
+<li><p>Combining data sets into one. It does not work, as samples are
+not symmetrical enough.</p></li>
+</ol>
+
+<hr>
+
+<pre><code>VP &lt;- c(0.36, 0.3, 0.36, 0.47, 0, 0.05, 0.4, 0, 0, 0.15, 0.89, 0.03,  0.45, 0.21, 0, 0.18, 0.04, 0.53, 0, 0.68, 0.06, 0.09, 0.58, 0.03, 0.23, 0.27, 0, 0.12, 0.12, 0, 0.32, 0.07, 0.04, 0.07, 0.39, 0, 0.25, 0.28, 0.42, 0.55, 0.04, 0.07, 0.18, 0.17, 0.06, 0.39, 0.65, 0.15, 0.1, 0.32, 0.52, 0.55, 0.71, 0.93, 0, 0.36)
+VN &lt;- c(0, -0.14, 0, -0.03, -0.33, -0.28, -0.02, -0.5, -0.16, -0.13,  0, -0.4, -0.02, -0.11, -0.74, 0, 0, 0, -0.63, 0, -0.33, -0.13, -0.2, -0.05, -0.33, -0.02, -0.26, 0, -0.66, -0.36, -0.16, -0.37, -0.13, -0.02, -0.06, -0.34, -0.28, 0, 0, -0.1, -0.38, -0.02, -0.16, -0.34, -0.37, -0.01, 0, 0, -0.39, -0.07, 0, -0.02, -0.19, 0, -0.43, -0.05)    
+par(mfrow = c(1, 2))
+hist(VN)
+hist(VP)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/OkhVT.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/OkhVT.png"" alt=""enter image description here""></a></p>
+"
+"0.221454612943307","0.217010255672309","213456","<p>I have a bivariate normal distribution composed of the univariate normal distributions $X_1$ and $X_2$ with $\rho \approx 0.3$.</p>
+
+<p>$$
+\begin{pmatrix}
+ X_1 \\
+ X_2
+\end{pmatrix}  \sim \mathcal{N} \left( \begin{pmatrix}
+ \mu_1 \\
+ \mu_2
+\end{pmatrix} , \begin{pmatrix}
+ \sigma^2_1 &amp;  \rho \sigma_1 \sigma_2 \\
+ \rho \sigma_1 \sigma_2 &amp;  \sigma^2_2
+\end{pmatrix} \right)
+$$</p>
+
+<p>Is there a simple way to calculate in R the cumulative probability of $X_1$ being less than a value $z$ given a particular slice of $X_2$ (between two values $a,b$) given we know all the parameters $\mu_1, \mu_2, \sigma_1, \sigma_2, \rho$?</p>
+
+<p>$P(X_1 &lt; z | a &lt; X_2 &lt; b)$</p>
+
+<p>Can the distribution function I am looking for match (or be approximated by) the distribution function of a univariate normal distribution (to use <code>qnorm</code>/<code>pnorm</code>)? Ideally this would be the case so I can perform the calculation with less dependencies on libraries (e.g. on a MySQL server).</p>
+
+<p>This is the bivariate distribution I am using:</p>
+
+<pre><code>means &lt;- c(79.55920, 52.29355)
+variances &lt;- c(268.8986, 770.0212)
+rho &lt;- 0.2821711
+
+covariancePartOfMatrix &lt;- sqrt(variances[1]) * sqrt(variances[2]) * rho
+sigmaMatrix &lt;- matrix(c(variances[1],covariancePartOfMatrix,covariancePartOfMatrix,variances[2]), byrow=T, ncol=2)
+
+n &lt;- 10000
+dat &lt;- MASS::mvrnorm(n=n, mu=means, Sigma=sigmaMatrix)
+
+plot(dat)
+</code></pre>
+
+<p>This is my numerical attempt to get the correct result. However it uses generated data from the bivariate distribution and I'm not convinced it will give the correct result.</p>
+
+<pre><code>a &lt;- 79.5
+b &lt;- 80.5
+z &lt;- 50
+
+sliceOfDat &lt;- subset(data.frame(dat), X1 &gt; a, X1 &lt; b)
+estimatedMean &lt;- mean(sliceOfDat[,c(2)])
+estimatedDev &lt;- sd(sliceOfDat[,c(2)])
+
+estimatedPercentile &lt;- pnorm(z, estimatedMean, estimatedDev)
+</code></pre>
+
+<h3>Edit - R implementation of solution based on whuber's answer</h3>
+
+<p>Here is an implementation of the accepted solution using <code>integrate</code>, compared against my original idea based on sampling. The accepted solution provides the expected output 0.5, whereas my original idea deviated by a significant amount (0.41). <strong>Update - See wheber's edit for a better implementation.</strong></p>
+
+<pre><code># Bivariate distribution parameters
+means &lt;- c(79.55920, 52.29355)
+variances &lt;- c(268.8986, 770.0212)
+rho &lt;- 0.2821711
+
+# Generate sample data for bivariate distribution
+n &lt;- 10000
+
+covariancePartOfMatrix &lt;- sqrt(variances[1]) * sqrt(variances[2]) * rho
+sigmaMatrix &lt;- matrix(c(variances[1],covariancePartOfMatrix,covariancePartOfMatrix,variances[2]), byrow=T, ncol=2)
+dat &lt;- MASS::mvrnorm(n=n, mu=means, Sigma=sigmaMatrix)
+
+# Input parameters to test the estimation
+w = 79.55920
+
+a &lt;- w - 0.5
+b &lt;- w + 0.5
+z &lt;- 52.29355
+
+# Univariate approximation using randomness
+sliceOfDat &lt;- subset(data.frame(dat), X1 &gt; a, X1 &lt; b)
+estimatedMean &lt;- mean(sliceOfDat[,c(2)])
+estimatedDev &lt;- sd(sliceOfDat[,c(2)])
+
+estimatedPercentile &lt;- pnorm(z, estimatedMean, estimatedDev)
+# OUTPUT: 0.411
+
+# Numerical approximation from exact solution
+adaptedZ &lt;- (z - means[2]) / sqrt(variances[2])
+adaptedB &lt;- (b - means[1]) / sqrt(variances[1])
+adaptedA &lt;- (a - means[1]) / sqrt(variances[1])
+
+exactSolutionCoeff &lt;- 1 / (pnorm(adaptedB) - pnorm(adaptedA))
+integrand &lt;- function(x) pnorm((adaptedZ - rho * x) / sqrt(1 - rho * rho)) * dnorm(x)
+exactSolutionInteg &lt;- integrate(integrand, adaptedA, adaptedB)
+# 0.0121, abs.error 1.348036e-16, ""OK""
+exactPercentile = exactSolutionCoeff * exactSolutionInteg$value
+# OUTPUT: 0.500
+</code></pre>
+"
+"0.334251608718693","0.327543536361078","217375","<h2>Introduction</h2>
+
+<p>Suppose I observe 30 subjects attempt a given task in 3 separate occasions and I give them a score. To analyse each subject's performance over time, I can use a multilevel / mixed effect / hierarchical model in which intercepts and slopes are allowed to vary by subject as follows (unfortunately the terminology and the notation vary across disciplines, so bear with me here):</p>
+
+<p>$$
+Score_{ij} = \beta_{0j} + \beta_{1j} \times Time_{ij} + e_{ij}
+$$</p>
+
+<p>Where:</p>
+
+<p>$$
+\beta_{0j} = \beta_{0} + u_{0j}
+$$
+$$
+\beta_{1j} = \beta_{1} + u_{1j}
+$$</p>
+
+<p>Here, <em>j</em> = {1, 2 ... 30} indexes subjects and <em>i</em> = {1, 2, 3} indexes the observation. In some disciplines, observations are considered to be <em>nested within</em> subjects, so subjects are the level-2 index and observations the level-1 index (hence ""multilevel"" or ""hierarchical"" models; but again, in some literature one finds that higher numbers indicate more aggregate levels whereas in other literature it is the opposite). </p>
+
+<p><em>Time</em> is a categorical variable that is zeroed at the first observation to model linear change between subjects and within subjects over time (note the two indices) and thus it takes the values <em>Time</em> = {0, 1, 2}. </p>
+
+<p>Now, while $\beta_0$ and $\beta_1$ give the mean intercept and slope that are the same across all subjects (some call them ""fixed"" effects but the terminology is disputed), $u_{0j}$ and $u_{1j}$ are parameters that vary by subjects and are assigned probability distributions (which is why some call them ""random"" effects). Indeed:</p>
+
+<p>$$
+u_j \sim N(0,\Omega_u)
+$$
+$$
+\Omega_u = \begin{bmatrix}\sigma^2_{u0} &amp; \\ \sigma_{u01} &amp; \sigma^2_{u1}\end{bmatrix}
+$$
+And $e_{ij}$ is the residual error, that is, how far the observed values vary around <strong>each subject's</strong> prediction, which is $\hat{y}_j = \hat{\beta} + \hat{u}_j$.
+$$
+e_{ij} \sim N(0, \sigma^2)
+$$</p>
+
+<p>One can say that $u$ are the level-2 random effects and $e$ the level-1 residual.</p>
+
+<p>Now that the definitions are out of the way, here comes the question.</p>
+
+<h2>Question</h2>
+
+<p>How do I calculate the standard error and confidence intervals around a subject's fitted value at each time point? Is my attempt below correct?</p>
+
+<h2>My take</h2>
+
+<p>Let us consider the first subject, so that <em>j</em> = 1 (I will not include the subscript in the section below for clarity). At <strong>time 0</strong> (i.e., <em>Time</em> = 0, <em>i</em> = 1), the fitted value for this individual is:
+$$
+\hat{y}_{i=1} = \hat{\beta}_0 + \hat{u}_0 + 0 \times (\hat{\beta}_1 + \hat{u}_1) = \hat{\beta}_0 + \hat{u}_0
+$$
+This is the fitted intercept for subject 1. Clearly the residual error is not part of the equation because it is $e_{ij} = y_{ij} - \hat{y}_{ij}$. Because $Y$ is a sum of random variables, the variance on this subject's intercept should be:
+$$
+var(\hat{y}_{i=1}) = var(\hat{\beta}_0) + var(\hat{u}_0) + 2 \times cov(\hat{\beta}_0, \hat{u}_0)
+$$</p>
+
+<p>However, <a href=""http://glmm.wikidot.com/faq#toc41"" rel=""nofollow"">this</a> page tells me that, and I quote, </p>
+
+<blockquote>
+  <p>the model assumes the fixed and random effects to be orthogonal</p>
+</blockquote>
+
+<p>so $cov(\hat{\beta}_0, \hat{u}_0) = 0$ and the variance reduces to $var(\hat{y}_{i=1}) = var(\hat{\beta}_0) + var(\hat{u}_0)$.</p>
+
+<p>At <strong>time 1</strong> (<em>Time</em> = 1, <em>i</em> = 2), the fitted score for subject 1 is:</p>
+
+<p>$$
+\hat{y}_{i=2} = \hat{\beta}_0 + \hat{u}_0 + 1 \times (\hat{\beta}_1 + \hat{u}_1) = \hat{\beta}_0 + \hat{u}_0 + \hat{\beta}_1 + \hat{u}_1
+$$</p>
+
+<p>Again a sum of random variables with $\beta_1$ and $u_1$ being multiplied by a factor $Time = x = 1$, so the variance is:</p>
+
+<p>$$
+var(\hat{y}_{i=2}) = var(\hat{\beta}_0) + var(\hat{u}_0) + var(\hat{\beta}_1) + var(\hat{u}_1) + 2  \times (cov(\hat{\beta}_0, \hat{\beta}_1) + cov(\hat{u}_0, \hat{u}_1))
+$$</p>
+
+<p>I think that the formula is justified because $\beta$s and $u$s are orthogonal across each other, but not between each other: the global intercept and slope are correlated, and so are the subject's intercept ans slope (and indeed packages like <code>lme4</code> in R will return these correlations, we'll get to this later).</p>
+
+<p>Finally, at <strong>time 2</strong> (<em>Time</em> = 2, <em>i</em> = 3), we have:</p>
+
+<p>$$
+\hat{y}_{i=3} = \hat{\beta}_0 + \hat{u}_0 + 2 \times (\hat{\beta}_1 + \hat{u}_1) = \hat{\beta}_0 + \hat{u}_0 + 2\hat{\beta}_1 + 2\hat{u}_1
+$$</p>
+
+<p>And:</p>
+
+<p>$$
+var(\hat{y}_{i=3}) = var(\hat{\beta}_0) + var(\hat{u}_0) + 2^2var(\hat{\beta}_1) + 2^2var(\hat{u}_1) + 2 \times 2cov(\hat{\beta}_0, \hat{\beta}_1) + 2 \times 2cov(\hat{u}_0, \hat{u}_1)
+$$</p>
+
+<p>Since $\beta_1$ and $u_1$ have now a factor $Time = x = 2$ in front of them, their variance is multiplied by $x^2 = 2^2$. </p>
+
+<p>Likewise, we have to take two times the sum of the covariances. The covariance between $\beta_0$ and $\beta_1$ is $x_{\beta_0}x_{\beta_1}cov(\hat{\beta}_0, \hat{\beta}_1)$, that is, $1\cdot{2}\cdot{cov(\hat{\beta}_0, \hat{\beta}_1)}$. The covariance between $u_0$ and $u_1$ is $x_{u_0}x_{u_1}cov(\hat{u}_0, \hat{u}_1)$, that is, $1\cdot{2}\cdot{cov(\hat{u}_0, \hat{u}_1)}$. Since we have to take twice their sum, this expands as in the equation above, $2 \times 2cov(\hat{\beta}_0, \hat{\beta}_1) + 2 \times 2cov(\hat{u}_0, \hat{u}_1)$. Right?</p>
+
+<p>Finally, if I want to calculate the 95% confidence interval around any of the fitted values (i.e., any of the $y$s at time 0, 1, or 2) for my subject I calculate:</p>
+
+<p>$$
+CI_{\hat{y}_i} = \pm 1.96 \times \sqrt{var(\hat{y}_i)}
+$$</p>
+
+<p>Is this correct?</p>
+
+<p>I am asking because the CIs I calculate using these formulas are rather different from those simulated by <code>lme4</code> and <code>merTools</code> (yes, those are simulation, but I have run <em>many</em> of them and results are consistenly different), so I am wondering whether it is my theory that is flawed. </p>
+
+<p>If the theory is correct, I have a reproducible example ready to add that compares the results using my approach and these two packages and we'll figure out why outcomes differ so much.</p>
+
+<p>Thank you,</p>
+
+<p>k.</p>
+"
+"0.262612865719445","0.257342506327489","222294","<p>I'm trying to understand the output of the Kolmogorov-Smirnov test function (two samples, two sided).
+Here is a simple test.</p>
+
+<pre><code>x &lt;- c(1,2,2,3,3,3,3,4,5,6)
+y &lt;- c(2,3,4,5,5,6,6,6,6,7)
+z &lt;- c(12,13,14,15,15,16,16,16,16,17)
+
+ks.test(x,y)
+
+#   Two-sample Kolmogorov-Smirnov test
+#
+#data:  x and y
+#D = 0.5, p-value = 0.1641
+#alternative hypothesis: two-sided
+#
+#Warning message:
+#In ks.test(x, y) : cannot compute exact p-value with ties
+
+ks.test(x,z)
+
+#Two-sample Kolmogorov-Smirnov test
+
+#data:  x and z
+#D = 1, p-value = 9.08e-05
+#alternative hypothesis: two-sided
+#
+#Warning message:
+#In ks.test(x, z) : cannot compute exact p-value with ties
+
+
+ks.test(x,x)
+
+#Two-sample Kolmogorov-Smirnov test
+
+#data:  x and x
+#D = 0, p-value = 1
+#alternative hypothesis: two-sided
+#
+#Warning message:
+#In ks.test(x, x) : cannot compute exact p-value with ties
+</code></pre>
+
+<p>There are a few things I don't understand here.</p>
+
+<ol>
+<li><p>From the <a href=""http://stat.ethz.ch/R-manual/R-patched/library/stats/html/ks.test.html"" rel=""nofollow"">help</a>, it seems that the p-value refers to the hypothesis <code>var1=var2</code>. However, here that would mean that the test says (<code>p&lt;0.05</code>):</p>
+
+<p>a. Cannot say that <code>X = Y</code>;</p>
+
+<p>b. Can say that <code>X = Z</code>;</p>
+
+<p>c. Cannot say that <code>X = X</code> (!)</p></li>
+</ol>
+
+<p>Besides appearing that x is different from itself (!), it is also quite strange to me that <code>x=z</code>, as the two distributions have zero overlapping support. How is that possible?</p>
+
+<ol start=""2"">
+<li><p>According to the definition of the test, <code>D</code> should be the maximum difference between the two probability distributions, but for instance in the case <code>(x,y)</code> it should be <code>D = Max|P(x)-P(y)| = 4</code> (in the case when <code>P(x)</code>, <code>P(y)</code> aren't normalized) or <code>D=0.3</code>  (if they are normalized). Why D is different from that? </p></li>
+<li><p>I have intentionally made an example with many <a href=""http://stackoverflow.com/questions/28158574/kolmogorov-smirnov-test?rq=1"">ties</a>, as the data I'm working with have lots of identical values. Why does this confuse the test? I thought it calculated a probability distribution that should not be affected by repeated values. Any idea?</p></li>
+</ol>
+"
+"0.185695338177052","0.18196863131171","223688","<p>Lognormal Probability:</p>
+
+<p>2 Part Question for a Newbie: </p>
+
+<p>1.) Assume I have a vector that I suspect is already logNormal (I didn't transform it) and I want to get the mean and variance.  From what I understand from reading the <a href=""https://en.wikipedia.org/wiki/Log-normal_distribution"" rel=""nofollow"">wikipedia</a> entry on lognormal distributions, I need to find the mean and the stdev of the normal distribution in order to calculate the mean and variance of the lognormal distribution.  Does this mean I have to transform my vector into a normal distribution to get the mean and sigma inputs I will use to calculate the log distribution? </p>
+
+<p>2.)  Iâ€™m trying to learn how to calculate the probability that the number of units of cars sold will be between x and y assuming the the underlying distribution is lognormal.</p>
+
+<p>here is a sample vector (in R): </p>
+
+<pre><code>cars &lt;- c(4950,2475,2017,917,1100,825,1650,1283,1008,1283,642,550,788,825,715,1082,1118,77    0,605,825)
+</code></pre>
+
+<p>What I'm looking for is the formula for finding the probability that the units of cars sold will be between, say, 750 and 800.  (and if anyone can help me with the R code I would be very grateful).  </p>
+
+<p>Thanks! </p>
+"
+"0.16609095970748","0.162757691754232","224177","<p>I have a similar problem as <a href=""http://stats.stackexchange.com/q/126642/20551"">this one</a>. My training samples contain N observations and K>2 classes. I want to classify my test samples into one of the K classes, or as an outlier if it is far from any known class.</p>
+
+<p>Is there any R(preferred) or Python package to solve this?</p>
+
+<p>One method I can think of is to use some sort of Gaussian fitting. I fit my in-sample data to get K Gaussian distributions, then for new samples I check its probability w.r.t each of the K distributions. If the largest one is above some threshold, I classify it to the class with largest prob, else it's an outlier.</p>
+
+<p>Is there a package to do this? Or preferreably a more sophisticated approach. This approach suffers from curse of dimensionality I think. Maybe random forest? SVM?</p>
+
+<p>The <code>gausspr</code> in R package <code>kernlab</code> seems to provide this. But after fitting, <code>predict(..., type = 'probabilities')</code> only gives normalised probability (prob for K classes to sum to 1). Can I get the raw score before normalisation?</p>
+"
+"0.143838990445615","0.140952295720482","226432","<p>I am testing different fully specified probability distributions, for data containing ties using ks.test in R.I have calculated the ks values for each one of the distributions and ks critical using the formula $1.36/\sqrt{n}$ at the significance level 0.05. As there are large number of ties due to rounding of the data, I could not fit any distribution, to the data.So my question if the repetition of data is removed while calculating the ks critical,i can significantly reduce the sample size n in the formula to calculate the ks critical, Is this acceptable?</p>
+"
+"0.117444043902941","0.115087067529687","234096","<p>Is there a prior probability distribution associated with BIC (Bayesian Information Criterion)?</p>
+
+<p>I ask this because in the R package BAS there is a linear modeling function that can be called as follows:</p>
+
+<pre><code>bas.lm(y ~ x, data = my_dataframe, prior = 'BIC')
+</code></pre>
+
+<p>and the documentation is not clear on how the priors are set given the 'BIC' argument. </p>
+
+<p>The posterior distributions come out to be normal looking (student-T actually I think). They could for example look something like this:
+<a href=""http://i.stack.imgur.com/DVIK6.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DVIK6.png"" alt=""posteriors""></a></p>
+
+<p>In summary, I am wondering <strong>what prior distributions are being used for the parameters?</strong></p>
+"

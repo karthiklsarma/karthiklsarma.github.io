@@ -1,0 +1,1 @@
+repeated-measures=264anova=97lmer=27lme4=15time-series=10regression=10glmm=9logistic=6simulation=5nlme=5correlation=5multivariate-analysis=4glmer=3statistical-significance=3tukey-hsd=2permutation=2covariance=1gam=1ggplot2=1normalization=1normal-distribution=1spatial=1linear=1poisson=1lsmeans=1analysis=1distributions=1bonferroni=1curves=1data-visualization=1clustering=1dataset=1

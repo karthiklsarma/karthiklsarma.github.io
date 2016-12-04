@@ -1,0 +1,1 @@
+regression=7logistic=5time-series=3random-forest=2binomial=2pca=2factor-analysis=2clustering=2anova=1glmer=1sparse=1prediction=1data-visualization=1spatial=1glmnet=1

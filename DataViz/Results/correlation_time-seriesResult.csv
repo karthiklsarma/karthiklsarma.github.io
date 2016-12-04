@@ -1,0 +1,946 @@
+"V1","V2","V3","V4"
+"0.367607311046904","0.24096579867075"," 13070","<p>Background:
+Generally, pooled time-series cross-sectional regressions utilize a strict factor model (i.e. require the covariance of residuals is zero). However, in time series such as security returns where strong comovements exist, the assumption that returns obey a strict factor model is easily rejected. </p>
+
+<p>In an approximate factor model, a moderate level of correlation and autocorrelation among residuals and factors themselves (as opposed to a strict factor model where the correlation of residuals is zero). Approximate factor models allow only correlations that are not marketwide. When we examine different samples at different points in time, approximate factor models admit only local autocorrelation of residuals. This condition guarantees that when the number of factors goes to infinity (i.e., when the number of assets is very large), eigenvalues of the covariance matrix remain bounded. We will assume that autocorrelation functions of residuals decays to zero. </p>
+
+<p>Connor (2007) provides additonal background <a href=""http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1024709"" rel=""nofollow"">here</a>.</p>
+
+<p>QUESTION: What function do I use to construct an approximate factor model in R? Perhaps this is a variation of the GLS procedure.</p>
+"
+"0.232495277487639","0.254000254000381"," 23746","<p>I have forecasts and actuals for panel data (i.e. time-series cross-sectional data). The forecasts are already generated and provided by some source outside of R. I'd like to evaluate the quality of the forecasts.</p>
+
+<p>Are there standard tools in R that perform various diagnostics on the residuals? By diagnostics I mean tests such as: </p>
+
+<ul>
+<li>auto-correlation of residuals across the cross-section</li>
+<li>auto-correlation of residuals along the time series for a given member</li>
+<li>tests for fixed effects vs. random effects</li>
+<li>heteroskedasticity, etc.</li>
+</ul>
+
+<p>Or is the best way to perform these diagnostics to perhaps build a panel model using the forecast as the predictor in the panel model?</p>
+"
+"0.164398987305357","0.179605302026775"," 24445","<p>I'm trying to estimate a multiple linear regression in R with an equation like this:</p>
+
+<pre><code>regr &lt;- lm(rate ~ constant + askings + questions + 0)
+</code></pre>
+
+<p>askings and questions are quarterly data time-series, constructed with <code>askings &lt;- ts(...)</code>.</p>
+
+<p>The problem now is that I got autocorrelated residuals. I know that it is possible to fit the regression using the gls function, but I don't know how to identify the correct AR or ARMA error structure which I have to implement in the gls function. </p>
+
+<p>I would try to estimate again now with,</p>
+
+<pre><code>gls(rate ~ constant + askings + questions + 0, correlation=corARMA(p=?,q=?))
+</code></pre>
+
+<p>but I'm unfortunately neither an R expert nor an statistical expert in general to identify p and q.</p>
+
+<p>I would be pleased If someone could give me a useful hint.
+Thank you very much in advance!</p>
+
+<p>Jo</p>
+"
+"0.402693633128415","0.43994134506406"," 63796","<p>This is related to a <a href=""http://stats.stackexchange.com/questions/62646/pooled-time-series-regression-in-r"">question</a> I asked a couple weeks ago, but I've got a new question related to the same data. You can find the data and its accompanying explanation in the link provided.</p>
+
+<p>I felt that a regression including year as a covariate along with year dummies would lead to a linear dependence problem, but I was told to try it anyway as </p>
+
+<blockquote>
+  <p>""the year dummies as independent variables [may] pick up year-specific
+  random effects not accounted for by a time trend, e.g. for example the
+  trend over all years could be down by say 2 percent per year which
+  could apply to most years, but a negative macro shock in one
+  particular year could make that year lie way off the regression
+  line--a simple example of why the year dummies are not co-linear with
+  a time trend.""</p>
+</blockquote>
+
+<p>This makes sense, I suppose, so I ran a regression that simply included year and year dummies for each year as the independent variables (including AR(1) corrections). This looked like the following:</p>
+
+<pre><code>&gt; ## Generate YearFactor and AgeGroupFactor using factor()
+&gt; 
+&gt; YearFactor &lt;- factor(YearVar)
+&gt; AgeGroupFactor &lt;- factor(AgeGroup)
+&gt; 
+&gt; ## Check to see that YearFactor and AgeGroupFactor are indeed factor variables
+&gt; 
+&gt; is.factor(YearFactor)
+[1] TRUE
+&gt; is.factor(AgeGroupFactor)
+[1] TRUE
+&gt;
+&gt; ## Run regressions with both time trend and year dummies to determine if a linear dependence problem exists.
+&gt; 
+&gt; TrendDummies &lt;- gls(PPHPY ~ YearVar + YearFactor, correlation=corARMA(p=1))
+Error in glsEstimate(object, control = control) : 
+ computed ""gls"" fit is singular, rank 13
+&gt; summary(TrendDummies)
+Error in summary(TrendDummies) : object 'TrendDummies' not found
+&gt;
+</code></pre>
+
+<p>I interpret the error message ""Error in glsEstimate(object, control = control) : 
+     computed ""gls"" fit is singular, rank 13"" to mean that there indeed is a linear dependence problem in this case. Am I properly interpreting this? </p>
+
+<p>Also, given the advice in quotes above, would my regression as constructed (if there were no linear dependence problems) capture the effects mentioned therein?</p>
+
+<p>And finally, if I run the same regression as OLS with no AR(1) correlation structure, I do indeed get some results (instead of an error message). Any thoughts on that?</p>
+"
+"0.28474739872575","0.311085508419128"," 69136","<p>I've done a cross correlation but I'm not sure if what I'm doing is correct...</p>
+
+<p>Here are the command lines I've used so far </p>
+
+<p>(this one is for the first time series. It represents the numbers of subscriptions for men and women on a website during the hours of the day) </p>
+
+<pre><code>data&lt;-read.table(text=""hour men women
+00h00 475 295
+01h00 321 157
+02h00 206 127
+03h00 141 61
+04h00 73 29
+05h00 49 22
+06h00 71 30
+07h00 100 32
+08h00 163 55
+09h00 219 126
+10h00 300 199
+11h00 342 255
+12h00 407 247
+13h00 480 334
+14h00 459 358
+15h00 481 281
+16h00 490 347
+17h00 458 309
+18h00 599 475
+19h00 618 419
+20h00 579 453
+21h00 565 530
+22h00 659 605
+23h00 600 435"",header=TRUE)  
+</code></pre>
+
+<p>(this one is for the second time series, which represents the time where ads have been shown on TV. I've add the time of the ads within a dummy time series. see this post for why I've done it in such manner  : <a href=""http://stats.stackexchange.com/questions/67134/time-series-and-cross-correlation"">Time series and cross correlation</a> )</p>
+
+<pre><code>hr&lt;-read.table(text=""hours
+00h00 
+01h00 
+02h00 
+03h00 
+04h00 
+05h00 
+06h00 
+07h00 
+08h00 
+09h00 
+10h00 
+11h00 
+12h00 
+12h50 
+13h00 
+14h00 
+15h00 
+16h00 
+17h00 
+17h45 
+18h00 
+19h00 
+20h00 
+21h00 
+22h00 
+23h00 
+23h10"",header=TRUE)
+</code></pre>
+
+<p>(Then I correlate the time series with the command line below)</p>
+
+<pre><code>ccf(data$men,hr,50)
+</code></pre>
+
+<p>And I'm having this graph (see below) but it doesn't make any sense for me.</p>
+
+<p>If you have any clue, I will be glad to hear them.</p>
+
+<p>Thanks.</p>
+
+<p><img src=""http://i.stack.imgur.com/mS8aD.png"" alt=""enter image description here""></p>
+"
+"0.367607311046904","0.401609664451249"," 96867","<p>This question builds on my previous question <a href=""http://stats.stackexchange.com/questions/96027/forecasting-hourly-time-series-based-on-previous-weeks-and-same-period-in-previo"">Forecasting Hourly Time Series based on previous weeks and same period in previous year/s</a>. My project is to forecast the number of ~400 different types of events expected in each hourly interval with enough accuracy for staffing decisions to be made.</p>
+
+<p>Based on my knowledge of the data I know that each interval is related to the same hour band from the previous few weeks and the same time in the previous few years. Thanks to a comment by Rob Hyndman I am now using <code>tbats()</code> to forecast with mixed results. When comparing the forecasted data to the actual data the monthly totals are consistently within 1-3%.</p>
+
+<p>However, when I compare the forecast to the actual for individual intervals the results are not very reliable at all. I have calculated the difference between the actual and the forecast as a percentage of the forecast for each interval and get an interquartile range of 50% to 150% with a mean difference of ~70%. This level of accuracy is unacceptable for what I need to use the data to do.</p>
+
+<p>I am pretty certain that there are correlations between the frequency of different types of events and some measurable environmental factors. Is there an easy way to feed R a time series for the count of each event type as well as some environmental factors and have it find the correlations and create a forecast?</p>
+
+<p>I am not trying to be lazy, the forecast tool is going to be automated and needs to be able to run without human input.</p>
+
+<p>The method I am currently using is:</p>
+
+<pre><code>data &lt;- scan(""data.csv"")
+fcast &lt;- forecast(tbats(msts(data, seasonal.periods=c(168,8766))),1464)
+</code></pre>
+
+<p><em>The csv is a single column containing an hourly count of a specific event type over 2 years.</em></p>
+"
+"0.328797974610715","0.35921060405355","116330","<p>I'm confused with the widely used approach to compute the normalized cross-correlation which is something like this:</p>
+
+<ol>
+<li><a href=""http://en.wikipedia.org/wiki/Standard_score#Calculation_from_raw_score"" rel=""nofollow"">Standardize</a> the argument vectors (of equal length $n$).</li>
+<li>Slide one over the other computing the dot-product of the intersection (correct at least for real vectors).</li>
+<li>Optionally, define 95% confidence interval as $\pm\frac{2}{\sqrt{n}}$.</li>
+</ol>
+
+<p>Autocorrelation of $\mathcal{N}(0,1)$ sample by this method looks like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/rEvcZ.png"" alt=""Example from R Studio""></p>
+
+<p>I can achieve such a result using <code>xcorr_common</code> function from this <a href=""https://gist.github.com/werediver/e5348bf945aeecfc5a2a"" rel=""nofollow"">gist</a>:</p>
+
+<p><img src=""http://i.stack.imgur.com/VRgJb.png"" alt=""Example from IPython Notebook, common version of xcorr""></p>
+
+<p>But it seems to me that this method is pretty confusing, because the arguments are standardized in total and not for each intersection. Moreover, the confidence interval derived from the total arguments length is incorrect for the lesser intersections.</p>
+
+<p>I think, the correct (or at least a not-less-correct) result should look like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/j2Rsx.png"" alt=""Example from IPython Notebook, special version of xcorr""></p>
+
+<p>This example is generated using <code>xcorr</code> function from the <a href=""https://gist.github.com/werediver/e5348bf945aeecfc5a2a"" rel=""nofollow"">gist</a>.</p>
+
+<p>The confidence interval here is computed as $\pm\frac{2}{\sqrt{n-k}}$, where $k$ is the lag and $n-k$ is the available intersection length. Each intersection is standardized independently.</p>
+
+<p>After this introduction I can ask my question: am I deadly wrong with this strange ""proper"" approach or am I inventing a wheel? :) Is it safe to work with cross-correlation calculated by the latter approach? Is it really more ""proper"" than the commonly used approach? If so, why even R uses the former method?</p>
+
+<p>Thanks in advance.</p>
+
+<p>* For basic info on confidence intervals for cross-correlation refer to:</p>
+
+<ol>
+<li>Stats StackExchange answer by Rob Hyndman: <a href=""http://stats.stackexchange.com/a/3128/43304"">http://stats.stackexchange.com/a/3128/43304</a></li>
+<li><a href=""http://support.minitab.com/en-us/minitab/17/topic-library/modeling-statistics/time-series/basics/guidelines-for-testing-the-autocorrelation-or-cross-correlation/"" rel=""nofollow"">Guidelines for testing the autocorrelation or cross correlation</a></li>
+</ol>
+
+<hr>
+
+<p>As it's pointed by <a href=""http://stats.stackexchange.com/users/919/whuber"">whuber</a> in his comment, this question is closely related to a number of already existing ones:</p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/q/81754/43304"">Understanding this acf output</a></li>
+<li><a href=""http://stats.stackexchange.com/q/81754/43304"">Formula for autocorrelation in R vs. Excel</a></li>
+</ul>
+
+<p>...and probably others with pretty good answers.</p>
+"
+"NaN","NaN","129566","<p>I've just read an excellent post 
+<a href=""http://stats.stackexchange.com/questions/71087/analysis-of-a-time-series-with-a-fixed-and-random-factor-in-r"">mix model</a></p>
+
+<p>I've a question connected to that. Roland, can you recommend any reference to a comment that if one have not enough observation periods then it is difficult to model properly auto-correlation? Did I understand it properly, that four observation periods are probably not enough to successfully account on auto-correlation. </p>
+"
+"0.294085848837523","0.321287731561","147619","<p>I'm trying to build a model that can predict streamflow for an alpine (snowmelt-fed) watershed using snow albedo (roughly, the energy reflectance of the snow) data. Albedo controls the melt of the snowpack, and higher albedo means slower melt, and vice versa. I have daily time-series data for both the snow albedo and streamflow, for 12 years from 2002-2013. The albedo time-series was obtained by spatially-averaging albedo data (raster files) from NASA's MODIS satellite.</p>
+
+<p>I have tried various methods (simple regression, GLMs, GAMs, decision trees and random forests) to build the flow prediction model, but all of them fail because of the autocorrelated relationship between albedo and flow. Since the albedo is a snowpack property, there is a lag between it and the flow (related to snowmelt).</p>
+
+<p>The Cross correlation function (CCF) between albedo and flow is shown below:</p>
+
+<p><a href=""http://imgur.com/PpW1Kpy"" rel=""nofollow""><img src=""http://i.imgur.com/PpW1Kpy.png"" title=""source: imgur.com"" /></a></p>
+
+<p>I have tried to include albedo lags of various days into the models, but I'm not able to mimic the distributed lag relationship between albedo and flow. I have tried to add precipitation, temperature and other climatic data to the predictors, but they don't seem to help. There are similar lagged and cross-correlation problems between these other predictors and flow.</p>
+
+<p>The albedo, flow, precipitation and air temperature time-series are shown below:</p>
+
+<p><a href=""http://imgur.com/Kb8Ta6q"" rel=""nofollow""><img src=""http://i.imgur.com/Kb8Ta6q.png"" title=""source: imgur.com"" /></a></p>
+
+<p>Is there a statistical or machine learning technique in R that I can explore to build the albedo-streamflow model?</p>
+
+<p>Thank you.</p>
+"
+"0.519875244910036","0.397573283972945","149799","<p>I want to code for Detrended Cross Correlation in R for time-series data but I'm still stuck. I don't know why the coefficient is not in range -1 : 1. I try to write following these equation below</p>
+
+<p><a href=""http://arxiv.org/pdf/1310.3984.pdf"" rel=""nofollow"">Measuring correlations between non-stationary series with DCCA coefficient</a></p>
+
+<p>Detrened cross-correlation coefficient is calculated as detrended covariance of two dataset over detrened variance of two integrated series </p>
+
+<p><img src=""http://i.stack.imgur.com/7EjJX.png"" alt=""enter image description here"">  (Equation 1)</p>
+
+<p>For time-series {xt}, use integrated series profile</p>
+
+<p><img src=""http://i.stack.imgur.com/JNdJv.png"" alt=""enter image description here"">   (Equation 2)</p>
+
+<p>where the data must be detrended by local trend in box of size s</p>
+
+<p><img src=""http://i.stack.imgur.com/eMg8Z.png"" alt=""enter image description here"">  (Equation 3)</p>
+
+<p><img src=""http://i.stack.imgur.com/SfhD3.png"" alt=""enter image description here"">(Equation 4)</p>
+
+<p>The X_hat is linear fit value evaluated by least square method</p>
+
+<p>Detrended covariance of two profiles</p>
+
+<p><img src=""http://i.stack.imgur.com/aiHyX.png"" alt=""enter image description here""> (Equation 5)</p>
+
+<p>Average the covariance over all boxes</p>
+
+<p><img src=""http://i.stack.imgur.com/ixtwd.png"" alt=""enter image description here"">  (Equation 6)</p>
+
+<pre><code>## data_1
+    x= c(-1.042061,-0.669056,-0.685977,-0.067925,0.808380,1.385235,1.455245,0.540762 ,0.139570,-1.038133,0.080121,-0.102159,-0.068675,0.515445,0.600459,0.655325,0.610604,0.482337,0.079108,-0.118951,-0.050178,0.007500,-0.200622)
+    ## data_2
+    y= c(-2.368030,-2.607095,-1.277660,0.301499,1.346982,1.885968,1.765950,1.242890,-0.464786,0.186658,-0.036450,-0.396513,-0.157115,-0.012962,0.378752,-0.151658,0.774253,0.646541,0.311877,-0.694177,-0.412918,-0.338630,0.276635)
+    ## window size = 6
+    k=6
+    DCCA_CC=function(x,y,k){
+      ## calculate cumulative sum profile of all t
+    xx&lt;- cumsum(x - mean(x))  ## Equation 2
+    yy&lt;- cumsum(y - mean(y))  ## Equation 2
+
+      ## Divide in to overlapping boxes of size k
+
+  slide_win_xx = mat_sliding_window(xx,k)
+  slide_win_yy = mat_sliding_window(yy,k)
+  ## calculate linear fit value in each box 
+  x_hat = t(apply(slide_win_xx,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+  y_hat = t(apply(slide_win_yy,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+
+##  Get detrend variance in each box with linear fit value (detrend by local trend).
+  F2_dfa_x = c()
+  F2_dfa_y = c()
+  for(i in 1:nrow(x_hat)){
+ ## Equation 4
+    F2_dfa_x = c(F2_dfa_x,mean((xx[i:(i+k-1)]-x_hat[i,])^2))
+  }
+  for(i in 1:nrow(y_hat)){
+## Equation 4
+    F2_dfa_y = c(F2_dfa_y,mean((yy[i:(i+k-1)]-y_hat[i,])^2))
+  }
+  ## Average detrend variance over all boxes to obtain fluctuation
+  F2_dfa_x = mean(F2_dfa_x) ## Equation 3
+  F2_dfa_y = mean(F2_dfa_y) ## Equation 3
+
+  ## Get detrended covariance of two profile
+  F2_dcca = c()
+  for(i in 1:nrow(x_hat)){
+  ## Equation 5
+    F2_dcca = c(F2_dcca,mean((xx[i:(i+k-1)]-x_hat[i,]) * (yy[i:(i+k-1)]-y_hat[i,]) ))
+  }
+
+## Equation 6
+  F2_dcca = mean(F2_dcca)
+
+## Calculate correlation coefficient 
+  rho = F2_dcca / (F2_dfa_x * F2_dfa_y) ## Equation 1
+  return(rho)
+}
+
+mat_sliding_window = function(xx,k){
+## Function to generate boxes given dataset(xx) and box size (k)
+  slide_mat=c()
+  for (i in 1:(length(xx)-k+1)){
+    slide_mat = rbind(slide_mat,xx[i:(i+k-1)] )
+  }
+  return(slide_mat)
+}
+
+print(DCCA_CC(x,y,k)) ##This give me 3.392302
+</code></pre>
+
+<p>I'm not sure if something wrong in integrated profile.</p>
+"
+"0.464990554975277","0.444500444500667","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"0.28474739872575","0.207390338946085","167044","<p>I am interested in analyzing the correlation between nationwide home prices and nationwide unemployment rates, both of which are leading economic indicators. I have data on nationwide home prices by using the Case-Shiller nationwide home price index (found here: <a href=""http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index"" rel=""nofollow"">http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index</a>), and I have data on nationwide unemployment rates from the Bureau of Labor Statistics. </p>
+
+<p>Preliminary hypothesis/background info: Home prices are high when economy is doing well, and unemployment rates are low when the economy is doing well. So common sense tells me that as the unemployment rate rises, then the Case Shiller home price index decreases, which means there should be a negative correlation. But I don't know how to prove this. Here is a summary of the data I have:</p>
+
+<p>I have the data for the Case-Shiller nationwide Home Price index for every month over the last ten years (1/1/2005-12/31/2014) which means 120 data points. I also have all the data for the nationwide Unemployment Rate over the same time period (1/1/2005-12/31/2014), which also means 120 data points. Both data are collected for the end of the month over the same time period, which means there is zero lag in the data sets.</p>
+
+<p>What kind of correlation analysis do I need to do to determine if there is any correlation between these two data sets? Cross-correlation? Time-series analysis?</p>
+
+<p>Thank you so much for any advice on how to start this research! Any help on what direction I should go would be incredibly appreciate. </p>
+
+<p>Thank you!</p>
+"
+"0.592748978363819","0.647576125802733","172226","<p>Let's assume an analytical model predicts an epidemic trend over time, i.e. number of infections over time. We also have a computer simulation results over time to verify the performance of the model. The goal is to prove the simulation results and predicted values of the analytical model (which are both a time series) are statistically close or similar. By similarity I mean the model predicts the values close to what simulation is providing.</p>
+
+<p><strong>Background</strong>:
+Researching around this topic, I came across the following posts:</p>
+
+<ol>
+<li><p><a href=""http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis"">http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis</a></p></li>
+<li><p><a href=""http://stats.stackexchange.com/questions/19103/how-to-statistically-compare-two-time-series"">How to statistically compare two time series?</a></p></li>
+</ol>
+
+<p>Both discussions suggest three approaches, where I am interested in two of them basically:</p>
+
+<p>(1). Use of ARIMA; 
+ (2). Use of Granger test</p>
+
+<p>For the first suggested solution, this is what has been written there in regards to ARIMA, in (1):</p>
+
+<blockquote>
+  <p>Run ARIMA on both data sets. (The basic idea here is to see if the same set of parameters (which make up the ARIMA model) can describe both your temp time series. If you run auto.arima() in forecast (R), then it will select the parameters p,d,q for your data, a great convenience.</p>
+</blockquote>
+
+<p>I ran auto.arima on the simulation values and then ran forecast, here are the results:</p>
+
+<pre><code>ARIMA(2,0,0) with zero mean     
+
+Coefficients:
+         ar1      ar2
+      1.4848  -0.5619
+s.e.  0.1876   0.1873
+
+sigma^2 estimated as 121434:  log likelihood=-110.64
+AIC=227.27   AICc=229.46   BIC=229.4
+</code></pre>
+
+<p>I ran auto.arima on predicted model values and then forecast. This is the result of the predicted model:</p>
+
+<pre><code>ARIMA(2,0,0) with non-zero mean 
+
+Coefficients:
+         ar1      ar2  intercept
+      1.5170  -0.7996  1478.8843
+s.e.  0.1329   0.1412   290.4144
+
+sigma^2 estimated as 85627:  log likelihood=-108.11
+AIC=224.21   AICc=228.21   BIC=227.05
+</code></pre>
+
+<p><strong>Question 1</strong> What are the values that need to be compared to prove that the two series are similar especially the trend over time?</p>
+
+<p>Regarding the second suggested option, I have read about it and found that Granger test is usually used to see if the values of series <em>A</em> at time <em>t</em> can predict the values of Series <em>B</em> at time <em>t+1</em>. </p>
+
+<p><strong>Question 2</strong> Basically, in my case I want to compare the values of time series A and B at the same time, how this one is relevant to my case then?</p>
+
+<p><strong>Question 3</strong> Is there any available method can be used to prove that the trend of two time-series over time is similar?</p>
+
+<p>FYI. I saw another method which is using Pearson Correlation Coefficient and I could follow the reasoning there. Moreover, verifying analytical models with simulations has been widely used in the literature. see:</p>
+
+<ol>
+<li><a href=""http://users.ece.gatech.edu/~jic/tnn05.pdf"" rel=""nofollow"">Spatial-Temporal Modeling of Malware Propagation in Networks Modeling</a></li>
+<li><a href=""http://cs.ucf.edu/~czou/research/emailWorm-TDSC.pdf"" rel=""nofollow"">Modeling and Simulation Study of the Propagation and Defense of Internet Email Worm</a></li>
+</ol>
+"
+"0.367607311046904","0.321287731561","180305","<p>I have a time series data (in day format) of 5 places for 15 days stored as a <code>matrix</code>. The structure of data is </p>
+
+<pre><code>meter_daywise&lt;-structure(c(24.4745528484842, 21.5936510486629, 58.9120896540103, 
+49.4188338105575, 568.791971631185, 27.1682608244523, 23.3482757939878, 
+74.710966227615, 82.6947717673258, 704.212340152625, 23.7581651139442, 
+21.154634543401, 64.9680107059625, 420.903181621575, 672.629513512841, 
+128.22871420984, 601.521395359887, 74.6606087800009, 335.87599588534, 
+576.451039365565, 641.329910104503, 1010.78497435794, 72.6159099850862, 
+225.153924410613, 582.652388366075, 529.082673064516, 1151.87208010484, 
+76.9939865858514, 198.567927906582, 641.511944831027, 280.685806121688, 
+998.647413766557, 73.2033388656998, 337.966543898629, 847.24874747014, 
+76.7357959402453, 1065.75153722813, 220.286408574643, 301.120955096701, 
+552.703945876515, 206.496034127105, 1053.49582469841, 206.187963352323, 
+219.791668265415, 655.496754449233, 172.87981151456, 1018.01514547636, 
+544.551001017031, 227.116788647859, 656.566145328213, 373.484460701849, 
+1503.65562864399, 117.732932835236, 251.383369528816, 802.871808716031, 
+150.471195301885, 1414.88799728991, 14.6490905509617, 203.429955747521, 
+622.731792495107, 548.093577186778, 1076.5618643676, 15.5135269483705, 
+256.581499048612, 644.572474965446, 63.2304035656636, 1538.07906461011, 
+15.0980567507389, 261.513768642083, 622.17970609429, 210.786387991582, 
+996.998005580537, 15.8138368515615, 157.390773346978, 573.477606081416
+), .Dim = c(5L, 15L), .Dimnames = list(c(""apFac_401"", ""apFac_403"", 
+""apFac_501"", ""apFac_503"", ""apFac_601""), c(""D1"", ""D2"", ""D3"", ""D4"", 
+""D5"", ""D6"", ""D7"", ""D8"", ""D9"", ""D10"", ""D11"", ""D12"", ""D13"", ""D14"", 
+""D15"")))
+</code></pre>
+
+<p>Earlier, I was calculating correlation between different series using</p>
+
+<pre><code>library(corrplot)# for plotting correlation matrix
+corrplot(cor(t(meter_daywise)),method = ""number"",type=""lower"")# have taken transpose of above structure
+</code></pre>
+
+<p>So, with this I am getting a nice correlation matrix showing correlation between different series.
+<a href=""http://i.stack.imgur.com/lVP29m.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/lVP29m.png"" alt=""enter image description here""></a></p>
+
+<p>But, while observing correlation values I find something is wrong and on  searching I found this <a href=""http://stats.stackexchange.com/questions/29096/correlation-between-two-time-series"">link</a>, where it mentions that we need to compute <strong>cross-correlation</strong>. Therefore, now I need to calculate cross correlation matrix like the above one. Accordingly, I found some functions like</p>
+
+<pre><code>  1. ccf() #in base packages
+  2. diss(meter_daywise,METHOD = ""CORT"",deltamethod = ""DTW"")#in TSclust package
+</code></pre>
+
+<p>I am facing two issues with above functions:</p>
+
+<ol>
+<li><code>ccf</code> do not take full matrix as input</li>
+<li><code>diss()</code> takes input matrix and produces some matrix, but while observing the values I find that it is not a cross-correlation matrix because the values are not between <code>-1</code> and <code>1</code>. </li>
+</ol>
+
+<p>So the question is how do we compute cross-correlation matrix of different time-series values in R? </p>
+
+<p>Note: I have already asked the same question on stack overflow at <a href=""http://stackoverflow.com/q/33537687/3317829"">link</a>, but I did not get any response . </p>
+"
+"0.28474739872575","0.311085508419128","196581","<p>Cochran et al. used an ARIMA model to investigate whether an execution had any deterrent effect on homicide. </p>
+
+<p>""They used ARIMA modeling to control for trend, drift, and autocorrelation. However, ARIMA modeling cannot (1) control specifically for third-variable sociodemographic factors known to be associated with homicide or (2) isolate the effect of multiple independent variables of interest, such as levels of execution and the amount of news coverage that executions receive. Rather, conventional ARIMA modeling generally is capable of assessing the impact of only a single intervention factor in a time series.""</p>
+
+<p>Baily replicated this study*, from which I've copied+pasted the above paragraph. He used multivariate time-series analysis instead of ARIMA.</p>
+
+<p>My understanding, based on reading this <a href=""http://stats.stackexchange.com/questions/18375/how-to-fit-an-arimax-model-with-r"">answer</a>, is that xreg does what Baily suggests an ARIMA model cannot. I.e. can you not look at execution and homocide with news coverage of the event in an 'xreg'? I am asking here because Baily's paper was published in 1998, and I wonder if the problem he speaks about has since been solved.</p>
+
+<pre><code>*Bailey, W. C. (1998). Deterrence, brutalization, and the death penalty: Another examination of Oklahoma's return to capital punishment. Criminology, 36(4), 711-734.
+</code></pre>
+"
+"0.594266903969212","0.510112785336185","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"
+"0.328797974610715","0.35921060405355","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"
+"0.464990554975277","0.444500444500667","215441","<p>I am new to R and analytics.
+I am trying to create weekly forecasting model. Additionally , I have been asked to see if following components impacts product movement : </p>
+
+<ol>
+<li>Weather data ( Mean temperature,rain,snowfall,humidity and precipitation) </li>
+<li>Holidays</li>
+<li>Promotions</li>
+</ol>
+
+<p>Data can be downloaded from below link :
+<a href=""https://www.dropbox.com/s/nudm3vs7eo837ml/Store%20Sales%20Data.xlsx?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/nudm3vs7eo837ml/Store%20Sales%20Data.xlsx?dl=0</a></p>
+
+<p>The objective is to create and validate weekly forecast for each store and each individual product category.</p>
+
+<p>Can anyone please validate my approach ? Also, do we have alternate efficient approach ?</p>
+
+<p><strong><em>Code :</em></strong></p>
+
+<p>for(pProduct in unique(df_sales$product_desc)) { </p>
+
+<pre><code>## Fetch data for of the identified location
+print (paste(paste("" Proceesing for"", pProductType),pProduct,sep = "" : "" ))
+
+## Data cleansing for subclass long description
+vProductDescription &lt;- gsub(""[^[:alnum:][:space:]-]"", """", pProduct)
+
+## Create directory for Product if it does not exists
+if (!file_test(""-d"", file.path(pRootDirectory, vProductDescription))){
+   dir.create(file.path(pRootDirectory, vProductDescription), showWarnings = FALSE  ,recursive = FALSE, mode = ""0777"")
+}else {
+   print(paste(""Directory Already exists :"", paste(pRootDirectory, vProductDescription ,""\\"",sep = """")  ))
+}
+
+pDirectoryL1 = paste(pRootDirectory, vProductDescription , sep="""")
+
+## Create product subset for processing
+df_subset    &lt;- subset(df_sales,product_desc == pProduct
+                      ,select=c(store,process_date,units,rain,snowfall,meantemp,promo_ind,humidity,precipitation,holiday_week,fiscal_year,fiscal_week_nbr))
+
+## Calculate Product History
+pMinDate       &lt;- as.Date(min(df_subset$process_date[df_subset$units &gt; 0]))
+pMaxDate       &lt;- as.Date(max(df_subset$process_date) )
+pHistoryLength &lt;- as.numeric(difftime(strptime(pMaxDate, format = ""%Y-%m-%d""),strptime(pMinDate, format = ""%Y-%m-%d""),units=""weeks""))
+
+## Check if product needs to be evaluated
+if (pHistoryLength &gt; 104 ) {
+
+    ## Data Cleansing for the data for processing
+    df_subset$process_date &lt;- as.Date(df_subset$process_date )
+    df_subset &lt;- df_subset[(df_subset$process_date &gt;= pMinDate),]
+
+    ## Processing individual location for forecasting
+    for(pLocation in unique(df_subset$store))
+    {
+
+        print (paste(paste("" Proceesing for "", pLocationType),pLocation,sep = "" : "" ))
+
+        ## Data Preparation for Location
+        pLocationData           &lt;- subset(df_subset,store == pLocation )
+        pLocationData           &lt;- pLocationData[order(pLocationData$process_date),]
+        rownames(pLocationData) &lt;- rep(1:nrow(pLocationData))
+
+        ## Create Directory Name
+        pLocationDirectoryName &lt;- paste(pLocationType,  pLocation ,  sep=""_"")
+
+        ## Create directory for Product if it does not exists
+        if (!file_test(""-d"", file.path(pDirectoryL1, pLocationDirectoryName))){
+           dir.create(file.path(pDirectoryL1, pLocationDirectoryName), showWarnings = FALSE  ,recursive = FALSE, mode = ""0777"")
+        } else {
+           print(paste(""Directory Already exists :"", paste(pDirectoryL1, pLocationDirectoryName ,""\\"",sep = """")  ))
+        }
+
+        pDirectoryL2 &lt;- paste(pDirectoryL1, pLocationDirectoryName, sep=""\\"")
+
+        ## set the current working directory to Location Folder
+        setwd(pDirectoryL2)
+
+        if (mean(pLocationData$units) &gt; 20) ## Do not forecast product with very low sales
+        {
+            ## 
+            pBreakPointDate     &lt;- as.Date(timeFirstDayInMonth(pMaxDate-89))
+
+            if (pForecastType == ""W"") {pforecastPeriod  &lt;- ceiling(as.numeric((pMaxDate - pBreakPointDate)/7))}
+
+            ## find the correlation of individual components with #Units sold
+            cor_week     &lt;- cor(pLocationData$units, pLocationData$fiscal_week_nbr, use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_holiday  &lt;- cor(pLocationData$units, pLocationData$holiday_week   , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_promo    &lt;- cor(pLocationData$units, pLocationData$promo_ind      , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_temp     &lt;- cor(pLocationData$units, pLocationData$meantemp       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_humid    &lt;- cor(pLocationData$units, pLocationData$humidity       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_precip   &lt;- cor(pLocationData$units, pLocationData$precipitation  , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_rain     &lt;- cor(pLocationData$units, pLocationData$rain           , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_snowfall &lt;- cor(pLocationData$units, pLocationData$snowfall       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+
+            covariates  &lt;- c(if ((!is.na(cor_week))     &amp; abs(cor_week)     &gt; 0.4) {""fiscal_week_nbr""}
+                            ,if ((!is.na(cor_holiday))  &amp; abs(cor_holiday)  &gt; 0.4) {""holiday_ind""}
+                            ,if ((!is.na(cor_promo))    &amp; abs(cor_promo)    &gt; 0.4) {""promo_ind""}
+                            ,if ((!is.na(cor_temp))     &amp; abs(cor_temp)     &gt; 0.4) {""meantemp""}
+                            ,if ((!is.na(cor_humid))    &amp; abs(cor_humid)    &gt; 0.4) {""humidity""}
+                            ,if ((!is.na(cor_precip))   &amp; abs(cor_precip)   &gt; 0.4) {""precipitation""}
+                            ,if ((!is.na(cor_rain))     &amp; abs(cor_rain)     &gt; 0.4) {""rain""}
+                            ,if ((!is.na(cor_snowfall)) &amp; abs(cor_snowfall) &gt; 0.4) {""snowfall""} )
+
+            covariates_str &lt;- """"
+
+            for (i in covariates) {covariates_str &lt;- paste(covariates_str,i[1], sep="" "")}
+
+            ## Create time-series object required for forecasting
+            xts_training &lt;- window(ts(pLocationData, start = 1 ), end   = (nrow(pLocationData) - pforecastPeriod  ))
+            xts_test     &lt;- window(ts(pLocationData, start = 1 ), start = (nrow(pLocationData) - pforecastPeriod+1))
+
+            ts_training  &lt;- ts(xts_training[,""units""] , start=c(year(pMinDate),month(pMinDate),day(pMinDate))                      , freq=  365.25/7)
+            ts_test      &lt;- ts(xts_test[,""units""]     , start=c(year(pBreakPointDate),month(pBreakPointDate),day(pBreakPointDate)) , freq=  365.25/7)
+
+            #================ AUTO ARIMA Model with regressors  ================#
+            try(
+            {
+               print(paste('Starting AUTO ARIMA with regressor for - ',vProductDescription))
+
+               ## forcasting using AUTO ARIMA  model
+               forecastARIMAReg &lt;- forecast(auto.arima(xts_training[,""units""], xreg = xts_training[,covariates])
+                                            , xreg = xts_test[, covariates], h = pforecastPeriod)
+
+               ## Save the forecasted data using AUTO ARIMA model
+               ForecastFileName = paste(pDirectoryL2,""forecast_data_"", ""ARIMA_Regressor"","".txt"" ,sep="""")
+               write.csv(forecastARIMAReg,file=ForecastFileName,row.names = TRUE)
+
+               ## PLOT ARIMA GRAPH
+               graph_data &lt;- xts(zoo(cbind(training= xts_training[,""units""], actual= xts_test[,""units""], forecast = forecastARIMAReg$mean , temperature=pLocationData$meantemp))
+                                 ,order.by = seq(min(pLocationData$process_date), max(pLocationData$process_date), by='weeks')  )
+
+               ## Graph title              
+               graph_title &lt;-  paste(vProductDescription , "" - Analysis using "", forecastARIMAReg$method , "" with regressor"" ,covariates_str)
+
+               ## PLOT AUTO ARIMA w/ Regressor GRAPH
+               graph_arima_reg &lt;- dygraph( graph_data, main= graph_title) %&gt;%
+                                  dySeries(""training"" , label = ""History""   , strokeWidth = 1.5  ) %&gt;%
+                                  dySeries(""actual""   , label = ""Actual""    , strokeWidth = 1.5  )  %&gt;%
+                                  dySeries(""forecast"" , label = ""Predicted"" , strokeWidth = 1.75 )  %&gt;%
+                                  dySeries(""temperature"", axis = ""y2"" , label=""Temperature"" , strokePattern=""dotted"")  %&gt;%
+                                  dyRangeSelector(height = 35)  %&gt;%
+                                  dyShading(from = as.yearmon(pBreakPointDate) , to = as.yearmon(pMaxDate), color = ""#E9FCE4"") %&gt;%
+                                  dyOptions(axisLineWidth = 1.5,includeZero = TRUE, axisLineColor = ""black"", gridLineColor = ""lightblue"" )
+
+
+               ## SAVE TO HTML File
+               saveWidget(widget= graph_arima_reg, file=""graph_arima_reg.html"")
+
+               ## Accruacy of Model against TEST data
+               accuracyARIMA_reg   &lt;- accuracy(forecastARIMAReg  , xts_test[,""units""])
+
+               print(paste('Finished AUTO ARIMA w/ regressor for - ',vProductDescription))
+            }, silent=T)
+
+ } else {
+   vErrorMessage &lt;- paste(""Insignificant data for forecasting "", pLocationType ,pLocation, sep="" - "")
+   print (vErrorMessage)
+   write.csv(vErrorMessage,file=""ErrorFile.txt"",row.names = TRUE)
+ }
+
+    } ##  End - Store loop
+
+
+} else {
+        vErrorMessage &lt;- paste(""Insufficient history for"",vProductDescription,""hence no forecast"")
+        print (vErrorMessage)
+        write.csv(vErrorMessage,file=""ErrorFile.txt"",row.names = TRUE)
+
+} ## IF condition for history validation
+</code></pre>
+
+<p>} ## End of Product Loop</p>
+"

@@ -1,0 +1,403 @@
+"V1","V2","V3","V4"
+"0.333333333333333","0.301511344577764","203769","<p>I have a standard OLS regression setup, where (sets of) the regresors are orthogonal to each other. I am looking for a fast low-level way (using <code>qr()</code> instead of <code>lm()</code> ) to do this in R. So far, I can think of at least three approaches:</p>
+
+<ol>
+<li><p><strong>Simple:</strong> Run the standard OLS: should be slow as does not make use of the orthogonal structure</p></li>
+<li><p><strong>Separate:</strong> Run regressions separately: we know that with orthogonal regressors, we could get the same estimates by estimating OLS on each (sets of ) regressors separately. </p></li>
+<li><p><strong>Sparse:</strong> Use a sparse routine:  the X matrix contains many zeros, so could be considered sparse. Or use a ""block diagonal"" routine in R for inverting the $X^\prime X$ noting that with (sets of ) orthogonal regressors, it is (block) diagonal.</p></li>
+</ol>
+
+<p>Against my expectations, in a single experiment (code below) I ran, the simplest method (1, simple) was the fastest, while the fancy sparse method the slowest.  Any ideas of why this would happen? Any idea of a better way/different routines that make use of the block-diagonal structure?</p>
+
+<p>Thanks!</p>
+
+<pre><code>library(Matrix)
+library(microbenchmark)
+
+
+n &lt;- 1000
+k &lt;- 5
+x &lt;- matrix(rnorm(n*k), ncol=k)
+eps &lt;- rnorm(n)
+y &lt;- as.matrix(ifelse(1:n&lt;(n/2), 
+                  x %*% seq(0.8, by=0.05,length.out=k)+eps, 
+                  x %*% seq(0.5, by=0.05,length.out=k)+eps))
+
+
+X_s &lt;- bdiag(x[1:(n/2),], x[(n/2+1):n,])
+X &lt;- as.matrix(X_s)
+microbenchmark(Simple=qr.coef(qr(X), y),
+           Separate=c(qr.coef(qr(X[,1]), y), qr.coef(qr(X[,2]), y)),
+           Sparse=qr.coef(qr(X_s), y))
+</code></pre>
+"
+"0.384900179459751","0.522232967867094","152033","<p>I'm having some difficulty interpreting how to correctly create a matrix input for regression from a long form data source. I have table containing marketing data where each row represents a view of an advert, with person ID, time of day and channel also included, and purchase decision for that person (success). </p>
+
+<p>This R code creates a rough sample of the long form data:</p>
+
+<p><code>aa &lt;- data.frame(ID=rep(letters[1:4]), success=c(1,0,0,1,1,0,0,1,1,0,0,1), 
++            viewTime=rep(c(""night"",""day"")), channel=rep(c(""tv"",""web"",""email""), 
++                                                        c(5,3,4)))
+aa
+   ID success viewTime channel
+1   a       1    night      tv
+2   b       0      day      tv
+3   c       0    night      tv
+4   d       1      day      tv
+5   a       1    night      tv
+6   b       0      day     web
+7   c       0    night     web
+8   d       1      day     web
+9   a       1    night   email
+10  b       0      day   email
+11  c       0    night   email
+12  d       1      day   email</code></p>
+
+<p>To model this I'm interested in summarizing the data at the person ID level and then fitting a logistic regression based on the purchase decision (success). I'm curious whether time of day, channel, and the interactions between time and channel influence the decision.</p>
+
+<p>The problem I'm having is how to summarize this. I can summarize across both variables of interest like this:</p>
+
+<p><code>library(reshape2)</code></p>
+
+<p><code>&gt; bb &lt;- dcast(aa, ID + success ~ channel + viewTime)</code></p>
+
+<p><code>&gt; bb
+  ID success email_day email_night tv_day tv_night web_day web_night
+1  a       1         0           1      0        2       0         0
+2  b       0         1           0      1        0       1         0
+3  c       0         0           1      0        1       0         1
+4  d       1         1           0      1        0       1         0</code></p>
+
+<p>Which returns the count of each combination of channel/time across each person, but I worry that this would model the interaction without modeling the main effect, which I know to be incorrect. Another option would be to summarize the count of ads by each variable of interest independently, like this:</p>
+
+<p><code>library(dplyr)</code></p>
+
+<pre><code>cc &lt;- left_join(dcast(aa, ID + success ~ viewTime), dcast(aa, ID + success ~ channel))
+</code></pre>
+
+<p><code>&gt; cc
+  ID success day night email tv web
+1  a       1   0     3     1  2   0
+2  b       0   3     0     1  1   1
+3  c       0   0     3     1  1   1
+4  d       1   3     0     1  1   1</code></p>
+
+<p>But now it seems rather odd to assign separate count data to each view, e.g. the count of views per person is double-counted. A third option is to join the two previous tables together.</p>
+
+<pre><code>dd &lt;- left_join(cc,bb)
+</code></pre>
+
+<p><code>&gt; dd
+  ID success day night email tv web email_day email_night tv_day tv_night web_day web_night
+1  a       1   0     3     1  2   0         0           1      0        2       0         0
+2  b       0   3     0     1  1   1         1           0      1        0       1         0
+3  c       0   0     3     1  1   1         0           1      0        1       0         1
+4  d       1   3     0     1  1   1         1           0      1        0       1         0</code></p>
+
+<p>Which returns individual counts for <code>Time</code> and <code>Channel</code>, as well as the count across each possible interaction. My question is which of these three approaches would be most correct and what is the reasoning behind that. </p>
+"
+"0.384900179459751","0.522232967867094","228238","<p>I'm having a strange problem running a meta-regression using the function <code>rma.mv()</code> in the 'metafor' package in R.</p>
+
+<p>Since some of my data are from multiple-endpoint studies, I have calculated the variance-covariance matrix so that correlations between outcomes are taken into account. I'm also using random effects at study and treatment level. As far as I'm aware, I have now covered all issues with regard to dependent effect sizes.</p>
+
+<p>The model looks like this:</p>
+
+<pre><code>cov_mod &lt;- rma.mv(Hedges_g, cov, mods = ~ days, random = ~ treatment | study, data = rev)
+</code></pre>
+
+<p>When running the code, it gives this error message:</p>
+
+<pre><code>Error in rma.mv(Hedges_g, cov9, mods = ~days, random = ~1 | treatment/study,  : 
+  Error during optimization.
+In addition: Warning message:
+In rma.mv(Hedges_g, cov9, mods = ~days, random = ~1 | treatment/study,  :
+  V appears to be not positive definite.
+</code></pre>
+
+<p>I have discovered that the problem lies with one particular study (9 effect sizes in total, coming from 3 treatment groups that were each tested at 3 moments in time). When I remove this study from the data set, the code runs without problem.</p>
+
+<p>Thus, apparently this particular study causes the matrix to be 'not positive definite'. I have read that this likely means that ""at least one of [the] variables can be expressed as a linear combination of the others"" (<a href=""http://stats.stackexchange.com/questions/30465/what-does-a-non-positive-definite-covariance-matrix-tell-me-about-my-data"">source</a>).</p>
+
+<p>However, here comes the strange thing: I have replaced all values in the variance-covariance matrix relating to this particular study with random numbers between 0-1 (maintaining the symmetry), and the error message remains unchanged. I am puzzled, because the matrix can no longer be linearly predictable if it contains random numbers.</p>
+
+<p>What could be the issue?</p>
+"
+"0.333333333333333","0.301511344577764"," 56226","<p>I have a large regression problem with a lot of cases, but relatively few independent variables. One of them is a categorical factor with thousands of levels. Robust regression runs forever. In some cases the large number of dummy variables becomes too sparse to calculate with even ""normal"" lm. </p>
+
+<p>What would usually make sense is to somehow calculate the average for each level of the factor, then adjust the dependent variable accordingly, and do the regression without the big factor. A colleague of mine could remember there is a two-letter R function that does that automatically, but he cannot remember the two letter combination.</p>
+
+<p>Any help would be greatly appreciated.</p>
+"
+"0.680413817439772","0.738548945875996","158366","<p>I'm trying to fit a multiple regression model with pairwise deletion in the context of missing data.  <code>lm()</code> uses listwise deletion, which I'd prefer not to use in my case.  I'd also prefer not to use multiple imputation or FIML.  How can I do multiple regression with pairwise deletion in R?</p>
+
+<p>I have tried the <code>mat.regress()</code> function of the <code>psych</code> package, which fits regression models to correlation/covariance matrices (which can be obtained from pairwise deletion), but the regression model does not appear to include an intercept parameter.</p>
+
+<p>Here's what I've tried (small example):</p>
+
+<pre><code>set.seed(33333)
+y &lt;- rnorm(1000)
+x1 &lt;- y*2 + rnorm(1000, sd=.2)
+x2 &lt;- y*5 + rnorm(1000, sd=.5)
+
+y[sample(1:1000, 10)] &lt;- NA
+x1[sample(1:1000, 10)] &lt;- NA
+x2[sample(1:1000, 10)] &lt;- NA
+
+mydata &lt;- data.frame(y, x1, x2)
+covMatrix &lt;- cov(mydata, use=""pairwise.complete.obs"")
+
+#Listwise Deletion
+listwiseDeletion &lt;- lm(y ~ x1 + x2, data=mydata)
+observations &lt;- length(listwiseDeletion$na.action) #30 rows deleted due to listwise deletion
+
+coef(listwiseDeletion)
+(Intercept)          x1          x2 
+0.001995527 0.245372245 0.100001989
+
+#Pairwise Deletion --- but missing intercept
+pairwiseDeletion &lt;- mat.regress(y=""y"", x=c(""x1"",""x2""), data=covMatrix, n.obs=observations)
+pairwiseDeletion$beta
+       y
+x1 0.1861277
+x2 0.1251995
+
+#Pairwise Deletion --- tried to add intercept, but received error when fitting model
+mydata$intercept &lt;- 0
+covMatrixWithIntercept &lt;- cov(mydata, use=""pairwise.complete.obs"")
+
+pairwiseDeletionWithIntercept &lt;- mat.regress(y=""y"", x=c(""intercept"",""x1"",""x2""), data=covMatrixWithIntercept, n.obs=observations)
+Something is seriously wrong the correlation matrix.
+In smc, smcs were set to 1.0
+Warning messages:
+1: In cov2cor(C) :
+  diag(.) had 0 or NA entries; non-finite result is doubtful
+2: In cor.smooth(R) :
+  I am sorry, there is something seriously wrong with the correlation matrix,
+cor.smooth failed to  smooth it because some of the eigen values are NA.  
+Are you sure you specified the data correctly?
+</code></pre>
+
+<p>So, how can I obtain an intercept parameter using <code>mat.regress</code>, or how can I obtain parameter estimates from pairwise deletion using another method or package in R?  I've seen <a href=""https://stats.stackexchange.com/questions/107597/is-there-a-way-to-use-the-covariance-matrix-to-find-coefficients-for-multiple-re"">matrix calculations</a> to do this, but, ideally, there'd be a package that also outputs regression diagnostics, fit stats, etc.  Also, preferably, the method would be able to fit interaction terms.</p>
+"
+"NaN","NaN"," 67484","<p>I've got a set of input-output vector pairs, and I want to find a function that approximates the output vectors from the input vectors. Specifically, I want a <em>matrix</em> by which to multiply an input vector such that I get a good approximation for the output.</p>
+
+<p>I guess <em>linear</em> regression is not what I'm looking for, or else I wouldn't know what to do with the linear function. So what sort of regression do I need to apply here? Literature tips and / or Java / Python / R packages are very welcome!</p>
+"
+"NaN","NaN"," 58775","<p>For a series of observations $(\vec{x}_i, y_i), i = 1 \cdots N$ from the linear model $Y =  \beta^T X + \epsilon$, the least squares estimate of $\beta$ is: $\hat{\beta} = (\mathbf{X}^T \mathbf{X})^{-1}(\mathbf{X}^T\mathbf{Y})$. Fitted values can be obtained as $\hat{y}_i = \hat{\beta}^Tx_i$. However I would like the $\hat{y}_i$'s to be independent of the $i$th observation. That is, I would like $\hat{y}_i = \hat{\beta}_{(-i)}^T x_i$, where $\hat{\beta}_{(-i)}$ is calculated using only observations $1,2 \cdots i-1, i+1 \cdots N-1, N$. Doing N separate fits is computationally infeasible, and I suspect there is a shortcut: $\hat{\beta}$ and $\hat{\beta}_{(-i)}$ are very similar.</p>
+
+<p>Any ideas? And does anyone know of a way in R to obtain such hold-one-out $\hat{y}$'s? </p>
+"
+"0.577350269189626","0.522232967867094","167014","<p>Lets say that you have access to a model that estimates the mean of four independent groups like m2 below, but these groups have been formed from two factors (a &amp; b) and you want to instead evaluate a model with two main effects (a &amp; b) and an interaction (aXb) like m1.  </p>
+
+<pre><code>n=10^3
+a=rnorm(n, 0, 1)&gt;0
+b=rnorm(n, 0, 1)&gt;0
+e=rnorm(n, 0, 1)
+y=1+a*.2 + b*-.2 + .3*a*b + e 
+
+aXb = a*b
+
+ai=a==TRUE &amp; b==FALSE
+bi=b==TRUE &amp; a==FALSE
+abi=a==TRUE &amp; b==TRUE
+
+m1 = lm(y~a+b+aXb)
+m2 = lm(y~ai+bi+abi)
+</code></pre>
+
+<p>Sample output below for m1 &amp; m2:</p>
+
+<pre><code>(Intercept)  0.85847    0.06396  13.423  &lt; 2e-16 ***
+aTRUE        0.37947    0.09180   4.134 3.87e-05 ***
+bTRUE        0.02101    0.08956   0.235    0.815    
+aXb          0.02870    0.12705   0.226    0.821    
+
+
+(Intercept)  0.85847    0.06396  13.423  &lt; 2e-16 ***
+aiTRUE       0.37947    0.09180   4.134 3.87e-05 ***
+biTRUE       0.02101    0.08956   0.235    0.815    
+abiTRUE      0.42918    0.08873   4.837 1.53e-06 ***
+</code></pre>
+
+<p>The two models are equivalent but parameterized differently and most estimtates are identical except <code>aXb</code> from m1 &amp; <code>abi</code> from m2. It is easy to calculate the point estimate of the interaction (aXb) in m1 from the independent groups modeled in m2 like this:</p>
+
+<pre><code> summary(m2)$coefficients[4,1]-summary(m2)$coefficients[3,1]-summary(m2)$coefficients[2,1]
+ [1] 0.0286971
+</code></pre>
+
+<p>And the other way around:</p>
+
+<pre><code> summary(m1)$coefficients[4,1]+summary(m1)$coefficients[3,1]+summary(m1)$coefficients[2,1]
+[1] 0.4291785
+</code></pre>
+
+<p>But how can I calculate the variance/standard error of the interaction term in m1 using only information from m2 (and vice versa)?</p>
+"
+"0.471404520791032","0.426401432711221","167324","<p>I'm trying to obtain the variance-covariance matrix of a logistic regression:</p>
+
+<pre><code>mydata &lt;- read.csv(""http://www.ats.ucla.edu/stat/data/binary.csv"")
+mylogit &lt;- glm(admit ~ gre + gpa, data = mydata, family = ""binomial"")
+</code></pre>
+
+<p>through matrix computation. I have been following the example published <a href=""http://www.ats.ucla.edu/stat/r/library/matrix_alg.htm"" rel=""nofollow"">here</a> for the basic linear regression</p>
+
+<pre><code>X &lt;- as.matrix(cbind(1, mydata[,c('gre','gpa')]))
+beta.hat &lt;- as.matrix(coef(mylogit))
+Y &lt;- as.matrix(mydata$admit)
+y.hat &lt;- X %*% beta.hat
+
+n &lt;- nrow(X)
+p &lt;- ncol(X)
+
+sigma2 &lt;- sum((Y - y.hat)^2)/(n - p)        
+v &lt;- solve(t(X) %*% X) * sigma2
+</code></pre>
+
+<p>But then my var/cov matrix doesn't not equals the matrix computed with <code>vcov()</code></p>
+
+<pre><code>v == vcov(mylogit)
+
+1   gre   gpa
+1   FALSE FALSE FALSE
+gre FALSE FALSE FALSE
+gpa FALSE FALSE FALSE
+</code></pre>
+
+<p>Did I miss some log transformation?</p>
+"
+"0.333333333333333","0.301511344577764","135395","<p>I am trying to look at expression of some genes and relate the dist matrix (Sm) to a number of different factors that I collected on the individuals (e.g., litter size, licking behavior, group housing conditions). Housing conditions are categorical while licking and litter size are continuous. </p>
+
+<pre><code>&gt; adonis(Sm ~ licking + litsiz + grp, data=sub7)
+
+Call:
+adonis(formula = Sm ~ licking + litsiz + grp, data = sub7) 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+          Df SumsOfSqs MeanSqs F.Model      R2 Pr(&gt;F)  
+licking    1    1.1831 1.18312  3.7850 0.20868  0.025 *
+litsiz     1    0.4898 0.48976  1.5668 0.08639  0.185  
+grp        2    1.4959 0.74796  2.3928 0.26386  0.042 *
+Residuals  8    2.5007 0.31258         0.44108         
+Total     12    5.6695                 1.00000         
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I notice that when I change the order of the variables, I get different results. This is expected since terms are added sequentially (Type I SS). </p>
+
+<pre><code>&gt; adonis(Sm ~ licking + grp + litsiz, data=sub7)
+
+Call:
+adonis(formula = Sm ~ licking + grp + litsiz, data = sub7) 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+          Df SumsOfSqs MeanSqs F.Model      R2 Pr(&gt;F)  
+licking    1    1.1831 1.18312  3.7850 0.20868  0.020 *
+grp        2    1.3785 0.68924  2.2050 0.24314  0.081 .
+litsiz     1    0.6072 0.60720  1.9425 0.10710  0.157  
+Residuals  8    2.5007 0.31258         0.44108         
+Total     12    5.6695                 1.00000         
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I can't seem to wrap my head around how to interpret these results? Is this an incorrect way to analyze these data? </p>
+
+<p>Any help would be greatly appreciated!</p>
+"
+"0.471404520791032","0.426401432711221"," 91682","<p>Suppose I fitted a logistic model and get the estimates as well as their <code>vcov</code> matrix. I would realize this: draw length($\beta_s$) independent $\mathcal N(0,1)$ values to create a random vector $z$, then $\beta^*$=$\hat{\beta}+Az$ where $A$ is the upper triangular matrix of the Cholesky decomposition matrix ($\hat{V}=A'A$). How can I draw the $\beta^*$ using the <code>vcov</code> matrix? Here is an example:</p>
+
+<pre><code>set.seed(123)
+df &lt;- data.frame(y=rbinom(100,1,0.5),
+                 x1=rnorm(100,10,2),
+                 x2=rbinom(100,20,0.6))
+
+fit &lt;- glm(y~x1+x2, data=df, family=""binomial"")
+</code></pre>
+
+<p>$\hat{\beta}$:</p>
+
+<pre><code>coef(summary(fit))
+            Estimate Std. Error  z value Pr(&gt;|z|)
+(Intercept)   0.1482    1.57451  0.09413   0.9250
+x1           -0.1710    0.10962 -1.55984   0.1188
+x2            0.1181    0.09047  1.30567   0.1917
+</code></pre>
+
+<p>vcov matrix:</p>
+
+<pre><code>vcov(fit)
+(Intercept)      2.4791 -0.1225802 -0.1020612
+x1              -0.1226  0.0120164  0.0003505
+x2              -0.1021  0.0003505  0.0081844
+</code></pre>
+
+<p>Would somebody know how to draw new $\beta^*$ using the <code>coef</code> and <code>vcov</code>?</p>
+"
+"0.471404520791032","0.426401432711221","190574","<p>I was attempting to calculate an OLS regression in <strong>R</strong> when I saw some strange things. The inverse of a square matrix does not exist if and only if the determinants is 0. Also, the matrix must be of full rank. </p>
+
+<p>So not sure how the below is possible:</p>
+
+<pre><code>&gt; dim(X)
+[1] 20000    51
+&gt; det(t(X) %*% X)
+[1] 3.863823e+161 #non-zero 
+
+&gt; solve(t(X) %*% X)
+Error in solve.default(t(X) %*% X) :
+system is computationally singular: reciprocal condition number = 3.18544e-17 
+</code></pre>
+
+<p>Why is solve() throw an error when trying to calculate the inverse when we know the determinant is not zero? What am I missing here?</p>
+
+<p>Checked that the matrix has full rank:</p>
+
+<pre><code>&gt; qr(t(X) %*% X)$rank
+[1] 51
+</code></pre>
+
+<p>But then just to test further I reassigned one of the X columns to the same value of another:</p>
+
+<pre><code>&gt; X[,2] = X[,3]
+</code></pre>
+
+<p>Thus, two columns of the X matrix are now the same.</p>
+
+<pre><code>&gt; qr(t(X) %*% X)$rank
+[1] 50
+</code></pre>
+
+<p>We now can confirm the <em>X'X</em> matrix is not of full rank.</p>
+
+<pre><code>&gt; det(t(X) %*% X)
+[1] 1.634637e+138
+</code></pre>
+
+<p>But the determinant is still not equal to 0? How is this possible and what am I missing?</p>
+"
+"0.577350269189626","0.522232967867094","192357","<p>I am constructing a model matrix for a repeated meassurments experiment with three individuals per group and three treatments per individual. </p>
+
+<pre><code>Gps &lt;- factor(c(1,1,1,2,2,2,3,3,3)) # Groups
+Tts &lt;- factor(c(""A"",""B"",""C"",""B"",""A"",""C"",""C"",""B"",""A"")) # Treatments
+</code></pre>
+
+<p>This model matrix makes sense to me, since it estimates the variance within each individual, using the per individual mean of treatment A as the intercept.</p>
+
+<pre><code>model.matrix(~0+Gps+Tts)
+</code></pre>
+
+<p>However, I often see a matrix like this:</p>
+
+<pre><code>model.matrix(~Gps+Tts)
+</code></pre>
+
+<p>What is the difference between the two model matrices?</p>
+"

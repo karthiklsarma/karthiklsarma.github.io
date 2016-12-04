@@ -1,0 +1,358 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 15167","<p>I have a doubt regarding two tests:</p>
+
+<p><strong>Breuschâ€“Pagan test</strong>, to detect heteroscedasticity in a series, and 
+<strong>Bartlett's test</strong>, to test for equal variances for samples from $k$
+populations.</p>
+
+<p>What are the difference betwen those two tests?</p>
+
+<ul>
+<li>Are not those tests highly related?</li>
+<li>How could a homoscedastic data give no homogeneity in the variance?</li>
+</ul>
+"
+"NaN","NaN","205227","<p>I'm a little new to R and I haven't done stats in a while. I know a one way ANOVA is the same as a linear regression, but is there a difference between a two way ANOVA and a linear regression with two covariates? And if they are different I'm not sure which one I performed. Below is my sample code:</p>
+
+<pre><code>data.frame[[""Acute""]] = factor(data.frame[[""Acute""]])
+data.frame[[""Frequency""]] = factor(data.frame[[""Frequency""]])
+DishMortalityVsTime.Total.Acute.Freq = aov(Dish.Mortality ~ Time * Acute * Frequency, data=data.frame)
+summary(DishMortalityVsTime.Total.Acute.Freq)
+</code></pre>
+
+<p>and the output</p>
+
+<pre><code>                      Df Sum Sq Mean Sq F value               Pr(&gt;F)    
+Days                   1  1.352  1.3524  65.189  0.00000000000000429 ***
+Acute                  2  5.885  2.9423 141.822 &lt; 0.0000000000000002 ***
+Frequency              3  0.539  0.1795   8.653  0.00001279126504853 ***
+Days:Acute             2  1.672  0.8361  40.302 &lt; 0.0000000000000002 ***
+Days:Frequency         3  0.050  0.0165   0.796                0.496    
+Acute:Frequency        6  0.787  0.1311   6.320  0.00000192315201011 ***
+Days:Acute:Frequency   6  0.038  0.0064   0.309                0.932    
+Residuals            552 11.452  0.0207 
+</code></pre>
+
+<p>Any help would be appreciated, Thanks!</p>
+"
+"0.447213595499958","0.471404520791032","160428","<p>I am building a really simple linear model. I want to test if the frass I got over 3 days from butterfly larvae depend upon the food they ate (diet), the butterfly family (the mother line) and subsequent survival (called ""survived"", obviously larvae which may latter die are likely to show e.g. problems to eat at larval stage). I'm also interested in the two way interactions: diet:family and survived:family. The interaction diet:survived could not be included because there is only one individual in one of the two diet that died.</p>
+
+<p>Model:</p>
+
+<pre><code>mod=lm(log(frass.weight)~diet*family+survived+family:survived,data=dat)
+Anova(mod)   # all the variables are significant.
+summary(mod)  #the R2adj is of 0.81
+shapiro.test(resid(mod)) # p-value = 0.2389
+</code></pre>
+
+<p>I have not looked at the variance as I have a small sample size. Only 3 individuals of seven family have been recorded for their frass on both the 2 diets.</p>
+
+<p>Problem:</p>
+
+<p>All looks nice, except that when I plot the model <code>plot(mod)</code> I get the following warning:</p>
+
+<pre><code>""Warning messages: 1: not plotting observations with leverage one:  
+ 3, 20, 30, 35 ""
+</code></pre>
+
+<p>Is it just a warning or I have a real issue that these points clearly influence the variance?</p>
+
+<p>When I remove these points, the final model I get is simplier:</p>
+
+<pre><code>mod1=lm(log(frass.weight)~diet*family+survived,data=datout)
+</code></pre>
+
+<p>The residuals are good and the plot works now fine.</p>
+
+<p>Therefore, is the warning about the leverage something to not really consider and my first model should be kept or not? Are my points real outliers?</p>
+"
+"0.632455532033676","0.666666666666667"," 56303","<p>First time posting here, so thank you ahead of time for your help.  I'd like to estimate the variances associated with two factors in a relatively simple, but unbalanced GLS model, and I am unsure how to extract that information (or how to manually calculate it).  For the two factors I'm using, DS3 and DS4, DS3 has four levels (WW - ZZ) and DS4 has seven levels (AA - GG).  I've been using the nlme package; the model itself and model output are below.</p>
+
+<pre><code>&gt; library(nlme)
+&gt; temp_gls4 = gls(output~DS3+DS4,data=temp_month,weights=varIdent(form=~1|DS4))
+&gt; summary(temp_gls4)
+Generalized least squares fit by REML
+  Model: output ~ DS3 + DS4 
+  Data: temp_month 
+     AIC      BIC    logLik
+1199.769 1268.615 -582.8845
+
+Variance function:
+Structure: Different standard deviations per stratum
+Formula: ~1 | DS4 
+Parameter estimates:
+       AA        BB        CC        DD        EE        FF        GG 
+1.0000000 1.2900663 1.1351448 0.9501666 0.7463385 0.8933227 0.9123444 
+
+Coefficients:
+                Value Std.Error   t-value p-value
+(Intercept)  3.853300 0.1232730 31.258279  0.0000
+DS3XX       -0.053908 0.1505280 -0.358129  0.7204
+DS3YY       -0.119480 0.1505280 -0.793737  0.4278
+DS3ZZ       -0.146255 0.1552625 -0.941988  0.3467
+DS4BB        0.934175 0.2081654  4.487655  0.0000
+DS4CC       -0.093199 0.1098115 -0.848717  0.3965
+DS4DD        0.831305 0.2011411  4.132945  0.0000
+DS4EE        1.867642 0.2538358  7.357675  0.0000
+DS4FF        1.429805 0.1680183  8.509820  0.0000
+DS4GG        0.050992 0.1779757  0.286510  0.7746
+</code></pre>
+
+<p>I know that in a traditional balanced least squared situation you can pretty easily calculate the variance of DS3 and DS4 by manipulating the mean squares (e.g. var(DS3)=(MS(DS3)-MSE)/7), but the data here aren't balanced and I don't know the math behind the GLS model and REML as compared to an traditional least squared model.  I've tried using the anova command, but it just produces the F statistics associated with each factor.  Any help you can provide would be appreciated!</p>
+
+<p>Jon</p>
+"
+"NaN","NaN","  7132","<p>When conducting a t-test we can always use a Welch approximation of the df, and let go of the assumption of equal variances.</p>
+
+<p>Is there something similar for (even one way) anova?  (any R implementation of that?)</p>
+"
+"0.782623792124926","0.824957911384306"," 31118","<p>I performed an experiment where I raised different families coming from two different source populations, where each family was split up into a different treatments. After the experiment I measured several traits on each individual. 
+To test for an effect of either treatment or source as well as their interaction, I used a linear mixed effect model with family as random factor, i.e.</p>
+
+<pre><code>lme(fixed=Trait~Treatment*Source,random=~1|Family,method=""ML"")
+</code></pre>
+
+<p>so far so good,
+Now I have to calculate the relative variance components, i.e. the percentage of variation that is explained by either treatment or source as well as the interaction.</p>
+
+<p>Without a random effect, I could easily use the sums of squares (SS) to calculate the variance explained by each factor. But for a mixed model (with ML estimation), there are no SS, hence I thought I could use Treatment and Source as random effects too to estimate the variance, i.e.</p>
+
+<pre><code>lme(fixed=Trait~1,random=~(Treatment*Source)|Family, method=""REML"")
+</code></pre>
+
+<p>However, in some cases, lme does not converge, hence I used lmer from the lme4 package:</p>
+
+<pre><code>lmer(Trait~1+(Treatment*Source|Family),data=DATA)
+</code></pre>
+
+<p>Where I extract the variances from the model using the summary function:</p>
+
+<pre><code>model&lt;-lmer(Trait~1+(Treatment*Source|Family),data=regrexpdat)
+results&lt;-model@REmat
+variances&lt;-results[,3]
+</code></pre>
+
+<p>I get the same values as with the VarCorr function. I use then these values to calculate the actual percentage of variation taking the sum as the total variation.</p>
+
+<p>Where I am struggling is with the interpretation of the results from the initial lme model (with treatment and source as fixed effects) and the random model to estimate the variance components (with treatment and source as random effect). I find in most cases that the percentage of variance explained by each factor does not correspond to the significance of the fixed effect.</p>
+
+<p>For example for the trait HD,
+The initial lme suggests a tendency for the interaction as well as a significance for Treatment. Using a backward procedure, I find that Treatment has a close to significant tendency. However, estimating variance components, I find that Source has the highest variance, making up to 26.7% of the total variance.</p>
+
+<p>The lme:</p>
+
+<pre><code>anova(lme(fixed=HD~as.factor(Treatment)*as.factor(Source),random=~1|as.factor(Family),method=""ML"",data=test),type=""m"")
+                                      numDF denDF  F-value p-value
+(Intercept)                                1   426 0.044523  0.8330
+as.factor(Treatment)                       1   426 5.935189  0.0153
+as.factor(Source)                          1    11 0.042662  0.8401
+as.factor(Treatment):as.factor(Source)     1   426 3.754112  0.0533
+</code></pre>
+
+<p>And the lmer:</p>
+
+<pre><code>summary(lmer(HD~1+(as.factor(Treatment)*as.factor(Source)|Family),data=regrexpdat))
+Linear mixed model fit by REML 
+Formula: HD ~ 1 + (as.factor(Treatment) * as.factor(Source) | Family) 
+   Data: regrexpdat 
+    AIC    BIC logLik deviance REMLdev
+ -103.5 -54.43  63.75   -132.5  -127.5
+Random effects:
+ Groups   Name                                      Variance  Std.Dev. Corr                 
+ Family   (Intercept)                               0.0113276 0.106431                      
+          as.factor(Treatment)                      0.0063710 0.079819  0.405               
+          as.factor(Source)                         0.0235294 0.153393 -0.134 -0.157        
+          as.factor(Treatment)L:as.factor(Source)   0.0076353 0.087380 -0.578 -0.589 -0.585 
+ Residual                                           0.0394610 0.198648                      
+Number of obs: 441, groups: Family, 13
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept) -0.02740    0.03237  -0.846
+</code></pre>
+
+<p>Hence my question is, is it correct what I am doing? Or should I use another way to estimate the amount of variance explained by each factor (i.e. Treatment, Source and their interaction). For example, would the effect sizes be a more appropriate way to go?</p>
+
+<p>Thanks!</p>
+
+<p>Kay Lucek</p>
+"
+"0.447213595499958","0.471404520791032","202032","<p>I have the following data that I wish to analyze using R:</p>
+
+<pre><code>     Resilience     PartsA       PartsB
+1   4.805032           1           1
+2   4.657384           1           2
+3   4.703198           1           3
+4   3.993497           1           4
+5   4.645764           1           5
+6   4.603158           1           1
+7   4.811521           1           2
+8   4.682717           1           3
+9   4.728485           1           4
+10  4.734114           1           5
+11  4.532497           1           1
+12  4.885308           1           2
+13  4.702712           1           3
+14  4.692207           1           4
+15  4.740994           1           5
+16  4.572724           1           1
+17  4.919445           1           2
+18  4.650043           1           3
+19  4.761368           1           4
+20  4.790507           1           5
+21  4.653509           2           1
+22  4.720434           2           2
+23  4.833647           2           3
+24  4.997706           2           4
+25  4.630829           2           5
+26  4.690605           2           1
+27  4.681007           2           2
+28  4.784369           2           3
+29  4.704247           2           4
+30  4.575493           2           5
+31  4.553369           2           1
+32  4.758170           2           2
+33  4.855304           2           3
+34  4.903961           2           4
+35  5.002031           2           5
+36  4.769658           2           1
+37  4.651714           2           2
+38  4.929959           2           3
+39  4.648468           2           4
+40  4.788978           2           5
+41  4.812591           3           1
+42  4.877903           3           2
+43  4.928751           3           3
+44  4.925799           3           4
+45  4.005860           3           5
+46  4.662776           3           1
+47  4.896822           3           2
+48  4.904109           3           3
+49  4.971777           3           4
+50  4.832897           3           5
+</code></pre>
+
+<p>I want to perform some kind of analysis in order to understand which Parts from A and B (which combination, such as 1 from PartsA and 3 from PartsB) cause the most deviation from the mean in the final result (material resilience).</p>
+
+<p>From PartsA, 3 same parts are used, but from different sources (in the construction of a material), and PartsB that's used in the construction is brought in from 5 different sources.</p>
+
+<p>Basically I want to test to see whether or not using parts from different sources creates a significant difference on the results or if all parts render same results (null hypothesis). Essentially a test for the significance that PartsA and PartsB play in the final outcome.</p>
+
+<p>I've thought about using ANOVA, in order to analyze the variance but I am rather unsure about how to interpret the results. 
+Any help would be greatly appreciated. Many thanks </p>
+"
+"NaN","NaN"," 33844","<p>can anybody tell me why the <code>oneway.test()</code> results in a p-value of NA when var.equal is set to FALSE but in a p-value of 0.7173 when it is set to TRUE</p>
+
+<p>Here is my example:</p>
+
+<pre><code>x &lt;- c(3.921973, 5.703782, 3.921973, 3.921973, 3.921973, 6.075346, 3.921973, 3.921973, 3.921973, 3.921973)
+y &lt;- c(4.424847, 4.424847, 4.424847, 4.424847, 4.424847, 4.424847, 4.424847, 4.424847)
+
+d &lt;- c(x,y)
+f &lt;- c(rep(""a"", 10), rep(""b"", 8))
+
+oneway.test(d ~ f, var.equal = FALSE)
+
+oneway.test(d ~ f, var.equal = TRUE)
+</code></pre>
+
+<p>Thanks for you help!</p>
+"
+"NaN","NaN","146775","<p>I have only just started using R in my first year at university and I am completely stuck. I have done an anova test as the data is normally distributed and parametric. However, this is my result. I'm unsure if the missing values are important as its only using R basically and also if I reject or accept the null hypothesis. Following the correct anova would I then carry out another test? I'm trying to find variation of a variable between different species of fish.</p>
+
+<pre><code>Df  Sum Sq   Mean Sq F value Pr(&gt;F)
+fishdata$Species   2 0.00024 0.0001214   0.765  0.467
+Residuals        228 0.03619 0.0001587               
+4 observations deleted due to missingness 
+</code></pre>
+"
+"NaN","NaN"," 83712","<p>I have five groups of data and I want to test if their variance is significantly different or not.  The data are normally distributed and I do not have any repeated measurements in any groups.  What sort of analysis should I use?</p>
+
+<p>Tukey's test compares the means, but how can I compare their variances?</p>
+
+<p>For example I have 3 groups A, B and C. In groups A, B and C I have  30, 50 and 20 observations (which are stored as double-precision numeric variables in R).  </p>
+"
+"NaN","NaN"," 99819","<p>Consider this example:</p>
+
+<pre><code>team &lt;- rep(c(""A"",""B"",""C""), times=c(7,4,10))
+trip &lt;- rep(NA,length(team))
+for(i in 1:length(unique(team))){
+  trip[which(team==unique(team)[i])] &lt;- 1:days[i]
+}
+obs  &lt; -c(rnorm(days[1],100,30), rnorm(days[1],100,5), rnorm(days[1],100,15))
+data &lt;- data.frame(team, trip, obs)
+
+boxplot(obs~team, data)
+</code></pre>
+
+<p>It is pretty clear that the variance in each team is different, but the mean is similar.</p>
+
+<p>How can I infer this statistically? How can I compare intra-group (within-group) variance with the inter-group (between-group) variance?</p>
+"
+"0.707106781186547","0.74535599249993","179641","<p>I want to conduct one-way ANOVA for this data:</p>
+
+<pre><code># three factor levels
+I &lt;- c(19, 22, 20, 18, 25, 21, 24, 17)
+II &lt;- c(20, 21, 33, 27, 29, 30, 22, 23)
+III &lt;- c(16, 15, 18, 26, 17, 23, 20, 19)
+
+# making a dataframe from data
+response &lt;- c(I, II, III)
+factor &lt;- c(rep(""I"", length(I)), rep(""II"", length(II)), rep(""III"", length(III)))
+(data1 &lt;- data.frame(response, factor))
+</code></pre>
+
+<p>So firstly, I check the boxplot for every factor level:</p>
+
+<pre><code># making a side-by-side boxplots
+plot(response ~ factor, data1)
+</code></pre>
+
+<p>and see that variance for level II is much higher than for I and II, so I suspect that Bartlett's test will reject the null hypothesis about the equality of variances. <a href=""http://i.stack.imgur.com/luFfO.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/luFfO.jpg"" alt=""enter image description here""></a></p>
+
+<p>I also check the exact value of these variances and see that the second one is significantly different from the others (22,83):</p>
+
+<pre><code>tapply(data1$response, data1$factor, var)
+#      I        II       III 
+#  7.928571 22.839286 13.642857 
+</code></pre>
+
+<p>Then I check the normality of response, it's ok:</p>
+
+<pre><code># testing for normality
+qqnorm(data1$response)
+    qqline(data1$response)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/atHoD.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/atHoD.jpg"" alt=""enter image description here""></a></p>
+
+<pre><code>if(shapiro.test(kalkulator$reakcja)$p.value &gt;= 0.01){
+   cat(""No reason to reject null hypothesis"")   
+}else {
+   cat(""This distribution isn't normal"")
+}
+# No reason to reject null hypothesis
+</code></pre>
+
+<p>So I finally go to Bartlett's test:</p>
+
+<pre><code># testing for homoscedasticity
+bartlett.test(response ~ factor, data1)
+
+# Bartlett test of homogeneity of variances
+
+# data:  response by factor
+# Bartlett's K-squared = 1.7932, df = 2, p-value = 0.408
+</code></pre>
+
+<p>And see that there's no reason to reject null hypothesis. I know of course, that this statement isn't equal to ""null hypothesis is true"", but I have here significant difference in variances and still this test is passed. Why? And should I assume that there is homogeneity of variances and go on with ANOVA? 
+Thanks for taking your time :)</p>
+"
+"NaN","NaN","198035","<p>I took few courses in stats so go easy on me. I used R on a dataset of the influence of pests on sugar cane production (<a href=""http://www.stat.ufl.edu/~winner/datasets.html"" rel=""nofollow"">http://www.stat.ufl.edu/~winner/datasets.html</a>).</p>
+
+<p>What I found with the regular ANOVA test is a high F value (40.79) and low probability value (2.27*10^-10) - which are both good.</p>
+
+<p>But TukeyHSD analysis shows that much higher p-values when comparing variables against each other(excluding the control).</p>
+
+<p>I think I should reject the means.Should I? What conclusions can I draw from this? What are the next steps for the study? Thanks, Matthew Mano</p>
+"

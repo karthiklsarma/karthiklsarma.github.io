@@ -1,0 +1,56 @@
+"V1","V2","V3","V4"
+"NaN","NaN","12310","<p>I tried to test if I should normalize the dataset before doing distribution fitting.</p>
+
+<pre><code>&gt; a1 &lt;- rgev(2000, loc= 0.449, scale=0.7423, shape=0)
+&gt; a1_scale &lt;- scale(a1)
+&gt; fgev(a1, shape=0)
+
+Call: fgev(x = a1, shape = 0) 
+Deviance: 5159.472 
+
+Estimates
+   loc   scale  
+0.4619  0.7495  
+
+Standard Errors
+    loc    scale  
+0.01764  0.01307  
+
+Optimization Information
+  Convergence: successful 
+  Function Evaluations: 24 
+  Gradient Evaluations: 5 
+
+&gt; fgev(a1_scale, shape=0)
+
+Call: fgev(x = a1_scale, shape = 0) 
+Deviance: 5288.283 
+
+Estimates
+    loc    scale  
+-0.4476   0.7740  
+
+Standard Errors
+    loc    scale  
+0.01822  0.01350  
+
+Optimization Information
+  Convergence: successful 
+  Function Evaluations: 24 
+  Gradient Evaluations: 5 
+</code></pre>
+
+<p>To check the agreement between these two results, I generate model b from the parameters obtained above and do the qq-plot.</p>
+
+<pre><code>&gt; b1 &lt;- rgev(2000, loc=0.4619, scale=0.7495, shape=0)
+&gt; b1_scale &lt;- rgev(2000, loc=-0.4476, scale=0.7440, shape=0)
+&gt; qqplot(b1, b1_scale)
+&gt; abline(0,1)
+</code></pre>
+
+<p>Here is what I found:</p>
+
+<p><img src=""http://i.stack.imgur.com/Gzd7X.png"" alt=""enter image description here""></p>
+
+<p>Does it mean that I should never normalize the dataset before doing distribution fitting?</p>
+"

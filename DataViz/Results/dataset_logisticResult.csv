@@ -1,0 +1,49 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 57448","<p>I am running a model (logistic regression) with 20 independent variables in R. </p>
+
+<p>Before running the model I calculated the correlation between all the variables and finally selected my variables by also checking ""visually"" the histograms of each variable in the case of presence and again in the case of absence. In situations where I don't see any obvious distribution associated to both presence &amp; absence, I discard the variable.</p>
+
+<p>I would like to make ""official"" calculations for the level of relation between Presence/Absence and each variable (how much each variable contributes to the Presence/Absence), for example with <code>Cramer's V index</code>, but the available function I find is from the package <code>vcd</code> and has some limitations: 
+doesn't give the <code>Cramer's V</code> (as well as the Phi-Coefficient Contingency Coeff.) for each independent variable, and it doesn't run for one independent variable.</p>
+
+<p>I might be missing some other obvious way to do this. Any help is appreciated.</p>
+"
+"NaN","NaN"," 22716","<p>I am currently playing around with the MNIST dataset (<a href=""http://yann.lecun.com/exdb/mnist/"" rel=""nofollow"">http://yann.lecun.com/exdb/mnist/</a>) in R. The training set size is 60000x748 and it seems to drain all my memory even when constructing simple models like logistic regression.</p>
+
+<p>My question is: how do you guys usually deal with big datasets in R?</p>
+
+<p>And tangent: is it feasible to break the dataset into smaller chunks, construct a model on each, then perform a weighted average on the predicted values?</p>
+"
+"NaN","NaN","189429","<p>Is this simply because if we have a lot of data, there is a bigger chance that a more complicated decision boundary (boundaries) is required to separate the observations? Does someone know researches who published papers about the performance of these techniques depending on the data size?</p>
+"
+"NaN","NaN"," 58152","<p>Suppose that we have a two-column data set. One column consists of a hundred x=0 and a hundred x=1, whereas the other one consists of y's (1 or 0 response). Besides, suppose that the P(Y=1|X=0) = 0.001 and P(Y=1|X=1) = 0.05. When fitting a logistic model (glm(y ~ x)) to this data set, why are we having a quasi separation problem here?</p>
+
+<p>My doubts are as follows:</p>
+
+<p>Since P(Y=1|X=0) = 0.001, we have P(Y=0|X=0) = 0.999. On the other hand, P(Y=1|X=1) = 0.05, so P(Y=0|X=1) = 0.95. As a result, we would see Y=0 with a very high chance when x=0 or 1. Why does this situation imply a quasi separation problem?</p>
+
+<p>Next, why log[(0.05/0.95)/(0.001/0.999)] = 4 is the theoretical coefficient of x in the model?</p>
+
+<p>Thanks.</p>
+"
+"NaN","NaN","215105","<p>I want to simulate a data set for logistic regression in which my $Y_i \sim Bin(n_i, p_i)$ and $n_i &gt;1 ~ \forall i$. I want something like:</p>
+
+<p><a href=""http://i.stack.imgur.com/Nx0yU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Nx0yU.png"" alt=""enter image description here""></a></p>
+
+<p>In another <a href=""http://stats.stackexchange.com/questions/46523/how-to-simulate-artificial-data-for-logistic-regression"">question</a>, data has been generated for a logistic in which $n_i = 1$. I am confused as to whether it would be correct to follow this method and then bin the $x$ variables and call that a population. I'm not quite sure how to do this without creating some sort of bias in the data that I won't account for in the logistic regression. I'm looking for an explicit description of how to account for $n_i&gt;1$, if possible using R.</p>
+
+<p><strong>EDIT</strong>: Using the code in the question which I've tweaked, here is what I have:</p>
+
+<pre><code>set.seed(1)
+x1 &lt;- rnorm(6)           # some continuous variables 
+n &lt;- round(runif(6, min = 1, max = 20))
+z = 1 + 2*x1                
+pr = 1/(1+exp(-z))         # pass through an inv-logit function
+y &lt;- matrix(0,6,1)
+for( i in 1:6 ) { y[i] &lt;- sum(rbinom(n[i], 1, pr[i]) == 1)}
+
+Y &lt;- y/n
+</code></pre>
+
+<p>Are there any reasons this is not a reasonable way of doing things?</p>
+"

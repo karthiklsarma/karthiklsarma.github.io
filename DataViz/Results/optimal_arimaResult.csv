@@ -1,0 +1,206 @@
+"V1","V2","V3","V4"
+"0.377964473009227","0.377964473009227"," 37908","<p>I am new to R. I am trying to apply forecasting model Time Series (TS) Model
+as follows:  </p>
+
+<ol>
+<li>Plotting original data, </li>
+<li>Simple Moving Average,  </li>
+<li>Auto correction(AC), Partial AC, Differencing of TS etc to get stationary time series,  </li>
+<li>Fitting optimal model which gives minimum AIC, residuals from ARIMA/ARMA  </li>
+<li>Normality test for residuals  </li>
+<li>forecasting for future values  </li>
+</ol>
+
+<p>The forecast figures are not coming out with the accuracy that I expected. Please find following weekly incidents. </p>
+
+<p><strong>Can anyone please help me with the right approach and sample code?</strong></p>
+
+<p>There are some outliers in the data (# of incidents per week) due to new release of application, seasonality effect and holiday period.  </p>
+
+<pre><code>March 11, 2011/ March 25, 2011/ June 24, 2011/December 02, 2011/ December 30, 2011/ 
+March 30, 2012/ April 20, 2012/
+
+
+            Time_Stamp Wkly_Cnt
+1    November 19, 2010        9
+2    November 26, 2010       22
+3    December 03, 2010       11
+4    December 10, 2010       12
+5    December 17, 2010       18
+6    December 31, 2010       17
+7     January 07, 2011       14
+8     January 14, 2011       21
+9     January 21, 2011       16
+10    January 28, 2011       22
+11   February 04, 2011       20
+12   February 11, 2011       31
+13   February 18, 2011       38
+14   February 25, 2011       37
+15      March 04, 2011       32
+16      March 18, 2011       34
+17      April 01, 2011       28
+18      April 08, 2011       32
+19      April 15, 2011       30
+20      April 29, 2011       30
+21        May 06, 2011       25
+22        May 13, 2011       19
+23        May 20, 2011       17
+24        May 27, 2011       28
+25       June 03, 2011       13
+26       June 10, 2011       17
+27       June 17, 2011       17
+28       July 01, 2011       14
+29       July 08, 2011       22
+30       July 15, 2011       19
+31       July 22, 2011       11
+32       July 29, 2011       14
+33     August 05, 2011       14
+34     August 12, 2011       21
+35     August 19, 2011       20
+36     August 26, 2011       16
+37  September 02, 2011       16
+38  September 09, 2011       10
+39  September 16, 2011       24
+40  September 23, 2011       12
+41  September 30, 2011       17
+42    October 07, 2011       32
+43    October 14, 2011       29
+44    October 21, 2011       19
+45    October 28, 2011       13
+46   November 04, 2011       12
+47   November 11, 2011       18
+48   November 18, 2011       14
+49   November 25, 2011       17
+50   December 09, 2011       36
+51   December 16, 2011       20
+52   December 23, 2011       22
+53    January 06, 2012       31
+54    January 13, 2012       29
+55    January 20, 2012       20
+56    January 27, 2012       27
+57   February 03, 2012       14
+58   February 10, 2012       23
+59   February 17, 2012       20
+60   February 24, 2012       15
+61      March 02, 2012       26
+62      March 09, 2012       19
+63      March 16, 2012       25
+64      March 23, 2012       26
+65      April 06, 2012       12
+66      April 13, 2012       20
+67      April 27, 2012       20
+68        May 04, 2012       16
+69        May 11, 2012       17
+70        May 18, 2012       17
+71        May 25, 2012       20
+72       June 01, 2012       14
+73       June 08, 2012       23
+74       June 15, 2012       21
+75       June 22, 2012       22
+76       June 29, 2012       19
+</code></pre>
+"
+"0.534522483824849","0.534522483824849"," 59305","<p>So I remember reading somewhere that when we have external regressors,  <code>auto.arima</code> cannot make correct predictions for the order of difference for either seasonality or the main time series itself (correct me if I'm wrong!)</p>
+
+<p>Now, I'd like to know whether we'd need to difference the external regressors as well?  Also, in the case of having external regressors (a few time series and a few dummies for seasonal patterns in those time series), can <code>auto.arima</code> even calculate the optimal MA and AR?</p>
+
+<p>Also, I have weekly seasonality as well as quarterly and yearly seasonality; since I can't specify that many seasonalities in auto.arima, I'm inputting a lot of dummy variables for quarters and months; will that yield mathematically correct results?</p>
+
+<p>Further, for those of you who have worked with SAS, when using the forecast procedure and estimating the input variables (the external regressors), does it automatically calculate the MA and AR for each external regressor?</p>
+"
+"0.755928946018454","0.755928946018454","126196","<p>I'm developing an app in C# (WPF) that amongst other things, it makes a time-series based forecast of sales (4-5 months into the future). I'm an industrial engineer so I'm not pro in statistics nor in programming (basic knowledge of both).</p>
+
+<p>What I'm doing right now is to aggregate my daily data into monthly data, then I test for monthly seasonality, and then either go for a <strong>Holt</strong>'s exponential smoothing or for a <strong>Holt-Winters</strong>'s one depending on the result. </p>
+
+<p>For determining the <strong>smoothing parameters</strong> I'm using <strong>brute force</strong> (i.e. testing a lot of possible combinations) and keeping the one that would have predict the past year (backtesting) with minimum <a href=""http://en.wikipedia.org/wiki/Mean_absolute_error"" rel=""nofollow"">MAE</a>.</p>
+
+<p>A <strong>problem</strong> arises: this method is SLOW (obviously, as always with brute force). It takes about 0,5s only trying the smoothing parameters in 0.05 intervals which doesn't give much accuracy. I need to do this with 1000+ items so it goes over 8 minutes (too much).</p>
+
+<p>So I have a few <strong>questions</strong>:</p>
+
+<ul>
+<li>Is there any method to determine optimal smoothing parameters without testing all of them?</li>
+<li>Using <em>R.NET</em> to use the forecast package of R will be faster?</li>
+<li><p>If so, should I:</p>
+
+<ul>
+<li>Use daily or monthly data?</li>
+<li>Make also an auto.arima? How to determine which model is better?</li>
+</ul></li>
+<li><p>Is my method of backtesting (make a model only with data previous to that point) valid to determine if a model is better than another?</p></li>
+</ul>
+
+<p><strong><em>EDIT:</em></strong> I have tried implementing R.NET. Time for <code>ets</code> is about 0,1s if I set which model to use and use only mae as <code>opt.crit</code> (if not, it goes up to 5s). </p>
+
+<p>This is good enough <strong>IF</strong> I could get the same out-of-sample predictions I mention in the comment. If it's not possible then I would have to run it 12 times, adding up to 1,2s which is not fast enough.</p>
+
+<ul>
+<li>How can I do that (get predictions over the last 12 data without considering them in the model) in R?</li>
+</ul>
+"
+"0.377964473009227","0.377964473009227","163092","<p>Iâ€™m looking to build an ARIMA model in R to help me predict the number of shots a football player is going to take in a game. </p>
+
+<p>I have last season's data to analyse to determine the optimal lags for my AR and MA parameters. I have a data frame in R, with the columns for the player name, date of match and the number of shots. </p>
+
+<p>Unfortunately, I only have a maximum 38 data points for each player which isnâ€™t enough to build a statistically confident model. I suspect I need a way to analyse the data holistically/all-at-once to help me determine the optimal lags.</p>
+
+<p>I donâ€™t, however, know how to do that or even if this is a statistically sound technique. </p>
+
+<p>At the moment I am just analysing my residuals (which have come from a linear regression with independent variables such as Home/Away and Team Possession) with code such as the following:</p>
+
+<pre><code>arima(residuals, order=c(3,0,0))
+</code></pre>
+
+<p>Is there a way to instruct R to perform this ARIMA analysis whilst looking at lots of mini-groups (where the groups are categorised by player name)?</p>
+
+<p>Any help would be much appreciated. </p>
+
+<p>Will </p>
+"
+"0.845154254728517","0.845154254728517","218525","<p>Let say that one wants to fit a model to a daily financial time series for prediction (e.g. ARIMA, SVM). If data are stationary, ideally the longer the time series, the better. In practice, I don't feel comfortable in blindly trusting stationarity tests (e.g. KPSS, ADF). For example, a 90% KPSS and ADF confirm that the following time series is stationary when it qualitatively doesn't seem to be homoscedastic.
+<a href=""http://i.stack.imgur.com/Qv8x2.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Qv8x2.png"" alt=""enter image description here""></a>
+Which quantitative methods exist to identify a reasonable starting date of the time series in terms of quality of the prediction (i.e. minimum test error, low variance of the prediction)? Please refer to R packages when possible.</p>
+
+<p>My attempts:</p>
+
+<p>(i) A brute force approach could consist in repeating the fitting for any length of the time series of interest (e.g. 1y, 1y+1d, ..., 5y). Anyway, this approach is too expensive.</p>
+
+<p>(ii) Perform stationarity tests (ADF, KPSS) to the time series of minimum allowed length and extend the length until the tests reject the stationarity. The problem of this approach are multiple:
+  (a) extremely dependent to the confidence of the test (e.g. 95% or 80%).
+  (b) stationarity tests are not able to identify change of regime that may occurs for long financial time series. </p>
+
+<p>Strictly related topic, but it doesn't provides automatic/quantitative procedures:
+<a href=""http://stats.stackexchange.com/questions/188868/length-of-time-series-for-forecasting-modeling"">Length of Time-Series for Forecasting Modeling</a></p>
+
+<p>EDIT (2/Jul/2016): After further thoughts, I think that an optimal approach could be to follow the principle ""the larger the dataset, the better"". After all, a model that is highly dependent on the length of the time series I guess that it could be considered a ""bad"" model. Rather than focusing on the selection of an optimal length, one could focus on the identification of features that are able to work well under different regimes of the time series.</p>
+"
+"0.771516749810459","0.771516749810459","234192","<p>I referred to <a href=""https://www.otexts.org/fpp/9/4"" rel=""nofollow"">this link</a> and I have the following questions regarding my data. Let me start by explaining the time series that I am dealing with.</p>
+
+<p>I have <strong>daily</strong> hospital data with various <strong>departments</strong> and numerous <strong>doctors</strong> working in each department. I have several years of data and my forecast horizon is for the next 365 days. My data has weekly and annual seasonality. Moreover I intend to capture the effects of holidays and Sundays in my forecasts. As a result I have not created a hierarchical time series as suggested towards the end of the link(primarily because I am not sure whether we can pass a regressor to it and more so because I do not know how many doctors I end up predicting for in each department). </p>
+
+<p>The reason for this is that some doctors do not have good data(short time series or sparse data). In this case I collect these doctors and aggregate them to form something I call ""OtherDocs"". Typically in <code>DeptXYZ -&gt; Doc1 , Doc2 , Doc3 , Doc4 , Doc5 and Doc6</code> I could end up creating forecasts for <code>DeptXYZ -&gt; Doc1 , Doc3 , Doc4 , Doc6 and OtherDocs</code>. If <code>OtherDocs</code> is still not predictable I generate a naive forecast. In this fashion I created <strong>base forecasts for every level in the hierarchy individually using <code>arima</code> and passing my <code>xreg</code> to it and selecting the best model on the basis of AIC</strong>.</p>
+
+<p>Now, consider this example - </p>
+
+<p><code>Total -&gt; DeptX and DeptY</code></p>
+
+<p><code>DeptX -&gt; DocA and DocB</code></p>
+
+<p><code>DeptY -&gt; Doc1 , Doc2 and Doc3</code></p>
+
+<p>There are cases where <code>DocA</code> has a time series that starts from ""2011-03-11"" and ends on ""2016-09-07"" while <code>DocB</code> has a time series that starts from ""2011-05-17"" and ends on ""2016-09-07"". Generating the base forecasts for <code>DocA</code> and <code>DocB</code> results in the predicted values(<code>fit$mean</code>) being of a time series from ""2016-09-08"" to ""2017-09-07"". As long as the time series refers to the same dates within the Department I believe we are good to go.</p>
+
+<p>In my attempt to reconcile the forecasts from each level I employed the forecasted proportions like so -</p>
+
+<p>$\Largeá»¹_{DocA,365} = \frac{Å·_{DocA,365}*Å·_{DeptX,365}}{(Å·_{DocA,365}+Å·_{DocB,365})*(Å·_{DeptX,365}+Å·_{DeptY,365})}Å·_{Total,365}$</p>
+
+<p><strong>1. Am I doing anything wrong in the above step?</strong></p>
+
+<p><strong>2. Suppose for one moment that the topmost level forecasted values do not capture the low points of data in the case of Holidays and Sundays. Does that intuitively mean that revised forecasts for DocA might not correctly capture the same(being a proportion of $Å·_{Total,365}$)?</strong></p>
+
+<p>Another query I have is to do with the Optimal Combination Approach -</p>
+
+<p>$\Largeá»¹_h = S(Sâ€²S)^{-1}Sâ€²Å·_h$</p>
+
+<p><strong>3. I am unfamiliar with this matrix notation $S'$. Is it the inverse of $S$? Could you shed some light on this? And how do you suggest I calculate the summing up matrix in my case?(Is it absolutely necessary to proceed with the exact knowledge of the number of doctors in each department?)</strong></p>
+"

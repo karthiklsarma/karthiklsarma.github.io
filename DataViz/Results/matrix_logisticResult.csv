@@ -1,0 +1,17 @@
+"V1","V2","V3","V4"
+"NaN","NaN","156610","<p>Whenever I run a logistic regression, I need to set the threshold so that it groups probabilities higher than the threshold to my positive group:</p>
+
+<pre><code>table(test$Noshow, logpred&gt;0.5)
+</code></pre>
+
+<p>What I sometimes do is to optimize my confusion matrix so that I get a good Sensitivity and Specificity values. Is this a good way to do it?</p>
+
+<p>On the other hand, when I run a randomForest model using the ""randomForest"" package, I can set the cutoffs such as this:</p>
+
+<pre><code>k &lt;- 0.5
+rfcutoff &lt;- c(k, 1-k)
+rftree &lt;- randomForest(rffrmla_all, data = train1, mtry = 2, keep.forest = TRUE, importance = TRUE, ntree = 500, cutoff = rfcutoff)
+</code></pre>
+
+<p>Again I optimize my confusion matrix to get a good cutoff or base the cutoff on a naive baseline proportion. What is a good way to do this? </p>
+"

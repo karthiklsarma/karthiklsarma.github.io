@@ -1,0 +1,14 @@
+clustering=55
+k-means=46
+data-visualization=9
+pca=3
+sparse=3
+regression=2
+time-series=1
+statistical-significance=1
+distance=1
+anova=1
+poisson=1
+correlation=1
+variance=1
+spatial=1

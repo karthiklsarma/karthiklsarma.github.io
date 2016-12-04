@@ -1,0 +1,267 @@
+"V1","V2","V3","V4"
+"0.670820393249937","0.755928946018454","104968","<p>Sorry about asking such a basic question. </p>
+
+<p>Assuming I have data like this </p>
+
+<p><code>x Trial1 Trial2 Trial3 
+ 1    1.0    2.0    3.0
+ 2    1.1    2.1    3.1
+ 3    1.2    2.2    3.2
+</code></p>
+
+<p>How exaclty to I regress my predictor variable x onto my data. I was thinking naively that I could just take the average of the data trials and get something like</p>
+
+<p><code>x y
+ 1    1.1
+ 2    2.1 
+ 3    3.1
+</code>
+for which I could simply use <code>model &lt;-lm(x ~ y)</code>. But I think I would introduce a bias by using the average. I was thinking instead to to create ordered pairs like (1,1.1), (1,2.0),...(3,2.2),(3,3.2). And use that for the regression but I'm not quite sure how to do this in a clean way in R. I was going to use data slicing and cbind a bunch of times, but I'm sure there is something better. </p>
+
+<p><strong>An example of what I'm getting at</strong></p>
+
+<p>The crux of my question is: how to do a regression model when you have data from mutiple runs of the same experiment. For example if I was looking at the temperature along a really thin metal wire (so its essentially 1-d), and then I mark off lenghts on this wire called x=0, x=1, x=2, ... x=total length. Then I take 10 temperature measuresments for each value of x. How do I create a regression model, which gives Temperarute as a function of length, i.e. T(x), given that I have 10 T values for each value of x? </p>
+"
+"0.8","0.845154254728517","112380","<p>I have a problem to build and to explain the linear multiple regression.</p>
+
+<p>I have a data set called <code>Cars93</code> with 26 variables (numeric and not numeric) and 93 observations. This data set you can find in the <code>MASS</code> R package. I want to build a linear regression model for predicting the price of a car. Then I have to do a variable selection (forward and backward stepwise) using AIC and BIC in R.  My knowledge in R is too little thatÂ´s why I have some problems. I really hope you can help me! </p>
+
+<p>1) The data set has some missing values </p>
+
+<p>I just solved this problem like this:</p>
+
+<pre><code> Cars93 [! Complete.cases (Cars93)] 
+ Cars93new &lt;- na.omit (Cars93) 
+ Cars93 = Cars93new 
+</code></pre>
+
+<p>I think some informations are going lost. Is there another solution to eliminate the missing values? </p>
+
+<p>2) Some variables from the dataset are not numeric
+I tried to convert these values into numerical values like this:</p>
+
+<pre><code>Cars93 $ airbags = factor (Cars93 $ airbags, labels = c (2,1,0)) 
+Cars93 $ airbags 
+  [1] 0 2 1 2 1 1 1 1 1 1 2 0 1 2 0 1 2 2 1 0 1 1 1 1 0 2 0 0 0 1 1 1 1 0 1 1 2 2 
+[39] 0 0 0 0 1 1 2 2 2 0 0 1 1 2 1 0 0 1 1 1 1 0 1 1 0 0 0 2 0 2 1 1 0 0 1 0 1 1 
+[77] 1 0 0 0 1 2 
+Levels: 2 1 0 
+</code></pre>
+
+<p>I did the same with other not numeric variables.</p>
+
+<p>Afterwards I tried to build a linear model regression with all variables:</p>
+
+<pre><code>Modell=lm(Price~Horsepower+EngineSize+MPG.city+MPG.highway+Rev.per.mile+Man.trans.avail+Fuel.tank.capacity+Passengers+Length+Wheelbase+Width+Turn.circle+Weight+Rear.seat.room+Luggage.room+Origin+AirBags+Type+Cylinders+Weight+PRM)
+summary(Modell)
+</code></pre>
+
+<p>But the output does make any sense:</p>
+
+<pre><code>Call:
+lm(formula = Price ~ Horsepower + EngineSize + MPG.city + MPG.highway + 
+    Rev.per.mile + Man.trans.avail + Fuel.tank.capacity + Passengers + 
+    Length + Wheelbase + Width + Turn.circle + Weight + Rear.seat.room + 
+    Luggage.room + Origin + AirBags + Type + Cylinders + Weight + 
+    RPM)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-9.4893 -2.3664 -0.0062  2.1180 18.1112 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        81.335018  37.993697   2.141 0.036826 *  
+Horsepower          0.123535   0.049355   2.503 0.015372 *  
+EngineSize         -0.615828   3.047223  -0.202 0.840602    
+MPG.city           -0.392888   0.470385  -0.835 0.407259    
+MPG.highway         0.013646   0.428978   0.032 0.974740    
+Rev.per.mile        0.001498   0.002511   0.597 0.553206    
+Man.trans.availYes -1.600967   2.480497  -0.645 0.521387    
+Fuel.tank.capacity  0.462731   0.572169   0.809 0.422219    
+Passengers          0.615593   1.823089   0.338 0.736925    
+Length              0.074875   0.130511   0.574 0.568547    
+Wheelbase           0.740146   0.343760   2.153 0.035796 *  
+Width              -1.745792   0.571082  -3.057 0.003473 ** 
+Turn.circle        -0.695287   0.415708  -1.673 0.100203    
+Weight             -0.004068   0.006255  -0.650 0.518171    
+Rear.seat.room      0.101150   0.420050   0.241 0.810619    
+Luggage.room        0.176183   0.367199   0.480 0.633306    
+Originnon-USA       1.881047   1.762845   1.067 0.290696    
+AirBagsDriver only -3.294049   1.888346  -1.744 0.086777 .  
+AirBagsNone        -8.535307   2.289737  -3.728 0.000464 ***
+TypeLarge          -1.692122   3.999146  -0.423 0.673887    
+TypeMidsize         2.684947   2.639047   1.017 0.313504    
+TypeSmall           1.913341   2.896592   0.661 0.511710    
+TypeSporty          4.686129   3.268426   1.434 0.157407    
+Cylinders4         -3.126727   4.554852  -0.686 0.495360    
+Cylinders5         -4.732933   7.498898  -0.631 0.530605    
+Cylinders6          0.224795   5.695793   0.039 0.968664    
+Cylinders8          4.020677   7.255406   0.554 0.581755    
+RPM                -0.002778   0.002450  -1.134 0.261805    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 5.009 on 54 degrees of freedom
+  (11 observations deleted due to missingness)
+Multiple R-squared:  0.8313,    Adjusted R-squared:  0.747 
+F-statistic: 9.859 on 27 and 54 DF,  p-value: 1.014e-12
+</code></pre>
+
+<p>I have 4 times ""Cylinders"" and ""Type"" and twice ""AirBag"" in the summary. I dont know why... And only 4 variables are significant in the model. Can somebody tell me, where is the mistake in my model?</p>
+
+<p>I also would like to know how to test other assumptions in R for multiple linear model.</p>
+"
+"0.447213595499958","0.377964473009227","120518","<p>The goal of problem is to predict the weight for missing data .
+I have a dataset of categorical type as shown below</p>
+
+<pre><code>ideal_for,occasion,color,outer_material,inner_material,sole_material,closure,tip_shape,weight,other_details,PID,shoe_type
+Men,Casual,""Black, Red"",,,,Laced,Round,350 gm,""Cushioned Ankle and Tongue, Textured Sole, Padded Footbed"",SHODR5ZRHRD2RXV7,sneakers
+Men,Casual,Brown,,,,Laced,Round,294 gm,""Padded Footbed, Textured Outsole"",SHODQ467KMYXRB2F,sneakers
+Men,Casual,Brown,,,,Laced,Round,373 gm,""Padded Footbed, Textured Sole"",SHODSM57F6ZHCCMT,sneakers
+Men,Casual,""Navy, Yellow"",,,,Laced,Round,265 gm,""Padded Footbed, Textured Sole, Cushioned Ankle and Tongue"",SHODR3SQEFPF3FTE,sneakers
+Men,Casual,Black,,,,Laced,Round,375 gm,""Textured Sole, Padded Footbed, Cushioned Ankle"",SHODS8SP6VDWMJFK,sneakers
+Men,Casual,Deep Sea Blue,,,,Laced,Round,368 gm,""Padded Footbed, Textured Sole"",SHODUHJAHQTRE6YH,sneakers
+</code></pre>
+
+<p>As you can see we have empty field in data , I replaced this empty field by NA </p>
+
+<p>then I converted this categorical to numerical like as below</p>
+
+<pre><code>ideal_for   occasion    color   outer_material  inner_material  sole_material   closure tip_shape   weight  other_details   PID shoe_type
+0   0   0   Black, Red  0   2   0   8   2   350.0   Cushioned Ankle and Tongue, Textured Sole, Padded Footbed   SHODR5ZRHRD2RXV7    76
+</code></pre>
+
+<p>eg 0 for men and 1 for women etc</p>
+
+<p>the I applied polynomial regression to predict the weight of missing data,
+Is this process correct to predict weight ,I am getting 0.0 correlation score while validating model. what is the best method to predict weight for such categorical dataset</p>
+"
+"NaN","NaN","105283","<p>I'm looking for a method to identify a shortlist of potentially good 2-way interaction terms rather than trying all possible interactions. This question is similarly asked before <a href=""http://stats.stackexchange.com/questions/4901/what-are-best-practices-in-identifying-interaction-effects"">here</a> but in a more general sense, not on a big data set.</p>
+
+<p>The answer that is given there (""think"" about the problem) is not applicable for me because I have around 800 features and >50K observations. I'd like to get something from the data.</p>
+
+<hr>
+
+<p><strong>Note:</strong> I also tried the random forest method that is given as an answer in the link above but I'm not sure I get the method completely right. The problems with RF are that <em>1)</em> It overfits on training data so what you find on training doesn't work on holdout. <em>2)</em> The $importance doesn't really define the strength of the interaction but defines the strength of the predictor itself.</p>
+"
+"0.447213595499958","0.377964473009227","126976","<p>I am playing a data without any background information. First, I try multiple linear regression. The model fits well, since the $r^2$ is larger than 90%. I deleted several variables by AIC. The fits improves a little bit. I am interesting what are possible directions that I should look into, if the model fits well at the very beginning.</p>
+
+<p>The target of the analysis is find the model that make the most accurate prediction.</p>
+
+<p>What I can come up with:</p>
+
+<ol>
+<li><p>Try other models like regression tree, random forest, SVM or whatever data mining models. The prediction may or may not become better.</p></li>
+<li><p>Perform cross validation.</p></li>
+<li><p>Check overfitting.</p></li>
+<li><p>Diagnostic residual.</p></li>
+</ol>
+"
+"NaN","NaN"," 96359","<p>Heyo-</p>
+
+<p>I just started fooling around with R and want to find a good tutorial. Suggestions? </p>
+
+<p>Also, are there other things I should be doing to beef up my R chops? </p>
+
+<p>Context: very little coding experience, intermediate knowledge of SPSS</p>
+
+<p>Much obliged.</p>
+"
+"0","0.377964473009227","174266","<p>I have dataset for which I am constructing a GAM model, with a number of factors predicting the dependent variable. When I take a summary of the model, I get a chart that indicates the ""significance of smooth terms"" (which is quite significant). What does this represent?</p>
+
+<p>Here is a sample of some data (totally made up btw).</p>
+
+<pre><code>gam.happiness_rating &lt;- gam(data = ratehappiness2008, overall_happy ~ s(salary, k=3) + s(age, k=3) + as.factor(sex) + as.factor(year) + num_siblings + num_vacation)
+
+summary(gam.happiness_rating)
+
+Parametric coefficients:
+                    Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          68.9221     5.4937  10.432  &lt; 2e-14 ***
+as.factor(sex)1     -12.3661     3.6232  -2.55  0.02346 ** 
+as.factor(year)1999  21.4689     3.3060   2.262 2.03e-06 ***
+num_siblings          1.2332     0.1082   1.648  0.02235 .  
+num_vacation          -4.3824   3.3261  -1.233  0.132343   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Approximate significance of smooth terms:
+               edf Ref.df      F  p-value    
+s(salary)     2.111  1.723 15.843  &lt; 2e-16 ***
+s(age)        1.844  1.485  16.46 2.47e-08 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+"
+"0.447213595499958","0.377964473009227","215105","<p>I want to simulate a data set for logistic regression in which my $Y_i \sim Bin(n_i, p_i)$ and $n_i &gt;1 ~ \forall i$. I want something like:</p>
+
+<p><a href=""http://i.stack.imgur.com/Nx0yU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Nx0yU.png"" alt=""enter image description here""></a></p>
+
+<p>In another <a href=""http://stats.stackexchange.com/questions/46523/how-to-simulate-artificial-data-for-logistic-regression"">question</a>, data has been generated for a logistic in which $n_i = 1$. I am confused as to whether it would be correct to follow this method and then bin the $x$ variables and call that a population. I'm not quite sure how to do this without creating some sort of bias in the data that I won't account for in the logistic regression. I'm looking for an explicit description of how to account for $n_i&gt;1$, if possible using R.</p>
+
+<p><strong>EDIT</strong>: Using the code in the question which I've tweaked, here is what I have:</p>
+
+<pre><code>set.seed(1)
+x1 &lt;- rnorm(6)           # some continuous variables 
+n &lt;- round(runif(6, min = 1, max = 20))
+z = 1 + 2*x1                
+pr = 1/(1+exp(-z))         # pass through an inv-logit function
+y &lt;- matrix(0,6,1)
+for( i in 1:6 ) { y[i] &lt;- sum(rbinom(n[i], 1, pr[i]) == 1)}
+
+Y &lt;- y/n
+</code></pre>
+
+<p>Are there any reasons this is not a reasonable way of doing things?</p>
+"
+"0.632455532033676","0.534522483824849","197337","<p>I have monthly temperature averages for a weather station across 100 years.
+I am wondering how I should analyze this data in a regression. </p>
+
+<p>The data are set up in the following fashion:</p>
+
+<pre><code>year  month  temp.avg
+1900    11      9 
+1900    12      6       
+1901    01      5 
+1901    02      4 
+....
+2015    12      7 
+</code></pre>
+
+<p>My question is: <strong>how do I go about accounting for the time and incorporating it into my model?</strong></p>
+
+<p>Here are my <strong>4 proposed methods:</strong></p>
+
+<ol>
+<li><p>Should I add a ""time"" variable which essentially counts my months from 1 through <em>n</em> rows of data? </p>
+
+<ul>
+<li>Ex: Using the example above, I would have a ""time"" column of 1,2,3,4,etc.</li>
+<li>I essentially lose the actual year &amp; month data, but does this matter? -- can I just add back, for example, ""Dec 1900"" for time 1?</li>
+</ul></li>
+<li><p>Given a month <em>i</em> in year <em>j</em>, should I create a continuous time by adding 0.0833 (1/12) to each year for each i-1 month? </p>
+
+<ul>
+<li><p>Ex. Again using the above example, I would have a ""time"" column consisting of values 1900, 1900.8333, 1900.9167, 1901.0000, 1901.0833, etc...</p></li>
+<li><p>The linear regression model for the prior two methods would essentially be: <code>lm(temp.avg ~ time)</code></p></li>
+</ul></li>
+<li><p>Do I just incorporate year and month (or perhaps more usefully <em>season</em>) in the model together?</p>
+
+<ul>
+<li>This would result in: <code>lm(temp.avg ~ year + month)</code></li>
+</ul></li>
+<li><p>Or is 3 wrong and instead I'd have to create a dummy variable for each month (or season)?</p>
+
+<ul>
+<li><code>lm(temp.avg ~ year + jan + feb + mar + apr ...)</code></li>
+</ul></li>
+</ol>
+
+<p>So <strong>which is correct?</strong> 
+I assume perhaps the questions I'm asking would dictate this to some degree. But perhaps someone could describe simply the validity of each method and when to apply each?</p>
+
+<p>Note: I understand that I will have to account for temporal autocorrelation, but I'm wondering how I incorporate time data <em>prior</em> to worrying about that.</p>
+
+<p>I will note that I perform my analyses in <code>R</code>.</p>
+"

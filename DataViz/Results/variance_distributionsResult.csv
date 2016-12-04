@@ -1,0 +1,79 @@
+"V1","V2","V3","V4"
+"1","1"," 15947","<p>Ok, let's try again. The context of the original question is given below, but perhaps it helps to focus on the statistical aspect to get an answer.</p>
+
+<p>What I got is a number of measurements in unit <em>t</em>. Those measurements are done while varying a larger number of variables. The impact of these variables is unknown and needs to be determined by interpreting the measurements.</p>
+
+<p>Since the measurements are in absolute numbers and variable <em>e</em> of the experiments is typically the main variable of interested, having only two values, I tend to calculate the ratio of the measurements based on <em>e</em>. Using the ratio enables me to compare the impact of the other variables on <em>t</em>.</p>
+
+<p>Now the question is: how to calculate the ratio properly?</p>
+
+<p>What I did first was to pair up measurements of <em>t</em> where all variables are equal, and then take a measurement with e<sub>1</sub> and one with e<sub>2</sub> to calculate the ration.
+However, that results in high variations, and the result is not very useful because of the noise.</p>
+
+<p>The second approach was to sort all measurements based on <em>t</em> and then calculate e<sub>1</sub>/e<sub>2</sub>. That reduces the noise a lot, but my half-knowledge tells me that is not the best way and perhaps not even correct.</p>
+
+<p>A colleague suggested to use the cartesian product instead of pairing random or sorted measurements. That sounds like it would account better for the random nature of two arbitrary measurements paired up for comparison. But, I am still whether that is correct, or whether there are approaches with a theoretical backing around in the community.</p>
+
+<p>Any pointers to approaches of how to work with and how to produce such ratios in a correct way a very welcome.</p>
+
+<h2>Context and Use-case</h2>
+
+<p>To give a bit of the context, I am measuring the performance of virtual machines (VMs), or systems software in general, and usually want to compare different optimizations for performance problem. Performance is measured in absolute runtime for a number of benchmarks, and usually for a number of configurations of a VM variating over used number of CPU cores, different benchmark parameters, etc. To get reliable results, each configuration is measure like 100 times. Thus, I end up with quite a number of measurements for all kind of different parameters where I am usually interested in the speedup for all of them, comparing the VM with and the VM without a certain optimization.</p>
+
+<p>What I currently do is to pick one specific series of measurements. Lets say the measurements for a VM with and without optimization (VM-norm/VM-opt) running benchmark A, on 1 core.</p>
+
+<p>Since I want to compare the results of the different benchmarks and number of cores, I can not use absolute runtime, but need to normalize it somehow. Thus, I pair up the 100 measurements for benchmark A on 1 core for VM-norm with the corresponding 100 measurements of VM-opt to calculate the VM-opt/VM-norm ratios.</p>
+
+<p>When I do that taking the measurements just in the order I got them, I obviously have quite a high variation in my 100 resulting VM-opt/VM-norm ratios. So, I thought, ok, let's assume the variation in my measurements come from non-deterministic effects and the same effects cause variation in the same way for VM-opt and VM-norm. So, naively, it should be ok to sort the measurements before pairing them up. And, as expected, that reduces the variation of course.</p>
+"
+"NaN","NaN","212430","<p>When building models with the <code>glm</code> function in R, one needs to specify the family. A family specifies an error distribution (or variance) function and a link function. For example, when I perform a logistic regression, I use the <code>binomial(link = ""logit"")</code> family.</p>
+
+<p>What are (or represent) the error distribution (or variance) and link function in R ?</p>
+
+<p>I assume that the link function is the type of model built (hence why using the <code>logit</code> function for the logistic regression. But I am not too sure about the error distribution function.</p>
+
+<p>I had a look at R's documentation but could not find detailed information other than how to use them and what parameters can be specified.</p>
+"
+"NaN","NaN","163244","<p>I am trying to independently select two sets of numbers (<code>set 1</code> and <code>set 2</code>) from a  bivariate normal distribution. I want the variance between the two to be equal and the correlation to be 0.  How can I do this?</p>"
+"NaN","NaN",NA,"<r><distributions><python><random-generation><covariance-matrix>"
+"NaN","NaN","139365","<p>I have a dataset of two columns: one with IDs and one with a column of single digits (0-9) (see below). I would like a statistical significance test for whether the data is uniform. Ideally, I would actually like to test whether certain groups of the data are uniform (i.e. is ID=1 uniform or is ID=2 uniform).</p>
+
+<p>There are a number of possible ways to do this, though given my actual data's structure, I think a test for the variance of uniform distribution would be best (the equation for uniform distribution variance is $\frac{(b-a)^2}{12}$. </p>
+
+<p>Does anyone have any ideas of where I could start or whether there are any existing R packages for something like this?</p>
+
+<pre><code>ID     Digits
+1         9            
+1         4            
+1         4            
+2         6            
+2         5            
+2         3
+2         3   
+</code></pre>
+"
+"NaN","NaN","199933","<p>I have four groups and in each group I have 12 cases.</p>
+
+<pre><code>G1  G2  G3  G4
+914 723 948 990
+942 698 843 990
+954 739 849 1020
+932 775 918 990
+930 788 961 1050
+904 717 852 1050
+878 751 864 1080
+957 794 840 1110
+878 770 852 1110
+868 751 854 1110
+889 734 920 1110
+888 753 884 1140
+</code></pre>
+
+<p>the observations represent age in days. 
+How can I do statistic controlling of distribution of age between these 4 groups?
+<br>
+For example, how can I say whether G4 is older than the others?</p>
+
+<p>Which post hoc test is needed for this type of data?
+Solutions could be brought via excel, SPSS or R.</p>
+"

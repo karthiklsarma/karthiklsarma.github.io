@@ -1,0 +1,999 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 57195","<p>I need to manually calculate multi-step prediction intervals for time series data. I know packages like 'forecast' in R provide these, but I cannot use these packages as the production infrastructure does not support R. </p>
+
+<p>Could someone point me to an article that explains how to generate multi-step prediction intervals? </p>
+"
+"0.696310623822791","0.639009650422694"," 41622","<p>I am aware that the ""prediction interval"", as defined in most textbooks on linear models, is focused on the uncertainty in the model being fit and is used to estimate an output prediction range for exact inputs.    However, as is normally the case, what about situations where the input isn't exact?   How do you calculate a ""prediction interval"" that accounts for both the uncertainty in the model and the uncertainty in the input data?</p>
+
+<p>For example,</p>
+
+<p>Assume the model is:   <code>y = a0 + (a1 * x1) + (a2 * x2)</code></p>
+
+<p>Where <code>y</code>, <code>x1</code>, and <code>x2</code> are time series vectors.     </p>
+
+<p>I only have one observation of the <code>y</code> time series with its associated <code>x1</code> and <code>x2</code> time series.  That data is used to fit the model.   However, I also have 1000 additional observations for <code>x1</code> and <code>x2</code>.   I can easily calculate individual ""prediction intervals"", using the model and each <code>x1</code> <code>x2</code> pair, however I want to estimate a ""prediction interval"" that allows for all <code>x1</code> and <code>x2</code> observations.   To be more specific, I generated the example below.   The questionable code is below the <code>#======</code> comment line.</p>
+
+<p>Basically, I used <code>lm(..)</code> to fit the <code>y</code> vector to its associated <code>x1</code> and <code>x2</code> vectors.  Next, I used <code>predict.lm(...interval=""prediction"", level=alpha)</code> to generate its typical <code>fit</code>, <code>lwr</code>, and <code>upr</code> vectors for each additional <code>x1</code> <code>x2</code> pair (see Graph 1, <code>fit</code> is the solid line, <code>upr</code> and <code>lwr</code> are the dashed lines for two observations).  I then collected these vectors for all <code>x1</code> <code>x2</code> pairs and used <code>alpha</code> to extract the upper and lower tails of all of the <code>lwr</code> and <code>upr</code> vectors (see Graph 2).</p>
+
+<p>Is this scheme valid?   Does the <code>alpha</code> that was used in <code>predict.lm(... level=alpha)</code> apply directly to counting-up/sorting the results to generate a ""prediction interval"" that allows for all <code>x1</code> <code>x2</code> pairs?   Can a 5% range from a competing model (for example an ARIMA model) be compared to this 5% ""prediction interval""?</p>
+
+<p>I'm fairly sure that the following scheme isn't right, but so far, I haven't figured out what I need to fix.</p>
+
+<pre><code>set.seed(1)
+
+numpoi &lt;- 10 #Number of data points in a time series vector
+
+#First independent variable ""x1"", first observation
+x1mea &lt;- 0.03
+x1sta &lt;- 0.05
+x1 &lt;- cumsum(rnorm(numpoi, mean=x1mea, sd=x1sta))
+
+#Second independent variable ""x2"", first observation
+x2mea &lt;- -0.01
+x2sta &lt;- 0.1
+x2 &lt;- cumsum(rnorm(numpoi, mean=x2mea, sd=x2sta))
+
+#Dependent variable ""y"", first observation
+a0 &lt;- 3
+a1 &lt;- 2
+a2 &lt;- 1
+noimea &lt;- 0.0
+noista &lt;- 0.1
+y &lt;- a0 + (a1 * x1) + (a2 * x2) + rnorm(numpoi, mean=noimea, sd=noista)
+
+#Build a data frame of the ""first observation"" data
+datfra &lt;- data.frame(y=y, x1=x1, x2=x2)
+
+#Fit the model for the ""first observation""
+mod &lt;- lm(y ~ x1 + x2, data=datfra)
+summary(mod)
+
+#Set up desired alpha value
+alpha &lt;- 0.95
+onetai &lt;- (1 - alpha)/2 #Convert the two tail ""alpha"" to a one tail value for use later
+
+#Generate some new data ""a"" for a second observation of ""x1"" and ""x2"".
+x1a &lt;- cumsum(rnorm(numpoi, mean=x1mea, sd=x1sta))
+x2a &lt;- cumsum(rnorm(numpoi, mean=x2mea, sd=x2sta))
+datfraa &lt;- data.frame(y=rep(NA, numpoi), x1=x1a, x2=x2a)
+modprea &lt;- predict(mod, newdata=datfraa, interval=""prediction"", level=alpha)
+
+#Generate some new data ""b"" for a third observation of ""x1"" and ""x2"".
+x1b &lt;- cumsum(rnorm(numpoi, mean=x1mea, sd=x1sta))
+x2b &lt;- cumsum(rnorm(numpoi, mean=x2mea, sd=x2sta))
+datfrab &lt;- data.frame(y=rep(NA, numpoi), x1=x1b, x2=x2b)
+modpreb &lt;- predict(mod, newdata=datfrab, interval=""prediction"", level=alpha)
+
+#Plot the results for both new data ""a"" and ""b""
+plot(modprea[, 1], type=""l"", ylim=c(min(modprea, modpreb), max(modprea, modpreb)), main=""Graph 1 - Second and Third Observations for x1 and x2"", lwd=2, col=""red"")
+lines(modprea[, 2], lwd=2, lty=2, col=""red"")
+lines(modprea[, 3], lwd=2, lty=2, col=""red"")
+lines(modpreb[, 1], lwd=2,  col=""green"")
+lines(modpreb[, 2], lwd=2, lty=2, col=""green"")
+lines(modpreb[, 3], lwd=2, lty=2, col=""green"")
+
+#===========================================================================
+#The code below is where my question lies.    Is this the appropriate method
+#to account for all observations?
+
+#Run the above calculation scheme on ""all"" observations.
+numtri &lt;- 1000 #All observations
+modprecfit &lt;- matrix(0, nrow=numpoi, ncol = numtri) #Matrix to hold all ""fit"" vectors
+modpreclwr &lt;- matrix(0, nrow=numpoi, ncol = numtri) #Matrix to hold all ""lwr"" vectors
+modprecupr &lt;- matrix(0, nrow=numpoi, ncol = numtri) #Matrix to hold all ""upr"" vectors
+
+#Fill up the modprecfit, modpreclwr, and modprecupr matricies.
+for (i in 1:numtri) {
+
+  #Generate the new data and put it in a dataframe
+  x1c &lt;- cumsum(rnorm(numpoi, mean=x1mea, sd=x1sta))
+  x2c &lt;- cumsum(rnorm(numpoi, mean=x2mea, sd=x2sta))
+  datfrac &lt;- data.frame(y=rep(NA, numpoi), x1=x1c, x2=x2c)
+
+  #Predict the new ""y"" for new input data
+  modprec &lt;- predict(mod, newdata=datfrac, interval=""prediction"", level=alpha)
+
+  #Store the ""ft"", ""lwr"", and ""upr"" vectors so they can be processed later
+  modprecfit[, i] &lt;- modprec[, 1]
+  modpreclwr[, i] &lt;- modprec[, 2]
+  modprecupr[, i] &lt;- modprec[, 3]
+
+}
+
+#Extract the average ""fit"", the lower quantile ""lwr"", and the upper quantile ""upr""
+modprecfitfin &lt;- apply(modprecfit, 1, quantile, 0.5)
+modpreclwrfin &lt;- apply(modpreclwr, 1, quantile, onetai)
+modprecuprfin &lt;- apply(modprecupr, 1, quantile, (1 - onetai))
+
+plot(modprecfitfin, type=""l"", ylim=c(min(modpreclwrfin), max(modprecuprfin)), main=""Graph 2 - All Observations for x1 and x2"", lwd=2, col=""red"")
+lines(modpreclwrfin, lwd=2, lty=2, col=""red"")
+lines(modprecuprfin, lwd=2, lty=2, col=""red"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/dHaNa.png"" alt=""enter image description here"">
+<img src=""http://i.stack.imgur.com/oMcGL.png"" alt=""enter image description here""></p>
+"
+"0.174077655955698","0.182574185835055","186190","<p>I am trying to make a prediction of imbalance prices in the elctricity market. My dataset consists of data for every 15 minutes (this is the time period in which a price is determined) during 11 months. I have several exogenous factors (like the spot market price) included mentioned here as x1 etc.</p>
+
+<p>In forecasting the price I am using the following code: </p>
+
+<pre><code>lag &lt;- function(x, k){c(rep(NA, k), x)[1 : length(x)]}
+mydata$y_lag1 &lt;- lag(mydata$y, 1)
+mydata$y_lag2 &lt;- lag(mydata$y, 2)
+mydata$x1_lag1 &lt;- lag(mydata$x1, 1)
+mydata$x2_lag1 &lt;- lag(mydata$x2, 1)
+mydata$x3_lag1 &lt;- lag(mydata$x3, 1
+
+f&lt;- y ~ y_lag1 + y_lag2 + x1_lag1 + x2_lag1 + x3_lag1
+fit &lt;- lm(formula = f, data = mydata)
+mydata$P_imb_pred &lt;- predict(fit, newdata = mydata)
+
+pred &lt;- data.frame(time=mydata$time, price=mydata$P_imb_pred)
+</code></pre>
+
+<p>My code works, but I am unsure if it does wat I want it to. I am trying to predict the price only 1 time unit (so 15 minutes) ahead. That's why I have lagged variables in the function. Can someone help me out? Should I additionally specify how much time ahead I want to forecast? If so, can you tell me how?</p>
+
+<p>Thanks for your help! </p>
+"
+"0.246182981958665","0.129099444873581","169602","<p>We have data (1901 to 2002) in this schema:</p>
+
+<pre><code>Fotrnight, Temp, Precipitation, WetDayFreq, (and other env variables), Cholera_cases
+</code></pre>
+
+<p>we have o<strong>ne such table for each village of three states</strong>. And we want to predict Cholera cases, given fortnight, village name (lat/long), env variables etc.</p>
+
+<p>Where,</p>
+
+<pre><code>Fortnight: 2 weeks time period. One year data is divided into 26 fortnights.
+Cholera_cases: are the no of cholera cases in that fortnight.
+</code></pre>
+
+<p>As per i think, time series model is not applicable here as we have one time series per village, and we can't have one model for each village. Or is it possible?</p>
+
+<p>Please, is there any way that we can combine time series or any other alternative approach to fit this kind of data???</p>
+"
+"0.348155311911396","0.365148371670111","111455","<p>I have two sets of data, say sales and profit, and I have calculated the correlation between these two data over different months using <code>R</code>. So currently I have somethings like this:</p>
+
+<pre><code>Month       | Jan | Feb | Mar | Apr | ....
+sales       |  X  |  Y  |  Z  |  P  | ....
+profit      |  A  |  B  |  C  |  D  | ....
+correlation | .1  | .35 | .28 | -.47| ....
+</code></pre>
+
+<p>This correlation calculation has been done over period of years and now I want to develop a prediction model which can provide me prediction for coming months of coming years,say what will be the profit for month of Aug 2014? How can I develop such a prediction model and what else, apart from what I have as of now, will I need to develop the prediction model? I am new to statistics and predictive analysis and thus if anyone could provide me a guide of required steps and some info about how can I do those steps then it would be very helpful for me to get the understanding also.</p>
+
+<p>Thanks in advance.</p>
+
+<p><strong>NOTE:</strong> If I could get help in respect to some non parametric bayesian method then it will be great. </p>
+"
+"0.426401432711221","0.447213595499958","111540","<p>I have two data sets whose structure is like this:</p>
+
+<p><strong>DATA SET 1:</strong> </p>
+
+<pre><code>        month_year  sales
+ [1,]  ""Jan 2000""  ""30000""
+ [2,]  ""Feb 2000""  ""12364""
+ [3,]  ""Mar 2000""  ""37485""
+ [4,]  ""Apr 2000""  ""2000""
+ [5,]  ""Jun 2000""  ""7573""
+          .     .      .
+          .     .      .
+</code></pre>
+
+<p><strong>DATA SET 2:</strong></p>
+
+<pre><code>          month_year    profit
+     [1,] ""Jan 2000"" ""84737476""
+     [2,] ""Jan 2000"" ""39450334""
+     [3,] ""Jan 2000"" ""48384943""
+     [4,] ""Feb 2000"" ""12345678""
+     [5,] ""Feb 2000"" ""49595340""
+     [6,] ""Jan 2001"" ""36769493""
+              .     .      .
+              .     .      .
+</code></pre>
+
+<p>As it can be seen the <strong>first data set has one sales value for each month of each year while in second data set I have <code>n</code>(say 100 but not constant all the time) number of values for each month of each year.</strong></p>
+
+<p>Now I want to develop <strong>a predictive model</strong> which can provide <strong>predictions for profit for future coming months</strong>. What is the best approach to develop such a predictive model? I searched online and found that we can form <strong>a regression</strong> or correlation <strong>fit</strong> model and based on that can do predictions. Which way is better- Regression or correlation? And <strong>how to form a regression fit for such data sets</strong> where one data set has multiple data points for each month of each year while the other has a single data point for each month of each year?</p>
+
+<p><strong>NOTE:</strong> I don't know whether it is the right approach or not but if we can get the regression/correlation value for like the month of Jan,Feb,Mar...and so on and then based on sales value we can do prediction of profit in general. I am new to this and hence I can lack in having certain concepts clear and thus request for some guidance for this issue.  </p>
+"
+"0.328975847479885","0.276026223736942","192714","<p>I want to estimate the current maximum capacity (in kWh) having the current power consumption (in kWh) and the state of charge of the battery (in %) available in a time series. </p>
+
+<p>I do not have a full battery charge circle recorded but only a snippet with the state of charge going from ~95% to ~35% in a 1 second data recording interval.</p>
+
+<p>At first, i cumulated the current power consumption and noticed that the progression between cumulated power consumption and state of charge was almost the same (see figure 1 and 2). </p>
+
+<p><strong>progression of state of charge vs. cumulated power consumption</strong>
+<a href=""http://i.stack.imgur.com/Y5tTp.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Y5tTp.png"" alt=""enter image description here""></a></p>
+
+<p>So i tried to use a linear regression model to predict two values of cumulated power consumption at 0% and 100% state of charge. In my assumption the delta of these two leaves me with the current maximum capacity of the battery.</p>
+
+<p>Ideally i want to monitor the capacity during the data recording. Which means i only have data of a few percent of state of charge.
+In figure 3 and 4 you can see my attempt of trying to create a linear regression model for every 2% state of charge. As you can see in the right plot, the estimated capacity has a very high variance.</p>
+
+<p><strong>LEFT: regression lines (green) of every 2% state of charge; RIGHT: estimated capacity of every 2% state of charge</strong>
+<a href=""http://i.stack.imgur.com/qOmlY.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/qOmlY.png"" alt=""enter image description here""></a></p>
+
+<p>Since i am not an expert in neither the matter of regression nor batteries/physics, my questions are:</p>
+
+<ul>
+<li><p>Is there a much simple or more exact way (or both) to estimate the current maximum capacity of the battery?</p></li>
+<li><p>If yes, is there a good way to estimate an sufficiently exact capacity with an even smaller snippet in an ongoing process, lets say every 2% state of charge? (maybe using a characteristic curve of the discharge process)</p></li>
+</ul>
+"
+"0.284267621807481","0.298142396999972","193611","<p>The maximum capacity of a battery during usage can vary from manufacturer's specifications due to factors like temperatures and battery health. Because of that i want to estimate the real maximum capacity (in kWh) of a battery using the percentage of the battery's remaining capacity (in %) and the current power consumption (in kW).</p>
+
+<p>I will get the above mentioned measurements in real time, in a time interval of every second, i.e., in a time series. During data recording, i will never see a full battery charge cycle but instead the battery will be between ~95% and ~35% percent.</p>
+
+<p>In my data exploration, i cumulated the current power consumption, visualized it together with the battery percentage and noticed that they share a linear dependency, as you can see in figure 1.</p>
+
+<p><strong>Figure 1: progression of battery capacity percentage and cumulated power consumption</strong>
+<a href=""http://i.stack.imgur.com/Y5tTp.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Y5tTp.png"" alt=""enter image description here""></a></p>
+
+<p>My approach of holding measurements in a bin for every 2% lost battery capacity and performing on that bin a linear regression to predict the cumulated power consumption at zero percent battery capacity is giving me rather unstable results. (see figure 2)</p>
+
+<p><strong>Figure 2: estimated capacity of every two percent battery capacity</strong>
+<a href=""http://i.stack.imgur.com/CB2jq.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/CB2jq.png"" alt=""enter image description here""></a></p>
+
+<ul>
+<li><p>Is there a way to get the results in a more stable (less varying) state?</p></li>
+<li><p>Or is there even a more exact way to estimate the current maximum capacity of the battery using a different method?</p></li>
+</ul>
+"
+"0.174077655955698","0.182574185835055","194828","<p>I have built a model on my training dataset where I have used the difference of the log(Y) i.e. diff(log(Y)) as my response variable.</p>
+
+<p>Now if I want to use this for predicting the Y variable in my test dataset, how do I do it in R?</p>
+
+<p>The problem is, if I use predict function, my output will be diff(log(Y)) and not Y itself. And I need Y here. Any help, please.</p>
+
+<p>P.S: I know how to manually get back to Y from diff(log(Y)), but I wanted to know if there was an easier way to do this.</p>
+"
+"0.348155311911396","0.365148371670111","177848","<p>Imagine we are collecting some feature values (like temperature, pressure etc.) every now and then and we also record the status of an equipment (which could be healthy or faulty); like below. Status of the equipment at each time depends on the series of event that has happened to it; so in order to classify the status of the equipment at time t; we have to look at what the predictor values are at time t; as well as how the predictor values behaved over the time until time t.</p>
+
+<pre><code>                 time temperature   pressure  status
+1 2011-07-27 18:33:57 -1.26352788 -4.5068982 healthy
+2 2011-07-27 16:55:54  1.32264716  1.1729150 healthy
+3 2011-07-27 10:14:22  0.09091158  2.4678387  faulty
+4 2011-07-27 08:20:32 -1.91443009 -0.1447071 healthy
+5 2011-07-27 08:19:09  0.33651122  0.8463276 healthy
+...
+</code></pre>
+
+<p>I have two questions.</p>
+
+<p>First, what would be the best practices or methods to use to predict the status of the equipment at each event?</p>
+
+<p>Second, if we want to use a regular classification model like random forests, what sort of transformation or preprocessing can be used to make this data classification-model friendly, while being able to capture the time dependency and the dependency on previous values that the predictors have got?</p>
+
+<p>The data size is almost 10M by 300.</p>
+"
+"0.389249472080761","0.408248290463863","139164","<p>I'm trying to find out how to do forecasting with a mixture model (averaging the forecasts of an <code>ets</code>, an <code>arima</code> and an <code>stlf</code> model). I do not have a huge amount of statistics experience and so I'm struggling with finding out how to do it.</p>
+
+<p>The point forecasts will just be the average of the point forecasts of the three methods, no problem.</p>
+
+<p>The problem is how to calculate the prediction intervals. </p>
+
+<p>I have found an R script with an attempt to do it, but the mixture prediction intervals are just calculated as an average of the prediction intervals of the models, and I am pretty sceptical about this approach - is it really that easy?</p>
+
+<p>If not, how do I go about calculating them?</p>
+"
+"0.348155311911396","0.365148371670111"," 94863","<p>I have a question about a quit sophisticated model for a time series. Suppose $ \{X_t:0\le t\le T\}$ is a time series. The plot of autocorrelation function and partialcorrelation function suggest and ARMA model. However, I also want to model the volatility, hence I use a ARMA(p,q)-GARCH(1,1) model, say. This means</p>
+
+<p>$$ X_t=\mu_t+\sigma_t Z_t$$
+$$\mu_t=\mu +\sum_{i=1}^p\phi_i(X_{t-i}-\mu)+\sum_{j=1}^q\theta_j(X_{t_j}-\mu_{t-j}) $$
+$$ \sigma_t^2=\omega+\alpha_1(X_{t-1}-\mu_{t-1})^2+\beta_1\sigma_{t-1}^2$$</p>
+
+<p>Then $\mu_t$ models the conditional expectation and $\sigma_tZ_t$ the conditional variance, where $\{Z_t\}$ is a strict white noise. </p>
+
+<p>In <code>R</code> we can use </p>
+
+<pre><code>model &lt;- garchFit(formula=~arma(p,q)+garch(1,1),cond.dist=""std"",trace=F)
+</code></pre>
+
+<p>command where we have to specify $p,q$ and we decided to assume the white noise has a student $t$ distribution. Using the built in functin <code>predict</code> we can get a forecast for the next day:</p>
+
+<pre><code>predict(model,n=1)
+</code></pre>
+
+<p>However what is the return value of <code>predict</code>? Does it forecast $\sigma_{t+1}^2$, $\mu_{t+1}$ or $X_{t+1}$ and how can I get the other two forecasts within <code>R</code>?</p>
+"
+"0.348155311911396","0.365148371670111","222499","<p>We have data from 'october' in the past 4 years and we want to predict what data for this year is going to look like in October.</p>
+
+<p>The data looks like this:</p>
+
+<p>1
+2
+3
+4
+5
+6
+...</p>
+
+<p>Every october has 31 days, every day 24 hours, every hour 60 minutes. So we have 31*24*60=44640 values for each year. We have collected all of the values for the 4 years and stored it in a single text file. Then we load the file and create seasonal periods:</p>
+
+<pre><code>library(""forecast"")
+ourdata &lt;- read.csv(""1.txt"")
+seasonal_info &lt;- msts(ourdata,seasonal.periods=c(4,124,2976,178560))
+</code></pre>
+
+<p>Now we have seasonal information in seasonal_info. We generally use a tbats() model to make time series predictions but the problem is that fitting a model for so many values is taking forever and sometimes it just crashes while trying to fit a model:</p>
+
+<pre><code>best_model &lt;- tbats(seasonal_info)
+</code></pre>
+
+<p>This takes forever. So is there any other way we can make predictions for October this year by looking at the data for Octobers from the past 4 years (where data is present in 1 minute intervals)?</p>
+
+<p><strong>EDIT</strong> to include more information as requested by @DJohnson:</p>
+
+<p>Yes, our data only pertains to October of each year. Our goal is to study the trends in Octobers past 4 years and see if there's a slight increase each year (the data pertains to traffic experienced on our border firewall). If there is a rise in traffic each year, we wish to be able to visualize it and put a percentage on it (percent rise). Also, we wish to predict the traffic in October this year and the next so we can increase our capacity accordingly. </p>
+"
+"0.389249472080761","0.408248290463863","222832","<p>We have data values pertaining to BPS (bits per second) traffic on a networking device. We have data from for a particular month (October) from the past 4 years. The data points are available in a 1 minute interval.</p>
+
+<p>So we have 31 days * 24 hours * 60 minutes = 44640 values for each year. Multiply that by 4 and we get ~180,000 data points in our CSV file. We have tried several model including TBATS, ARIMA etc. to make future predictions. For example, we need to predict 44640 values for the october of next year. Problem is that so many data values means that fitting a model takes forever and it's not worth waiting an entire day of processing just to find that model is predicting a straight line trend around the average of previous values.</p>
+
+<p>We are looking for possibly reducing this data using something like exponential smoothing but we do not know how. The past data values are as follows:</p>
+
+<pre><code>8839
+29191985
+3825997
+439694949
+5186727
+5747251
+4814919
+489752985
+481456366
+53712118
+51364413
+57449919
+48123322
+473151317
+529185483
+51284866
+528115232
+597333333
+535883672
+594275668
+549679615
+589267353
+54916916
+756419719
+65492594
+587599734
+616325563
+68434481
+63351749
+624134894
+61665387
+697646113
+61722678
+689499647
+6884953
+618223888
+67283625
+7451432
+773956231
+72682555
+748525567
+682498934
+71892441
+8527712
+752342356
+68912676
+746693391
+7241629
+712685465
+748971655
+74339677
+773571787
+81173992
+9369364
+885665416
+969439265
+99578482
+13281261
+127297176
+1577597
+129853832
+13882798
+1184388675
+115559261
+118735937
+121685158
+1128946618
+1157798227
+1143165165
+11632918
+122479785
+11341628
+116385628
+12621439
+1172845976
+1214564385
+1795176
+12957522
+1183316274
+12619916
+12519533
+135765784
+1399453354
+1399224864
+1372868436
+1331569834
+137852813
+128497677
+1297789678
+135918171
+1294935824
+1384582825
+1362893276
+145228865
+142459451
+1523728929
+1553973554
+155186563
+149211641
+159253766
+141712263
+14764913
+148991924
+1562214535
+164371933
+1546871
+163188462
+168156746
+168938876
+16835799
+171595761
+1663196329
+1692558573
+17636281
+18258581
+177213887
+1652531676
+19852331
+1789876462
+1789629233
+1748867173
+181994385
+176165681
+1969791999
+19861387
+1947295162
+287128848
+235583965
+1968433253
+217279852
+2212697598
+1953822855
+2212983294
+2166245238
+29418584
+28276258
+22111712
+21361513
+2114169137
+2314153846
+216195463
+1948538537
+2131395686
+22873135
+2121744212
+2261766416
+1952463426
+231837712
+211836243
+21321957
+231673786
+23586221
+237934824
+23857991
+226835959
+22527878
+229163528
+223611724
+242565252
+2451523242
+242146954
+22592296
+2524295439
+24288788
+239426786
+2488167389
+23614618
+2387528327
+224687321
+2352352153
+219349398
+211514732
+223242859
+2114838493
+2275546998
+224398369
+2271632485
+2237118326
+231972341
+223867472
+232943687
+2616184865
+2264386319
+241637212
+2577586277
+2473823845
+247444156
+261553512
+264819946
+2643896421
+274781277
+26189985
+272488724
+2727773421
+269784662
+2923184161
+2835866726
+29476972
+313529872
+3899199
+2979386981
+37853218
+38881954
+297738289
+3113766229
+32723531
+2773715317
+3137525998
+367757942
+36456197
+297769411
+2882461831
+342295362
+344496963
+39439679
+3136141447
+3324496997
+3253434742
+338259
+2895698259
+31183592
+374252594
+38459536
+312441788
+3239434239
+3161928
+3166617496
+31916915
+3162371549
+319837457
+3141362857
+32638795
+3157587728
+3281771348
+3142241484
+3368347612
+327583987
+3241925869
+33183412
+32491351
+3383213
+3573783926
+3299445212
+3268651
+33138667
+329333539
+329314786
+343676884
+342544137
+3286497278
+34854846
+31553839
+3553121791
+3295782535
+333871824
+3357511167
+364861848
+3412626294
+33294747
+348641163
+327124157
+3392738132
+325626931
+33883856
+334594742
+32942374
+31897973
+3834926556
+365132813
+35475637
+336384187
+366552233
+36141892
+34887985
+34695147
+3576451651
+3335458644
+3326826563
+3341539
+339894997
+337912327
+336649223
+3555534642
+329266359
+356461957
+3439773899
+328435177
+3758339514
+346635125
+361774558
+335482465
+3486783351
+349275
+341392357
+37215
+3497621877
+364242974
+3624311875
+377361582
+367461755
+363526377
+34877241
+47832182
+371281677
+376216515
+3741615717
+3695335388
+3628351931
+372717255
+3792287845
+36549945
+372238998
+3869247316
+3822289851
+386173797
+372368834
+345429379
+417153116
+38749739
+395119594
+3746367111
+383839372
+391378292
+367872746
+372373178
+3625754
+379946415
+37778181
+3746261571
+3918932444
+386892529
+3695653853
+3959862748
+415346593
+42977194
+412162553
+41582129
+41732773
+471311973
+4415543
+3838746827
+43135679
+41259122
+416451147
+382524677
+3829914759
+396922256
+392669399
+383285533
+3915829759
+497197157
+471337265
+494296438
+395495
+41562899
+3973355519
+398198495
+376359951
+397532419
+438115941
+383579951
+39116435
+425944659
+3961366459
+3997619677
+4575215
+415522986
+3947337112
+394636114
+392714147
+385221299
+47237153
+...and so on
+</code></pre>
+
+<p>Keeping in mind that we have 
+~180,000 such past data values, and we wish to predict the next 44640 future values, how do we go about making such a prediction in R?</p>
+
+<p>We are new at R so actual code rather than abstract concepts would help a lot!</p>
+
+<p><strong>EDIT to show how out ARIMA model got stuck in computations:</strong></p>
+
+<p>This is the code we used for auto-arima fitting that got stuck for hours until we had to abort:</p>
+
+<pre><code>mydata &lt;- load.csv(""2.csv"")
+mydata &lt;- ts(mydata, start = c(2012,1), frequency = 44640)
+require(forecast)
+arimafit &lt;- auto.arima(mydata)
+</code></pre>
+
+<p>What are we doing wrong in the ARIMA model that's taking so long? </p>
+"
+"0.174077655955698","0.182574185835055","233312","<p>am new to data science.i have used forecast package in R and got some accuracy measurements like RMSE,ME,MAPE etc.</p>
+
+<p>can anyone explain me this measurements in a practical approach?</p>
+
+<p>Please see my example code.</p>
+
+<pre><code>&gt; library(forecast)
+
+&gt; data=read.csv(""experiment.csv"")
+&gt; head(data)
+  BATCH value value1 value2
+1     I     5.77  21.32   34.82
+2    II     4.46  20.36   46.89
+3   III     4.57  22.64   42.95
+4    IV     3.54  23.63   48.45
+5     V     6.34  19.33   36.43
+6    VI     4.56  25.36   39.58
+
+&gt; dataset=data.frame(value=data$value,value1=data$value1,value2=data$value2)
+&gt; fit.nn=nnetar(dataset$value)
+&gt; modelaccuracy.nn=accuracy(fit.nn)
+&gt; modelaccuracy.nn
+                         ME             RMSE            MAE             MPE             MAPE        MASE        ACF1   
+Training set 0.001978004     0.4052840794   0.3743702393    -0.9462031738   9.191369199 0.3249114902    -0.2064674413
+</code></pre>
+
+<p>here some measurements has negative values.what it actually means?whether it's a bad dataset or forecasting accuracy would be not good?</p>
+
+<p>many thanks in advance.</p>
+"
+"NaN","NaN","209173","<p>I am working on a project, and I am absolutely new to forecasting and not so strong in statistics. I have an employee data for the last 7 years, along with the other variables like economic growth, employee turnover, vacancies, and some other economical factors. 
+I have to do forecasting for the next 5 years. I have some questions: </p>
+
+<ul>
+<li>Is it possible to do a time series analysis with more than one explanatory variable? Can this be done in R? </li>
+</ul>
+
+<p>I would appreciate any kind of help. Thanks in advance!! </p>
+"
+"0.246182981958665","0.258198889747161","209434","<p>I am new to R and statistics. I have a problem related to the prediction: I want to predict a univariate time series using SVM, but I do not know how to construct the training set.
+what I want is that I want to feed first 16 values into the SVM and then I want SVM should predict the next 3 values. My SAMPLE DATA:</p>
+
+<pre><code>Timestamp   Cost
+2010-09-21T00:00:00+00:00   5
+2010-09-21T00:01:00+00:00   6
+2010-09-21T00:02:00+00:00   6
+2010-09-21T00:03:00+00:00   6
+2010-09-21T00:04:00+00:00   6
+2010-09-21T00:05:00+00:00   6
+2010-09-21T00:06:00+00:00   6
+2010-09-21T00:07:00+00:00   5
+2010-09-21T00:08:00+00:00   6
+2010-09-21T00:09:00+00:00   5
+2010-09-21T01:10:00+00:00   5
+2010-09-21T01:11:00+00:00   6
+2010-09-21T01:12:00+00:00   6 
+2010-09-21T01:13:00+00:00   6
+2010-09-21T01:14:00+00:00   6
+2010-09-21T01:15:00+00:00   6
+2010-09-21T01:16:00+00:00   6
+2010-09-21T01:17:00+00:00   5
+2010-09-21T01:18:00+00:00   6
+</code></pre>
+
+<p>Thanks</p>
+"
+"0.348155311911396","0.365148371670111"," 64720","<p>I am trying to use R to build a time-series model to predict a variable which is only reported on irregular intervals.  I have data for independent variables for all time periods (days), however the key dependent variable, reported_UV, is only reported monthly (every 30 or so days).</p>
+
+<p>I am looking for help building this model so that reported_UV can be predicted based upon previous cases of reported_UV as well as the independent variables.</p>
+
+<p>The dataset is at the following link in .csv format: <a href=""https://docs.google.com/file/d/0B42_3jCtgxwYRVp5dkJ2NGVnaWs/edit?usp=sharing"" rel=""nofollow"">https://docs.google.com/file/d/0B42_3jCtgxwYRVp5dkJ2NGVnaWs/edit?usp=sharing</a></p>
+
+<p>A description of the data fields is as follows:</p>
+
+<ul>
+<li>Month_Year The Month &amp; Year (e.g. Jun-11)</li>
+<li>Date The Date (e.g. 6/1/2011)</li>
+<li>DayInMonth The day in month (e.g. for June 1st, this would be ""1"")</li>
+<li>Weekday Shows as ""1"" if the day is a weekday</li>
+<li>Weekend Shows as ""1"" if the day is a weekend</li>
+<li>Holiday Shows as ""1"" if the day is a holiday</li>
+<li>Month Shows the month in the year (e.g. for June, this would be ""6"")</li>
+<li>daily_UV The total unique visitors for the day</li>
+<li>p28_UV A lagging indicator showing the total unique visitors for past 28 days. This is a deduped version of the previous 28 days of daily_UV.</li>
+<li>reported_UV This is the key dependent variable to predict, reported by an independent auditor. This is reported on the last day of the month and shows the total unique visitors for the month. For example, the value on June 30th shows the entire month of June. All other values are missing.</li>
+</ul>
+"
+"0.174077655955698","0.182574185835055","174476","<p>how to best predict data like this which contains multiple levels of nearly constant data?</p>
+
+<p>Simple linear models even with weights (exponential) did not cut it.</p>
+
+<p>I experimented with some clustering and then robust linear regression but my problem is that the relationship between these levels of constant data is lost.</p>
+
+<p>Here is the data from the picture:</p>
+
+<pre><code>structure(list(date = structure(c(32L, 10L, 11L, 14L, 5L, 6L, 
+1L, 2L, 12L, 9L, 19L, 13L, 4L, 17L, 15L, 3L, 18L, 7L, 8L, 21L, 
+16L, 22L, 28L, 29L, 30L, 26L, 27L, 31L, 20L, 23L, 24L, 25L), .Label = c(""18.02.13"", 
+""18.03.13"", ""18.11.13"", ""19.08.13"", ""19.11.12"", ""20.01.13"", ""20.01.14"", 
+""20.02.14"", ""20.05.13"", ""20.08.12"", ""20.09.12"", ""21.04.13"", ""21.07.13"", 
+""21.10.12"", ""21.10.13"", ""22.04.14"", ""22.09.13"", ""22.12.13"", ""23.06.13"", 
+""25.01.15"", ""25.03.14"", ""25.05.14"", ""26.02.15"", ""26.03.15"", ""26.04.15"", 
+""26.10.14"", ""26.11.14"", ""27.07.14"", ""27.08.14"", ""28.09.14"", ""28.12.14"", 
+""29.03.10""), class = ""factor""), amount = c(-4, -12.4, -9.9, -9.9, 
+-9.94, -14.29, -9.97, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, 
+-9.9, -9.9, -9.9, -4, -4, -11.9, -11.9, -11.9, -11.9, -11.98, 
+-11.98, -11.9, -13.8, -11.64, -11.96, -11.9, -11.9, -11.9)), .Names = c(""date"", 
+""amount""), class = ""data.frame"", row.names = c(NA, -32L))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DWypm.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DWypm.jpg"" alt=""regression for multiple levels""></a></p>
+
+<h1>revisiting rollmedian</h1>
+
+<p>@Gaurav - you asked: Have you tried building a model with moving averages? as ARIMA didn't work - I did not try it. But I have now.</p>
+
+<pre><code>zoo::rollmedian(rollTS, 5)
+</code></pre>
+
+<p>Seems to get the pattern of the data. However I wonder now how to reasonably forecast it. Is this possible?</p>
+
+<p><a href=""http://i.stack.imgur.com/dPhK8.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dPhK8.png"" alt=""rollmedian""></a></p>
+"
+"NaN","NaN","174591","<p>Given a VAR model for the second differences of a vector time series, $\Delta^2 y$, how to obtain the one-step-ahead (and possibly $h$-step-ahead) prediction intervals for the series in levels, $y$? </p>
+
+<p>Any suggestion or resources regarding how to implement this, e.g. in R, would also be appreciated.</p>
+"
+"0.174077655955698","0","167859","<p>I wish to predict variable $y$, and so I am tempted to estimate</p>
+
+<p>$$
+y_t = \beta_0 + \beta_1 x_t+ u_t
+$$</p>
+
+<p>Looking at a plot of $y$, the series does not seem stationary.
+Instead I regress like so:</p>
+
+<p>$$
+y_t - y_{t-1} = \gamma ( x_t - x_{t-1} ) + u_t
+$$</p>
+
+<p>Now the purpose of this time series transformation is to make the series stationary - lets assume that the series is stationary in the changes.</p>
+
+<p>How do then back track, and calculate the actual level predictions?</p>
+
+<p>Bonus points for R code.</p>
+"
+"0.174077655955698","0.182574185835055","167944","<p>I have the following time series of <em>count data</em>:</p>
+
+<pre><code>x &lt;- ts(c(21337, 56994, 95497, 138829, 146346, 157182, 128136,
+          104615, 103659, 102082, 109968, 113945, 118067, 93867, 54930))
+</code></pre>
+
+<p>To which I have associated the following model</p>
+
+<pre><code>&gt; library(forecast)
+...
+&gt; ets(x)
+ETS(A,N,N) 
+
+Call:
+ ets(y = x) 
+
+  Smoothing parameters:
+    alpha = 0.9999 
+
+  Initial states:
+    l = 105466.6663 
+
+  sigma:  32125.45
+
+     AIC     AICc      BIC 
+355.9429 356.9429 357.3590 
+</code></pre>
+
+<p>Which gives me negative prediction boundaries at 95% confidence:</p>
+
+<pre><code>&gt; forecast(ets(x), level = .95)
+   Point Forecast       Lo 95    Hi 95
+16       54933.94   -8030.795 117898.7
+17       54933.94  -34107.138 143975.0
+18       54933.94  -54116.824 163984.7
+...
+</code></pre>
+
+<p>Since we're dealing with count data, I've decided to hide the negative values from my final plot:</p>
+
+<pre><code>plot(forecast(ets(x), level = .95), ylim = c(0, 260e3))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Vp2wN.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Vp2wN.png"" alt=""plot""></a></p>
+
+<p><strong>My questions are:</strong></p>
+
+<ol>
+<li><strong>How many Statistics professors have I just aggravated with that procedure?</strong></li>
+<li><strong>How could I get away with such a model without having to resort to transforming my data (I'm trying to avoid the back-and-forth of log-transformation)?</strong></li>
+</ol>
+
+<p>Related questions:</p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/q/92443/27433"">Can a mathematically sound prediction interval have a negative lower bound?</a></li>
+<li><a href=""http://stats.stackexchange.com/q/143129/27433"">Getting Negative Forecasting Values</a></li>
+</ul>
+"
+"0.389249472080761","0.32659863237109","224380","<p>I have a dataset which contains data from a sensor for every 5 minutes and am trying to predict for example 10 future values based on the first 500 values. My data looks like the following and could be downloaded <a href=""https://github.com/numenta/NAB/blob/master/data/artificialWithAnomaly/art_daily_flatmiddle.csv"" rel=""nofollow"">here</a>:</p>
+
+<pre><code>timestamp,value
+2014-04-01 00:00:00,-21.0483826823
+2014-04-01 00:05:00,-20.2954768676
+2014-04-01 00:10:00,-18.127229468299998
+2014-04-01 00:15:00,-20.1716653997
+2014-04-01 00:20:00,-21.223761612
+2014-04-01 00:25:00,-19.1044911334
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/iw6O3.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iw6O3.png"" alt=""enter image description here""></a></p>
+
+<p>I am taking the following steps:</p>
+
+<pre><code># Read data from file and create time series    
+myData &lt;- read.zoo(file=""filePath"", sep = "","", header = TRUE,index = 1, tz = """", format = ""%Y-%m-%d %H:%M:%S"", nrows=500)
+
+# Fit ARIMA model to the data
+fit &lt;- auto.arima(z, stepwise=FALSE, trace=TRUE, approximation=FALSE)
+
+# Predict 10 timesteps ahead
+pred &lt;- predict(fit, n.ahead = 10)
+</code></pre>
+
+<p>But when I print the prediction results they do not seem promising and model always converges to a single value:</p>
+
+<pre><code>$pred
+Time Series:
+Start = 1396474800 
+End = 1396477500 
+Frequency = 0.00333333333333333 
+ [1] 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789 81.62789
+
+$se
+Time Series:
+Start = 1396474800 
+End = 1396477500 
+Frequency = 0.00333333333333333 
+ [1]  7.136100  9.728122 11.762177 13.493007 15.025767 16.416032 17.697417 18.892088 20.015580 21.079276
+</code></pre>
+
+<p>And here is the summary of fit:</p>
+
+<pre><code>&gt; summary(fit)
+Series: z 
+ARIMA(0,1,1)                    
+
+Coefficients:
+          ma1
+      -0.0735
+s.e.   0.0463
+
+sigma^2 estimated as 50.92:  log likelihood=-1688.17
+AIC=3380.34   AICc=3380.37   BIC=3388.77
+
+Training set error measures:
+                    ME     RMSE      MAE     MPE    MAPE       MASE        ACF1
+Training set 0.2215984 7.121813 3.141386 1592726 1592732 0.07197436 0.001426353
+</code></pre>
+
+<p>This is my first day with R and I think I might be doing something wrong. Any help would be much appreciated.</p>
+
+<p>Thanks</p>
+"

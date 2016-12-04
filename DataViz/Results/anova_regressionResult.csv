@@ -1,0 +1,2891 @@
+"V1","V2","V3","V4"
+"0.164957219768465","0.159617376893524","7775","<p>Does anyone have suggestions or packages that will calculate the coefficient of partial determination?</p>
+
+<p>The coefficient of partial determination can be defined as the percent of variation that cannot be explained in a reduced model, but can be explained by the predictors specified in a full(er) model. This coefficient is used to provide insight into whether or not one or more additional predictors may be useful in a more fully specified regression model.</p>
+
+<p>The calculation for the partial r^2 is relatively straight forward after estimating your two models and generating the ANOVA tables for them. The calculation for the partial r^2 is:</p>
+
+<p>(SSEreduced - SSEfull) / SSEreduced</p>
+
+<p>I've written this relatively simple function that will calculate this for a multiple linear regression model. I'm unfamiliar with other model structures in R where this function may not perform as well:</p>
+
+<pre><code>partialR2 &lt;- function(model.full, model.reduced){
+    anova.full &lt;- anova(model.full)
+    anova.reduced &lt;- anova(model.reduced)
+
+    sse.full &lt;- tail(anova.full$""Sum Sq"", 1)
+    sse.reduced &lt;- tail(anova.reduced$""Sum Sq"", 1)
+
+    pR2 &lt;- (sse.reduced - sse.full) / sse.reduced
+    return(pR2)
+
+    }
+</code></pre>
+
+<p>Any suggestions or tips on more robust functions to accomplish this task and/or more efficient implementations of the above code would be much appreciated.</p>
+"
+"0.218217890235992","0.211153942092367","21071","<p>I'm testing for difference in a continuous outcome under three different conditions. </p>
+
+<p>Under condition A I take a measurement of the outcome. I do this twice for the same sample. Example values could be 2.2, 2.1. These are ""technical"" replicates that come from the same biological source</p>
+
+<p>I do the same for four ""biological"" replicates for condition A:</p>
+
+<pre><code>A1, measure 1: 2.2
+A1, measure 2: 2.1
+A2, measure 1: 2.0
+A2, measure 2: 2.1
+A3, measure 1: 1.9
+A3, measure 2: 1.8
+A4, measure 1: 1.5
+A4, measure 2: 1.6
+</code></pre>
+
+<p>I also have conditions B, C, and D, with two ""technical"" replicates in each of four ""biological"" replicates.</p>
+
+<p>How would I test test for mean differences (ANOVA) that best accounts for both the technical and biological variation? I wouldn't want to fit a model counting each measurement as a separate observation, because each pair comes from the same biological sample. I'm assuming there must be a better way than just averaging over the pairs.</p>
+
+<p>Bonus: how do you do this in R?</p>
+
+<p>Assuming I have data that looks like this:</p>
+
+<pre><code>&gt; data
+   condition sample measurement outcome
+1          A      1           1     2.2
+2          A      1           2     2.1
+3          A      2           1     2.0
+4          A      2           2     2.1
+5          A      3           1     1.9
+6          A      3           2     1.8
+7          A      4           1     1.5
+8          A      4           2     1.6
+9          B      1           1     1.7
+10         B      1           2     1.6
+11         B      2           1     1.5
+12         B      2           2     1.6
+13         B      3           1     1.4
+14         B      3           2     1.3
+15         B      4           1     1.0
+16         B      4           2     1.1
+17         C      1           1     2.4
+18         C      1           2     2.3
+19         C      2           1     2.2
+20         C      2           2     2.3
+21         C      3           1     2.1
+22         C      3           2     2.0
+23         C      4           1     1.7
+24         C      4           2     1.8
+</code></pre>
+
+<p>I probably wouldn't want to do something like this:</p>
+
+<pre><code>summary(lm(outcome~condition, data=data))
+</code></pre>
+
+<p>Thanks in advance.</p>
+"
+"0.116642368703961","0.11286652959662","55946","<p>I conducted a regression analysis using R's lm() function. One of the independent variables shows no significance (p = 0.89), which contradicts the hypothesis that is should have a significantly positive effect on the dependent variable. </p>
+
+<p>How do you interpret that? Can you say that it has no positive effect on the dependent variable, just because it is not significant - even though it is not significantly negative?</p>
+"
+"NaN","NaN","57145","<p>I tried to compare the following two models using ""anova.lm()"" in R:</p>
+
+<pre><code>Model 1: score ~ gpa + class 
+Model 2: score ~ gpa   
+  Res.Df     RSS Df   Sum of Sq      F    Pr(&gt;F) 
+1     90     213                              
+2     91     201  1          96  14.07  &lt;2.2e-16 
+</code></pre>
+
+<p>Since there is only one DF, how should I report the result of this F test?</p>
+
+<p>Is ""<strong>F(df=1) = 14.07, p-value &lt; 2.2e-16</strong>"" correct?</p>
+"
+"0.247435829652697","0.239426065340287","115154","<p>Relatively new to stats. I use linear regression  and get R^2, which is quite low.</p>
+
+<p><strong>MODEL 1</strong></p>
+
+<pre><code>    lmoutar=lm(formula = ts_y ~ ts_y_lag + ts_x)
+</code></pre>
+
+<p>So switched to arima with external regressor. Using ""auto.arima"", I formulate arimax model</p>
+
+<p><strong>MODEL 2</strong></p>
+
+<pre><code>    fitarima &lt;- auto.arima(ts_y, xreg=ts_x)
+    arimaout&lt;-arima(ts_y,order=c(2,0,5),xreg=ts_x)
+</code></pre>
+
+<p>How can I compare the explanability of AR model with arima model. From the thread <a href=""http://stats.stackexchange.com/questions/8750/how-can-i-calculate-the-r-squared-of-a-regression-with-arima-errors-using-r"">How can I calculate the R-squared of a regression with arima errors using R?</a>, I understand R^2 is not an option for ARIMA.</p>
+
+<p>From the thread <a href=""http://stats.stackexchange.com/questions/11850/model-comparison-between-an-arima-model-and-a-regression-model"">Model comparison between an ARIMA model and a regression model</a>, AIC/BIC is not the right criteria and MSE from forcast/predict can be possible criteria for comparison across AR and ARIMA model. Is MSE the best option for model comparison, if so how would I generate MSE for AR and ARIMA?</p>
+
+<p>I tried to compare the above ar and arima model using anova, but I get following error message</p>
+
+<pre><code>anova.lm(lmoutar,arimaout)
+   Warning message:
+    In anova.lmlist(object, ...) :
+            models with response â€˜""NULL""â€™ removed because response differs from model 1
+</code></pre>
+
+<p>What does this error message mean? </p>
+
+<p><strong><em>EDIT</em></strong></p>
+
+<p>Thanks for the response so far and insight that AR is nested within ARIMA. How would one answer this question, if I rephrase  as ""How to compare AR, ARIMA and General Linear Models?"". The first model I listed has AR(1) and independent variable; it is a general linear model. So how would I compare a GLM versus ARIMAX model? Any thing else besides MSE that I could use to judge between GLM and ARIMAX</p>
+"
+"0.29738085706659","0.287754318422332","115304","<p>I am learning about building linear regression models by looking over someone elses R code.  Here is the example data I am using:</p>
+
+<pre><code>v1  v2  v3  response
+0.417655013 -0.012026453    -0.528416414    48.55555556
+-0.018445979    -0.460809371    0.054017873 47.76666667
+-0.246110341    0.092230159 0.057435968 49.14444444
+-0.521980295    -0.428499038    0.119640369 51.08888889
+0.633310578 -0.224215856    -0.153917427    48.97777778
+0.41522316  0.050609412 -0.642394965    48.5
+-0.07349941 0.547128578 -0.539018121    53.95555556
+-0.313950353    0.207853678 0.713903994 48.16666667
+0.404643796 -0.326782199    -0.785848428    47.7
+0.028246796 -0.424323318    0.289313911 49.34444444
+0.720822953 -0.166712488    0.323246062 50.78888889
+-0.430825851    -0.308119827    0.543823856 52.65555556
+-0.964175294    0.661700584 -0.11905972 51.03333333
+-0.178955757    -0.11148414 -0.151179885    48.28888889
+0.488388035 0.515903257 -0.087738159    48.68888889
+-0.097527627    0.188292773 0.207321867 49.86666667
+0.481853599 0.21142728  -0.226700254    48.38888889
+1.139561277 -0.293574756    0.574855693 54.55555556
+0.104077762 0.16075114  -0.131124443    48.61111111
+</code></pre>
+
+<p>I read in the data and use a call to <code>lm()</code> to build a model:</p>
+
+<pre><code>&gt; my_data&lt;- read.table(""data.csv"", header = T, sep = "","")
+&gt; my_lm &lt;- lm(response~v1 + v2 + v3 + v1:v2 + v1:v3 + v2:v3, data=my_data)
+&gt; summary(my_lm)
+
+Call:
+lm(formula = response ~ v1 + v2 + v3 + v1:v2 + v1:v3 + v2:v3, 
+data = my_data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.0603 -0.6615 -0.1891  1.0395  1.8280 
+
+Coefficients:
+         Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  49.33944    0.42089 117.226  &lt; 2e-16 ***
+v1            0.06611    0.82320   0.080  0.93732    
+v2           -0.36725    1.06359  -0.345  0.73585    
+v3            0.72741    1.00973   0.720  0.48508    
+v1:v2        -2.54544    2.21663  -1.148  0.27321    
+v1:v3         0.80641    2.77603   0.290  0.77640    
+v2:v3       -12.16017    3.62473  -3.355  0.00573 ** 
+--- 
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 1.375 on 12 degrees of freedom
+Multiple R-squared:  0.697, Adjusted R-squared:  0.5455 
+F-statistic:   4.6 on 6 and 12 DF,  p-value: 0.01191
+</code></pre>
+
+<p>Following along with their code I then use a call to <code>anova()</code>:</p>
+
+<pre><code>&gt; my_lm_anova &lt;- anova(my_lm)
+&gt; my_lm_anova
+Analysis of Variance Table
+
+Response: response
+          Df  Sum Sq Mean Sq F value   Pr(&gt;F)   
+v1         1  0.0010  0.0010  0.0005 0.982400   
+v2         1  0.2842  0.2842  0.1503 0.705036   
+v3         1  9.8059  9.8059  5.1856 0.041891 * 
+v1:v2      1  4.3653  4.3653  2.3084 0.154573   
+v1:v3      1 16.4582 16.4582  8.7034 0.012141 * 
+v2:v3      1 21.2824 21.2824 11.2545 0.005729 **
+Residuals 12 22.6921  1.8910                    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>However, I am not sure:</p>
+
+<ol>
+<li>Why I would use the call to ANOVA in this situation, and</li>
+<li>What the ANOVA table is telling me about the predictor variables.</li>
+</ol>
+
+<p>From the code they appear to use the ANOVA table as follows.  For predictor variable v1, the result of </p>
+
+<ul>
+<li>Adding the 'Sum Sq' entry for v1 together with half of the 'Sum Sq' entry for v1:v2 and half of the 'Sum Sq' entry for v1:v3, </li>
+<li>Dividing by the sum of the entire 'Sum Sq' column, and</li>
+<li>Multiplying by 100</li>
+</ul>
+
+<p>gives the percent of variance of the response variable that is explained by predictor variable v1 in the <code>lm()</code> model.  I don't see why this is nor why half of the 'Sum Sq' entry for v1:v2 is attributed to v1 and half to v2.  Is this just convenience?</p>
+"
+"0.116642368703961","0.11286652959662","122935","<p>I have a design involving 1 between-subjects categorical factor, 1 between-subjects continuous factor and 2 within-subjects categorical factors.</p>
+
+<p>This is theoretically a case of multiple regression, but as in this question <a href=""http://stats.stackexchange.com/questions/48455/anova-or-regression-1-continuous-factor-1-categorical-factor-with-continuous"">here</a>, I was able to use <code>lm()</code> in <code>R</code> to specify my model (actually, using the <code>aov.car()</code> function in the <code>afex</code> package).</p>
+
+<p>This means that my output was in the form of an ANOVA table, with F and p-values. Can I report my analysis as though it was an ANOVA, or should I find a way to force the output of regression coefficients and report the analysis as though it were a multiple regression? I know that I shouldn't use an ANCOVA in this case, because my continuous predictor variable is certainly not a nuisance variable!</p>
+"
+"0.0824786098842323","0.0798086884467622","124694","<p>I have two groups of persons, GRP0 and GRP1, on which I measured three continuous variables: VAR1, VAR2 and VAR3.</p>
+
+<p>I would like to use Mancova in R with:
+- VAR1, VAR2 and VAR3 as outcome variables
+- GRP={0,1} as predictor variable
+- age and gender as covariates</p>
+
+<p>What would be the correct way to formulate this model in R?</p>
+
+<p>Also the measured were carried out on 100 instances (which are serially correlated) so any help on how to apply permutation-based multiple-comparison correction on top would be ideal.</p>
+
+<p>Thanks a lot </p>
+"
+"0.0824786098842323","0.0798086884467622","130476","<p>This model is a simple linear regression:</p>
+
+<pre><code>mtcars_lm &lt;- lm(mpg ~ wt, mtcars)
+</code></pre>
+
+<p>And this model adds <code>cyl</code> as a random effect:</p>
+
+<pre><code>library(lme4)
+mtcars_mixed_effects &lt;- lmer(mpg ~ wt + (1 | cyl), mtcars)
+</code></pre>
+
+<p>Is there a way to test whether adding <code>cyl</code> as random effect is worthwhile? I tried this but it threw an error:</p>
+
+<pre><code>anova(mtcars_mixed_effects, mtcars_lm)
+</code></pre>
+
+<p>(please disregard the fact that <code>cyl</code> only has three groups, I'm just using one of R's built in datasets to make question reprodicible).</p>
+"
+"0.164957219768465","0.159617376893524","146427","<p>I have a data set which has DV and around 40 IVs. I want to select best variables out of the existing ones. I can use correlation, but it requires only numeric variables. I would like to see relation between continuous and categorical variables.</p>
+
+<p>What method should I use for variable selection, which can handle both continuous and categorical variables (including relation between them)? I am using <code>R</code> as a modeling tool. Also, is it advisable to convert continuous variables into categorical variables for better results?</p>
+"
+"NaN","NaN","205227","<p>I'm a little new to R and I haven't done stats in a while. I know a one way ANOVA is the same as a linear regression, but is there a difference between a two way ANOVA and a linear regression with two covariates? And if they are different I'm not sure which one I performed. Below is my sample code:</p>
+
+<pre><code>data.frame[[""Acute""]] = factor(data.frame[[""Acute""]])
+data.frame[[""Frequency""]] = factor(data.frame[[""Frequency""]])
+DishMortalityVsTime.Total.Acute.Freq = aov(Dish.Mortality ~ Time * Acute * Frequency, data=data.frame)
+summary(DishMortalityVsTime.Total.Acute.Freq)
+</code></pre>
+
+<p>and the output</p>
+
+<pre><code>                      Df Sum Sq Mean Sq F value               Pr(&gt;F)    
+Days                   1  1.352  1.3524  65.189  0.00000000000000429 ***
+Acute                  2  5.885  2.9423 141.822 &lt; 0.0000000000000002 ***
+Frequency              3  0.539  0.1795   8.653  0.00001279126504853 ***
+Days:Acute             2  1.672  0.8361  40.302 &lt; 0.0000000000000002 ***
+Days:Frequency         3  0.050  0.0165   0.796                0.496    
+Acute:Frequency        6  0.787  0.1311   6.320  0.00000192315201011 ***
+Days:Acute:Frequency   6  0.038  0.0064   0.309                0.932    
+Residuals            552 11.452  0.0207 
+</code></pre>
+
+<p>Any help would be appreciated, Thanks!</p>
+"
+"0.233284737407922","0.22573305919324","145657","<p>Basically I'm attempting to recreate the results of an example from class in R. What I'm trying to do is decide whether it's best to use a single regression line for an entire data set or two lines based on a categorical variable. The teacher indicates there are three steps to this:</p>
+
+<ol>
+<li>Determine if two different lines are required</li>
+<li>If yes, determine if they differ in slope</li>
+<li>If yes, determine if they differ in intercept</li>
+</ol>
+
+<p>Here is my data:</p>
+
+<pre><code>&gt; example
+   Predictor Response Group
+1         21       11     A
+2         24       21     A
+3         26       23     A
+4         29       29     A
+5         35       34     A
+6         45       51     A
+7         51       59     A
+8         68       73     A
+9         72       83     A
+10        76       95     A
+11        17       11     B
+12        21       55     B
+13        26       34     B
+14        28       44     B
+15        32       26     B
+16        36       34     B
+17        40       15     B
+18        45       21     B
+19        51       16     B
+20        68       21     B
+</code></pre>
+
+<p>I've realized that if I add the interaction and group terms to the model:</p>
+
+<pre><code>ex_mod &lt;- lm(Response ~ Predictor,data = example)
+ex_mod2 &lt;- lm(Response ~ Predictor + Group + Predictor:Group,data = example)
+</code></pre>
+
+<p>And then perform ANOVA on this. I get the right answer for step 1:</p>
+
+<pre><code>&gt; anova(ex_mod,ex_mod2)
+Analysis of Variance Table
+
+Model 1: Response ~ Predictor
+Model 2: Response ~ Predictor + Group + Predictor:Group
+  Res.Df    RSS Df Sum of Sq     F    Pr(&gt;F)    
+1     18 6616.4                                 
+2     16 1583.8  2    5032.6 25.42 1.078e-05 ***   
+</code></pre>
+
+<p>Which means I need different lines, but now I need to know if they differ in slope or y-intercept or both. And here is where I'm stuck. I cant seem to get the right answer (F = 293.17 for slope, and F = 170.77 for intercept). </p>
+
+<p>The teacher indicates that the next steps are: 1) to generate RSS in which the slope is fixed,but the y-intercepts are allowed to vary; and 2) generate RSS in which the y-intercept is fixed, but the slopes are allowed to vary.</p>
+
+<p>I apologize if the question is confusing or simplistic, but I dont know how to proceed from here.</p>
+
+<p>Thanks</p>
+"
+"0.164957219768465","0.159617376893524","145790","<p>I'm trying to figure out how to produce an ANOVA Table in R for a multiple regression model. So far I can only produce it for each regressor, and the Mean Square is calculating as the same as Sum Of Squares.</p>
+
+<pre><code>&gt; anova(nflwin.lm)
+Analysis of Variance Table
+
+Response: wins
+             Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+pass_yard     1  76.193  76.193  26.172 3.100e-05 ***
+percent_rush  1 139.501 139.501  47.918 3.698e-07 ***
+oppo_rush     1  41.400  41.400  14.221 0.0009378 ***
+Residuals    24  69.870   2.911                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I'm trying to produce something like</p>
+
+<pre><code>Analysis of Variance Table
+
+Response: wins
+             Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+Model         3  76.193  76.193  26.172 3.100e-05 ***
+Residuals    24  69.870   2.911                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+"
+"0.116642368703961","0.11286652959662","206286","<pre><code>Model  &lt;- c(""A"",""A"",""A"",""A"",""A"",""B"",""B"",""B"",""B"",""B"",""C"",""C"",""C"",""C"")
+Price  &lt;- c(12,14,15,13,16,36,32,24,14,15,14,11,24,31)
+region &lt;- c(""W"",""E"",""E"",""W"",""W"",""E"",""E"",""E"",""E"",""W"",""W"",""W"",""E"",""W"")
+dt &lt;- data.frame(Model, Price, region)
+
+fit &lt;- lm(log(Price)~., data=dt)
+summary(fit)
+
+Call:
+lm(formula = log(Price) ~ ., data = dt)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.53051 -0.18080 -0.01557  0.20122  0.59010 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   2.7980     0.2047  13.666 8.53e-08 ***
+ModelB        0.3716     0.2409   1.542    0.154    
+ModelC        0.3194     0.2409   1.326    0.214    
+regionW      -0.2734     0.2146  -1.274    0.231    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>Lets ignore the significant, I just make up some numbers. Right now, we set A as base, 0.37 means B has 37% higher price than A. But my question is can we set the mean of A:C as mean, the parameter show the difference to the mean of A,B,C?</p>
+"
+"0.202030508910442","0.195490563735322","82698","<p>I've run a simulation study in order to determine type I error rate of a statistic.My simulation design includes threes factors as sample size (4 levels), test length or number of items (3 levels) and estimator (3 levels). The statistic is developed to measure person fit with test data in educational testing situation.I've replicated the analysis in each cell (i.e. the design is fully-crossed) 100 times.</p>
+
+<p>Now, I have the results and type I error rates range from 0.005 to 0.105 (i.e. across the whole analysis). I want to analyze how factors affect type I error rate using something similar to ANOVA. I tried Beta Regression in R using <code>betareg</code> package but I received this error message:</p>
+
+<blockquote>
+  <p>invalid dependent variable, all observations must be in (0, 1)</p>
+</blockquote>
+
+<p>Any idea on how to determine the effect of design factors on type I error rate?</p>
+"
+"0.0824786098842323","0.0798086884467622","152514","<p>How should I understand the <code>anova</code> result when comparing two models?</p>
+
+<p>Example:</p>
+
+<pre><code>  Res.Df    RSS Df Sum of Sq      F    Pr(&gt;F)    
+1      9 54.032                                  
+2      7  4.632  2      49.4 37.329 0.0001844 ***
+</code></pre>
+
+<p>The manpage states: ""Compute analysis of variance (or deviance) tables for one or more fitted model objects."" However, out professor mentioned that it may be employed for model comparison - that's what I intend to do.</p>
+
+<p>Hence I assume I could use <code>anova(model1, model2)</code> and obtain a p-value which tells me whether I should reject the null hypothesis: ""the models are the same"".</p>
+
+<p>May I state that if the p-value is less then (let's say) 0.05, the models differ significantly?</p>
+"
+"0.164957219768465","0.159617376893524","153719","<p>Consider the following dataset:</p>
+
+<pre><code>#   color  type region_west region_cent region_east region_west_pct region_cent_pct region_east_pct
+# 1   red shirt          24          17          48          0.2697          0.1910          0.5393
+# 2  blue shirt          24          18          44          0.2791          0.2093          0.5116
+# 3   red  pant          42          13          33          0.4773          0.1477          0.3750
+# 4  blue  pant          46          17          41          0.4423          0.1635          0.3942
+# 5   red   hat          46          38           8          0.5000          0.4130          0.0870
+# 6  blue   hat          40          11          21          0.5556          0.1528          0.2917
+</code></pre>
+
+<p><code>color</code> and <code>type</code> should be self explanatory - we can say the region column represent ""sales"" and percent of sales by row.</p>
+
+<p>What are some approaches for answering questions such as:</p>
+
+<ol>
+<li>Is <code>color</code> and/or <code>type</code> statistically different by region? Which regions? (e.g. post-hoc testing)  </li>
+<li>How many (or what percent) <code>color = red</code> items should I put in the West?</li>
+<li>How many (or what percent) <code>type = pant</code> items should I place in the East?</li>
+<li>How would you express a confidence interval around the number of <code>color = red</code> items in the West? What about a confidence interval for the percentage? </li>
+<li>How are you correcting for making multiple comparisons? (e.g. Bonferonni)</li>
+</ol>
+
+<p><hr>
+<strong>Additional Assumptions:</strong> Assume these values represent a true population total sales. That is, all possible sales from the West, Central, and East region -- effectively demand. Additionally, we can assume the sales were made online and the customer resides in one of the three regions. This is essentially a warehouse distribution problem - say I have three warehouses, West, Central, and East - how much of each product should I place in each warehouse if these distributions are the assumed demand quantities.
+<hr>
+My initial thoughts are <code>chi-square</code>, <code>ANOVA</code>, and/or <code>regression/glm/gam</code> but I thought this is a ""neat"" little example hitting on a lot of fundamentals represented on this board, so I'm hoping to get some variety in the responses. </p>
+
+<p>Here's the original dataset:</p>
+
+<pre><code>df &lt;- structure(list(color = structure(c(1L, 2L, 1L, 2L, 1L, 2L), .Label = c(""red"", ""blue""), class = ""factor""), type = structure(c(1L, 1L, 2L, 2L, 3L, 3L), .Label = c(""shirt"", ""pant"", ""hat""), class = ""factor""),     region_west = c(24L, 24L, 42L, 46L, 46L, 40L), region_cent = c(17L,     18L, 13L, 17L, 38L, 11L), region_east = c(48L, 44L, 33L,     41L, 8L, 21L), region_west_pct = c(0.2697, 0.2791, 0.4773,     0.4423, 0.5, 0.5556), region_cent_pct = c(0.191, 0.2093,     0.1477, 0.1635, 0.413, 0.1528), region_east_pct = c(0.5393,     0.5116, 0.375, 0.3942, 0.087, 0.2917)), .Names = c(""color"", ""type"", ""region_west"", ""region_cent"", ""region_east"", ""region_west_pct"", ""region_cent_pct"", ""region_east_pct""), out.attrs = structure(list(    dim = 2:3, dimnames = structure(list(Var1 = c(""Var1=red"",     ""Var1=blue""), Var2 = c(""Var2=shirt"", ""Var2=pant"", ""Var2=hat""    )), .Names = c(""Var1"", ""Var2""))), .Names = c(""dim"", ""dimnames"")), row.names = c(NA, -6L), class = ""data.frame"")
+</code></pre>
+
+<p>Here's the dataset in a  ""tidy"" format:</p>
+
+<pre><code>df.tidy &lt;- structure(list(color = structure(c(1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L, 1L, 2L), .Label = c(""red"", ""blue""), class = ""factor""), type = structure(c(1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L, 1L, 1L, 2L, 2L, 3L, 3L), .Label = c(""shirt"", ""pant"", ""hat""), class = ""factor""),     region = structure(c(1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L,     2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 1L, 1L, 1L, 1L, 1L, 1L,     2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L, 1L, 1L, 1L,     1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 3L, 3L, 3L, 3L, 3L, 3L    ), .Label = c(""region_west"", ""region_cent"", ""region_east""    ), class = ""factor""), sales = c(24L, 24L, 42L, 46L, 46L,     40L, 17L, 18L, 13L, 17L, 38L, 11L, 48L, 44L, 33L, 41L, 8L,     21L, 24L, 24L, 42L, 46L, 46L, 40L, 17L, 18L, 13L, 17L, 38L,     11L, 48L, 44L, 33L, 41L, 8L, 21L, 24L, 24L, 42L, 46L, 46L,     40L, 17L, 18L, 13L, 17L, 38L, 11L, 48L, 44L, 33L, 41L, 8L,     21L), pct = c(0.2697, 0.2791, 0.4773, 0.4423, 0.5, 0.5556,     0.2697, 0.2791, 0.4773, 0.4423, 0.5, 0.5556, 0.2697, 0.2791,     0.4773, 0.4423, 0.5, 0.5556, 0.191, 0.2093, 0.1477, 0.1635,     0.413, 0.1528, 0.191, 0.2093, 0.1477, 0.1635, 0.413, 0.1528,     0.191, 0.2093, 0.1477, 0.1635, 0.413, 0.1528, 0.5393, 0.5116,     0.375, 0.3942, 0.087, 0.2917, 0.5393, 0.5116, 0.375, 0.3942,     0.087, 0.2917, 0.5393, 0.5116, 0.375, 0.3942, 0.087, 0.2917    )), row.names = c(NA, -54L), class = ""data.frame"", .Names = c(""color"", ""type"", ""region"", ""sales"", ""pct""))
+</code></pre>
+
+<p>Feel free to expand the dataset to a larger example.</p>
+"
+"0.164957219768465","0.159617376893524","61153","<p>I obtained data of typical time point in two conditions in this shape:</p>
+
+<pre><code>weight   condition   time
+0.1307857    Transf    1
+0.1926429    Transf    2
+0.2734286    Transf    3
+0.4403571    Transf    4
+0.6037143    Transf    5
+0.9036429    Transf    6
+1.5454286    Transf    7
+0.1370714       Unt    1
+0.2005000       Unt    2
+0.2973571       Unt    3
+0.4592143       Unt    4
+0.8336429       Unt    5
+1.3099286       Unt    6
+2.1470000       Unt    7
+</code></pre>
+
+<p>I am using the package <code>nlme</code> in <code>R</code> to test the difference between the two conditions in time</p>
+
+<pre><code>fm1 &lt;- lme(weigth~condition,random=~1|time,data=data_new)
+anova.lme(fm1, adjustSigma = F)
+</code></pre>
+
+<p>I got this:</p>
+
+<pre><code>numDF denDF  F-value p-value
+(Intercept)     1     6 8.421439  0.0273
+condition       1     6 4.208786  0.0861
+</code></pre>
+
+<p>Questions:</p>
+
+<ol>
+<li><p>Am I doing things correctly with this procedure to test the differences between the two conditions in time?</p></li>
+<li><p>If yes, which is my p-value, the intercept one or the condition?</p></li>
+<li><p>If this is not the proper test, what are the alternatives?</p></li>
+</ol>
+"
+"0.0824786098842323","0.0798086884467622","181691","<p>I am a statistics newbie, so please excuse me if I am asking very basic questions! </p>
+
+<p>For my coursework (using R) , I am analysing three survey questions which all look at attitudes to saving in old age. My IV is the categorical variable ""age"", split into ""Young"" and ""Old"". Two of the survey questions are numeric, and one categorial (yes/no). </p>
+
+<p>I am very confused as to how I should go about analysing the data. I have been given the following methods to use, and only these! : </p>
+
+<p>Correlations,
+Differences between means,
+ANOVA,
+ and OLS</p>
+
+<p>I would really appreciate some help :) </p>
+"
+"0.0824786098842323","0.0798086884467622","157938","<p>I used the <code>anova</code> function in R to get an ANOVA table for my model.</p>
+
+<pre><code>fit &lt;- lm(open_time ~ sent_time + email_id + day, data=mydata)
+anova(fit)
+</code></pre>
+
+<p>I got the following output:</p>
+
+<pre><code>Analysis of Variance Table
+
+Response: open_time 
+             Df    Sum Sq Mean Sq F value Pr(&gt;F)
+sent_time    1    222321  222321  2.2673 0.1323
+email_id     1     15229   15229  0.1553 0.6936
+day          1       798     798  0.0081 0.9281
+Residuals 1996 195721653   98057  
+</code></pre>
+
+<p>Can someone explain in basic terms as to how can I use this output to get useful information about my model (as in which independent variables are more significant in the prediction model, etc)?</p>
+"
+"0.233284737407922","0.22573305919324","187776","<p>I want to test if it is worth splitting a variable into subgroups. The research question that I have is: <em>does it adds anything to the prognosis knowing if the cancer is located on the forearm or if arm is sufficient?</em></p>
+
+<p>My plan is to use the <code>rms</code>-package and test models with <code>anova()</code>. I initially thought that I would be able to get away with a simple <code>x1 + x1:x2</code> but I don't think the <code>model.matrix</code> looks quite right. Here's an illustration of what I mean:</p>
+
+<pre><code>library(magrittr)
+n &lt;- 12
+test_data &lt;- data.frame(
+  x1 = factor(rep(c(1, 2),
+                  each = n/2),
+              labels = c(""a"", ""b"")),
+  x2 = c(rep(LETTERS[1:2], each = n/4),
+             rep(LETTERS[3:4], each = n/4))
+)
+
+# Now we add some code for manually generating the interaction variables
+test_data %&lt;&gt;% 
+  within({
+    is_a_and_x2 &lt;- x2
+    is_a_and_x2[x1 != ""a""] &lt;- LETTERS[1]
+    is_b_and_x2 &lt;- x2 
+    is_b_and_x2[x1 == ""a""] &lt;- LETTERS[3]
+    is_a_and_x2 &lt;- factor(is_a_and_x2)
+    is_b_and_x2 &lt;- factor(is_b_and_x2)
+  })
+</code></pre>
+
+<p>The data looks as following:</p>
+
+<pre><code>| x1 | x2 | is_b_and_x2 | is_a_and_x2 |
+|----+----+-------------+-------------|
+| a  | A  | C           | A           |
+| a  | A  | C           | A           |
+| a  | A  | C           | A           |
+| a  | B  | C           | B           |
+| a  | B  | C           | B           |
+| a  | B  | C           | B           |
+| b  | C  | C           | A           |
+| b  | C  | C           | A           |
+| b  | C  | C           | A           |
+| b  | D  | D           | A           |
+| b  | D  | D           | A           |
+| b  | D  | D           | A           |
+</code></pre>
+
+<p>Now if we do a simple <code>model.matrix</code>:</p>
+
+<pre><code>model.matrix( ~ x1 + is_a_and_x2 + is_b_and_x2, data = test_data)
+</code></pre>
+
+<p>We get the expected:</p>
+
+<pre><code>|================================================== 
+| (Intercept) | x1b | is_a_and_x2B | is_b_and_x2D 
+| 1           | 0   | 0            | 0            
+| 1           | 0   | 0            | 0            
+| 1           | 0   | 0            | 0            
+| 1           | 0   | 1            | 0            
+| 1           | 0   | 1            | 0            
+| 1           | 0   | 1            | 0            
+| 1           | 1   | 0            | 0            
+| 1           | 1   | 0            | 0            
+| 1           | 1   | 0            | 0            
+| 1           | 1   | 0            | 1            
+| 1           | 1   | 0            | 1            
+| 1           | 1   | 0            | 1            
+|================================================== 
+</code></pre>
+
+<p>Now this looks like a reasonable design matrix but I can't recreate it using a simple formula:</p>
+
+<pre><code>model.matrix( ~ x1 + x1 : x2, data = test_data)
+</code></pre>
+
+<p>Gives: </p>
+
+<pre><code>|================================================================================ 
+| (Intercept) | x1b | x1a:x2B | x1b:x2B | x1a:x2C | x1b:x2C | x1a:x2D | x1b:x2D 
+| 1           | 0   | 0       | 0       | 0       | 0       | 0       | 0       
+| 1           | 0   | 0       | 0       | 0       | 0       | 0       | 0       
+| 1           | 0   | 0       | 0       | 0       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       | 0       | 0       
+| 1           | 1   | 0       | 0       | 0       | 1       | 0       | 0       
+| 1           | 1   | 0       | 0       | 0       | 1       | 0       | 0       
+| 1           | 1   | 0       | 0       | 0       | 1       | 0       | 0       
+| 1           | 1   | 0       | 0       | 0       | 0       | 0       | 1       
+| 1           | 1   | 0       | 0       | 0       | 0       | 0       | 1       
+| 1           | 1   | 0       | 0       | 0       | 0       | 0       | 1       
+|================================================================================ 
+</code></pre>
+
+<p>Using some aggressive cleaning we get:</p>
+
+<pre><code>model.matrix( ~ x1 + x1 : x2, data = test_data) %&gt;% 
+  t %&gt;% 
+  .[!duplicated(.),] %&gt;% 
+  t
+
+|============================================================ 
+| (Intercept) | x1b | x1a:x2B | x1b:x2B | x1b:x2C | x1b:x2D 
+| 1           | 0   | 0       | 0       | 0       | 0       
+| 1           | 0   | 0       | 0       | 0       | 0       
+| 1           | 0   | 0       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       
+| 1           | 0   | 1       | 0       | 0       | 0       
+| 1           | 1   | 0       | 0       | 1       | 0       
+| 1           | 1   | 0       | 0       | 1       | 0       
+| 1           | 1   | 0       | 0       | 1       | 0       
+| 1           | 1   | 0       | 0       | 0       | 1       
+| 1           | 1   | 0       | 0       | 0       | 1       
+| 1           | 1   | 0       | 0       | 0       | 1       
+|============================================================ 
+</code></pre>
+
+<p><strong>My question: Is there a more convenient method than the hand-made variables or should I use a different approach?</strong></p>
+"
+"0.142857142857143","0.138232703275227","63357","<p>Consider a model with a continuous response variable and a categorical explanatory variable.  I appreciate that in R, a summary.lm output of an anova on this data gives you rows that represent the mean value of each factor level.  The significance stars represent the significance of the difference between the mean of each level and the ""intercept"", which represents the mean of the first level of the factor.</p>
+
+<p>What I am wondering is what do significance stars on this intercept term represent?  Simply that the mean of this particular factor level is different from zero?</p>
+"
+"0.247435829652697","0.239426065340287","26461","<p>We have a data set with two covariates and a categorical grouping variable and want to know if there are significant differences between the slope or intercept among the covariates associated with the different grouping variables.  We've used anova() and lm() to compare the fits of three different models: 1) with a single slope and intercept, 2) with different intercepts for each group, and 3) with a slope and an intercept for each group.  According to the anova() general linear test, the second model is the most appropriate of the three, there is a significant improvement to the model by including a separate intercept for each group.  However, when we look at the 95% confidence intervals for these intercepts -- they all overlap, suggesting there aren't significant differences between the intercepts.  How can these two results be reconciled?  We thought another way of interpreting the results of the model-selection method was that there has to be at least one significant difference among the intercepts... but perhaps this is not correct?</p>
+
+<p>Below is the R code to replicate this analysis.  We've used the dput() function so you can work with exactly the same data we're grappling with.</p>
+
+<pre><code># Begin R Script
+# &gt; dput(data)
+structure(list(Head = c(1.92, 1.93, 1.79, 1.94, 1.91, 1.88, 1.91, 
+1.9, 1.97, 1.97, 1.95, 1.93, 1.95, 2, 1.87, 1.88, 1.97, 1.88, 
+1.89, 1.86, 1.86, 1.97, 2.02, 2.04, 1.9, 1.83, 1.95, 1.87, 1.93, 
+1.94, 1.91, 1.96, 1.89, 1.87, 1.95, 1.86, 2.03, 1.88, 1.98, 1.97, 
+1.86, 2.04, 1.86, 1.92, 1.98, 1.86, 1.83, 1.93, 1.9, 1.97, 1.92, 
+2.04, 1.92, 1.9, 1.93, 1.96, 1.91, 2.01, 1.97, 1.96, 1.76, 1.84, 
+1.92, 1.96, 1.87, 2.1, 2.17, 2.1, 2.11, 2.17, 2.12, 2.06, 2.06, 
+2.1, 2.05, 2.07, 2.2, 2.14, 2.02, 2.08, 2.16, 2.11, 2.29, 2.08, 
+2.04, 2.12, 2.02, 2.22, 2.22, 2.2, 2.26, 2.15, 2, 2.24, 2.18, 
+2.07, 2.06, 2.18, 2.14, 2.13, 2.2, 2.1, 2.13, 2.15, 2.25, 2.14, 
+2.07, 1.98, 2.16, 2.11, 2.21, 2.18, 2.13, 2.06, 2.21, 2.08, 1.88, 
+1.81, 1.87, 1.88, 1.87, 1.79, 1.99, 1.87, 1.95, 1.91, 1.99, 1.85, 
+2.03, 1.88, 1.88, 1.87, 1.85, 1.94, 1.98, 2.01, 1.82, 1.85, 1.75, 
+1.95, 1.92, 1.91, 1.98, 1.92, 1.96, 1.9, 1.86, 1.97, 2.06, 1.86, 
+1.91, 2.01, 1.73, 1.97, 1.94, 1.81, 1.86, 1.99, 1.96, 1.94, 1.85, 
+1.91, 1.96, 1.9, 1.98, 1.89, 1.88, 1.95, 1.9, 1.94, NA, 1.84, 
+1.83, 1.84, 1.96, 1.74, 1.91, 1.84, 1.88, 1.83, 1.93, 1.78, 1.88, 
+1.93, 2.15, 2.16, 2.23, 2.09, 2.36, 2.31, 2.25, 2.29, 2.3, 2.04, 
+2.22, 2.19, 2.25, 2.31, 2.3, 2.28, 2.25, 2.15, 2.29, 2.24, 2.34, 
+2.2, 2.24, 2.17, 2.26, 2.18, 2.17, 2.34, 2.23, 2.36, 2.31, 2.13, 
+2.2, 2.27, 2.27, 2.2, 2.34, 2.12, 2.26, 2.18, 2.31, 2.24, 2.26, 
+2.15, 2.29, 2.14, 2.25, 2.31, 2.13, 2.09, 2.24, 2.26, 2.26, 2.21, 
+2.25, 2.29, 2.15, 2.2, 2.18, 2.16, 2.14, 2.26, 2.22, 2.12, 2.12, 
+2.16, 2.27, 2.17, 2.27, 2.17, 2.3, 2.25, 2.17, 2.27, 2.06, 2.13, 
+2.11, 2.11, 1.97, 2.09, 2.06, 2.11, 2.09, 2.08, 2.17, 2.12, 2.13, 
+1.99, 2.08, 2.01, 1.97, 1.97, 2.09, 1.94, 2.06, 2.09, 2.04, 2, 
+2.14, 2.07, 1.98, 2, 2.19, 2.12, 2.06, 2, 2.02, 2.16, 2.1, 1.97, 
+1.97, 2.1, 2.02, 1.99, 2.13, 2.05, 2.05, 2.16, 2.02, 2.02, 2.08, 
+1.98, 2.04, 2.02, 2.07, 2.02, 2.02, 2.02), Site = structure(c(2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
+5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 
+5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 
+5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 5L, 
+5L, 5L, 5L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
+3L, 3L, 3L, 3L, 3L, 3L, 3L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 
+4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 4L, 
+4L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 
+1L, 1L, 1L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 6L, 
+6L, 6L, 6L, 6L, 6L, 6L, 6L), .Label = c(""ANZ"", ""BC"", ""DV"", ""MC"", 
+""RB"", ""WW""), class = ""factor""), Leg = c(2.38, 2.45, 2.22, 2.23, 
+2.26, 2.32, 2.28, 2.17, 2.39, 2.27, 2.42, 2.33, 2.31, 2.32, 2.25, 
+2.27, 2.38, 2.28, 2.33, 2.24, 2.21, 2.22, 2.42, 2.23, 2.36, 2.2, 
+2.28, 2.23, 2.33, 2.35, 2.36, 2.26, 2.26, 2.3, 2.23, 2.31, 2.27, 
+2.23, 2.37, 2.27, 2.26, 2.3, 2.33, 2.34, 2.27, 2.4, 2.22, 2.25, 
+2.28, 2.33, 2.26, 2.32, 2.29, 2.31, 2.37, 2.24, 2.26, 2.36, 2.32, 
+2.32, 2.15, 2.2, 2.29, 2.37, 2.26, 2.24, 2.23, 2.24, 2.26, 2.18, 
+2.11, 2.23, 2.31, 2.25, 2.15, 2.3, 2.33, 2.35, 2.21, 2.36, 2.27, 
+2.24, 2.35, 2.24, 2.33, 2.32, 2.24, 2.35, 2.36, 2.39, 2.28, 2.36, 
+2.19, 2.27, 2.39, 2.23, 2.29, 2.32, 2.3, 2.32, NA, 2.25, 2.24, 
+2.21, 2.37, 2.21, 2.21, 2.27, 2.27, 2.26, 2.19, 2.2, 2.25, 2.25, 
+2.25, NA, 2.24, 2.17, 2.2, 2.2, 2.18, 2.14, 2.17, 2.27, 2.28, 
+2.27, 2.29, 2.23, 2.25, 2.33, 2.22, 2.29, 2.19, 2.15, 2.24, 2.24, 
+2.26, 2.25, 2.09, 2.27, 2.18, 2.2, 2.25, 2.24, 2.18, 2.3, 2.26, 
+2.18, 2.27, 2.12, 2.18, 2.33, 2.13, 2.28, 2.23, 2.16, 2.2, 2.3, 
+2.31, 2.18, 2.33, 2.29, 2.26, 2.21, 2.22, 2.27, 2.32, 2.24, 2.25, 
+2.17, 2.2, 2.26, 2.27, 2.24, 2.25, 2.09, 2.25, 2.21, 2.24, 2.21, 
+2.22, 2.13, 2.24, 2.21, 2.3, 2.34, 2.35, 2.32, 2.46, 2.43, 2.42, 
+2.41, 2.32, 2.25, 2.33, 2.19, 2.45, 2.32, 2.4, 2.38, 2.35, 2.39, 
+2.29, 2.35, 2.43, 2.29, 2.33, 2.31, 2.28, 2.38, 2.32, 2.43, 2.27, 
+2.4, 2.37, 2.27, 2.41, 2.32, 2.38, 2.23, 2.33, 2.21, 2.34, 2.19, 
+2.34, 2.35, 2.35, 2.31, 2.33, 2.41, 2.53, 2.39, 2.17, 2.16, 2.38, 
+2.34, 2.33, 2.33, 2.29, 2.43, 2.28, 2.34, 2.38, 2.3, 2.29, 2.43, 
+2.36, 2.24, 2.35, 2.38, 2.4, 2.36, 2.42, 2.28, 2.45, 2.33, 2.32, 
+2.33, 2.31, 2.44, 2.37, 2.4, 2.35, 2.33, 2.31, 2.36, 2.43, 2.38, 
+2.4, 2.38, 2.46, 2.33, 2.38, 2.23, 2.24, 2.39, 2.36, 2.19, 2.32, 
+2.37, 2.39, 2.34, 2.39, 2.23, 2.25, 2.29, 2.39, 2.35, NA, 2.28, 
+2.35, 2.38, 2.34, 2.17, 2.29, NA, 2.26, NA, NA, NA, 2.24, 2.33, 
+2.23, 2.28, 2.29, 2.23, 2.2, 2.27, 2.31, 2.31, 2.26, 2.28)), .Names = c(""Head"", 
+""Site"", ""Leg""), class = ""data.frame"", row.names = c(NA, -312L
+)) 
+
+# plot graph
+library(ggplot2)
+
+qplot(Head, Leg, 
+    color=Site, 
+    data=data) + 
+        stat_smooth(method=""lm"", alpha=0.2) + 
+        theme_bw()
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/QMIBf.jpg"" alt=""enter image description here""></p>
+
+<pre><code># create linear models
+lm.1 &lt;- lm(Leg ~ Head, data)
+lm.2 &lt;- lm(Leg ~ Head + Site, data)
+lm.3 &lt;- lm(Leg ~ Head*Site, data)
+
+# evaluate linear models
+anova(lm.1, lm.2, lm.3)
+anova(lm.1, lm.2)
+
+# &gt; anova(lm.1, lm.2)
+# Analysis of Variance Table
+# Model 1: Leg.3.1 ~ Head.W1
+# Model 2: Leg.3.1 ~ Head.W1 + Site
+  # Res.Df     RSS Df Sum of Sq     F    Pr(&gt;F)    
+# 1    302 1.25589                                 
+# 2    297 0.91332  5   0.34257 22.28 &lt; 2.2e-16 ***
+
+
+# examining the multiple-intercepts model (lm.2)
+summary(lm.2)
+coef(lm.2)
+confint(lm.2)
+
+# extracting the intercepts
+intercepts &lt;- coef(lm.2)[c(1, 3:7)]
+intercepts.1 &lt;- intercepts[1]
+intercepts &lt;- intercepts.1 + intercepts
+intercepts[1] &lt;- intercepts.1
+intercepts
+
+# extracting the confidence intervals
+ci &lt;- confint(lm.2)[c(1, 3:7),]
+ci[2:6,] &lt;- ci[2:6,] + confint(lm.2)[1,]
+ci[,1]
+
+# putting everything together in a dataframe
+labels &lt;- c(""ANZ"", ""BC"", ""DV"", ""MC"", ""RB"", ""WW"")
+ci.dataframe &lt;- data.frame(Site=labels, Intercept=intercepts, CI.low = ci[,1], CI.high = ci[,2])
+ci.dataframe
+
+# plotting intercepts and 95% CI
+qplot(Site, Intercept, geom=c(""point"", ""errorbar""), ymin=CI.low, ymax=CI.high, data=ci.dataframe, ylab=""Intercept &amp; 95% CI"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/40PNp.jpg"" alt=""ancova intercepts""></p>
+
+<p>Just to summarize -- the problem is that the 95% CIs for the intercepts all overlap, but the model selection method suggests that the best model is one that fits different intercepts.  So I'm inclined to think either our model selection method is flawed or the 95% CIs for the intercept estimates were calculated incorrectly.  Any thoughts would be greatly appreciated!</p>
+"
+"0.218217890235992","0.211153942092367","193752","<p>I have one response variable $Y$ and one predictor $X$. I am trying to fit a polynomial regression model and try to compare different model with different highest power term, the output of ANOVA in R is the following</p>
+
+<pre><code>Analysis of Variance Table
+Model 1: Y ~ X
+Model 2: Y ~ X + I(X^2)
+Model 3: Y ~ X + I(X^2) + I(X^3)
+Model 4: Y ~ poly(X, 5)
+
+  Res.Df    RSS   Df  Sum of Sq       F    Pr(&gt;F)    
+    504    19472                                   
+    503    15347  1    4125.1     151.693 &lt; 2.2e-16 ***
+    502    14616  1     731.8     26.909 3.104e-07 ***
+    500    13597  2    1018.4     18.726 1.438e-08 ***
+
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I understand how to derive all these numbers in the table, but there are some contradiction. Here is my question: in this table, the last model is the biggest model in the sense that it contains all the predictors in all previous models, the ""Sum of Sq"" for Model 4 is 1018.4 = 14616-13597, i.e., the difference of the sum of residuals between model 3 and model 4 and the F statistic for Model 4, which is 18.726 is obtained by $\frac{RSS_3-RSS_4}{502-500}\div\frac{13597}{500}$, i.e., the difference in RSS between model 3 and model 4 divide by the difference of degree of freedom and then divide by the MSE of model 4. This makes a lot of sense. However, when I compute the F statistic for model 3, I am so confused. The ""Sum of Sq"" for model 3 is obtained via $731.8=15347-14616$, i.e,. the difference in RSS of model 2 and model 3. But the F statistic for model 3 is obtained via $\frac{RSS_2-RSS_3}{503-502}\div\frac{13597}{500}$, i.e., the difference in RSS of model 2 and model 3 divide by their difference in degree of freedom, BUTTTT then divide by the MSE of model 4. In my mind, it should finally divide the MSE of model 3 rather than model 4, since we are comparing the difference between model 2 and model 3. </p>
+"
+"NaN","NaN","206576","<p><strong>Background</strong>:</p>
+
+<p>The most recent statistics class I've taken in university goes over topics such as experimental design, tests for Normality, comparing two samples, categorical data analysis, linear regression, MLR, and power analysis. As a result, I am working towards a conceptual base in these topics.</p>
+
+<p><strong>Question</strong>:</p>
+
+<p>Are there any books that use R to reinforce these concepts and build on them towards advanced statistics such as advanced pattern recognition, if so which ones?</p>
+"
+"0.260820265478651","0.252377232562534","160253","<p>I'm trying to compare two linear models, one calculated with full dataset and one calculated on a subset of the same data.<br>
+The reason why I need/want to do that is, I suspect a part of the data to cause a shift in the slope.<br>
+So here is my dummy dataset.</p>
+
+<pre><code>set.seed(5)
+x1 &lt;- runif(20, 0, 115)
+x2 &lt;- runif(10, 85, 150)
+x &lt;- c(x1, x2)
+
+# dependent variable y has two parts with different slopes
+y &lt;- c(6*x1 + rnorm(20, 0, 15), 1.5*x2 + 500 + rnorm(10, 0, 15))
+
+# the grouping variables A and B correspond to the first part of y
+# grouping variable C to the second part of y
+groups &lt;- c(rep(c(""A"", ""B""), each = 10), rep(""C"", 10))
+
+# joining everything together
+df &lt;- data.frame(x, y, groups)
+</code></pre>
+
+<p>Plotting the dataframe <code>plot(df$x, df$y, col = df$groups)</code> shows that the C group in entirely responsible for a shift in the slope.<br>
+I'm trying to see, if leaving out the C group changes the slope significantly.<br>
+I tried this by subsetting the dataframe, calculating the linear models, and compare the two models.</p>
+
+<pre><code># first linear model
+lm1 &lt;- lm(y ~ x, data = df)
+# subset without the C group
+df2 &lt;- subset(df, groups != ""C"")
+# second linear model
+lm2 &lt;- lm(y ~ x, data = df2)
+
+# comparison of the two models
+anova(lm1, lm2)
+</code></pre>
+
+<p>However, running anova gives an error saying that the ""models were not all fitted to the same size of dataset""</p>
+
+<p>Is there anyway to compare the two models?</p>
+"
+"0.184427778390829","0.178457652562062","213187","<p>I'm very new to R and stats in general but I think I need to do a repeated measures analysis perhaps using a linear mixed model on my data.</p>
+
+<p>Data are behavioural measurements e.g. distance swum for 21 fish of 2 different genotypes. Each fish was tested for 10 minutes, and data taken for each minute. I've made graphs to show this (B and C).</p>
+
+<p><img src=""http://i.stack.imgur.com/8oKg9.png"" alt=""""></p>
+
+<p>My issue is that I can't do just a normal regression as each of the points is linked over time by the same fish. I've been taught to use linear mixed models such as:</p>
+
+<pre><code>model &lt;- lmer(swimdurbot~1+start+(1+start|file), data=tdautodisc)
+model2 &lt;- lmer(swimdurbot~Genotype+start+(1+start|file), data=tdautodisc)
+model3 &lt;- lmer(swimdurbot~Genotype+(1+start|file), data=tdautodisc)
+model4 &lt;- lmer(swimdurbot~Genotype+start+ Genotype*start +(1+start|file), data=tdautodisc)
+model5 &lt;- lmer(swimdurbot~Genotype+start+(1+start|file), data=tdautodisc)
+</code></pre>
+
+<p>and to then perform anovas on them but I honestly can't work out what each model is showing, how they are different from each other and which part of the analysis that R comes up with tells me what I want to know.</p>
+
+<p>I want to find out from my data: Does fish behaviour change over 10 mintutes (gradient)? Is the behaviour different between genotypes? and Does genotype affect the change in behaviour over time?</p>
+
+<p>I would really appreciate some help on this as I can't get my head around it, and the graphs don't show any obvious trend so aren't useful for me to guess which part of the analysis relates to which aspect of the graphs.</p>
+"
+"0.142857142857143","0.138232703275227","199042","<p>I am using R to find optimal values of Lambda in Box-Cox transformations.
+you can find the data I am using here: </p>
+
+<pre>
+https://uwyo-files.instructure.com/courses/449832/files/36678098/course%20files/CH03PR15.txt?download=1&inline=1&sf_verifier=8db02990e8a79f78c9ff4418589ec229&ts=1456693144&user_id=569842
+</pre>
+
+<p>I have named the data ""C15""</p>
+
+<p>I used typical code to find the SSE for values of lambda in increments of 1 from -2 to positive 2.</p>
+
+<pre><code>C15$CONCENTRATION &lt;- C15$V1
+C15$HOURS &lt;- C15$V2
+C15 &lt;- C15[,(3:4), drop=F]
+attach(C15)
+require(MASS)
+library(MASS)
+hourfit &lt;- lm(CONCENTRATION~HOURS)
+bchourfit &lt;- boxcox(hourfit)
+#chart indicates somewhere around 0 is the best value for lambda.
+C15$concneg2 &lt;- CONCENTRATION^(-2)
+    C15$concneg1 &lt;- CONCENTRATION^(-1)
+C15$conczero &lt;- CONCENTRATION^0
+    C15$concplus1 &lt;- CONCENTRATION^1
+C15$concplus2 &lt;- CONCENTRATION^2
+attach(C15)
+concfitneg2 &lt;- lm(concneg2~HOURS)
+concfitneg1 &lt;- lm(concneg1~HOURS)
+concfitzero &lt;- lm(conczero~HOURS)
+concfitplus1 &lt;- lm(concplus1~HOURS)
+concfitplus2 &lt;- lm(concplus2~HOURS)
+aov(concfitneg2)
+aov(concfitneg1)
+aov(concfitzero)
+aov(concfitplus1)
+aov(concfitplus2)
+install.packages(""AID"")
+library(""AID"")
+boxcoxfr(CONCENTRATION,HOURS)
+</code></pre>
+
+<p>From the ANOVA tables you can see that the lowest Sum of Squared error in the residuals comes from a lambda value of 0. However, I now use a function which finds the optimal value of lambda. It now indicates that the optimal value is .14, which is consistent with the log-likelihood graph before. However, when an ANOVA table is generated for the linear model with a transformation of .14, the Sum of Squared error is larger than the model that uses a transformation of zero. </p>
+
+<pre><code>install.packages(""AID"")
+
+library(""AID"")
+attach(C15)
+boxcoxfr(CONCENTRATION,HOURS)
+C15$concopti &lt;- CONCENTRATION^(.14)
+attach(C15)
+concoptifit &lt;- lm(concopti~HOURS)
+aov(concoptifit)
+aov(concfitzero)
+</code></pre>
+
+<p>Why does the optimal value of Lambda not also give the lowest SSE?</p>
+"
+"0.184427778390829","0.178457652562062","11127","<p>I have 2 dependent variables (DVs) each of whose score may be influenced by the set of 7 independent variables (IVs). DVs are continuous, while the set of IVs consists of a mix of continuous and binary coded variables. (In code below continuous variables are written in upper case letters and binary variables in lower case letters.)</p>
+
+<p>The aim of the study is to uncover how these DVs are influenced by IVs variables. I proposed the following multivariate multiple regression (MMR) model:</p>
+
+<pre><code>my.model &lt;- lm(cbind(A, B) ~ c + d + e + f + g + H + I)
+</code></pre>
+
+<p>To interpret the results I call two statements:</p>
+
+<ol>
+<li><code>summary(manova(my.model))</code></li>
+<li><code>Manova(my.model)</code></li>
+</ol>
+
+<p>Outputs from both calls are pasted below and are significantly different. Can somebody please explain which statement among the two should be picked to properly summarize the results of MMR, and why? Any suggestion would be greatly appreciated.</p>
+
+<p>Output using <code>summary(manova(my.model))</code> statement:</p>
+
+<pre><code>&gt; summary(manova(my.model))
+           Df   Pillai approx F num Df den Df    Pr(&gt;F)    
+c           1 0.105295   5.8255      2     99  0.004057 ** 
+d           1 0.085131   4.6061      2     99  0.012225 *  
+e           1 0.007886   0.3935      2     99  0.675773    
+f           1 0.036121   1.8550      2     99  0.161854    
+g           1 0.002103   0.1043      2     99  0.901049    
+H           1 0.228766  14.6828      2     99 2.605e-06 ***
+I           1 0.011752   0.5887      2     99  0.556999    
+Residuals 100                                              
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+</code></pre>
+
+<p>Output using <code>Manova(my.model)</code> statement:</p>
+
+<pre><code>&gt; library(car)
+&gt; Manova(my.model)
+
+Type II MANOVA Tests: Pillai test statistic
+  Df test stat approx F num Df den Df    Pr(&gt;F)    
+c  1  0.030928   1.5798      2     99   0.21117    
+d  1  0.079422   4.2706      2     99   0.01663 *  
+e  1  0.003067   0.1523      2     99   0.85893    
+f  1  0.029812   1.5210      2     99   0.22355    
+g  1  0.004331   0.2153      2     99   0.80668    
+H  1  0.229303  14.7276      2     99 2.516e-06 ***
+I  1  0.011752   0.5887      2     99   0.55700    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+</code></pre>
+"
+"0.481672703099157","0.491973796619809","116562","<p>I recently started transitioning from JMP to R and to get started, I've been trying to reproduce some of my old JMP results in R. However, when I run a multiple regression with one continuous variable (income) and one categorical variable (condition) predicting a continuous variable (psc), the results from the 2 programs differ.</p>
+
+<p>Here's my JMP model and results:
+<img src=""http://i.stack.imgur.com/ZQnL8.png"" alt=""JMP model""></p>
+
+<p><img src=""http://i.stack.imgur.com/Rrmyv.png"" alt=""JMP results""></p>
+
+<p>And here's my R code and results:</p>
+
+<pre><code>&gt; library(plyr)
+
+&gt; # load data files
+&gt; online &lt;- read.csv('r_online.csv')
+&gt; paper &lt;- read.csv('r_paper.csv')
+
+&gt; # define conditions for online data
+&gt; online$condition &lt;- NA
+&gt; levels(online$condition) &lt;- c('wc','fd')
+
+&gt; online[!is.na(online$Ntrl1), 'condition'] &lt;- 'wc'
+&gt; online[!is.na(online$Ntrl3), 'condition'] &lt;- 'fd'
+
+&gt; online$condition &lt;- factor(online$condition)
+
+&gt; # merge online and paper data
+&gt; mydata &lt;- rbind.fill(online, paper)
+
+&gt; # exclude dropped data
+&gt; mydata &lt;- subset(mydata, Class &lt; 5)
+
+&gt; # calcualte psc
+&gt; psc &lt;- ((8-mydata$PSF1r)+(8-mydata$PSF2r)+mydata$PSF3+(8-mydata$PSF4r)+(8-mydata$PSF5r)+mydata$PSF6)/6
+&gt; mydata$psc &lt;- psc
+
+&gt; # save income and condition as values
+&gt; income &lt;- mydata$Income
+&gt; condition &lt;-mydata$condition
+
+&gt; # psc by income and condition
+&gt; psc.income.regress &lt;- lm(psc ~ income * condition)
+&gt; summary(psc.income.regress)
+
+Call:
+lm(formula = psc ~ income * condition)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7275 -0.3585  0.0731  0.5122  1.1602 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         3.89116    0.50804   7.659 1.96e-09 ***
+income              0.13393    0.07494   1.787   0.0813 .  
+conditionwc        -1.53409    0.69323  -2.213   0.0325 *  
+income:conditionwc  0.21807    0.10291   2.119   0.0402 *  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 0.7742 on 41 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.4149,    Adjusted R-squared:  0.3721 
+F-statistic:  9.69 on 3 and 41 DF,  p-value: 5.854e-05
+</code></pre>
+
+<p>So, R-squared, R-squared Adjusted, Overall F, Overall p, and p and t for the interaction are the same in both R and JMP, but p and t for the main effects and all of the Estimates are different.</p>
+
+<p>I did some reading and found that this occurs because JMP calculates Type-III sums of squares, while R calculates Type-I SS. So far, though, I haven't been able to figure out how to get R to calculate Type-III SS in the same way as JMP.</p>
+
+<p>One site said that I could get Type-III SS by changing the last part of my R code to this:</p>
+
+<pre><code>&gt; ### alternative method suggested for getting type-III SS ###
+&gt; options(contrasts=c(""contr.sum"",""contr.poly""))
+&gt; psc.income.regress &lt;- lm(psc ~ income * condition)
+&gt; drop1(psc.income.regress,~.,test=""F"")
+
+Single term deletions
+
+Model:
+psc ~ income * condition
+                 Df Sum of Sq    RSS      AIC F value    Pr(&gt;F)    
+&lt;none&gt;                        24.576 -19.2208                      
+income            1   13.3659 37.941  -1.6778 22.2985 2.729e-05 ***
+condition         1    2.9354 27.511 -16.1434  4.8972   0.03253 *  
+income:condition  1    2.6917 27.267 -16.5438  4.4906   0.04018 *  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+
+&gt; summary(psc.income.regress)
+
+Call:
+lm(formula = psc ~ income * condition)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7275 -0.3585  0.0731  0.5122  1.1602 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)        3.12412    0.34662   9.013 2.82e-11 ***
+income             0.24297    0.05145   4.722 2.73e-05 ***
+condition1         0.76704    0.34662   2.213   0.0325 *  
+income:condition1 -0.10904    0.05145  -2.119   0.0402 *  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 0.7742 on 41 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.4149,    Adjusted R-squared:  0.3721 
+F-statistic:  9.69 on 3 and 41 DF,  p-value: 5.854e-05
+</code></pre>
+
+<p>Now all the estimates for income, interaction, and the intercept are the same in R as in JMP, but condition is still different.</p>
+
+<p>Another person suggested that I recode my conditions as numeric contrasts (instead of having them as factors) and center everything, so I changed the end of my code to this:</p>
+
+<pre><code>&gt; ### 2nd alternative method: change condition to numeric contrast and center variables ###
+&gt; condition_c &lt;- ifelse(condition == 'fd', +.5, -.5)
+&gt; condition_c &lt;- scale(condition_c, scale=F,center=T)
+&gt; income_c &lt;- scale(income,scale=F,center=T)
+&gt; psc.income.regress &lt;- lm(psc ~ income_c * condition_c)
+&gt; summary(psc.income.regress)
+
+Call:
+lm(formula = psc ~ income_c * condition_c)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7275 -0.3585  0.0731  0.5122  1.1602 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)           4.67891    0.11588  40.379  &lt; 2e-16 ***
+income_c              0.22739    0.05241   4.338 9.13e-05 ***
+condition_c           0.14813    0.23615   0.627   0.5340    
+income_c:condition_c -0.21807    0.10291  -2.119   0.0402 *  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 0.7742 on 41 degrees of freedom
+  (4 observations deleted due to missingness)
+Multiple R-squared:  0.4149,    Adjusted R-squared:  0.3721 
+F-statistic:  9.69 on 3 and 41 DF,  p-value: 5.854e-05
+</code></pre>
+
+<p>Doing this, the p and t values for the interaction and condition become the same as in JMP, but now income and all the estimates are different.</p>
+
+<p>I've tried to be as thorough as I can in trying finding an answer on my own, but I've run out of ideas so any help would be immensely appreciated. All relevant R files can be found here: <a href=""https://www.dropbox.com/s/eoup5im2iko1ro6/R.zip?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/eoup5im2iko1ro6/R.zip?dl=0</a></p>
+"
+"0.238095238095238","0.25342662267125","175597","<p>I am using the <code>quantreg</code> package in R to develop quantile estimates at different taus, then using <code>anova</code> to test whether the Beta Estimates at different quantiles are equal ($H_0$) or not ($H_1$). Thus </p>
+
+<pre><code>library(quantreg)
+data(Mammals) # sample data in quantreg
+</code></pre>
+
+<p>for taus 0.1, 0.25, 0.5, 0.75 and 0.9</p>
+
+<pre><code>fit1 &lt;- rq(weight ~ speed + hoppers + specials, tau = .1, data = Mammals)
+fit2 &lt;- rq(weight ~ speed + hoppers + specials, tau = .25, data = Mammals)
+fit3 &lt;- rq(weight ~ speed + hoppers + specials, tau = .5, data = Mammals)
+fit4 &lt;- rq(weight ~ speed + hoppers + specials, tau = .75, data = Mammals)
+fit5 &lt;- rq(weight ~ speed + hoppers + specials, tau = .9, data = Mammals)
+
+anova(fit1, fit2, fit3, fit4, fit5, test=""Wald"", joint=FALSE)
+</code></pre>
+
+<p>Results in </p>
+
+<pre><code>Quantile Regression Analysis of Deviance Table
+
+Model: weight ~ speed + hoppers + specials
+Tests of Equality of Distinct Slopes: tau in {  0.1 0.25 0.5 0.75 0.9  }
+
+             Df Resid Df F value  Pr(&gt;F)  
+speed         4      531  1.0952 0.35810  
+hoppersTRUE   4      531  2.5898 0.03599 *
+specialsTRUE  4      531  1.3774 0.24046  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>However changing the order of the models to say;</p>
+
+<pre><code>anova(fit3, fit1, fit2, fit4, fit5, test=""Wald"", joint=FALSE)
+</code></pre>
+
+<p>Produces the <strong>exact same result!</strong></p>
+
+<h2>My question is basically, what gives?</h2>
+
+<p><strong>(1)</strong> Is <code>anova</code> truly comparing all the models to one another (ie all estimates from different taus, ${_nC_r} = {_5C_2} = 10$ <strong>separate</strong> comparisons) </p>
+
+<p><strong>OR</strong> </p>
+
+<p><strong>(2)</strong> Is <code>anova</code> selecting the model with the lowest tau and comparing the remaining models to that?</p>
+
+<p>I've extracted (and annotated) the relevant segments of the of <code>anova</code> function called in the <code>quantreg</code> environment bellow.</p>
+
+<pre><code>getAnywhere(anova.rqlist)
+sum.fit1 &lt;- summary(fit1, covariance=TRUE); sum.fit2 &lt;- summary(fit2, covariance=TRUE); 
+sum.fit3 &lt;- summary(fit3, covariance=TRUE); sum.fit4 &lt;- summary(fit4, covariance=TRUE); 
+sum.fit5 &lt;- summary(fit5, covariance=TRUE)
+objects &lt;- list(); objects[[1]] &lt;- sum.fit1; objects[[2]] &lt;- sum.fit2 
+objects[[3]] &lt;- sum.fit3; objects[[4]] &lt;- sum.fit4; objects[[5]] &lt;- sum.fit5
+taus &lt;- c(0.1, 0.25, 0.5, 0.75, 0.9)
+m &lt;- length(taus)
+n &lt;- length(fit1$y)
+    Omega &lt;- outer(taus, taus, pmin) - outer(taus, taus) ##!!!HERE!!!###
+    J &lt;- objects[[1]]$J 
+# From help file on summary.rq: J is Unscaled Outer product of gradient matrix returned if cov=TRUE and se != ""iid"". The Huber sandwich is cov = tau (1-tau) Hinv %*% J %*% Hinv. 
+p &lt;- dim(J)[1]
+H &lt;- array(unlist(lapply(objects, function(x) x$Hinv)), c(p, p, m))
+# From help file on summary.rq: Hinv : inverse of the estimated Hessian matrix returned if cov=TRUE and se %in% c(""nid"",""ker"") , note that for se = ""boot"" there is no way to split the estimated covariance matrix into its sandwich constituent parts.    
+H &lt;- matrix(aperm(H, c(1, 3, 2)), p * m, p) %*% t(chol(J))
+W &lt;- (H %*% t(H)) * (kronecker(Omega, outer(rep(1, p), rep(1, p)))) ##!!!HERE!!!###
+coef &lt;- unlist(lapply(objects, function(x) coef(x)[, 1]))
+Tn &lt;- pvalue &lt;- rep(0, p - 1)
+ndf &lt;- m - 1
+ddf &lt;- n * m - (m - 1)
+for (i in 2:p) {
+  E &lt;- matrix(0, 1, p)
+  E[1, i] &lt;- 1
+  D &lt;- kronecker(diff(diag(m)), E)
+  Tn[i - 1] &lt;- t(D %*% coef) %*% solve(D %*% W %*% 
+                                         t(D), D %*% coef)/ndf
+  pvalue[i - 1] &lt;- 1 - pf(Tn[i - 1], ndf, ddf)
+}
+pvalue
+</code></pre>
+
+<p>The reason i care is that if explanation <strong>(1)</strong> is being implemented then all the estimates are truly being compared, while if explanation <strong>(2)</strong> is being implemented, then technically the models are only being compared to minimum tau and <strong>NOT</strong> to one another. </p>
+
+<p><strong>Note:</strong> The lines that define <code>Omega</code> and <code>W</code> suggest to me that the latter interpretation <strong>(2)</strong> is being implemented, but I'm not sure.</p>
+"
+"0.0824786098842323","0.0798086884467622","49924","<p>I'm learning R and trying to understand how <code>lm()</code> handles factor variables &amp; how to make sense of the ANOVA table. I'm fairly new to statistics, so please be gentle with me.</p>
+
+<p>Here's some movie data from Rotten Tomatoes. I'm trying to model the score of each movie based on the mean scores for all of the movies in 4 groups: those rated G, PG, PG-13, and R.</p>
+
+<pre><code>download.file(""http://www.rossmanchance.com/iscam2/data/movies03RT.txt"", destfile = ""./movies.txt"")
+movies &lt;- read.table(""./movies.txt"", sep = ""\t"", header = T, quote = """")
+lm1 &lt;- lm(movies$score ~ as.factor(movies$rating))
+anova(lm1)
+</code></pre>
+
+<p>and the ANOVA output:</p>
+
+<pre><code>## Analysis of Variance Table
+## 
+## Response: movies$score
+##                           Df Sum Sq Mean Sq F value Pr(&gt;F)
+## as.factor(movies$rating)   3    570     190    0.92   0.43
+## Residuals                136  28149     207
+</code></pre>
+
+<p>I understand how to get all the numbers in this table, EXCEPT <code>Sum Sq</code> and <code>Mean Sq</code> for <code>as.factor(movies$rating)</code>. Can someone please explain how that <code>Sum Sq</code> is calculated from my data? I know that <code>Mean Sq</code>is just <code>Sum Sq</code> divided by <code>Df</code>.</p>
+"
+"0.116642368703961","0.11286652959662","119790","<p>Is there a difference between chi-squared (from <code>coxph</code> -> <code>anova</code>) and Wald chi-squared (from <code>cph</code> -> <code>anova</code>)?</p>
+
+<p>And how do I have to interpret these chi-squared values? What does a P&lt;0.05 mean in this case? Why does the sum of chi-squared values of each variable not equal TOTAL? My idea was that each chi-squared indicates the predictive information of each variable and TOTAL that of the entire model.</p>
+
+<pre><code>&gt; library(survival)
+&gt; library(rms)
+&gt;
+&gt; data(colon)
+&gt; d &lt;- colon
+&gt; m1 &lt;- cph(Surv(time, status) ~ age + sex + nodes, data=d)
+&gt; anova(m1)
+                Wald Statistics          Response: Surv(time, status) 
+
+ Factor     Chi-Square d.f. P     
+ age          0.03     1    0.8612
+ sex          0.93     1    0.3349
+ nodes      189.79     1    &lt;.0001
+ TOTAL      192.01     3    &lt;.0001
+&gt; 0.03+0.93+189.79 # = 190.75
+[1] 190.75
+&gt; m2 &lt;- coxph(Surv(time, status) ~ age + sex + nodes, data=d)
+&gt; anova(m2)
+Analysis of Deviance Table
+ Cox model: response is Surv(time, status)
+Terms added sequentially (first to last)
+
+       loglik    Chisq Df Pr(&gt;|Chi|)    
+NULL  -6424.0                           
+age   -6423.6   0.7147  1     0.3979    
+sex   -6423.4   0.5019  1     0.4787    
+nodes -6356.9 132.8685  1     &lt;2e-16 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+"
+"0.116642368703961","0.11286652959662","164314","<p>I have a data set with performance and training data that looks something like (this is not the exact data, but gives a general idea):</p>
+
+<pre><code>&gt;dat
+Performance Training
+1           1
+0           1
+1           2
+0           2
+1           3
+1           3
+</code></pre>
+
+<p>I want to find if there is are any significant differences between performance means for the respective levels of performance in R.  I have tried linear regression and anova, such as: <code>summary(lm(performance~training))</code> or <code>summary(aov(performance~training))</code> both of which yield non-significant results.  However, when I do a T-test to compare some of the means manually it is telling be significant differences exist.  Any thoughts on how to code what I am looking for or what might be going on here?</p>
+"
+"0.164957219768465","0.159617376893524","217643","<p>I'm trying to find out if my numeric predictors have a linear relation to the logit of my logistic regression. I tried to use the lrm fit in the rms package where I have used 3 knot cubic spline on all numeric predictors like this:</p>
+
+<pre><code>&gt; fit &lt;- lrm(y ~ rcs(x1,3)+rcs(x2,3)+.....)
+</code></pre>
+
+<p>There after I used anova on lrm fit. The main question is how do I use the result in anova(fit)? </p>
+
+<p>My understanding is that the wald statistics are just the associated coefficients squared and dived by it's se. But what about the statistics for nonlinear terms here? are they the wald statistics for the coefficients for the squared predictors? </p>
+
+<p>If none of the statistics are significant, can I conclude that there are no quadratic effect from my predictors?</p>
+"
+"0.164957219768465","0.159617376893524","159711","<p>I'm trying to figure out why the <code>anova</code> function in R gives me the same results (for the p-value) regardless of the order of the models.</p>
+
+<pre><code>&gt; anova(lm.fit ,lm.fit2)
+Analysis of Variance Table
+
+Model 1: medv ~ lstat
+Model 2: medv ~ lstat + I(lstat^2)
+  Res.Df   RSS Df Sum of Sq     F    Pr(&gt;F)    
+1    504 19472                                 
+2    503 15347  1    4125.1 135.2 &lt; 2.2e-16 ***
+---
+Signif. codes:  
+0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+&gt; anova(lm.fit2,lm.fit)
+Analysis of Variance Table
+
+Model 1: medv ~ lstat + I(lstat^2)
+Model 2: medv ~ lstat
+  Res.Df   RSS Df Sum of Sq     F    Pr(&gt;F)    
+1    503 15347                                 
+2    504 19472 -1   -4125.1 135.2 &lt; 2.2e-16 ***
+---
+Signif. codes:  
+0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I can't understand why the p-value is so low in both cases. The way I'm understanding I should interpret the result of the <code>anova</code> is that the model 2 is better than model 1 if the p-value is very low, but in this case I'm getting exactly the same no matter the order.</p>
+
+<p>I'm trying to read <code>?anova</code> to check what this all means, but the help page is very succinct, is there another help where it states what the <code>Df</code> parameter means for instance?</p>
+"
+"0.0824786098842323","0.0798086884467622","117489","<p>From my limited statistical knowledge, I could use MANOVA if I had multiple independent variables (x1, x2...xn). What can I do (specifically in R) with one ""x"" variable and multiple ""y"" groups? I'm trying to see if there is any relationship between the y's with respect to their regression with x. I've already set up a loop that computes bivariate, piecewise linear regressions between each pair (x-y1, x-y2, ... x-yn), but that does not include any analysis of variation between the y variables. Does anybody know how I might do this (in a statistically sound manner, of course) in R? My data looks like this:</p>
+
+<pre><code>x         y1       y2      y3      y4      y5
+4.19    5.51    19.76   50.00   19.36   54.07
+8.60    10.16   33.01   82.99   38.48   44.95
+8.03    7.82    31.29   79.05   40.12   59.18
+6.64    8.99    27.13   69.13   30.44   59.02
+7.03    8.22    25.29   74.45   36.02   50.88
+1.50    5.90    10.69   22.88   10.34   34.50
+4.36    7.61    19.27   44.47   20.06   24.62
+7.17    8.30    26.72   68.68   31.61   20.16
+2.68    5.61    14.25   37.07   15.20   67.75
+7.91    7.75    30.93   82.01   38.62   65.36
+3.74    5.24    16.42   40.17   17.54   15.19
+</code></pre>
+"
+"0.219942959691286","0.212823169191366","173026","<p>Suppose I have a linear regression model Y ~ b1*x1 + b2*x2 with the sample data:</p>
+
+<pre><code>        x1      x2        y
+0  -0.7251 -0.6033  10.2508
+1  -1.3148  3.7067  10.3054
+2  -1.2818 -5.8136   7.2010
+3   0.6154  3.6336  11.2807
+4   1.4887 -2.8337  10.6299
+5  -2.0224 -0.3931   7.4502
+6   0.5419 -1.7807  10.7339
+7  -1.0745 -5.0296   5.8734
+8   3.2116 -0.4681  11.7184
+9   1.6767 -4.6040   9.0145
+10 -1.3355 -2.6874   6.5014
+11  0.8296  2.6793  11.8295
+12 -2.8647  4.2916   7.8414
+13  1.8445 -3.3924   9.6520
+14 -0.1036  2.4273  11.9766
+15  1.0886 -3.5636  10.6023
+16 -3.3026 -6.9837   4.9962
+17  1.4050 -3.8453  10.4630
+18 -0.3111 -1.4278   9.2283
+19 -3.5454  2.4960   7.3720
+</code></pre>
+
+<p>And using the following R code to get the Analysis of Variance Table:</p>
+
+<pre><code>&gt; df &lt;- read.csv('f:/data.csv', header=T, sep="","")
+&gt; model_All &lt;- lm(y ~ x1 + x2, data=df)
+&gt; anova(model_All)
+Analysis of Variance Table
+
+Response: y
+          Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+x1         1 44.440  44.440  58.277 6.865e-07 ***
+x2         1 26.640  26.640  34.934 1.711e-05 ***
+Residuals 17 12.964   0.763                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>And I can calculate the F value of hypothesis test H0ï¼š b2=0 via:</p>
+
+<pre><code>&gt; model_Drop2 &lt;- lm(y ~ x1, data=df)
+&gt; SSR_All = sum(resid(model_All)^2)
+&gt; SSR_Dp2 = sum(resid(model_Drop2)^2)
+&gt; F_x2 = ((SSR_Dp2 - SSR_All) / 1) / (SSR_All / (20 - 3))
+&gt; F_x2
+[1] 34.93434
+</code></pre>
+
+<p>We can see that <code>F_x2</code> <strong>is equal to</strong> F value of <code>x2</code> in <code>Analysis of Variance Table</code>.
+However, the value <code>F_x1</code> calculated as follow <strong>is not equal to</strong> F value of <code>x1</code>, I can't understand why:</p>
+
+<pre><code>&gt; model_Drop1 &lt;- lm(y ~ x2, data=df)
+&gt; SSR_Dp1 = sum(resid(model_Drop1)^2)
+&gt; F_x1 = ((SSR_Dp1 - SSR_All) / 1) / (SSR_All / (20 - 3))
+&gt; F_x1
+[1] 70.30392
+</code></pre>
+
+<p>So, what is the mathematics definition of the F value in table?</p>
+
+<p><strong>EDIT</strong> The result of the features reversed as commented by @Michael M:</p>
+
+<pre><code>&gt; model_All2 &lt;- lm(y ~ x2 + x1, data=df)
+&gt; anova(model_All2)
+Analysis of Variance Table
+
+Response: y
+          Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+x2         1 17.468  17.468  22.907 0.0001718 ***
+x1         1 53.612  53.612  70.304 1.914e-07 ***
+Residuals 17 12.964   0.763                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+"
+"NaN","NaN","29329","<p>I was wondering, what is the meaning of operators in anova or regression formulas in R</p>
+
+<p>For example</p>
+
+<ul>
+<li>""<strong>+</strong>"" aov &lt;- aov(x~time+sample, data=data) -> repeated mesures anova?</li>
+<li>""<strong>*</strong>"" aov &lt;- aov(x~time*sample, data=data) -> two way anova?</li>
+<li>""<strong>/</strong>"" aov &lt;- aov(x~time/sample, data=data) -> ?</li>
+<li>""<strong>:</strong>"" aov &lt;- aov(x~time:sample, data=data) -> ?</li>
+</ul>
+
+<p>And also are there more operators for this kind of formulas?</p>
+"
+"0.260820265478651","0.252377232562534","125787","<p>I would like to learn what is the correct way to approach analysis of this data. I have done some reading on the subject, but I still feel uncertain. Perhaps many approaches are valid, but simply  that some are more conservative than others?</p>
+
+<p>My study: </p>
+
+<p>I have 5 grasslands, and in each grassland I have 30 spiders. For each spider I have an estimate of what proportion of herbivores it consumes ""Diet"" (so 5 x 30, n = 150). For each grassland I also have an estimate of the overall biomass of herbivores that exist there ""Biomass"". Thus I have 5 values of ""Biomass"" (one for each grassland) and 150 of ""Diet"" (30 spiders per grassland). Both Diet and Biomass are continous variables. </p>
+
+<p>I would like to run an anlysis that tests how Diet changes across Biomass and derive a slope value, thus keeping Biomass as a continous variable:</p>
+
+<p>Diet ~ Biomass</p>
+
+<p>As I understand it, if I use raw data for Diet (n=150) then using anova is more approrpiate, and grassland becomes a factor with 5 levels.</p>
+
+<p>Or I could run it as a linear regression and thus keep Biomass as a continuous variable and derive a slope value. However, as a linear regression, should I use the raw data (n=150) or mean values (so 5 means - one for each grassland based on 30 samples). Which of the 2 linear regression approaches is correct? (means or raw data). </p>
+
+<p>While I am familiar with the notion that both anova and regression have the same underlying mathematics and are now regarded as general linear modelling, I still don't know how this affects the data that I should be using when running a linear model of the form:  Diet ~ Biomass</p>
+
+<p>Using raw data seems better because it captures the variability in the dataset, but if i use it with Biomass as a continous variable to get a slope value (i.e regression analysis) I am concerned that it inflates the degrees of freedom (df=1,149) and is psuedo-replicated, so inaccurately increases my chances of a significant result? Therefore, is it incorrect to model the raw data (n=150) against only 5 values of ""Biomass"" in a linear form (and not as factors as required in an anova)?</p>
+"
+"0.0824786098842323","0.0798086884467622","218879","<p>I'm looking to model percent change in transaction year over year for sales people grouped in certain categories (7 categories total). The percent change in transactions would be Q1 of the current year divided by the number of transactions from Q1 of the previous year which gives me a percent change (positive or negative). </p>
+
+<p>Since this is count data the correct model to use is the Poisson distribution and eventually I would like to do a Poisson regression to look at the effects of predictor variables on percent change in transactions.</p>
+
+<p>But my question is, if I want to compare the means between the different groups what is the analogous version of the ANOVA for Poisson assumptions. (if that's the correct way to put it) </p>
+"
+"0.142857142857143","0.138232703275227","133107","<p>I have a dataset with seven dependent variables and three independent variables. Now I want to test the significance of a multivariate regression model as a whole. </p>
+
+<p>My model looks like this (using r):</p>
+
+<pre><code>my.model &lt;- lm(cbind(res1,res2,res3,res4,res5,res6,res7) ~ indep1 + indep2+indep1:indep2, data=df)
+</code></pre>
+
+<p>now I can use </p>
+
+<pre><code>summary(manova(my.model)) 
+</code></pre>
+
+<p>for model testing. I am not sure about this,  how can I interpret the results when I want to test the model as a whole?</p>
+
+<p>this is result of the summary:</p>
+
+<pre><code>                 Df   Pillai approx F num Df den Df    Pr(&gt;F)    
+indep1           1 0.067716   35.383      7   3410 &lt; 2.2e-16 ***
+indep2           1 0.209308  128.954      7   3410 &lt; 2.2e-16 ***
+indep1:indep2    1 0.006977    3.422      7   3410  0.001191 ** 
+Residuals                 3416                              
+</code></pre>
+
+<p>Many thanks in advance!</p>
+"
+"NaN","NaN","74628","<p>I have completed analysis on the effects of two drug treatments over a period of time on the CD4 cell count of a number of patients. I have taken the square root of the initial CD4 count as a covariate and I have taken a summary measure of the 'slopes' for each patient. </p>"
+"NaN","NaN","<p>My model is the following:</p>",""
+"NaN","NaN","<pre><code>&gt; slopes.aov &lt;- aov(individual.slope.trans[-29] ~ sqrt(initialCD4)[-29] + treatment.fac[-29])",""
+"NaN","NaN","&gt; summary(slopes.aov)",""
+"NaN","NaN","                   Df Sum Sq  Mean Sq F value Pr(&gt;F)",""
+"NaN","NaN","sqrt(initialCD4)[-29]   1 0.0060 0.006027   0.990  0.322",""
+"NaN","NaN","treatment.fac[-29]      1 0.0082 0.008184   1.344  0.249",""
+"NaN","NaN","Residuals             109 0.6638 0.006090         ",""
+"NaN","NaN","</code></pre>",""
+"NaN","NaN","<p>I am quite new to data analysis I am not quite sure how to interpret this model?</p>",""
+"NaN","NaN","<p>Can I still use the regression coefficients to describe my summary measure even though we have no significance. I am really struggling with this. Also how can we describe to effect of the covariate.?</p>",""
+"NaN","NaN","<p>I understand that I have no evidence to suggest that the treatments have an effect on the 'slopes' (my summary measure) and so I have no evidence to say that one treatment is performing better than another.      </p>",""
+"NaN","NaN","","<r><regression><anova><model>"
+"0.204124145231931","0.22573305919324","223648","<p>I am new in statistical analysis field.</p>
+
+<p>I have a dataset which is divided into five groups each with four columns(common in all five groups). All these five groups have a baseline group to be compared with. Each row in these groups is considered to be different sample such Sample1, Sample2, Sample 3 and so on. There are total 30 samples for each group.</p>
+
+<p>For example:</p>
+
+<p>Baseline ( Column A, Column B, Column C, Column D)
+Group A(Column A, Column B, Column C, Column D)
+Group B(Column A, Column B, Column C, Column D)
+Group C(Column A, Column B, Column C, Column D)
+Group D(Column A, Column B, Column C, Column D)
+Group E(Column A, Column B, Column C, Column D)
+The test has been conducted on different groups, and columns values have been recorded for different groups. I have to decide which group will be best to select that has values closer to the baseline value by recorded column values.</p>
+
+<p>I would like to know what kind of statistical analysis would be best. Should I do the t-test for each column of the different group with baseline and compare their p-value and the best p-value would be the group to select. Should I do Anova test for each column at one go and decide based on these results.</p>
+
+<p>Or, should I do perform some other analysis apart from which I mentioned here to select the best group.</p>
+
+<p>Please suggest.</p>
+"
+"0.29738085706659","0.287754318422332","76250","<p>I am new to statistics and I am trying to understand the difference between ANOVA and linear regression. I am using R to explore this. I read various articles about why ANOVA and regression are different but still the same and how the can be visualised etc. I think I am pretty there but one bit is still missing.</p>
+
+<p>I understand that ANOVA compares the variance within groups with the variance between groups to determine whether there is or is not a difference between any of the groups tested. (<a href=""https://controls.engin.umich.edu/wiki/index.php/Factor_analysis_and_ANOVA"" rel=""nofollow"">https://controls.engin.umich.edu/wiki/index.php/Factor_analysis_and_ANOVA</a>)</p>
+
+<p>For linear regression, I found a post in this forum which says that the same can be tested when we test whether b (slope) = 0.
+(<a href=""http://stats.stackexchange.com/questions/555/why-is-anova-taught-used-as-if-it-is-a-different-research-methodology-compared"">Why is ANOVA taught / used as if it is a different research methodology compared to linear regression?</a>)</p>
+
+<p>For more than two groups I found a website stating:</p>
+
+<p>The null hypothesis is: $\text{H}_0: Âµ_1 = Âµ_2 = Âµ_3$</p>
+
+<p>The linear regression model is: $y = b_0 + b_1X_1 + b_2X_2 + e$</p>
+
+<p>The output of the linear regression is, however, then the intercept for one group and the difference to this intercept for the other two groups. 
+(<a href=""http://www.real-statistics.com/multiple-regression/anova-using-regression/"" rel=""nofollow"">http://www.real-statistics.com/multiple-regression/anova-using-regression/</a>)</p>
+
+<p>for me, this looks like that actually the intercepts are compared and not the slopes?</p>
+
+<p>Another example where they compare intercepts rather than the slopes can be found here:
+(<a href=""http://www.theanalysisfactor.com/why-anova-and-linear-regression-are-the-same-analysis/"" rel=""nofollow"">http://www.theanalysisfactor.com/why-anova-and-linear-regression-are-the-same-analysis/</a>)</p>
+
+<p>I am now struggling to understand what is actually compared in the linear regression? the slopes, the intercepts or both? </p>
+"
+"0.273550602216097","0.264695474588282","32498","<p>I realize that similar questions have already been asked and answered, but I am in need of a bit more detail and specific advice as I am new to PCA and statistical methods in general. My question is also a bit broader because I will be putting it in context and I need to know if I'm even headed in the right direction.</p>
+
+<p>I have a great deal of data. For each datapoint, there is one continuous response variable that I am interested in examining. Let's call it X.</p>
+
+<p>There are also five or six categorical variables, most of which have between three and ten possible values. One of them, however (let's call it A), has 154 possible values, and to complicate things further, each datapoint can fall in 1-4 of those 154 categories. For the vast majority of them, they just take one of the 154 values, but about 10% of them take two or three values, and maybe 0.5% of them take four values. (I am actually considering including a discrete but quantitative variable that will be equal to the number of values taken by S, as I think it might also be a relevant factor affecting X.)</p>
+
+<p>My ultimate goal here is twofold: to create a predictive model with multiple regression, and to use ANOVA to determine how much each of my variables' variance explains the variance in X.</p>
+
+<p>Someone more familiar with statistics than I suggested that I start with PCA because both multiple regression and ANOVA assume that all factors are independent. I'm pretty sure there are some correlations between a few of my factors (though I have no idea what they are) so I figured PCA would be a good way to begin disentangling.</p>
+
+<p>My questions are:</p>
+
+<ol>
+<li><p>Can I perform PCA given the categorical nature of my data? If so, what method should I use to ""dummy code"" the variables? If not, what method would be more effective?</p></li>
+<li><p>Will including a single discrete, quantitative variable (the number of values taken by A) complicate matters?</p></li>
+<li><p>Will PCA even do what I want? (namely, disentangling the variables so I can then use multiple regression and ANOVA)</p></li>
+<li><p>Whatever you recommend, is it possible in R, and if so, how? (I haven't even downloaded R yet but it's been recommended to me and it's free so I'm inclined to give it a swing. I have some programming experience in Python and C++ so in theory I can learn it without too much difficulty.)</p></li>
+</ol>
+
+<p>Thanks very much in advance. </p>
+"
+"0.184427778390829","0.178457652562062","222431","<p>See this file here: <a href=""http://www.math.uvic.ca/~nathoo/stat359-material/decay.TXT"" rel=""nofollow"" title=""Decay.txt"">Decay.TXT</a>. </p>
+
+<p>I first tried to fit the logarithmic model first </p>
+
+<pre><code>dec = read.table('decay.txt', header=T)
+attach(dec)
+logy &lt;- log(y)
+model1 &lt;- lm(logy ~ x)
+</code></pre>
+
+<p>And now I try to fit a quadratic model into the data: </p>
+
+<pre><code>model2 &lt;- lm(y ~ x + I(x^2))
+</code></pre>
+
+<p>I now attempt to get the r^2 (r-squared values) of the models. </p>
+
+<pre><code>(rsq1 &lt;- summary(model1)$r.squared)
+[1] 0.8307964
+
+(rsq2 &lt;- summary(model2)$r.squared)
+[1] 0.9079788
+</code></pre>
+
+<p>Obviously as seen, here the coefficient of determination of the quadratic regression model is better than the exponential regression model (for this dataset). </p>
+
+<p>However, the critical appraisal of these models says otherwise. For the exponential model, we see that: 
+<a href=""http://i.stack.imgur.com/ha55L.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ha55L.jpg"" alt=""Exponential regression""></a></p>
+
+<p>And for the quadratic polynomial model, we see that: 
+<a href=""http://i.stack.imgur.com/B30jv.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/B30jv.jpg"" alt=""Quadratic regression""></a></p>
+
+<p>The QQ Plot reveals something strange with the residuals for the Quadratic regression i.e ""Not Normally Distributed"". </p>
+
+<p>Now I am trying to use ANOVA, to compare the two models. And I type: </p>
+
+<pre><code>anova(model1, model2)  
+</code></pre>
+
+<p>and there is an error regarding the missing variable <code>y</code>. What is the right way to conduct the <code>anova</code> ?    </p>
+"
+"0.147542222712664","0.14276612204965","91848","<p>I need a little bit of help and confirmation that I have the right idea. 
+I have some fake data of 8 tribes; within each tribe members work hard to gain food for their own tribe. No one can speak to these tribes, but people suspect that each tribe has one of the two strategies presented below for gaining food:</p>
+
+<ol>
+<li><p>Members of a tribe who travel farther away from the tribe's main location are given more food, so they face less of a chance of starving before coming back.</p></li>
+<li><p>Members of a tribe who travel far are given less food; that way if they are lost, there is less of a food loss to the tribe as a whole.</p></li>
+</ol>
+
+<p>The variables (columns) I am working with are <code>Tribe number</code>, <code>Distance from the tribe location</code> when sample was taken (10, 20, 30, or 40 miles), <code>Weight of each member</code> that we are studying (related to the amount of food is given), <code>height</code> (taller people use energy more efficiently, and there is a strong positive correlation between weight and height in arbitrary units and inches), finally I have each observation categorized by height (group <code>1</code>: 56â€“62in, group <code>2</code>: 62â€“64...).</p>
+
+<p>I want to find out if the tribes use different strategies, and also if there is a difference among the classes <code>pf</code> height. In addition I want to find out the strategies that are in use. I am having a hard time with how to classify each tribe as using either strategy <code>1</code> or <code>2</code>. I was thinking of doing a one-way ANOVA to check if there is a difference in <code>mean</code> within each group based on <code>distance</code>. (In a particular tribe is there a difference in the mean of weight between those who were 10, 20 , 30, or 40 miles?) I don't know how to figure out if each colony uses a different strategy.</p>
+
+<p>Finally, I want to build a linear model of mass on colony, distance, and height. I know how to build a model and run diagnostics. My concern here is, can I use distance as a categorical variable since its values are 10, 20, 30, or 40 miles? </p>
+"
+"0.0824786098842323","0.0798086884467622","201819","<p>I ran a linear model function in R and got the following output:</p>
+
+<pre><code>Call:
+lm(formula = y ~ z1 + z2, data = heat1)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-3.049 -1.495 -1.231  1.491  4.102 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  40.9577    14.6645   2.793 0.019022 *  
+z1            0.7857     0.1309   6.004 0.000131 ***
+z2            0.1174     0.1558   0.754 0.468435    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 2.425 on 10 degrees of freedom
+Multiple R-squared:  0.9783,    Adjusted R-squared:  0.974 
+F-statistic: 225.9 on 2 and 10 DF,  p-value: 4.762e-09
+</code></pre>
+
+<p>But calculating the SSE returns:</p>
+
+<pre><code>sum((mdl1$residuals)^2)
+[1] 58.80899
+</code></pre>
+
+<p>Why is the value of RSE * 10 different from the SSE calculated. Am I missing something out here?</p>
+"
+"0.164957219768465","0.159617376893524","221182","<p>I've got a dataset with two measures in a group of people, before (pre) and after (post) an intervention. Second measure is always greater than first one.</p>
+
+<p>My assumption is that the initial value determines the magnitude of the post-intervention measure, so, the lower the initial value, the higher the increase, the higher the initial value, the lower the increase.</p>
+
+<p>The target of my analysis is not the change itself, but the ratio post/pre intervention. My main outcome should be a pvalue of the change (it it is significant or not) and a graph pre Vs predicted(post/pre).</p>
+
+<p>Iâ€™ve tried a one-way repeated measures anova, but this way I only analyse the variance, I cant predict the outcome.</p>
+
+<pre><code>library(car)
+options(contrasts=c(""contr.sum"",""contr.poly""))
+measure1&lt;-runif(1000,0,1000)
+measure2&lt;-measure1*(200-20*log(measure1))
+lmmodel &lt;- lm(cbind(measure1,measure2) ~ 1)
+measureFactor&lt;-factor(c(""measure1"",""measure2""), ordered=F)
+finalmodel&lt;-Anova(lmmodel,idata=data.frame(measureFactor),idesign=~ measureFactor,type=3)
+summary(finalmodel)
+</code></pre>
+
+<p>I have the impression that this is way more easy than I think, but Iâ€™m blocked, any clues?</p>
+
+<p>SECOND: what if there are two groups, the first one is a â€œcontrolâ€ group and the other one is an â€œinterventionâ€ group, both with measures pre and post intervention, how would this modify my model? How could I get the pvalue of differences between the two groups.</p>
+"
+"0.116642368703961","0.11286652959662","100670","<p>What is the purpose of the ANOVA table? I once learned that you can only interpret the significance (p-value) of a multi-level discrete variable, or an interaction effect using the ANOVA table. Why? Why can't you use the p-value outputs of the regression? Why do people look at the ANOVA table in practice? </p>
+
+<p>GLM</p>
+
+<pre><code>Coefficients:
+                                    Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)                          -1.9800     1.3697  -1.446    0.148
+ConnectivityHIGH                      1.9214     1.6361   1.174    0.240
+SusceptibilityHIGH                    0.8636     1.7183   0.503    0.615
+ConnectivityHIGH:SusceptibilityHIGH  -0.6555     2.1348  -0.307    0.759
+</code></pre>
+
+<p>ANOVA</p>
+
+<pre><code>                            Df Deviance Resid. Df Resid. Dev Pr(&gt;Chi)
+NULL                                           19     3.6712         
+Connectivity                 1  2.43379        18     1.2374   0.1187
+Susceptibility               1  0.19710        17     1.0403   0.6571
+Connectivity:Susceptibility  1  0.09598        16     0.9443   0.7567
+</code></pre>
+"
+"0.164957219768465","0.159617376893524","202032","<p>I have the following data that I wish to analyze using R:</p>
+
+<pre><code>     Resilience     PartsA       PartsB
+1   4.805032           1           1
+2   4.657384           1           2
+3   4.703198           1           3
+4   3.993497           1           4
+5   4.645764           1           5
+6   4.603158           1           1
+7   4.811521           1           2
+8   4.682717           1           3
+9   4.728485           1           4
+10  4.734114           1           5
+11  4.532497           1           1
+12  4.885308           1           2
+13  4.702712           1           3
+14  4.692207           1           4
+15  4.740994           1           5
+16  4.572724           1           1
+17  4.919445           1           2
+18  4.650043           1           3
+19  4.761368           1           4
+20  4.790507           1           5
+21  4.653509           2           1
+22  4.720434           2           2
+23  4.833647           2           3
+24  4.997706           2           4
+25  4.630829           2           5
+26  4.690605           2           1
+27  4.681007           2           2
+28  4.784369           2           3
+29  4.704247           2           4
+30  4.575493           2           5
+31  4.553369           2           1
+32  4.758170           2           2
+33  4.855304           2           3
+34  4.903961           2           4
+35  5.002031           2           5
+36  4.769658           2           1
+37  4.651714           2           2
+38  4.929959           2           3
+39  4.648468           2           4
+40  4.788978           2           5
+41  4.812591           3           1
+42  4.877903           3           2
+43  4.928751           3           3
+44  4.925799           3           4
+45  4.005860           3           5
+46  4.662776           3           1
+47  4.896822           3           2
+48  4.904109           3           3
+49  4.971777           3           4
+50  4.832897           3           5
+</code></pre>
+
+<p>I want to perform some kind of analysis in order to understand which Parts from A and B (which combination, such as 1 from PartsA and 3 from PartsB) cause the most deviation from the mean in the final result (material resilience).</p>
+
+<p>From PartsA, 3 same parts are used, but from different sources (in the construction of a material), and PartsB that's used in the construction is brought in from 5 different sources.</p>
+
+<p>Basically I want to test to see whether or not using parts from different sources creates a significant difference on the results or if all parts render same results (null hypothesis). Essentially a test for the significance that PartsA and PartsB play in the final outcome.</p>
+
+<p>I've thought about using ANOVA, in order to analyze the variance but I am rather unsure about how to interpret the results. 
+Any help would be greatly appreciated. Many thanks </p>
+"
+"0.308606699924184","0.298616768655568","58321","<p>I need some help with the statistical analysis of a study of a particular surgery to remove a particular cancer. I am using the statistical program R to conduct my analysis. My data are saved in the object <code>study_data</code>.</p>
+
+<h3>Data</h3>
+
+<pre><code># Create reproducible example data
+set.seed(50)
+
+study_data &lt;- data.frame(
+              Patient_ID = 1:500,
+              Institution = sample(c(""New York"",""San Francisco"",""Houston"",""Chicago""),500,T),
+              Gender = sample(c(""Male"",""Female""),500,T),
+              Race = sample(c(""White"",""Black"",""Hispanic"",""Asian""),500,T),
+              Tumor_grade = sample(c(""One"",""Two"",""Three"",""Four""),500,T),
+              Pathologic_stage = sample(c(""P0"",""Pa"",""Pis"",""P1"",""P2a"",""P2b"",""P3a"",""P3b"",""P4a"",""P4b""),500,T),
+              Treatment_arm = sample(c(""One"",""Two"",""Three"",""Four""),500,T),
+              Surgery_age = round(runif(500,20,100)),
+              Nodes_removed = round(runif(500,1,130)))
+</code></pre>
+
+<p>Here is what the data look like:</p>
+
+<pre><code># Peak at the first six lines of the data
+head(study_data)
+
+  Patient_ID   Institution Gender     Race Tumor_grade Pathologic_stage Treatment_arm Surgery_age Nodes_removed
+1          1       Houston   Male Hispanic         One              P2b           Two          77           130
+2          2 San Francisco Female Hispanic       Three               Pa           Two          38           112
+3          3      New York Female    Black        Four               P0          Four          90            90
+4          4       Chicago   Male Hispanic         Two              Pis          Four          46             4
+5          5       Houston Female    Black        Four              P2a          Four          96           114
+6          6      New York   Male    Black       Three              P3b          Four          92             7
+</code></pre>
+
+<h3>My interest</h3>
+
+<p>I am interested in learning more about what variables are associated with the number of lymph nodes removed during the surgery. My first thought was to simply stratify the data by a particular variable and then calculate the median number of nodes removed.</p>
+
+<p>For example, to see if the institution at which the surgery was performed mattered, I could write:</p>
+
+<pre><code>cbind(do.call(rbind, by(study_data$Nodes_removed, study_data$Institution, summary)))
+
+              Min. 1st Qu. Median  Mean 3rd Qu. Max.
+Chicago          1   25.50   65.5 64.48   98.75  129
+Houston          1   40.00   71.0 69.26  100.00  130
+New York         4   36.00   67.0 67.96  100.00  129
+San Francisco    3   36.75   61.0 65.76   99.00  127
+</code></pre>
+
+<p>This lets me compare the median nodes removed in each institutional city.</p>
+
+<h3>My question</h3>
+
+<p>I would like to fully examine the association between all of my variables and the outcome <code>Nodes_removed</code>.</p>
+
+<ol>
+<li>Should I just do these simple summary statistics for all of my variables?</li>
+<li>Do I need to perform some sort of hypothesis test for all of the associations to say whether or not the summary statistics differ? For example, should I calculate a median and a confidence interval for each comparison?</li>
+<li>Or should I be using t-tests to compare one group to another?</li>
+<li>In the case of a multi-level variable, should I use ANOVA?</li>
+<li>Is there any role for linear regression analysis here? </li>
+<li>If I wanted to build a single model that includes every possible predictor variable, what method should I use?</li>
+</ol>
+
+<p>For example, say that I am most interested in the association between the age at which the surgery was performed, <code>Surgery_age</code>, and <code>Nodes_removed</code>. However, I would like to adjust this association for potential confounders like gender, race, tumor grade, treatment arm, etc. What is the best way for me to do this?</p>
+
+<p>Thanks for any advice you can give!</p>
+"
+"NaN","NaN","18404","<p>I want to regress two series (one big series divided in half) with the mean of the big series. 
+I do that because I would like to ""investigate"" the relationship between those two subseries and the mean.</p>
+
+<p>Does this make any sense for you?</p>
+
+<p>When running the code below, I don't understand why I don't get p-value:</p>
+
+<pre><code>&gt; x  = rnorm(200)
+&gt; m  = mean(x) 
+&gt; anova(lm(rep(m, 100) ~ x[1:100]), lm(rep(m, 100) ~ x[101:200])) 
+Analysis of Variance Table
+
+Model 1: rep(m, 100) ~ x[1:100]
+Model 2: rep(m, 100) ~ x[101:200]
+  Res.Df RSS Df Sum of Sq F Pr(&gt;F)
+1     98   0                      
+2     98   0  0         0   
+</code></pre>
+"
+"0.260820265478651","0.252377232562534","58700","<p>I am having some trouble running an Anova on categorical variables in R and matching SPSS output. What I need to do is run an anova on the dataset below (its a made up data set).  But, I need to know if the mean of each category is significantly from the total mean of all races.  </p>
+
+<pre><code>Satisfaction    Race
+3   Asian
+4   Cacasion
+5   African American
+2   Other 
+5   African American
+3   African American
+4   African American
+5   African American
+2   Asian
+3   African American
+1   Cacasion
+1   Cacasion
+1   Cacasion
+5   Other 
+5   Other 
+5   Other 
+5   African American
+5   Asian
+4   Asian
+5   Other 
+5   Other 
+5   Other 
+1   Cacasion
+4   Cacasion
+</code></pre>
+
+<p>For example, the mean of all races is 3.5 :</p>
+
+<pre><code>&gt; mean(test$Satisfaction)
+[1] 3.5 
+</code></pre>
+
+<p>What I would like to know is if the mean score for each race is significantly different from the total mean of 3.5 and the p-value.</p>
+
+<p>I ran an Anova in R with the following model, but R will set one catagory as the refernce and test is against the others :</p>
+
+<pre><code>&gt; lm.test &lt;- lm(test$Satisfaction ~ test$Race)
+&gt; summary(lm.test)
+
+Call:
+lm(formula = test$Satisfaction ~ test$Race)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5714 -1.0000  0.4286  0.8482  2.0000 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         3.8571     0.5023   7.679 2.18e-07 ***
+test$RaceAsian     -0.6071     0.8330  -0.729   0.4745    
+    test$RaceCacasion  -1.8571     0.7394  -2.512   0.0207 *  
+test$RaceOther      0.7143     0.7103   1.006   0.3266    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1 
+
+Residual standard error: 1.329 on 20 degrees of freedom
+Multiple R-squared: 0.391,  Adjusted R-squared: 0.2997 
+F-statistic:  4.28 on 3 and 20 DF,  p-value: 0.01732 
+</code></pre>
+
+<p>The output is telling me that the mean for African American is 3.8571 and is significantly different from the mean of the caucasian group.  It is not different from the mean of group Asian and Other.  </p>
+
+<p>Is there a way for me to set the intercept to 3.5 in R and get significant compared to the mean and not the reference group.  Or should I be using another tests altogether?  My stats isn't that great so if its another tests a brief explain on which test and how to run it in R would be great.  </p>
+"
+"0.164957219768465","0.159617376893524","231111","<p>Let's construct a simple example. Below is the code.</p>
+
+<pre><code>A&lt;-gl(2,4) #factor of 2 levels 
+B&lt;-gl(4,2) #factor of 4 levels
+df&lt;-data.frame(y,A,B)
+</code></pre>
+
+<p>As you can see, B is nested within A. 
+The peculiar result I am interested in the output of the model matrix when I fit for a nested model . How does R decide what is included inside the intercept? Since we are using dummy coding, the coefficients of the model is interpreted as the difference between a particular level and the reference level/the intercept for an single factor model. I understand for model ~A, A1 becomes the intercept and that for model ~A+B, A1 and B1 (both) become the intercept. </p>
+
+<p>I do not get why when we use a nested model, A1:B2 appears as a column inside the model matrix. Why isn't the first parameter of the interaction subspace A1:B1 or A2:B1? I think I am missing the concept. I think the intercept is A1. Hence, Why do we not compare the levels of A1:B1 and A1(intercept)  or A2:B1 and A1(intercept)?</p>
+
+<pre><code>#nested model 
+&gt; mod&lt;-aov(y~A+A:B)
+&gt; model.matrix(mod)
+  (Intercept) A2 A1:B2 A2:B2 A1:B3 A2:B3 A1:B4 A2:B4
+1           1  0     0     0     0     0     0     0
+2           1  0     0     0     0     0     0     0
+3           1  0     1     0     0     0     0     0
+4           1  0     1     0     0     0     0     0
+5           1  1     0     0     0     1     0     0
+6           1  1     0     0     0     1     0     0
+7           1  1     0     0     0     0     0     1
+8           1  1     0     0     0     0     0     1
+</code></pre>
+"
+"0.274505406523006","0.287754318422332","231435","<p>So basically I was trying to compare two models in R using the anova function, here is what my data looks like :</p>
+
+<p><a href=""http://i.stack.imgur.com/gVvJD.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/gVvJD.png"" alt=""enter image description here""></a></p>
+
+<p>I wanted to compare tose two plots (know if there was a statistical difference), in order to do so I was advised to compare two regression, one model where regression was applied to all the points I had and one model where in the regression model I took into account the fact variable.</p>
+
+<p><code>log(y) ~ poly(x, 3) * fact</code>  vs <code>log(y) ~ poly(x, 3)</code> </p>
+
+<p>(First I tried to use <code>y ~ poly(x,3)</code>, but the <code>log(y)</code> seemed graphically like a way better fit, this might be one of the mistakes I made)</p>
+
+<p>Using the Anova test would then have told me whether the models where statistically different.</p>
+
+<p>But when doing so, I had weird results. When I compared the two models, I had very low p-value (<code>&lt;2.2e-16</code>) even though, they intuitively didn't seem that different.</p>
+
+<p>Just to make sure everything was working correctly, I wanted to know if the degree for the polynomial regression that used (3) was a good fit. So I did an ANOVA test on <code>log(y) ~ poly(x, n) * fact</code>  vs <code>log(y) ~ poly(x, n+1) * fact</code>. Until the values were not significant anymore, but it went on (I had p-values<code>&lt;2.2e-16</code>) till n=10. When I made the same algorithm on the regessions without the <code>* fact</code>, it only got through n=3, which graphically seemed way more logical. I do know that I shouldn't only trust the graphical aspect of things, but I'm afraid I may be overfitting my models, chosing the wrong model, using the <code>anova()</code> function the wrong way.</p>
+
+<p>Here is the graphical aspect (regressions with fact taken into account) of things that made me wonder whether my results were accurate or not : (polynomial degrees are 6,9,10 in that order)</p>
+
+<p><a href=""http://i.stack.imgur.com/4pTOy.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/4pTOy.png"" alt=""Degree 6""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/FcOqK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/FcOqK.png"" alt=""Degree 9""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/eyf4H.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/eyf4H.png"" alt=""Degree 10""></a></p>
+
+<p>Maybe the <code>anova()</code> function in R isn't as accurate for models with grouping variables which is why when I compare the models with <code>* fact</code> to the ones without it I always get a p-value which is <code>&lt;2.2e-16</code>.</p>
+
+<p>I also believe I may have chosen a wrong model by doing a polynomial regression on my functions which is why all my results would be useless.</p>
+
+<p>I don't know if adding the actual data would be useful to anyone but if so I'll edit it in.</p>
+"
+"0.184427778390829","0.178457652562062","20002","<p>I was always under the impression that regression is just a more general form of ANOVA and that the results would be identical. Recently, however, I have run both a regression and an ANOVA on the same data and the results differ significantly. That is, in the regression model both main effects and the interaction are significant, while in the ANOVA one main effect is not significant. I expect this has something to do with the interaction, but it's not clear to me what is different about these two ways of modeling the same question. If it's important, one predictor is categorical and the other is continuous, as indicated in the simulation below. </p>
+
+<p>Here is an example of what my data looks like and what analyses I'm running, but without the same p-values or effects being significant in the results (my actual results are outlined above):</p>
+
+<pre><code>group&lt;-c(1,1,1,0,0,0)
+moderator&lt;-c(1,2,3,4,5,6)
+score&lt;-c(6,3,8,5,7,4)
+
+summary(lm(score~group*moderator))
+summary(aov(score~group*moderator))
+</code></pre>
+"
+"0.184427778390829","0.178457652562062","183330","<p>I would like to test for significant differences between several replicated measurements (experimental conditions measured in replicates) considering a numerical covariate. </p>
+
+<p>I suppose, I don't have a dependant variable. In order to encode the experimental conditions I would use dummy variables (set to 0 or 1), but how do I consider the continuous covariate in the model?</p>
+
+<p>The covariate is itself a replicated value measured for each condition.
+A particular replicate of the covariate does not correspond to a particular replicate of the primary measurement. </p>
+
+<p>The objective is finally to identify significant differences between the conditions that are not due to differences in the levels of the covariate.</p>
+
+<p>I would like to have a solution using a regression model and also a p-value/fdr for the difference being true. An example in R would be perfect, or a link to one perhaps.</p>
+
+<p>Thanks a lot ;-)</p>
+"
+"0.233284737407922","0.22573305919324","131152","<p>Let say I've ran this linear regression:</p>
+
+<pre><code>lm_mtcars &lt;- lm(mpg ~ wt + vs, mtcars)
+</code></pre>
+
+<p>I can use <code>anova()</code> to see the amount of variance in the dependent variable accounted for by the two predictors:</p>
+
+<pre><code>anova(lm_mtcars)
+
+Analysis of Variance Table
+
+Response: mpg
+          Df Sum Sq Mean Sq  F value    Pr(&gt;F)    
+wt         1 847.73  847.73 109.7042 2.284e-11 ***
+vs         1  54.23   54.23   7.0177   0.01293 *  
+Residuals 29 224.09    7.73                       
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>Lets say I now add a random intercept for <code>cyl</code>:</p>
+
+<pre><code>library(lme4)
+lmer_mtcars &lt;- lmer(mpg ~ wt + vs + (1 | cyl), mtcars)
+summary(lmer_mtcars)
+
+Linear mixed model fit by REML ['lmerMod']
+Formula: mpg ~ wt + vs + (1 | cyl)
+   Data: mtcars
+
+REML criterion at convergence: 148.8
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-1.67088 -0.68589 -0.08363  0.48294  2.16959 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ cyl      (Intercept) 3.624    1.904   
+ Residual             6.784    2.605   
+Number of obs: 32, groups:  cyl, 3
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  31.4788     2.6007  12.104
+wt           -3.8054     0.6989  -5.445
+vs            1.9500     1.4315   1.362
+
+Correlation of Fixed Effects:
+   (Intr) wt    
+wt -0.846       
+vs -0.272  0.006
+</code></pre>
+
+<p>The variance accounted for by each fixed effect now drops because the random intercept for <code>cyl</code> is now accounting for some of the variance in <code>mpg</code>:</p>
+
+<pre><code>anova(lmer_mtcars)
+
+Analysis of Variance Table
+   Df  Sum Sq Mean Sq F value
+wt  1 201.707 201.707 29.7345
+vs  1  12.587  12.587  1.8555
+</code></pre>
+
+<p>But in <code>lmer_mtcars</code>, how can I tell what proportion of the variance is being accounted for by <code>wt</code>, <code>vs</code> and the random intecept for <code>cyl</code>?</p>
+"
+"0.218217890235992","0.211153942092367","131401","<p>I am running a pooled OLS regression using the plm package in R. Though, my question is more about basic statistics, so I try posting it here first ;)</p>
+
+<p>Since my regression results yield heteroskedastic residuals I would like to try using heteroskedasticity robust standard errors. As a result from <code>coeftest(mod, vcov.=vcovHC(mod, type=""HC0""))</code> I get a table containing estimates, standard errors, t-values and p-values for each independent variable, which basically are my ""robust"" regression results.</p>
+
+<p>For discussing the importance of different variables I would like to plot the share of variance explained by each independent variable, so I need the respective sum of squares. However, using function <code>aov()</code>, I don't know how to tell R to use robust standard errors.</p>
+
+<p>Now my question is: How do I get the ANOVA table/sum of squares that refers to robust standard errors? Is it possible to calculate it based on the ANOVA table from regression with normal standard errors?</p>
+
+<p>Edit:</p>
+
+<p>In other words and disregarding my R-issues:</p>
+
+<p>If R$^2$ is not affected by using robust standard errors, will also the respective contributions to explained variance by the different explanatory variables be unchanged?</p>
+
+<p>Edit:</p>
+
+<p>In R, does <code>aov(mod)</code> actually give a correct ANOVA table for a panelmodel (plm)?</p>
+"
+"0.116642368703961","0.11286652959662","104548","<p>I followed <a href=""http://rtutorialseries.blogspot.hk/2010/01/r-tutorial-series-basic-hierarchical.html"" rel=""nofollow"">this tutorial</a> to learn Hierarchical Linear Regression (HLR) in R, but couldn't understand how to interpret its sample output of <code>&gt;anova(model1,model2,model3)</code></p>
+
+<p><img src=""http://i.stack.imgur.com/MxXIM.png"" alt=""enter image description here""></p>
+
+<p>The tutorial simply says </p>
+
+<blockquote>
+  <p>each predictor added along the way is making an important contribution to the overall model.</p>
+</blockquote>
+
+<p>But I would like some more details to <strong>quantify</strong> the contribution of each explanatory variable, like:</p>
+
+<ol>
+<li><p>""UNEM"" explains <code>X</code> (or <code>X%</code>) variance</p></li>
+<li><p>Adding the ""HGRAD"" variable explains <code>Y</code> (or <code>Y%</code>) more variance</p></li>
+<li><p>Adding the ""INC"" variable further explains <code>Z</code> (or <code>Z%</code>) more variance</p></li>
+</ol>
+
+<p>So, can I get the value of <code>X</code>, <code>Y</code>, and <code>Z</code> using the above ANOVA table? How? Specifically, what do <code>Res.Df</code>, <code>RSS</code>, <code>Sum of Sq</code> mean in this ANOVA table?</p>
+"
+"0.202030508910442","0.195490563735322","104764","<p>Say I have some data, where a dependent variable, <code>dv</code>, is a function of some independent variable, <code>iv</code>, and a categorical predictor, <code>cat</code>. Here are some example data below generated in R:</p>
+
+<pre><code>a&lt;-c(1:100)
+err&lt;-rnorm(100,sd=30)
+b&lt;-a + err
+c&lt;-a + err + 20
+cat1&lt;-rep(0,100)
+cat2&lt;-rep(1,100)
+iv&lt;-c(a,a)
+dv&lt;-c(b,c)
+cat&lt;-c(cat1,cat2)
+data&lt;- data.frame(dv,iv,cat)
+</code></pre>
+
+<p>I then model <code>dv</code> as a function of <code>iv</code> and <code>cat</code> with this code:</p>
+
+<pre><code>summary(lm(dv~iv + cat, data=data))
+</code></pre>
+
+<p>and get the following output</p>
+
+<pre><code>                Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept) -5.49606    5.09626  -1.078    0.282    
+iv           1.18250    0.07848  15.067  &lt; 2e-16 ***
+cat         20.00000    4.53086   4.414 1.67e-05 ***
+</code></pre>
+
+<p>Now, I want to plot the effect of cat using a standard bar graph- means and errors. So, based on the model, I calculate what the value of <code>dv</code> should be when <code>cat</code> is 0 and when <code>cat</code> is 1, using a common value of <code>iv</code> of 50. For my particular data set, I would get <code>dv</code> values of 53.62894 and 73.62894, for <code>cat</code> levels 0 and 1, respectively. </p>
+
+<p>My question is: which term from the model should I use for the error bars? Should I just use the std error estimate of the <code>cat</code> predictor? Or something more complex that integrates the error values of the intercept and <code>iv</code> parameter as well?</p>
+"
+"0.116642368703961","0.11286652959662","183467","<p>I would like to be able to compare 2 models as is often done as follows:</p>
+
+<pre><code>modelA &lt;- lm(Ys ~ X1 + X2 + X3)
+modelB &lt;- lm(Ys ~ X1 + X2)
+anova(modelA, modelB)
+</code></pre>
+
+<p>but instead of adding or removing a co-variate- my first model is a fixed effects model with a single time point per subject, and my second model is a mixed effects model with several time points per subject and grouped by subjectID:</p>
+
+<pre><code>modelA &lt;- lm(Ys ~ X1 + X2 + X3) #e.g. 5 observations/subjects
+
+modelB &lt;- lme(Ys ~ X1 + X2 + X3, random= ~ 1 | subjectID) 
+#e.g. same 5 subjects with 3 time points each= 15 observations
+</code></pre>
+
+<p>since chi-square with anova fails in this scenario, how should I compare them. Is there a specific package in <code>R</code> I should use? An F-test requires knowing what the d.f. are for a mixed model, which I am unclear on how to calculate.</p>
+
+<p>Thanks for your help!</p>
+"
+"0.0824786098842323","0.0798086884467622","83712","<p>I have five groups of data and I want to test if their variance is significantly different or not.  The data are normally distributed and I do not have any repeated measurements in any groups.  What sort of analysis should I use?</p>
+
+<p>Tukey's test compares the means, but how can I compare their variances?</p>
+
+<p>For example I have 3 groups A, B and C. In groups A, B and C I have  30, 50 and 20 observations (which are stored as double-precision numeric variables in R).  </p>
+"
+"0.0673435029701474","0.195490563735322","35373","<p>I'd like to do some analysis of shooting efficiency in basketball when a team is leading (AHEAD) or trailing (BEHIND) by less than 8 points and whether they are HOME or AWAY. Here are a few examples of the data:</p>
+
+<pre><code>Ray Allen   HOME    BEHIND  59.4%   134
+Ray Allen   HOME    AHEAD   57.13%  132
+Ray Allen   AWAY    BEHIND  49.1%   166
+Ray Allen   AWAY    AHEAD   48.03%  126
+Jason Terry AWAY    BEHIND  56.6%   242
+Jason Terry HOME    BEHIND  52.0%   193
+Jason Terry AWAY    AHEAD   50.05%  198
+Jason Terry HOME    AHEAD   48.73%  207
+Jamal Crawford  AWAY    AHEAD   51.65%  82
+Jamal Crawford  HOME    AHEAD   42.50%  178
+Jamal Crawford  AWAY    BEHIND  35.5%   129
+Jamal Crawford  HOME    BEHIND  33.4%   118
+Kevin Durant    HOME    BEHIND  48.6%   222
+Kevin Durant    HOME    AHEAD   44.05%  248
+Kevin Durant    AWAY    BEHIND  41.4%   325
+Kevin Durant    AWAY    AHEAD   40.07%  213
+</code></pre>
+
+<p>The 4th column is the FG% (i.e. proportion of made shots) and the 5th column is the number of shots (i.e. trials).</p>
+
+<p>You can see even with these 4 players (and there are roughly 200 in the data set), that there is variation of the mean FG% between players, and for each player, there is not a consistent pattern in whether they are ""better"" at HOME or AWAY or AHEAD or BEHIND. So there's a lot of variance between groups and within groups as far as I can tell.</p>
+
+<p>I thought about using lmer, but I wasn't sure how to do that for this problem, because if I just use the FG% as the outcome, I lose the information about how many shots were taken. Eventually, I'd like to put this into BUGS, but I thought there might be a more straightforward way for now, because I'm not quite ready for that yet.</p>
+
+<p>I should just add that what I'm really after is a way to determine whether a player is ""really"" better under one of these conditions, or are the apparent differences just due to noise/variation from small sample sizes.</p>
+
+<p>Thanks for any advice.</p>
+"
+"0.164957219768465","0.159617376893524","208382","<p>cross posted from <a href=""http://stackoverflow.com/questions/36742778/which-r-statistics-tests-to-use-in-order-to-compare-the-effects-of-different-var"">StackOverflow</a></p>
+
+<p>I'm hoping someone can help point me in the right direction.</p>
+
+<p>I've got a data set which includes 'testscore', 'User Type (a or b)', 'Gender' and 'Age Group'. The data set has an N over 2,000 so considering the Central Limit Theorem, I'm not worried about normality (should I be?).
+I've pasted a sample csv in Pastebin here <a href=""http://pastebin.com/9AXT22Gu"" rel=""nofollow"">http://pastebin.com/9AXT22Gu</a></p>
+
+<p>Box plots (by User Type, Age Group and Gender) show me the difference between User Types, Age, Gender v testscore results. These differences might not exist in the sample csv though.</p>
+
+<pre><code>bp &lt;- ggplot(mydata, aes(x=Usertype, y=testscore, group=Usertype)) + 
+  geom_boxplot(aes(fill=Usertype))
+bp
+bp + facet_grid(Gender ~ AgeGroup)
+</code></pre>
+
+<p>My question is therefore: What are the most appropriate methods (available in R) to evaluate the effect and significance of 'Usertype' (and other variables) on the TestScore? Specifically, I'd like to:</p>
+
+<ol>
+<li>Compare Usertypes over all and based on Gender and AgeGroup. i.e.
+Males in the agegroup 18-24 with a Usertype A score (significantly)
+higher than Males in the agegroup 18-24 Usertype B. </li>
+<li>Establish whether Usertype effects testscore and control for gender
+and age. i.e. are the results mainly due to Age/Gender?</li>
+</ol>
+
+<p>Currently, I'm homing in on Anova with a post-hoc TukeyHSD, but I'm no longer sure that's the right approach for what I'm trying to accomplish.</p>
+
+<p>I'm also interested in the best way to visually represent output, but that's another story</p>
+
+<p>Help and pointers in the right direction (to examples, books etc) would be greatly appreciated.</p>
+
+<p>Many thanks,</p>
+
+<p>Dave</p>
+"
+"0.233284737407922","0.22573305919324","63913","<p>I conducted an experiment in a factorial design: I measured light (PAR) in three herbivore treatments as well as six nutrient treatments. The experiment was blocked.</p>
+
+<p>I've run the linear model as follows (you can download the data from my website to replicate)</p>
+
+<pre><code>dat &lt;- read.csv('http://www.natelemoine.com/testDat.csv')
+mod1 &lt;- lm(light ~ Nutrient*Herbivore + BlockID, dat)
+</code></pre>
+
+<p>The residual plots look pretty good</p>
+
+<pre><code>par(mfrow=c(2,2))
+plot(mod1)
+</code></pre>
+
+<p>When I look at the ANOVA table, I see main effects of Nutrient and Herbivore. </p>
+
+<pre><code>anova(mod1)
+
+Analysis of Variance Table 
+
+Response: light 
+                    Df  Sum Sq Mean Sq F value    Pr(&gt;F)     
+Nutrient             5  4.5603 0.91206  7.1198 5.152e-06 *** 
+Herbivore            2  2.1358 1.06791  8.3364 0.0003661 *** 
+BlockID              9  5.6186 0.62429  4.8734 9.663e-06 *** 
+Nutrient:Herbivore  10  1.7372 0.17372  1.3561 0.2058882     
+Residuals          153 19.5996 0.12810                       
+--- 
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+</code></pre>
+
+<p>However, the regression table shows non-significant main effects and significant interactions.</p>
+
+<pre><code>summary(mod1)
+
+Call: 
+lm(formula = light ~ Nutrient * Herbivore + BlockID, data = dat) 
+
+Residuals: 
+     Min       1Q   Median       3Q      Max  
+-0.96084 -0.19573  0.01328  0.24176  0.74200  
+
+Coefficients: 
+                           Estimate Std. Error t value Pr(&gt;|t|)     
+(Intercept)                1.351669   0.138619   9.751  &lt; 2e-16 *** 
+Nutrientb                  0.170548   0.160064   1.066  0.28833     
+Nutrientc                 -0.002172   0.160064  -0.014  0.98919     
+Nutrientd                 -0.163537   0.160064  -1.022  0.30854     
+Nutriente                 -0.392894   0.160064  -2.455  0.01522 *   
+Nutrientf                  0.137610   0.160064   0.860  0.39129     
+HerbivorePaired           -0.074901   0.160064  -0.468  0.64049     
+HerbivoreZebra            -0.036931   0.160064  -0.231  0.81784     
+... 
+Nutrientb:HerbivorePaired  0.040539   0.226364   0.179  0.85811     
+Nutrientc:HerbivorePaired  0.323127   0.226364   1.427  0.15548     
+Nutrientd:HerbivorePaired  0.642734   0.226364   2.839  0.00513 **  
+Nutriente:HerbivorePaired  0.454013   0.226364   2.006  0.04665 *   
+Nutrientf:HerbivorePaired  0.384195   0.226364   1.697  0.09168 .   
+Nutrientb:HerbivoreZebra   0.064540   0.226364   0.285  0.77594     
+Nutrientc:HerbivoreZebra   0.279311   0.226364   1.234  0.21913     
+Nutrientd:HerbivoreZebra   0.536160   0.226364   2.369  0.01911 *   
+Nutriente:HerbivoreZebra   0.394504   0.226364   1.743  0.08338 .   
+Nutrientf:HerbivoreZebra   0.324598   0.226364   1.434  0.15362     
+--- 
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
+
+Residual standard error: 0.3579 on 153 degrees of freedom 
+Multiple R-squared:  0.4176,    Adjusted R-squared:  0.3186  
+F-statistic: 4.219 on 26 and 153 DF,  p-value: 8.643e-09 
+</code></pre>
+
+<p>I know that this question has been previously <a href=""http://stats.stackexchange.com/questions/20002/regression-vs-anova-discrepancy"">asked and answered</a> in <a href=""http://stats.stackexchange.com/questions/28938/why-do-linear-regression-and-anova-give-different-p-value-in-case-of-consideri"">multiple posts</a>. In the earlier posts, the issue revolved around the different types of SS used in anova() and lm(). However, I don't think that is the issue here. First of all, the design is balanced:</p>
+
+<pre><code>with(dat, tapply(light, list(Nutrient, Herbivore), length))
+</code></pre>
+
+<p>Second, using the Anova() option doesn't change the anova table. This isn't a surprise because the design is balanced.</p>
+
+<pre><code>Anova(mod1, type=2)
+Anova(mod1, type=3)
+</code></pre>
+
+<p>Changing the contrast doesn't change the results (qualitatively). I still get pretty much backwards intepretations from anova() vs. summary().</p>
+
+<pre><code>options(contrasts=c(""contr.sum"",""contr.poly""))
+mod2 &lt;- lm(light ~ Nutrient*Herbivore + BlockID, dat)
+anova(mod2)
+summary(mod2)
+</code></pre>
+
+<p>I'm confused because everything I've read on regression not agreeing with ANOVA implicates differences in the way R uses SS for summary() and anova() functions. However, in the balanced design, the SS types are equivalent, and the results here don't change. How can I have completely opposite interpretations depending on which output I use?</p>
+"
+"NaN","NaN","64249","<p>Sorry for asking such stupid question, but I cannot understand the criteria behind contrast matrix, should be created for designing linear models in R. I have read <a href=""http://www.bioconductor.org/packages/release/bioc/vignettes/limma/inst/doc/usersguide.pdf"" rel=""nofollow"">limma user guide</a> (P: 101) and there was an example for that. The example is about estrogen(present/absent) and its late (48h) and early (10h) effect on a cancer. I cannot understand in what sense they could take away the effect of time by assigning 1 for both e48 and E48.</p>
+
+<p>Here are the R commands:</p>
+
+<pre><code>treatments &lt;- factor(c(1,1,2,2,3,3,4,4),labels=c(""e10"",""E10"",""e48"",""E48""))
+contrasts(treatments) &lt;- cbind(Time=c(0,0,1,1),E10=c(0,1,0,0),E48=c(0,0,0,1))
+contrasts
+
+&gt; treatments
+[1] e10 e10 E10 E10 e48 e48 E48 E48
+attr(,""contrasts"")
+    Time E10 E48
+e10    0   0   0
+E10    0   1   0
+e48    1   0   0
+E48    1   0   1
+Levels: e10 E10 e48 E48
+</code></pre>
+"
+"0.202030508910442","0.195490563735322","213804","<p>I am running some linear regressions in R. I am dealing with a linear dependent and linear as well as categorical independent variables using <a href=""https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html"" rel=""nofollow"">lm</a>. So far, I have looked at the output that <code>summary(model)</code> gives me. </p>
+
+<p>Other studies instead run <a href=""http://www.inside-r.org/packages/cran/car/docs/Anova"" rel=""nofollow"">Anova()</a> from the <a href=""https://cran.r-project.org/web/packages/car/index.html"" rel=""nofollow"">car</a> package on their linear model, which returns a similar table. The docs for <code>Anova()</code> state that it</p>
+
+<blockquote>
+  <p>Calculates type-II or type-III analysis-of-variance tables for model objects. </p>
+</blockquote>
+
+<p>I am under the impression that this <code>Anova()</code> returns an F instead of the t-statistic but is ~ equivalent in what its tell me. (sample output below). So I was wondering</p>
+
+<ul>
+<li><p>Are standard R <code>summary(lm)</code> and car <code>Anova(lm)</code> indeed doing pretty much the same calculations here? If not, what is the difference?</p></li>
+<li><p>They both report the same p-value, however the F-statistic at the bottom of the standard output is different from the <code>Anova()</code> one. Why is that?</p></li>
+<li><p>What are applications where one would choose one over the other?</p></li>
+</ul>
+
+<p>Any help is much appreciated!</p>
+
+<p>Sample output:</p>
+
+<p>Standard R</p>
+
+<pre><code>summary(linreg)
+...
+         Estimate    t value    Pr(&gt;|t|)
+Age      -18.016     -3.917     0.000107
+Gender   -45.4912    -4.916     1.35e-06
+---
+Residual standard error: 85.81 on 359 degrees of freedom
+F-statistic: 16.71 on 2 and 359 DF, p-value: 1.147e-07
+</code></pre>
+
+<p>Anova() output</p>
+
+<pre><code>Anova(linreg)
+
+Anova Table (Type II tests)
+
+           Sum Sq    F value   Pr (&gt;F)
+Age        112997    15.345    0.0001072
+Gender     1777936   24.164    1.348e-06
+</code></pre>
+"
+"0.0824786098842323","0.0798086884467622","85798","<p>If I do a multiple regression such as:</p>
+
+<pre><code>df&lt;-data.frame(y1=rnorm(100,2,3),
+y2=rnorm(100,3,2),
+x1=rbinom(100,1,0.5),
+x2=rnorm(100,100,10))
+
+fit&lt;-lm(cbind(y1,y2)~x1+x2,data=df)
+&gt; anova(fit)
+Analysis of Variance Table
+
+            Df  Pillai approx F num Df den Df Pr(&gt;F)    
+(Intercept)  1 0.75423  147.306      2     96 &lt;2e-16 ***
+x1           1 0.00720    0.348      2     96 0.7069    
+x2           1 0.00928    0.450      2     96 0.6391    
+Residuals   97                                          
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>I am wondering how to explain this ANOVA object where two models have different responses and the same set of predictors.</p>
+"
+"0.202030508910442","0.195490563735322","48455","<p>I have 1 categorical factor (3 treatments) and 1 continuous factor (weight) and then I have 5 continuous response variables.</p>
+
+<p>From what I have read, I should not use a two way ANOVA as one of the factors is continuous.  Is this correct? Should I be using a Multiple Regression instead?</p>
+
+<p>I was advised that I can use ANOVA, but I'm not sure if this is correct based on what I have read.  I could convert the continuous factor to categorical, but I have also read on this site that this is not the preferred option.</p>
+
+<p>My aim with the data is to see if there is a significant difference between the 3 treatments in regards to the response variables, which would be a standard one-way ANOVA, but I also want to see if weight effects the response variables.  </p>
+
+<p>My analysis will be with R.</p>
+"
+"0.247435829652697","0.239426065340287","172782","<p>Newbie question using R's mtcars dataset with anova() function. My question is how to use anova() to select the best (nested) model. Here's some example data:</p>
+
+<pre><code>&gt; anova(lm(mpg~disp,mtcars),lm(mpg~disp+wt,mtcars),lm(mpg~disp+wt+am,mtcars))
+Analysis of Variance Table
+
+Model 1: mpg ~ disp
+Model 2: mpg ~ disp + wt
+Model 3: mpg ~ disp + wt + am
+  Res.Df    RSS Df Sum of Sq      F   Pr(&gt;F)   
+1     30 317.16                                
+2     29 246.68  1    70.476 8.0036 0.008535 **
+3     28 246.56  1     0.126 0.0143 0.905548   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+&gt; anova(lm(mpg~disp,mtcars),lm(mpg~disp+wt,mtcars),lm(mpg~disp+wt+hp,mtcars))
+Analysis of Variance Table
+
+Model 1: mpg ~ disp
+Model 2: mpg ~ disp + wt
+Model 3: mpg ~ disp + wt + hp
+  Res.Df    RSS Df Sum of Sq       F   Pr(&gt;F)   
+1     30 317.16                                 
+2     29 246.68  1    70.476 10.1201 0.003571 **
+3     28 194.99  1    51.692  7.4228 0.010971 * 
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>My understanding is anova() compares the reduction in the residual sum of squares to report a corresponding p-value for each nested model, where lower p-values means that nested model is more significantly different from the first model. </p>
+
+<p>Question 1: Why is it that changing the 3rd regressor variable effects results from the 2nd nest model? That is, the p-value for <code>disp+wt</code> model changes from 0.008535 to 0.003571 going from the first to the second example. (does anova's model 2 analysis use data from model 3???)</p>
+
+<p>Question 2: Since the 3rd model's <code>Sum of Sq</code> value is much lower in the first example (e.g. 0.126 versus 51.692), I'd expect the p-value to be lower as well, but it in fact increases (e.g. 0.905548 versus 0.010971). Why?</p>
+
+<p>Question 3: Ultimately I'm trying to understand, given a dataset with a lot of regressors, how to use anova() to find the best model. Any general rules of thumb are appreciated. </p>
+"
+"0.187043905916565","0.180989093222028","173047","<p>Suppose I have a linear regression model Y ~ b1*x1 + b2*x2 with the sample data:</p>
+
+<pre><code>        x1      x2        y
+0  -0.7251 -0.6033  10.2508
+1  -1.3148  3.7067  10.3054
+2  -1.2818 -5.8136   7.2010
+3   0.6154  3.6336  11.2807
+4   1.4887 -2.8337  10.6299
+5  -2.0224 -0.3931   7.4502
+6   0.5419 -1.7807  10.7339
+7  -1.0745 -5.0296   5.8734
+8   3.2116 -0.4681  11.7184
+9   1.6767 -4.6040   9.0145
+10 -1.3355 -2.6874   6.5014
+11  0.8296  2.6793  11.8295
+12 -2.8647  4.2916   7.8414
+13  1.8445 -3.3924   9.6520
+14 -0.1036  2.4273  11.9766
+15  1.0886 -3.5636  10.6023
+16 -3.3026 -6.9837   4.9962
+17  1.4050 -3.8453  10.4630
+18 -0.3111 -1.4278   9.2283
+19 -3.5454  2.4960   7.3720
+</code></pre>
+
+<p>And using the following R code to get the Analysis of Variance Table:</p>
+
+<pre><code>&gt; df &lt;- read.csv('f:/data.csv', header=T, sep="","")
+&gt; model_All &lt;- lm(y ~ x1 + x2, data=df)
+&gt; anova(model_All)
+Analysis of Variance Table
+
+Response: y
+          Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+x1         1 44.440  44.440  58.277 6.865e-07 ***
+x2         1 26.640  26.640  34.934 1.711e-05 ***
+Residuals 17 12.964   0.763                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>And I can calculate the F value of hypothesis test H0ï¼š b2=0 via:</p>
+
+<pre><code>&gt; model_Drop2 &lt;- lm(y ~ x1, data=df)
+&gt; SSR_All = sum(resid(model_All)^2)
+&gt; SSR_Dp2 = sum(resid(model_Drop2)^2)
+&gt; F_x2 = ((SSR_Dp2 - SSR_All) / 1) / (SSR_All / (20 - 3))
+&gt; F_x2
+[1] 34.93434
+</code></pre>
+
+<p>We can see that <code>F_x2</code> <strong>is equal to</strong> F value of <code>x2</code> in <code>Analysis of Variance Table</code>.
+However, the value <code>F_x1</code> calculated as follow <strong>is not equal to</strong> F value of <code>x1</code>, I can't understand why:</p>
+
+<pre><code>&gt; model_Drop1 &lt;- lm(y ~ x2, data=df)
+&gt; SSR_Dp1 = sum(resid(model_Drop1)^2)
+&gt; F_x1 = ((SSR_Dp1 - SSR_All) / 1) / (SSR_All / (20 - 3))
+&gt; F_x1
+[1] 70.30392
+</code></pre>
+
+<p>So, what is the mathematics definition of the F value in table?</p>
+"
+"0.142857142857143","0.138232703275227","136927","<p>I want to compare the following two linear models:</p>
+
+<pre><code>model 1: y = mean + A + B  
+model 2: y = mean + A + A*B
+</code></pre>
+
+<p>Is model 2 equivalent to y = mean + A + B + A*B? Can I use <code>anova(model1, model2)</code> in R to compare the two nested models? </p>
+
+<p>If not, how can I compare them in R?</p>
+"
+"0.350412778942576","0.339069539867919","192173","<p>I'm working on the similarity of categorical regression with exclusively  dummy variables and ANOVA. There are lots of references, like Gujarati &amp; Porter (2009), which have mentioned that those two are equivalent. Everything is okay when distribution of residuals is normal, variances are homogeneous and regression model is significant. My questions are there. We have a category with 3 levels (red,blue,green), a numeric variable ""allscore""( -5 &lt;= allscore &lt;= +5). I played with R and made data and ran models (regression and variance).</p>
+
+<pre><code># creating data 
+bluescore  &lt;- rnorm(n=100, mean=-1, sd=1)
+redscore   &lt;- rnorm(n=100, mean=2,  sd=1)
+greenscore &lt;- rnorm(n=100, mean=.1, sd=2)
+for (i in 1:100) {
+  if (bluescore[i] &lt; -5)  bluescore[i]  &lt;- -5
+  if (bluescore[i] &gt; 5)   bluescore[i]  &lt;-  5
+  if (redscore[i] &lt; -5)   redscore[i]   &lt;- -5
+  if (redscore[i] &gt; 5)    redscore[i]   &lt;-  5
+  if (greenscore[i] &lt; -5) greenscore[i] &lt;- -5
+  if (greenscore[i] &gt; 5)  greenscore[i] &lt;-  5
+}
+color &lt;- as.factor(c(rep(1,100), rep(2,100), rep(3,100)))
+allscore &lt;- c(bluescore, redscore, greenscore)
+table &lt;- data.frame(color, allscore)
+randtable &lt;- table[sample(nrow(table)),]
+finaltable &lt;- data.frame(randtable$color, randtable$allscore)
+colnames(finaltable) &lt;- c(""color"", ""score"")
+# plot
+plot(randtable$allscore ~ randtable$color, data=finaltable)
+# saving data for SPSS
+library(rio)
+export(finaltable, ""dummy.sav"")
+write.csv(finaltable, ""finaltable.csv"")
+# making dummy variables
+dummyred   &lt;- NULL
+dummygreen &lt;- NULL
+dummyblue  &lt;- NULL
+for(i in 1:NROW(finaltable)) {
+  if (randtable$color[i]==2) dummyred[i]=1 else dummyred[i]=0
+      if (randtable$color[i]==3) dummygreen[i]=1 else dummygreen[i]=0
+  if (randtable$color[i]==1) dummyblue[i]=1 else dummyblue[i]=0
+}
+t1 = cbind(randtable, dummyred, dummygreen)
+# run regression model 
+mosel.1 &lt;- lm(formula = allscore~dummyred + dummygreen + dummyblue -1, data=t1)
+ttt &lt;- summary(mosel.1)
+ttt
+
+# **test of homogenity**
+# Bartlettâ€™s test
+bartlett.test(randtable$allscore ~ randtable$color, data=finaltable)
+# Leveneâ€™s test
+library(car)
+
+leveneTest(randtable$allscore ~ randtable$color, data=finaltable)
+# Fligner-Killeen test
+fligner.test(randtable$allscore ~ randtable$color, data=finaltable)
+# ANOVA mode
+hh &lt;- aov(randtable$allscore ~ randtable$color, data=finaltable)
+hh
+summary(hh)
+# post hoc test
+TukeyHSD(hh)
+</code></pre>
+
+<p>Output would be something like this:  </p>
+
+<p><a href=""http://i.stack.imgur.com/v0o8x.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/v0o8x.png"" alt=""enter image description here""></a></p>
+
+<pre><code>Call:
+lm(formula = allscore ~ dummyred + dummygreen + dummyblue - 1, 
+    data = t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-5.0152 -0.7880  0.0043  0.8088  3.3731 
+
+Coefficients:
+           Estimate Std. Error t value Pr(&gt;|t|)    
+dummyred    2.02102    0.13273  15.227  &lt; 2e-16 ***
+dummygreen  0.01525    0.13273   0.115    0.909    
+dummyblue  -1.04294    0.13273  -7.858 7.24e-14 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 1.327 on 297 degrees of freedom
+Multiple R-squared:  0.4971,    Adjusted R-squared:  0.4921 
+F-statistic: 97.87 on 3 and 297 DF,  p-value: &lt; 2.2e-16
+
+&gt;  
+&gt; # test of homogenity
+&gt; # Bartlettâ€™s test
+&gt; bartlett.test(randtable$allscore ~ randtable$color, data=finaltable)
+
+    Bartlett test of homogeneity of variances
+
+data:  randtable$allscore by randtable$color
+Bartlett's K-squared = 94.825, df = 2, p-value &lt; 2.2e-16
+
+&gt; # Leveneâ€™s test
+&gt; library(car)
+&gt; 
+&gt; leveneTest(randtable$allscore ~ randtable$color, data=finaltable)
+Levene's Test for Homogeneity of Variance (center = median)
+       Df F value    Pr(&gt;F)    
+group   2  43.995 &lt; 2.2e-16 ***
+      297                      
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+&gt; # Fligner-Killeen test
+&gt; fligner.test(randtable$allscore ~ randtable$color, data=finaltable)
+
+    Fligner-Killeen test of homogeneity of variances
+
+data:  randtable$allscore by randtable$color
+Fligner-Killeen:med chi-squared = 66.204, df = 2, p-value = 4.207e-15
+
+&gt; # ANOVA mode
+&gt; hh &lt;- aov(randtable$allscore ~ randtable$color, data=finaltable)
+&gt; hh
+Call:
+   aov(formula = randtable$allscore ~ randtable$color, data = finaltable)
+
+Terms:
+                randtable$color Residuals
+Sum of Squares         484.3572  523.2176
+Deg. of Freedom               2       297
+
+Residual standard error: 1.327281
+Estimated effects may be unbalanced
+&gt; summary(hh)
+                 Df Sum Sq Mean Sq F value Pr(&gt;F)    
+randtable$color   2  484.4  242.18   137.5 &lt;2e-16 ***
+Residuals       297  523.2    1.76                   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+&gt; # post hoc test
+&gt; TukeyHSD(hh)
+  Tukey multiple comparisons of means
+    95% family-wise confidence level
+
+Fit: aov(formula = randtable$allscore ~ randtable$color, data = finaltable)
+
+$`randtable$color`
+         diff        lwr       upr p adj
+2-1  3.063958  2.6218117  3.506104 0e+00
+3-1  1.058184  0.6160382  1.500330 1e-07
+3-2 -2.005774 -2.4479195 -1.563628 0e+00
+</code></pre>
+
+<ul>
+<li>Is variance homogeneity check essential for regression model as assumption (because it compares means and equivalent to ANOVA)?</li>
+<li>What is assumption for this regression model?</li>
+<li>How can I interpret ""greendummy"" variable insignificance? Can I omit it from model? What theory support this omission? Is it means green color has no effect on scores? Is it equivalent to heterogeneity of variances?</li>
+<li>How about ANOVA model, what can I say about the results?  </li>
+<li>Can I remove green level from ANOVA?</li>
+</ul>
+
+<blockquote>
+  <p>Gujarati, Damodar N.; Porter, Dawn C. (2009): Basic econometrics. 5th
+  ed. Boston: McGraw-Hill Irwin (The McGraw-Hill series, economics).</p>
+</blockquote>
+"
+"0.142857142857143","0.138232703275227","214613","<p>I am trying to make a simple linear regression to see if my variable ""totalssq"" has an influence on my variable ""hadsa"". (my data is ""dstatss"") Both are quantitative.
+I made a model with lm() and tested it with an ANOVA.
+Here are the outputs :</p>
+
+<pre><code>    Analysis of Variance Table
+
+    Response: dstatss$hadsa
+             Df  Sum Sq Mean Sq F value  Pr(&gt;F)  
+      dstatss$totalssq  1  88.272  88.272  5.6848 0.03623 *
+     Residuals        11 170.805  15.528                  
+     ---
+    Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>The p-value is significant, but i don't know what it should mean to me ?
+Does it means that there is a significant relationship between my variables ? I don't really know how to interpret this.</p>
+"
+"0.0824786098842323","0.0798086884467622","47008","<p>I have a fairly simple dataset consisting of one independent variable, one dependent variable, and a categorical variable. 
+I have plenty of experience running frequentist tests like <code>aov()</code> and <code>lm()</code>, but I cannot figure out how to perform their bayesian equivalents in R. </p>
+
+<p>I would like to run a bayesian linear regression on the first two variables and a bayesian analysis of variance using the categorical variable as the groupings, but I cannot find any simple examples on how to do this with R. Can someone provide a basic example for both? Additionally, what exactly are the output statistics created by bayesian analysis and what do they express?</p>
+
+<p>I am not very well-versed in stats, but the consensus seems to be that using basic tests with p-values is now thought to be somewhat misguided, and I am trying to keep up.
+Regards.</p>
+"
+"NaN","NaN","138464","<p>I'm relatively new to R and stats, and I just encountered a situation that I haven't before. I ran an lm (in R) with species richness as the response variable and elevation level (I have five of them ranging from 3000 m to 5000 m; it's a categorical variable) as the predictor. The model output gives me the exact same values for standard errors for all the slopes (0.7709 for the intercept, and 1.0903 for the other 4 elevations).  I believe data that would give a similar output is fairly easy to generate (see <a href=""http://stackoverflow.com/questions/28611798/r-identical-se-values-for-all-slopes-in-an-lm"">http://stackoverflow.com/questions/28611798/r-identical-se-values-for-all-slopes-in-an-lm</a>).  However, when I calculate SEs for my data directly, I get different values for each elevation.  Could someone help me understand what is going on?  Thanks!</p>
+"
+"NaN","NaN","179760","<p>Im using R but have been told to ask this here as its not really an R problem but a stats one</p>
+
+<p>I have the following dataset called <code>FeqAndASCATmergeCell</code> </p>
+
+<pre><code>   code freq  CNI
+1   asd  577   13
+2   gdg  989  477
+3   grh  843   23
+4   asf   26   56
+5   ghq  977  123
+6   ver  354  921
+7   ngj   13   98
+8   qwe  439  535
+9   wer  867  636
+10  ert  829  654
+11  rty  410   34
+12  tyu  950    6
+13  yui  210   34
+14  uio  121  636
+15  iop  626 3463
+16  aax  850  653
+17  afd  767  636
+18  vfd  655   46
+</code></pre>
+
+<p>I have plotted these so that the x axis is 'code' and freq and CNI are two straight lines based on their values. </p>
+
+<p><a href=""http://i.stack.imgur.com/2phEo.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/2phEo.png"" alt=""enter image description here""></a></p>
+
+<p>I would like to compare the gradient of the two lines to see if they are significantly different in R. How can I do this? I tried ANOVA but I get the error</p>
+
+<pre><code>error in oneway.test(freq ~ CNI, data = FeqAndASCATmergeCell) : 
+  not enough observations
+</code></pre>
+"
+"0.321672143858654","0.347878007755959","198484","<p>Consider this example:</p>
+
+<pre><code>foo &lt;-data.frame(x=c(0.010355057,0.013228936,0.016313905,0.019261687,0.021710159,0.023973474,0.025968176,0.027767232,0.029459730,0.030213807,0.023582566,0.008689883,0.006558429,0.005144958),
+                 y=c(971.3800,1025.2271,1104.1505,1034.2607,902.6324,713.9053,621.4824,521.7672,428.9838,381.4685,741.7900, 979.7046,1065.5245,1118.0616))
+Model3 &lt;- lm(y~poly(x,3),data=foo)
+Model4 &lt;- lm(y~poly(x,4),data=foo)
+</code></pre>
+
+<p>For <code>Model3</code>, the <code>poly(x,3)</code> term is not significant:</p>
+
+<pre><code>&gt; summary(Model3)
+
+Call:
+lm(formula = y ~ poly(x, 3), data = foo)
+
+Residuals:
+   Min     1Q Median     3Q    Max 
+-76.47 -51.61  -0.55  38.22 100.57 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)   829.31      17.85  46.463 5.14e-13 ***
+poly(x, 3)1  -819.37      66.78 -12.269 2.37e-07 ***
+poly(x, 3)2  -373.05      66.78  -5.586 0.000232 ***
+poly(x, 3)3   -87.85      66.78  -1.315 0.217740    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 66.78 on 10 degrees of freedom
+Multiple R-squared:  0.9483,    Adjusted R-squared:  0.9328 
+F-statistic: 61.15 on 3 and 10 DF,  p-value: 9.771e-07
+</code></pre>
+
+<p>However, for <code>Model4</code> it is:</p>
+
+<pre><code>&gt; summary(Model4)
+
+Call:
+lm(formula = y ~ poly(x, 4), data = foo)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-34.344 -19.982   1.229  18.499  33.116 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  829.310      7.924 104.655 3.37e-15 ***
+poly(x, 4)1 -819.372     29.650 -27.635 5.16e-10 ***
+poly(x, 4)2 -373.052     29.650 -12.582 5.14e-07 ***
+poly(x, 4)3  -87.846     29.650  -2.963 0.015887 *  
+poly(x, 4)4  191.543     29.650   6.460 0.000117 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 29.65 on 9 degrees of freedom
+Multiple R-squared:  0.9908,    Adjusted R-squared:  0.9868 
+F-statistic: 243.1 on 4 and 9 DF,  p-value: 3.695e-09
+</code></pre>
+
+<p>Why does this happen? Note that the estimate of all coefficients is the same in both cases, since the polynomials are orthogonal. However, the significance is not. This seems to me difficult to understand: if I performed a degree 3 regression, it looks like I could drop the <code>poly(x, 4)3</code> term, thus reverting to a degree 2 orthogonal regression. However, if I performed a degree 4 regression, I shouldn't, even though the coefficients of the common terms have exactly the same estimate. What do I conclude? Probably that one should never trust subset selection :) An <code>anova</code> analysis says that the difference among the degree 2, degree 3 and degree 4 models is significant:</p>
+
+<pre><code>&gt; Model2 &lt;- lm(y~poly(x,2),data=foo)     
+&gt; anova(Model2,Model3,Model4)
+Analysis of Variance Table
+
+Model 1: y ~ poly(x, 2)
+Model 2: y ~ poly(x, 3)
+Model 3: y ~ poly(x, 4)
+  Res.Df   RSS Df Sum of Sq       F    Pr(&gt;F)    
+1     11 52318                                   
+2     10 44601  1      7717  8.7782 0.0158868 *  
+3      9  7912  1     36689 41.7341 0.0001167 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>EDIT: following a suggestion in comments, I add the residual vs fitted plots for <code>Model2</code>, <code>Model3</code> and <code>Model4</code></p>
+
+<p><a href=""http://i.stack.imgur.com/9ZU8h.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/9ZU8h.png"" alt=""enter image description here""></a>` </p>
+
+<p>It's true that the maximum residual error is more or less the same for <code>Model2</code> and <code>Model3</code>, and it becomes nearly one third going from <code>Model3</code> to <code>Model4</code>. There seems to be still some kind of trend in the residuals, though it is less evident than for <code>Model2</code> and <code>Model3</code>. However, why does this invalidate the <em>p</em>-values? Which hypothesis of the linear model paradigm is violated here? I seem to remember that the residuals only had to be uncorrelated with the predictor. However, if they also have to uncorrelated among themselves, then clearly this assumption is violated and the <em>p</em>-values based on the t-test are invalid.</p>
+"
+"0.31943828249997","0.309097721236966","223901","<p><strong>Does anyone know how R computes the model matrix from a formula in aov() or lm()?</strong> </p>
+
+<p>I wonder about some things. Just assume the models below makes sense (although it might not). You have factor S with 3 levels and 2 regression variables, x1 &amp; x2. Printing model.matrix gives me 1st row output as below. <strong>I would like to know what R does when reading in the formula (taking into account the formula terms which are either factors or regression variables)</strong>.</p>
+
+<pre><code>~S+x1+x2
+(Intercept) S2 S3 x1 x2
+</code></pre>
+
+<p>The first case, R assumes S1 to be the intercept and fits the main effects each level of S and each of the regression variables. I think this should be correct.</p>
+
+<pre><code>~S:(x1+x2)
+(Intercept) S1:x1 S2:x1 S3:x1 S1:x2 S2:x2 S3:x2
+</code></pre>
+
+<p>The second case, R expands the formula such that ~S:x1+S:x2. It considers S1:x1 which is the first term of the formula as a regression coefficient so it fits an ordinary intercept. Also, it fits all the linear combinations of levels of S and the regression variables. </p>
+
+<pre><code>~S*(x1+x2)
+(Intercept) S2 S3 x1 x2 S2:x1 S3:x1 S2:x2 S3:x2
+</code></pre>
+
+<p>The third case, R expands the formula such that ~S+x1+x2+S:x1+S:x2. It considers S1 as the first term of the formula so it makes it its intercept. The main effects are fit first. Then something weird happens. <strong>Why does S2:x1 appear but not S1:x1 first?</strong> <strong>Furthermore, why does S2:x2 appear but not S1:x2 first?</strong>. </p>
+
+<pre><code>~S*(x1+x2)+F
+(Intercept) S2 S3 x1 x2 F2 F3 S2:x1 S3:x1 S2:x2 S3:x2
+</code></pre>
+
+<p>The fourth case, I added a factor F with 3 levels into the equation. The formula expands so ~S+x1+x2+F. It appears that all main effect terms are brought forward but the order in which they appear in the equation is preserved. Then followed by interaction terms and after that higher order interaction terms(if there are). Since S1 appears first I would assume that S1 is the intercept. <strong>But why doesn't F1 appear before F2 , why doesn't S1:x1 appear before S2:x1 and why doesn't S1:x2 appear before S2:x2?</strong></p>
+
+<p>I may have a conceptual misunderstanding with intercepts and how it relates to how the coefficients are fitted. Thanks for the help in advance.</p>
+"
+"NaN","NaN","162562","<ol>
+<li><p>What does the P value in the following example mean?</p>
+
+<pre><code>library(rms)
+
+data(pbc)
+d &lt;- pbc
+rm(pbc)
+d$status &lt;- ifelse(d$status != 0, 1, 0)
+
+ddist &lt;- datadist(d)
+options(datadist='ddist')
+
+fit &lt;- lrm(status ~ rcs(age, 4), data=d)
+(an &lt;- anova(fit))
+plot(Predict(fit), anova=an, pval=TRUE)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/WGfjA.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/WGfjA.png"" alt=""P value in the top center of the figure""></a></p></li>
+<li><p>How can I interpret the following R output in the upper example (<code>an &lt;- anova(fit)</code>) in the upper example)?</p>
+
+<pre><code>                Wald Statistics          Response: status 
+
+ Factor     Chi-Square d.f. P     
+ age        9.18       3    0.0269
+ Nonlinear  2.52       2    0.2832
+ TOTAL      9.18       3    0.0269
+</code></pre></li>
+</ol>
+"

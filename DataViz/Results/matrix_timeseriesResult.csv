@@ -1,0 +1,26 @@
+"V1","V2","V3","V4"
+"NaN","NaN","214810","<p>The DCC model is defined through the proxy $Q_t$ as
+$$Q_t=(1-\alpha-\beta) \overline{Q} +\alpha\epsilon_{t-1}\epsilon_{t-1}' + \beta Q_{t-1}$$which is then normalized to find the correlation matrix $R_t$
+$$R_t=\frac{q_{ij,t}}{\sqrt{q_{ii,t}q_{jj,t}}}$$</p>
+
+<p>I've been using the <code>rmgarch</code> package and its copula-garch commands (<code>cgarchspec</code> and <code>cgarchfit</code>) to couple time series with either a normal or Student-t copula and a DCC dependence structure.</p>
+
+<p>All results are nice and everything, but my question is on a problem which is present also at the univariate GARCH level: how is $Q_0$ chosen for the first estimation of $Q_1$? I've been going through the <code>rmgarch</code> document and other references on the Internet but haven't found any relevant info. </p>
+"
+"NaN","NaN","221518","<p>I'm trying to investigate how events affect the stock market through econo-physics and I came across a paper that uses the co-variance matrix. </p>
+
+<p>What I don't understand is how such a matrix can be formed with one time series. The paper says:</p>
+
+<blockquote>
+  <p>We study here the behaviour of the first three eigenvalues (Î»1, Î»2,
+  Î»3) and their ratio [(Î»1/Î»2), (Î»1/Î»3), (Î»2/Î»3)] of the co-variance matrices
+  of the original return series and of those rebuilt from wavelet
+  components for emerging and mature markets.</p>
+</blockquote>
+
+<p>How can I replicate this if I'm looking at a series like the DJIA?</p>
+
+<p><code>cov(ts)</code> simply returns a single value.</p>
+
+<p><a href=""https://www.dropbox.com/s/7cn0fwq6wzw8o6z/Reaction%20of%20Stock%20Markets%20to%20Events%20-%20Merging%20and%20Mature%20Markets%20using%20Wavelet%20Transforms.pdf?dl=0"" rel=""nofollow"">Link to the paper</a></p>
+"

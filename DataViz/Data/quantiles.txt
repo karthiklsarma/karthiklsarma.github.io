@@ -1,0 +1,1 @@
+quantiles=15regression=6data-visualization=6bayesian=4time-series=4distributions=4simulation=3qq-plot=2normal-distribution=2lme4=1garch=1probability=1anova=1posterior=1estimation=1multivariate-analysis=1gam=1curves=1logistic=1variance=1weibull=1mcmc=1

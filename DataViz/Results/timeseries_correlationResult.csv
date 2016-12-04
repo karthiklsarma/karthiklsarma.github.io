@@ -1,0 +1,3246 @@
+"V1","V2","V3","V4"
+"0.0751646028002829","0.0811107105653813","3463","<p>I have two time series S, and T. they have the same frequency and the same length.</p>
+
+<p>I would like to calculate (using R), the correlation between this pair (i.e. S and T), and also be able to calculate the significance of the correlation), so I can determine whether the correlation is due to chance or not.</p>
+
+<p>I would like to do this in R, and am looking for pointers/skeletal framework to get me started.</p>
+"
+"0.130188910980824","0.0936585811581694","10110","<p>100 periods have been collected from a 3 dimensional periodic signal. The wavelength slightly varies. The noise of the wavelength follows Gaussian distribution with zero mean. A good estimate of the wavelength is known, that is not an issue here. The noise of the amplitude may not be Gaussian and may be contaminated with outliers.</p>
+
+<p><strong>How can I compute a single period that approximates 'best' all of the collected 100 periods?</strong></p>
+
+<p>I have no idea how time-series models work. Are they prepared for varying wavelengths? Can they handle non-smooth true signals? If a time-series model is fitted, can I compute a 'best estimate' for a single period? How?</p>
+
+<p>A related question is <a href=""http://stackoverflow.com/q/2572444/341970"">this</a>. Speed is not an issue in my case. Processing is done off-line, after all periods have been collected.</p>
+
+<p><strong>Origin of the problem:</strong> I am measuring acceleration during human steps at 200 Hz. After that I am trying to double integrate the data to get the vertical displacement of the center of gravity. Of course the noise introduces a HUGE error when you integrate twice. I would like to exploit periodicity to reduce this noise. Here is a crude graph of the actual data (y: acceleration in g, x: time in second) of 6 steps corresponding to 3 periods (1 left and 1 right step is a period):
+<img src=""http://i.stack.imgur.com/44q8d.png"" alt=""Human steps""></p>
+
+<p>My interest is now purely theoretical, as <a href=""http://jap.physiology.org/content/39/1/174.abstract"" rel=""nofollow"">http://jap.physiology.org/content/39/1/174.abstract</a> gives a pretty good recipe what to do. It does not address periodicity.</p>
+
+<p><strong>Note:</strong> I have asked <a href=""http://stackoverflow.com/q/5702974/341970"">this question on stackoverflow</a> but it seems to be off-topic there.</p>
+"
+"0.106298800690547","0.114707866935281","13221","<p>I have data from different sources that is currently in multiple data frames. They generally look something like:</p>
+
+<pre><code>TimeStamp (MS Detail Converted with strptime), Field1, Field2, Field3 
+</code></pre>
+
+<p>In all cases the Time Stamps are irregular, and the fields are either character data or int data.</p>
+
+<p>There are three types of correlations I would like to be able to do with this data (using the term loosely). In all cases these will sometimes be from the same source, and other times from different sources:</p>
+
+<ol>
+<li>Numeric to Numeric</li>
+<li>Numeric to Categorical (string). I am not sure of the proper term for this, but if field1 where to have values like A, B, and C, how might find if field2 has higher numbers than B is more likely to be the value of field1</li>
+</ol>
+
+<p>The end goal is not only to test for correlations, but also to be able to discover them. I realize this is a pretty vague / big area. Mostly looking for basic examples, or point in the right direction of how to transform my data into format that will let me do these things.</p>
+"
+"NaN","NaN","226577","<p>I have a count response across 33 years which I am analyzing using quasipoisson regression.</p>
+
+<pre><code>mdl&lt;- glm(y ~ year, family=""quasipoisson"")
+</code></pre>
+
+<p>Now since <code>y</code> is a temporal data, I need to account for temporal autocorrelation at lag(1). I could do this in using <code>gls</code></p>
+
+<pre><code>mdl &lt;- gls(y ~ year,correlation = corAR1(form=~year))
+</code></pre>
+
+<p>but in <code>gls</code> how do I specify the error family which is ""quasipoisson""?</p>
+
+<p>Thanks</p>
+"
+"0.281240191291608","0.260132990857236","203290","<h2><strong>Data:</strong></h2>
+
+<p>I have 92 years of monthly climate data. One of my variables is a drought index (<a href=""https://climatedataguide.ucar.edu/climate-data/standardized-precipitation-evapotranspiration-index-spei"" rel=""nofollow"">SPEI</a>) ranging from -2 (dry) to 2 (wet). 
+All the data can be found <a href=""http://theforestecologist.web.unc.edu/files/2015/07/df.clim_.csv"" rel=""nofollow""><strong>here</strong></a>.</p>
+
+<p><strong><em>Data Structure:</em></strong></p>
+
+<pre><code>year month  order.ID  season  temp.avg  ppt.avg    GDD    pdo     spei
+1923     0        13       1    6.1612  0.23516  73.54   0.27   0.6544
+1923     1        14       1    5.0967  0.24161  40.66   0.01   0.4837
+1923     2        15       1     3.425  0.24428  47.19  -0.95   0.5207
+1923     3        16       2    9.7870  0.46612  161.3  -1.23   0.2631
+1923     4        17       2    12.753    0.304  238.1  -0.64   0.2476
+</code></pre>
+
+<p><em>note: PDO = Pacific Decadal Oscillation Index | order.ID = (monthly) time series order</em></p>
+
+<p><strong><em>Graph of SPEI across time:</em></strong></p>
+
+<p><a href=""http://i.stack.imgur.com/OGVEQ.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/OGVEQ.jpg"" alt=""SPEI""></a></p>
+
+<p>I am trying to determine the long-term (92yr) trends of the SPEI data. I am doing so with a general least squares approach using <code>gls</code> function from the <code>nlme</code> package in <code>R</code>. </p>
+
+<hr>
+
+<h2><strong>Issue:</strong></h2>
+
+<p>After examining my best (lowest AIC) model ( <code>gls(spei ~ I(year - 1950) + pdo)</code> ) using ACF and PACF, it was very clear that there was underlying temporal autocorrelation and likely periodicity. </p>
+
+<p><a href=""http://i.stack.imgur.com/agvIw.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/agvIw.jpg"" alt=""ACF &amp; PACF for NC""></a> </p>
+
+<p>I've attempted to account for these issues in two ways:</p>
+
+<ol>
+<li><p><strong>Accounting for periodicity</strong> by including <strong>sin + cos</strong> parameters to the model. I did so by examining how including the following parameters, </p>
+
+<pre><code>I(cos(2*pi/P*(order.ID))) + I(sin(2*pi/P*(order.ID)))
+</code></pre>
+
+<p>in my model using various period lengths (P) affected the AIC of the model: </p>
+
+<p><a href=""http://i.stack.imgur.com/HM8GF.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/HM8GF.jpg"" alt=""sincos_AIC""></a></p>
+
+<ul>
+<li>Though including the sin/cos parameters using the period (630) that created the model with the lowest AIC improved the AIC of my model, it did not correct for the issues I was seeing in my ACF/PACF plots. In fact, even including upwards of 4 combinations of SIN/COS parameters using numerous ""strong"" periods (e.g., 630, 238, 183 and 49) failed to eliminate the ACF/PACF issues:</li>
+</ul>
+
+<p><a href=""http://i.stack.imgur.com/2j9f6.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/2j9f6.jpg"" alt=""acf of periods 630 + 238""></a></p></li>
+<li><p><strong>Accounting for autocorrelation</strong> using <strong>corARMA</strong> argument in <code>gls</code> function. Specifically, I tried ARMA models using all combinations of p = {1:4} &amp; q = {0:3} with no luck in eliminating the autocorrelation. </p>
+
+<ul>
+<li><p>The best performing (lowest AIC) model was </p>
+
+<pre><code>gls(spei ~ I(year - 1950) + pdo, correlation = corARMA(p=4,q=2), method = ML)
+</code></pre></li>
+<li><p>But the resulting ACF/PACF still had issues:</p></li>
+</ul>
+
+<p><a href=""http://i.stack.imgur.com/4m65R.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/4m65R.jpg"" alt=""acf3""></a></p></li>
+</ol>
+
+<p>Note: I did try a combination of 1 and 2 (using sin+cos parameters <em>and</em> a corARMA argument in my model), but even the combination of approaches failed to ""fix"" the problem.</p>
+
+<p>Additional note:</p>
+
+<p>I tried adding months and seasons (separately and together) to the model in two ways: 1st, as periods (12 and 4 respectively) in SIN/COS parameters and, second, as categorical dummy variables in the model. Both approaches resulted in models with higher AICs - essentially suggesting the periodicity is not due to months or seasons??</p>
+
+<hr>
+
+<h2><strong>Question</strong>:</h2>
+
+<p>What do I do now? How do I go about ""fixing"" this data - i.e., how do I properly account for the periodicity and autocorrelation so that I can accurately view the long-term annual (linear) trend (and correct p value of the coefficient)?</p>
+
+<p>Obviously nothing I've tried so far has worked...</p>
+"
+"0.130188910980824","0.140487871737254","56900","<p>I have a 20-yr dataset of an annual count of species abundance for a set of polygons (~200 irregularly shaped, continuous polygons).  I have been using regression analysis to infer trends (change in count per year) for each polygon, as well as aggregations of polygon data based on management boundaries.</p>
+
+<p>I am sure that there is spatial autocorrelation in the data, which is sure to impact the regression analysis for the aggregated data.  My question is - how do I run a SAC test for time series data?  Do I need to look at the SAC of residuals from my regression for each year (global Moran's I)?  Or can I run one test with all years?</p>
+
+<p>Once I've tested that yes there is SAC, is there an easy was to address this?  My stats background is minimal and everything I've read on spatio-temporal modeling sounds very complex.  I know that R has a distance-weighted autocovariate function - is this at all simple to use?</p>
+
+<p>I'm really quite confused on how to assess/addess SAC for this problem and would very much appreciate any suggestions, links, or references. Thanks in advance!</p>
+"
+"0.130188910980824","0.140487871737254","57119","<p>I'm dealing with a time series data and I'm trying to construct a time series model for this particular dataset.  I'm new to R and tried using the the <code>auto.arima</code> function under the forecast package:</p>
+
+<pre><code>fit &lt;- auto.arima(tsdata, xreg=cbind(CSS2$Month,CSS2$DayID,CSS2$Year), 
+                  stepwise=FALSE, approximation=FALSE)
+summary(fit)
+resid(fit)
+acf(resid(fit))
+</code></pre>
+
+<p>However, I noticed some problems in the ACF plot and the PACF plot from the resulting model.  Both of those appear to show some trends or seasonality.
+The data that I'm dealing with do have some strong seasonal patterns (on a weekly basis and on a monthly basis), and I thought that this would be captured using <code>auto.arima</code>.  I do have the most recent version of the forecast package.
+I should mention that I have daily data for 3 years, so there are a total of 1095 observations.</p>
+
+<p>Any suggestions would be much appreciated, thank you!</p>
+
+<p>ACF Plot PACF Plot</p>
+"
+"NaN","NaN","177300","<p>How would I calculate the autocorrelogram for a compositional time series in R?</p>"
+"NaN","NaN","","<r><time-series><autocorrelation><compositional-data>"
+"0.112746904200424","0.0811107105653813","22964","<p>I've got a dataset that looks like this:</p>
+
+<pre><code>id      start   end     score1  score2
+[...]    
+LmjF.31 280000  290000  .       .
+LmjF.31 290000  300000  .       2686
+LmjF.31 300000  310000  .       .
+LmjF.31 310000  320000  .       74
+LmjF.31 320000  330000  .       1897
+LmjF.31 330000  340000  .       4116
+LmjF.31 340000  350000  705     3156
+LmjF.31 350000  360000  663     4145
+LmjF.31 360000  370000  170     4864
+[...]
+LmjF.34 1140000 1150000 2284    2751
+LmjF.34 1150000 1160000 .       .
+LmjF.34 1160000 1170000 .       .
+LmjF.34 1170000 1180000 572     .
+[...]
+</code></pre>
+
+<p>(dot=<code>.</code> means score is 0)</p>
+
+<p>I would like to rank the regions for each <code>id</code> where the correlation between score1 and score2 is highest . The second and third columns are <code>start</code> and <code>end</code> positions for sliding windows that at their minimum can be of size 1, but with smaller windows, fewer of them have non-zero on both scores, so I am already using bigger windows. Since these windows in different chromosomes for two different species, correlations in <code>score1</code> and <code>score2</code> that don't overlap but that are close to each other would still be relevant, but if they partially or fully overlap, then even better. That's why the sliding window size is relative, since I would like to use a method that takes into account cases like the ones for LmjF.31 start=340000 to end=370000, where there is three consecutive rows with a score bigger than 0. Any suggestions?</p>
+"
+"0.336146322726407","0.326464312549505","79216","<p><strong>Problem</strong>: When trying to calculate the variance of timeseries sums I get a negative variance, mostly due to autocovariances at large lag steps. Does not seem realistic.</p>
+
+<p>I have a timeseries which is calculated from another timeseries using a regression equation.
+I would like to propagate the uncertainty in the regression to the final timeseries. Then I want to sum (or take mean values) different segments of the timeseries over different timeperiods, and get the uncertainty of the sums. The timeseries is originally in 1 hour frequency and I want to sum over periods of 1 day (resampling to daily frequency) up to several years. The timeseries is strongly autocorrelated at short lag times.</p>
+
+<p>For getting the variance of the sum (in the case of 3 elements being summed):
+$$Var(a+b+c)= \\ Var(a)+Var(b)+Var(c) + 2 \times (Cov(a,b) + Cov(a,c)+Cov(b,c))$$</p>
+
+<p>I use <code>r</code> for the calculations. I get the variances for each timeseries element as $SE^2$, where $SE$ is the standard error (<code>se.fit</code>) returned from r's <code>predict()</code> function using the regression model. The covariances I get from the autocovariance function <code>acf()</code>.</p>
+
+<p>Here is some code and a selection of the data (excuse clumsy R code, I'm very new to R):</p>
+
+<pre><code>#tsY is the predicted timeseries from the regression
+tsY=c(81.4,  79.0,  83.4,   81.7,   75.7,   68.3,   62.3,   57.2,   52.6,   48.8,   45.4,   42.6,   39.9,   37.6,   35.6,   33.8,   32.2,   30.8,   29.6,   28.4,   27.3,   26.2,   25.0,   23.9)
+#tsSE is the standard error from the prediction (se.fit)
+tsSE=c(1.55,  1.49, 1.60,   1.56,   1.41,   1.23,   1.09,   0.97,   0.87,   0.78,   0.71,   0.65,   0.60,   0.55,   0.51,   0.48,   0.45,   0.42,   0.40,   0.38,   0.36,   0.34,   0.32,   0.30)
+
+tsVar=tsSE^2
+
+#create a matrix of the autocovariances at different lag times, diagonal is lag=0
+#rows and columns are indicies in timeseries
+covmat&lt;-matrix(numeric(0), length(tsY),length(tsY)) 
+for ( i in (1:(length(tsY)) ) ) {
+  if (i == 1) {
+    autocov&lt;-acf(tsY, type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }  else {
+    autocov&lt;-acf(tsY[-(1:i-1)], type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }
+
+}
+
+# sum the matrix columns, but not the diagonal
+sumofColumns &lt;- rep(NA, ncol(covmat))
+for (i in (1:ncol(covmat))) {
+  if (i == 1) {
+    sumofColumns[i]=sum(covmat[-(1),i])  
+  } else{ 
+    sumofColumns[i]=sum(covmat[-(1:i),i])  
+  }
+}
+
+sumofCov=sum(sumofColumns) # sum of the covariance (Cov(a,b) + Cov(a,c)+...)
+sumofVar=sum(tsVar) # sum of the variances of each timeseries element
+varofSum=sumofVar+2*sumofCov # variance of the sum of the timeseries
+
+# from the covmat the negative variance occurs at larger lag times.
+acf(tsY, type='covariance', lag.max= length(tsY))
+
+&gt; sumofCov
+[1] -1151.529
+&gt; varofSum
+[1] -2283.246
+</code></pre>
+
+<p><strong>So I have the following questions:</strong></p>
+
+<blockquote>
+  <ol>
+  <li><p>Did I completely misunderstand how to calculate variance of sums?</p></li>
+  <li><p>Is it better to use a cutoff from the max lags to be considered in the autocovariance? If so how would one determine this? This would especially be important with the complete data where the length is several thousand. </p></li>
+  </ol>
+  
+  <p><strike>3. Why is the covariance negative in this sample data at large? When plotting tsY  <code>plot(tsY)</code> it looks like the covariance/correlation should remain positive.</strike> Because it is the variation in direction from their means.</p>
+</blockquote>
+
+<p><strong>EDIT:</strong></p>
+
+<blockquote>
+  <p>Comment on <strong>question 2</strong> above:
+  I have realized that using n-1 lags, as above in the code, does not make a lot of sense. There appear to be few different ways to determine the maximum lags to consider.  Box &amp; Jenkins (1970) suggest n/4 and R by default 10*log10(n). This does not answer the question however, of how to determine an appropriate cutoff for summing the covariances.</p>
+  
+  <p>Does it make sense to look at the partial autocorrelation (function pacf()), in order not to overestimate the effect of the auto covariance in the summation term? The partial autocorrelation for my data is significantly different from zero only at 1 or 2 lags. Similarly, fitting an AR model using ar() function, I also get an order of 1 or 2.</p>
+</blockquote>
+
+<p>Cheers</p>
+
+<p>Related post <a href=""http://stats.stackexchange.com/questions/10943/variance-on-the-sum-of-predicted-values-from-a-mixed-effect-model-on-a-timeserie"">Variance on the sum of predicted values from a mixed effect model on a timeseries</a></p>
+"
+"NaN","NaN","185425","<p>I have a sample of 1000 data points and I used it as the training sample to forecast with Timeseries. My lecture suggested me comparing the ACF with its critical values (upper and lower) numerically rather than looking at the graph. </p>"
+"NaN","NaN","<p>Here are my ACF values: </p>",""
+"NaN","NaN","<p><a href=http://i.stack.imgur.com/RJiYb.png rel=nofollow><img src=http://i.stack.imgur.com/RJiYb.png alt=enter image description here></a></p>",""
+"NaN","NaN","<p><strong>Question:</strong> How do I come up with the upper and the lower critical values for the ACF? Is there any function in R to yield these values? </p>",""
+"NaN","NaN","","<r><time-series><autocorrelation>"
+"0.0751646028002829","0.0811107105653813","185521","<p>The question is about stimulating different type of species (coded 1-10) based on given species frequencies, and other parameters (eg. mean of normally distributed mass and ratio) using gibbs sampling. I have done all the work above and get a trace plot(shown below), and I want to know after burn in period, how dependent the subsequent points from the Markov chain are. Someone told me to use pacf and acf from time series class but I never learned that before. Could some one explain that or is there any other way to show the dependency?</p>
+
+<p>(I interpret dependency as how the next point is dependent on the previous one from the markov chain)
+<a href=""http://i.stack.imgur.com/gnG0f.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/gnG0f.jpg"" alt=""enter image description here""></a></p>
+"
+"0.130188910980824","0.140487871737254","40592","<p>I am trying to model annual tree nut production using climate predictors. </p>
+
+<p>The nut data (dependent) is a binary timeseries (0,1 -  representing unsuccessful and successful nut production), with one observation per year, and with 90 years of data and two missing years (88 onservations). </p>
+
+<p>The independent variables are monthly climate variables, including months in previous years (for example, Temp.July.t, Temp.July.t-1)</p>
+
+<p>I'm using R, and have an basic-intermediate knowledge of statistics.</p>
+
+<p>My problem is that the dependent data has strong temporal autocorrelation (nut production cannot be successful two years running).  I'm looking for a pointer towards a technique that will allow me to deal with the autocorrelation in the binary data and create a statistical model that allows me to investigate the relationship between nut production and climate.</p>
+
+<p>Thank you.</p>
+"
+"NaN","NaN","6469","<p>How do I fit a linear model with autocorrelated errors in R? In stata I would use the <code>prais</code> command, but I can't find an R equivalent...</p>
+"
+"0.150329205600566","0.162221421130763","199313","<p>I am working on some exchange rates data. I have two series: </p>
+
+<ul>
+<li>$X_t$ with the official exchange rate (e.g. forex)</li>
+<li>$Y_t$ with the exchange rate on the ""black market"" (e.g. currency exchange houses at airports).</li>
+</ul>
+
+<p>I am interested in modelling the relationship between these two series. It is reasonable to model $Y_t$ as a function of $X_t$ and lagged values of this series (because the black market kinda follows the official market). I would like to get insight on two questions:</p>
+
+<ul>
+<li>Average lag in the response of the black market (how long does it take for currency exchange houses to react to changes in the official market).</li>
+<li>The magnitude of the reaction (do currency exchange houses overreact?, or they kind of smooth the movements in the official market?)</li>
+</ul>
+
+<p>Here's how the data looks like:</p>
+
+<p><a href=""http://i.stack.imgur.com/CBAg1.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/CBAg1.png"" alt=""enter image description here""></a></p>
+
+<p>I've read that the ""cross correlation function (CCF) is helpful for identifying lags of the $X$-variable that might be useful predictors of $Y_t$"". (link)</p>
+
+<p>So I produced such plots for 20, 50 and 150 lags (I have in total 520 obs) with the following code in R .</p>
+
+<pre><code>ccf(x = toy$xa, y = toy$ya, lag.max = 20)
+ccf(x = toy$xa, y = toy$ya, lag.max = 50)
+ccf(x = toy$xa, y = toy$ya, lag.max = 250)
+</code></pre>
+
+<p>And here's how they look:</p>
+
+<p><a href=""http://i.stack.imgur.com/Mquko.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Mquko.png"" alt=""enter image description here""></a></p>
+
+<p>Does it mean that up to 170 lags might be useful predictors?, or am I doing something wrong?</p>
+"
+"0.0751646028002829","0.0811107105653813","24445","<p>I'm trying to estimate a multiple linear regression in R with an equation like this:</p>
+
+<pre><code>regr &lt;- lm(rate ~ constant + askings + questions + 0)
+</code></pre>
+
+<p>askings and questions are quarterly data time-series, constructed with <code>askings &lt;- ts(...)</code>.</p>
+
+<p>The problem now is that I got autocorrelated residuals. I know that it is possible to fit the regression using the gls function, but I don't know how to identify the correct AR or ARMA error structure which I have to implement in the gls function. </p>
+
+<p>I would try to estimate again now with,</p>
+
+<pre><code>gls(rate ~ constant + askings + questions + 0, correlation=corARMA(p=?,q=?))
+</code></pre>
+
+<p>but I'm unfortunately neither an R expert nor an statistical expert in general to identify p and q.</p>
+
+<p>I would be pleased If someone could give me a useful hint.
+Thank you very much in advance!</p>
+
+<p>Jo</p>
+"
+"0.184114923579665","0.16556654463313","24778","<p>Given two time series within the same time period, I can use the <code>ccf</code> function in <code>R</code> to compute a notion of similarity of these time series. What I am wondering is this - can I compute the cross correlation on the trend line obtained after using time decomposition function such as <code>stl</code>? </p>
+
+<p>Time series decomposition is known to decompose a given series into its trend line, seasonal component and the error so by removing the error, would we get a better sense of cross correlation? So in short, my question is this: <strong><em>Is cross correlation of the trend line better than cross correlating raw timeseries?</em></strong></p>
+
+<p>I tried explaining what I had done in the picture that follows. In the cross correlation graph that I obtained, it indicates a high value at t=0.</p>
+
+<p><img src=""http://i.stack.imgur.com/R82xE.png"" alt=""enter image description here""></p>
+"
+"NaN","NaN","24779","<p>Let us say I extract all tweets containing a certain hashtag (main subject of the tweet) and bin them by the hour i.e. count the number of tweets that occurred during a certain hour. I will then be obtaining a time series for this particular hashtag. I have recently come across the <a href=""http://cs.wellesley.edu/~cs315/Papers/stl%20statistical%20model.pdf"" rel=""nofollow"">STL decomposition</a> which decomposes a given timeline into its seasonal, trend and error components and <code>R</code> provides a simple function <code>stl</code> to achieve this.</p>
+
+<p>I am trying to understand if using this in my context (timeline of tweet counts) is appropriate. What I would like to examine is whether two given hashtags have a similar timeline and I was wondering what I can understand by using time series decomposition. Any suggestions?</p>
+"
+"0.168073161363204","0.181369062527503","181566","<p>I have <strong>time-series</strong> data of 12 consumers. The data corresponding to 12 consumers (named as <code>a ... l</code>) is
+<a href=""http://i.stack.imgur.com/hcHPc.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/hcHPc.png"" alt=""enter image description here""></a> </p>
+
+<p>I want to cluster these consumers so that I may know which of the consumers have utmost similar consumption behavior. Accordingly, I found clustering method <a href=""http://www.inside-r.org/packages/cran/fpc/docs/pamk"" rel=""nofollow"">pamk</a>, which automatically calculates the number of clusters in input data.</p>
+
+<p>I assume that I have only two options to calculate the distance between any two time-series, i.e., <a href=""https://en.wikipedia.org/wiki/Euclidean_distance"" rel=""nofollow"">Euclidean</a>, and <a href=""https://en.wikipedia.org/wiki/Dynamic_time_warping"" rel=""nofollow"">DTW</a>. I tried both of them and I do get different clusters. Now the question is which one should I rely upon? and why?</p>
+
+<p>When I use <code>Eulidean</code> distance I got following clusters:
+<a href=""http://i.stack.imgur.com/0Irqg.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/0Irqg.png"" alt=""enter image description here""></a></p>
+
+<p>and using <code>DTW</code> distance I got
+<a href=""http://i.stack.imgur.com/AUwub.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/AUwub.png"" alt=""enter image description here""></a></p>
+
+<p><strong>Conclusion:</strong>
+  How will you decide which clustering approach is the best in this case?</p>
+"
+"0.130188910980824","0.0936585811581694","168182","<p>I am trying to create a model of refrigeration having the energy consumption and the temperature over time. So far, I've tried regression but fitting this data into linear model seems impossible. Another thing that I've tried is cross correlation but it's insignificant (around 0.11 at lag 0). I also clustered the data and for another fridge I was able to state that if the fridge is in 'idle mode' (e.g. not consuming electricity) the temperature goes above certain value. However, for this fridge, this doesn't work as the data seems pretty random. Here is a scatter plot of the data, the bigger the circle, the higher the frequency.
+<a href=""http://i.stack.imgur.com/1w5lU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/1w5lU.png"" alt=""enter image description here""></a></p>
+
+<p>Any ideas what type of analysis can I use to derive insights from this? I would like to know if there is any correlation between the kW data and the temperature data. A new plot for the full duration that I have:</p>
+
+<p><a href=""http://i.stack.imgur.com/yfZAr.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/yfZAr.png"" alt=""enter image description here""></a></p>
+"
+"0.198866846404498","0.18394180184549","169299","<p>I use auto.arima function in R to fit a TS model to a annual data composed of electricity demand. The series is transformed w.r.t Box-Cox lambda due to the prevailing heteroscedasticity and then it is twiced differenced to eliminate the trend in the data. The first ACF/PACF plot (w/o transformation) suggest that an ARIMA model should be fitted to the model; whereas the second ACF/PACF (with transformation) plot suggests that an AR model should be fitted. However both of them depend on the same data. 
+In both of the case, the auto.arima function selects the best model as ARIMA(1,2,1) which can be expected according to the first plot but not according to the second plot due to the one spike in PACF.     </p>
+
+<p><a href=""http://i.stack.imgur.com/qoYJH.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/qoYJH.jpg"" alt=""untransformed""></a>
+<a href=""http://i.stack.imgur.com/FOzNv.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/FOzNv.jpg"" alt=""transformed""></a></p>
+
+<pre><code>dmnd=c(8.6,9.8,11.2,12.4,13.5,15.7,18.6,21.1,22.3,23.6,24.6,26.3,28.3,29.6,33.3,36.4,40.5,44.9,48.4,52.6,56.8,60.5,67.2,73.4,77.8,85.6,94.8,105.5,
+</code></pre>
+
+<p>114.0,118.5,128.3,126.9,132.6,141.2,150.0,160.8,174.6,190.0,198.1,194.1,210.4,230.3,242.4,246.4,257.2)</p>
+
+<pre><code>x=ts(dmnd,frequency=1)
+
+sdx=diff(x,differences = 2)
+x1&lt;-acf(sdx,length(sdx),ylab=""Sample ACF"",main ="""")
+x2&lt;-pacf(sdx,length(sdx),ylab=""Sample PACF"",main ="""")
+
+library(FitAR)
+
+#transformation
+fit=arima(x,order=c(0,2,0))
+BoxCox(fit, interval = c(-1, 1), type = ""BoxCox"")
+
+library(forecast)
+tx=BoxCox(x, -0.049)
+
+sdx=diff(tx,differences = 2)
+x1&lt;-acf(sdx,length(sdx),ylab=""Sample ACF"",main ="""")
+x2&lt;-pacf(sdx,length(sdx),ylab=""Sample PACF"",main ="""")
+
+
+fit=auto.arima(x,d = 2,D = 0,start.p=0, start.q=0, max.p=5, max.q=5,stationary=FALSE,seasonal=FALSE,stepwise=TRUE,trace=TRUE,approximation=FALSE,allowdrift=TRUE,ic=""aicc"",lambda=-0.049)
+
+par(mfrow=c(1,2)) 
+x1&lt;-acf(fit$residuals,length(fit$residuals),ylab=""Sample ACF"",main ="""")
+x2&lt;-pacf(fit$residuals,length(fit$residuals),ylab=""Sample PACF"",main ="""")
+
+Box.test(fit$residuals, lag = length(fit$residuals)/5, type = c(""Ljung-Box""), fitdf = length(fit$ coef))
+
+shapiro.test(fit$residuals)
+
+library(TSA)
+x.standard=rstandard.Arima(fit)
+qqnorm(x.standard,main ="""")
+qqline(x.standard)
+</code></pre>
+
+<p><strong><em>Results of ARIMA(3,1,0) Model</em></strong> </p>
+
+<p><a href=""http://i.stack.imgur.com/MmgeP.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MmgeP.jpg"" alt=""Summary""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/ojFY1.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ojFY1.jpg"" alt=""sample ACF/PACf""></a>
+<a href=""http://i.stack.imgur.com/Gh94D.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Gh94D.jpg"" alt=""Normality""></a></p>
+
+<pre><code>Shapiro-Wilk normality test
+
+data:  fit$residuals
+W = 0.8557, p-value = 5.153e-05
+
+Box-Ljung test
+
+data:  fit$residuals
+X-squared = 14.2044, df = 6, p-value = 0.02743
+</code></pre>
+
+<p><strong><em>Diagnostics of Residuals ARIMA(1,1,1) transformed</em></strong>
+<a href=""http://i.stack.imgur.com/lQGXi.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/lQGXi.jpg"" alt=""ACF/PACF""></a>
+<a href=""http://i.stack.imgur.com/twQf2.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/twQf2.jpg"" alt=""Normal""></a></p>
+
+<p><strong><em>auto.arima result for the series without the observations ""32, 40, 41""</em></strong>
+<a href=""http://i.stack.imgur.com/9XI2O.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/9XI2O.jpg"" alt=""without some observation""></a></p>
+"
+"NaN","NaN","191828","<p>I'm at the beginnings of trying to find this out, and much of the reading out there is not quite what I'm looking for.  </p>
+
+<p>I'm looking for recommended reading for determining correlation or covariance of 2 variables over time.  I have a temperature sensor and a light sensor in my pool and I want to identify if one's trend over time is a good predictor for the other and if so how strong.  I need to do this in R.  </p>
+
+<p>Any insight is very greatly appreciated.</p>
+
+<p>Thanks!</p>
+"
+"0.168073161363204","0.181369062527503","234066","<p>The bird auditory surveys consist of >100 roadside survey routes across Ontario. Bird call count was conducted at 10-20 stations along each survey routes for >10 years. For each station, there is data on the amount of forest harvested within the last 5 years.  An objective is to assess how bird abundance is affected by forest harvesting.</p>
+
+<p>My problem is to how to deal with spatial and temporal autocorrelation and the violation of independence of data. That is, the response variable (abundance of birds) is likely to be spatially and temporally autocorrelated. And, the bird abundance at each station is likely correlated with that at other stations within a route. My approach is to incorporate routes and year as random effects in generalized mixed effects models as shown below (using <code>lme4</code> package). But, I am not sure how well autocorrelation is modeled adequately in this way.</p>
+
+<pre><code>glmer(Abundance ~ Area_harvested + (1 | route) + (1 | Year),
+      data = mydata, family = poisson)
+</code></pre>
+
+<p>Although I specified Poisson above, negative binomial or zero-inflated models (because there are many zeros; abundance = 0) may be more appropriate.</p>
+
+<p>Could anyone please suggest a proper way to analyze my data? Also, could you please suggest better or proper way to specify random effects given my data?</p>
+"
+"0.0751646028002829","0.0811107105653813","155781","<p>Following the steps of <a href=""http://en.wikipedia.org/wiki/Breusch%E2%80%93Godfrey_test#Procedure"" rel=""nofollow"">Breuschâ€“Godfrey test</a> , I wrote my own <code>R</code> code which differs from the <code>R</code> function for <code>bgtest</code> under package 'lmtest' . Though both of them reject the null hypothesis that at least one $\rho$ is statistically significant .</p>
+
+<p>I have $30$ observations in my data set and I set the null hypothesis that :
+$$\rho_1=\rho_2=\rho_3=\rho_4=\rho_5=0$$</p>
+
+<pre><code> data &lt;- read.csv(""exc12.26.csv"",header=TRUE)
+
+ lC &lt;- log(C); lI &lt;- log(I); lL &lt;- log(L); lH &lt;- log(H); lA &lt;- log(A)
+
+ lm.y &lt;- lm(lC~lI+lL+lH+lA)
+ uhat &lt;- resid(lm.y)
+
+ ##BG test :
+ ut_1 &lt;-uhat[5:29];ut_2 &lt;-uhat[4:28];ut_3 &lt;-uhat[3:27];ut_4 &lt;-uhat[2:26];ut_5 &lt;-uhat[1:25]
+
+lm.u &lt;- lm(uhat[6:30]~lI[6:30]+lL[6:30]+lH[6:30]+lA[6:30]+ut_1+ut_2+ut_3+ut_4+ut_5)
+
+summary(lm.u)
+R2 &lt;- 0.4943 
+chi_cal &lt;- 25*R2
+
+p_val &lt;- pchisq(chi_cal,5,lower.tail=FALSE)
+p_val
+[1] 0.03020434
+</code></pre>
+
+<p>But if I use the function <code>bgtest</code> , the p-value does not match with my R-code p-value .</p>
+
+<pre><code> library(lmtest)
+ bgtest(lm.y,order=5,type=""Chisq"")
+
+ ##Output : p-value = 0.01396
+
+ detach(data)
+</code></pre>
+
+<p>Where am i doing mistake ?</p>
+"
+"0.198866846404498","0.18394180184549","111455","<p>I have two sets of data, say sales and profit, and I have calculated the correlation between these two data over different months using <code>R</code>. So currently I have somethings like this:</p>
+
+<pre><code>Month       | Jan | Feb | Mar | Apr | ....
+sales       |  X  |  Y  |  Z  |  P  | ....
+profit      |  A  |  B  |  C  |  D  | ....
+correlation | .1  | .35 | .28 | -.47| ....
+</code></pre>
+
+<p>This correlation calculation has been done over period of years and now I want to develop a prediction model which can provide me prediction for coming months of coming years,say what will be the profit for month of Aug 2014? How can I develop such a prediction model and what else, apart from what I have as of now, will I need to develop the prediction model? I am new to statistics and predictive analysis and thus if anyone could provide me a guide of required steps and some info about how can I do those steps then it would be very helpful for me to get the understanding also.</p>
+
+<p>Thanks in advance.</p>
+
+<p><strong>NOTE:</strong> If I could get help in respect to some non parametric bayesian method then it will be great. </p>
+"
+"0.184114923579665","0.16556654463313","151652","<p>I fitted a number of SARIMA models using R and chose the ARIMA(0,0,0)(3,1,0)[12] as the best fitted model to the univariate data with 180 points (periodicity=12). This model is chosen as the best model according to the criteria of lowest MAPE among other fitted 624 models.</p>
+
+<p>The residuals of the model violates the assumption of independently distributed residuals (and same for the 2nd best, 3rd best model etc.). Actually the residuals are also non-normally distributed; however the model is fitted with the method of conditional sum of squares in order to bypass the violation of normality assumption. </p>
+
+<p>In the data, the most of the values are close to zero and this does not allow any data transformation. </p>
+
+<p>The data represent the evolution of coefficents of a 11th degree polynomial equation (in total 15 equations representing different years of electricity load duration curves). The purpose is to forecast the coefficients of e.g. the 16th equation and so the corresponding load duration curve.</p>
+
+<p>Can anybody sugggest/provide any solutions to this case?</p>
+
+<pre><code>x=c(1.887090e+04, -6.023007e+00,  1.193635e-02, -1.455856e-05,  1.064251e-08, -4.953592e-12,  1.517229e-15, -3.090332e-19,
+4.137144e-23, -3.491891e-27,  1.682794e-31, -3.527046e-36,  1.904962e+04, -7.394189e+00,  1.600849e-02, -2.077511e-05,
+1.585519e-08,-7.587987e-12,    2.363570e-15, -4.859251e-19,  6.534816e-23, -5.525202e-27,  2.663420e-31, -5.580438e-36,
+2.009098e+04, -1.061082e+01,  2.319182e-02, -2.917768e-05,  2.171827e-08, -1.019917e-11,  3.133564e-15, -6.379905e-19,
+8.520995e-23, -7.168462e-27,  3.442102e-31, -7.188143e-36,  2.067028e+04, -8.034999e+00,  1.761326e-02, -2.240562e-05,
+1.680919e-08, -7.961614e-12,  2.469832e-15, -5.081494e-19,  6.861040e-23, -5.835236e-27,  2.831898e-31, -5.974519e-36,
+2.233604e+04, -1.033148e+01,  2.287039e-02, -2.952031e-05,  2.255568e-08, -1.086351e-11,  3.419260e-15, -7.123005e-19,
+9.720229e-23, -8.341734e-27,  4.079166e-31, -8.660882e-36,  2.392045e+04, -8.246481e+00,  1.585412e-02, -2.056180e-05,
+1.636424e-08, -8.253437e-12,  2.710813e-15, -5.858824e-19,  8.245204e-23, -7.258003e-27,  3.624039e-31, -7.827743e-36,
+2.636514e+04, -9.886355e+00,  1.951992e-02, -2.504930e-05,  1.963158e-08, -9.789139e-12,  3.190186e-15, -6.856046e-19,
+9.606813e-23, -8.427664e-27,  4.196799e-31, -9.046539e-36,  2.866210e+04, -8.866902e+00,  1.734494e-02, -2.387617e-05,
+1.957175e-08, -9.993900e-12,  3.300201e-15, -7.152619e-19,  1.008517e-22, -8.892694e-27,  4.448060e-31, -9.626143e-36,
+3.002254e+04, -1.007403e+01,  2.151203e-02, -2.984675e-05,  2.427803e-08, -1.226036e-11,  3.997630e-15, -8.550747e-19,
+1.190499e-22, -1.037815e-26,  5.140218e-31, -1.103334e-35,  2.929311e+04, -1.123255e+01,  2.282206e-02, -2.968240e-05,
+2.323868e-08, -1.146069e-11,  3.677709e-15, -7.777557e-19,  1.073806e-22, -9.301478e-27,  4.584147e-31, -9.800725e-36,
+3.306894e+04, -1.396117e+01,  2.326777e-02, -2.724425e-05,  2.023428e-08, -9.690231e-12,  3.055811e-15, -6.392630e-19,
+8.763020e-23, -7.552202e-27,  3.707622e-31, -7.901994e-36,  3.491666e+04, -1.315883e+01,  2.554492e-02, -3.194439e-05,
+2.437661e-08, -1.184053e-11,  3.762542e-15, -7.896499e-19,  1.082565e-22, -9.310722e-27,  4.554895e-31, -9.664092e-36,
+3.775600e+04, -2.101521e+01,  4.695457e-02, -6.000206e-05,  4.510264e-08, -2.134088e-11,  6.600784e-15, -1.352465e-18,
+1.817468e-22, -1.538166e-26,  7.429410e-31, -1.560507e-35,  3.699341e+04, -1.019327e+01,  1.761360e-02, -2.428662e-05,
+2.084200e-08, -1.112473e-11,  3.796505e-15, -8.415154e-19,  1.204392e-22, -1.072641e-26,  5.402195e-31, -1.174885e-35,
+4.009280e+04, -1.887174e+01,  3.441926e-02, -4.161190e-05,  3.152055e-08, -1.535050e-11,  4.911316e-15, -1.040003e-18,
+1.440215e-22, -1.251900e-26,  6.190925e-31, -1.327693e-35)
+
+fit=arima(x, order = c(0, 0, 0),seasonal = list(order = c(3, 1, 0), period =12),method=c(""CSS""))
+
+par(mfrow=c(1,2)) 
+x1&lt;-acf(fit$residuals,180,ylab=""Sample ACF"",main ="""",xaxt=""n"")
+axis(1, at=seq(0, 15, by=2), labels = TRUE)
+abline(v=(seq(0,15,1)), col=""black"", lty=""dotted"")
+
+x2&lt;-pacf(fit$residuals,180,ylab=""Sample PACF"",main ="""",xaxt=""n"")
+axis(1, at=seq(0, 15, by=2), labels = TRUE)
+abline(v=(seq(0,15,by=1)), col=""black"", lty=""dotted"")
+</code></pre>
+"
+"NaN","NaN","111840","<p>I am looking for a library routine that will calculate the lag 1 autocorrelation of a time series with a rolling window; meaning ""slide a window of size N points along the time series, calculate the lag 1 autocorrelation for each window.""</p>
+
+<p>I have implemented an algorithm inspired by <a href=""http://en.wikipedia.org/wiki/Autocorrelation#Estimation"" rel=""nofollow"">Wikipedia</a> but would like something to compare the results with.</p>
+
+<p>Is the mentioned routine available in for example R or Python?</p>
+"
+"0.106298800690547","0.114707866935281","192507","<p>BACKGROUND:</p>
+
+<p>I have some animal behaviour data. The time allocated by a group of animals 
+to different behaviours per minute was recorded repeatedly until
+the end of the experiment. Therefore, I have 4 response variables:</p>
+
+<p>y1 = proportion of time allocated to behaviour 1
+y2 = proportion of time allocated to behaviour 2
+y3 = proportion of time allocated to behaviour 3
+y4 = proportion of time allocated to behaviour 4
+NB: The sum of all the y variables is equal to 1. </p>
+
+<p>I also have a number of candidate predictor variables. I wish to establish which 
+of these candidate predictor variables have a significant effect on the proportion
+of time allocated to the different behaviours.</p>
+
+<p>PROBLEM:</p>
+
+<p>I believe this may be modeled using Dirichlet multivariable regression 
+(used for modeling data representing components as a percentage of a total, DirichletReg package in R). However,
+there is a issue of temporal correlation ie. the y variables are not independent. For example,
+if the proportion of y1 at time_1 is high, then the proportion of y1 at time_2 is also
+likely to be high. </p>
+
+<p>QUESTION:</p>
+
+<p>Is it possible incorporate temporal autocorrelation into Dirichlet multivariable regression? If so, which R package
+would be suitable? Are there any other possible approaches to this problem? Many thanks in advance.</p>
+"
+"0.198866846404498","0.214598768819738","159162","<p>I have various data sets that correspond to values (in percentage) at given time points (hours, up to 10 hours).</p>
+
+<p>The total number of data sets of values at given time points is 8.</p>
+
+<p>My question is actually very simple, I know that some of these data sets are better linearly correlated with time than others, I want to perform an operation using some software that would find which data set is best correlated with time, or which part of which data set is best correlated with time.</p>
+
+<p>Here is an example:</p>
+
+<p>Time: 0 1 2 3 4 5 6 7 8 9 10
+set1: 0 10 20 30 40 50 60 70 80 90 100
+Set2: 0 5 15 22 23 55 65 80 81 83 90
+Set3: 0 10 20 30 40 50 60 77 81 95 99</p>
+
+<p>Set1 has is 100% linearily correlated with time, Set 2 is less, Set3 has part of it (0 -> 60) that's 100% percent linearily correlated with time.</p>
+
+<p>I would like to find a software that can perform such calculations (that is find which set or which part of which set is best linearly related to another data set or part of data set).</p>
+
+<p>Currently I am doing it with excel (manually, using RÂ²) or by printing the plots and using a ruler (which you might find funny ;)))</p>
+"
+"0.184114923579665","0.198679853559757","211827","<p>I am trying to find if a particular pattern exists in a time series. I have found that I could try using Covariance or correlation for the task. I have used a sliding window technique for doing this. </p>
+
+<pre><code> xvector = as.vector(x$Mean.F3Amp)
+ xvectorarray = embed(xvector,40)
+ #n : is the point from where the time series is to be searched
+
+
+ for(r in 1:nrow(xvectorarray))
+   {
+    eachrow = xvectorarray[r,]
+    comparerow = xvectorarray[n,]
+    #testcossim = cos.sim(eachrow,comparerow)
+     # class(testcossim)
+     #if(cosSim(eachrow,comparerow)&gt;=0.96)
+     # if(cor.test(eachrow,comparerow,method=""pearson"")!=0)
+     #if(dcor.t(eachrow,comparerow,distance = FALSE)&gt;=20||is.infinite(dcor.t(eachrow,comparerow,distance = FALSE)))
+     if(sd(eachrow,na.rm = FALSE)!=0&amp;&amp;cov(eachrow,comparerow)&lt;=1&amp;&amp;cov(eachrow,comparerow)&gt;=0)
+     {
+         flush.console()
+       plot.ts(comparerow)
+      lines(eachrow,col=""red"")
+      Sys.sleep(0.1)
+
+      }
+
+
+}
+</code></pre>
+
+<p>The comments in the code shows the various parameters I have tried to find the similarity. But I am unable to find an optimum value for the condition check in the if conditions. For different time series and query patterns the optimum value range for covariance is different to get an accurate result. </p>
+
+<p>I am looking how can covariance be used as a measure of similarity in my case. </p>
+"
+"NaN","NaN","194395","<p>If I do an autocorrelation test in R (using function <code>acf</code>), I get a great graph, and the horizontal lines show the cutoff of significance. </p>
+
+<p>Function <code>acf</code> also prints out the individual lag values in the console, however, here I can't see which are significant. Is there an easy way to do that without looking at the graph?</p>
+"
+"0.198866846404498","0.214598768819738","66369","<p>I've found two definitions in the literature for the autocorrelation time of a weakly stationary time series:</p>
+
+<p>$$
+\tau_a = 1+2\sum_{k=1}^\infty \rho_k \quad \text{versus} \quad \tau_b = 1+2\sum_{k=1}^\infty \left|\rho_k\right|
+$$</p>
+
+<p>where $\rho_k = \frac{\text{Cov}[X_t,X_{t+h}]}{\text{Var}[X_t]}$ is the autocorrelation at lag $k$.  </p>
+
+<p>One application of the autocorrelation time is to find the ""effective sample size"": if you have $n$ observations of a time series, and you know its autocorrelation time $\tau$, then you can pretend that you have</p>
+
+<p>$$
+n_\text{eff} = \frac{n}{\tau}
+$$</p>
+
+<p>independent samples instead of $n$ correlated ones for the purposes of finding the mean.  Estimating $\tau$ from data is non-trivial, but there are a few ways of doing it (see <a href=""http://arxiv.org/abs/1011.0175"">Thompson 2010</a>).</p>
+
+<p>The definition without absolute values, $\tau_a$, seems more common in the literature; but it admits the possibility of $\tau_a&lt;1$.  Using R and the ""coda"" package:</p>
+
+<pre><code>require(coda)
+ts.uncorr &lt;- arima.sim(model=list(),n=10000)         # white noise 
+ts.corr &lt;- arima.sim(model=list(ar=-0.5),n=10000)    # AR(1)
+effectiveSize(ts.uncorr)                             # Sanity check
+    # result should be close to 10000
+effectiveSize(ts.corr)
+    # result is in the neighborhood of 30000... ???
+</code></pre>
+
+<p>The ""effectiveSize"" function in ""coda"" uses a definition of the autocorrelation time equivalent to $\tau_a$, above.  There are some other R packages out there that compute effective sample size or autocorrelation time, and all the ones I've tried give results consistent with this:  that an AR(1) process with a negative AR coefficient has <em>more</em> effective samples than the correlated time series.  This seems strange.  </p>
+
+<p>Obviously, this can never happen in the $\tau_b$ definition of autocorrelation time.</p>
+
+<p>What is the correct definition of autocorrelation time?  Is there something wrong with my understanding of effective sample sizes?  The $n_\text{eff} &gt; n$ result shown above seems like it must be wrong... what's going on?</p>
+"
+"0.271009829496304","0.224960635332924","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"NaN","NaN","163682","<p>I want to use Arima model for forecasting wind speed.I plot my data."
+"NaN","NaN","<a href=http://i.stack.imgur.com/TrGLz.jpg rel=nofollow><img src=http://i.stack.imgur.com/TrGLz.jpg alt=enter image description here></a></p>",""
+"NaN","NaN","<p>Then i plot ACF and PACF.",""
+"NaN","NaN","<a href=http://i.stack.imgur.com/RWq8H.jpg rel=nofollow><img src=http://i.stack.imgur.com/RWq8H.jpg alt=enter image description here></a></p>",""
+"NaN","NaN","<p>I used ADF test and KPSS test and they said that data are stationary and doesnt need differencing but in ACF plot we see Sinusoidal trend.Is it realy stationary and doesnt need differencing?How we should know abou seasonality?",""
+"NaN","NaN","TNX</p>",""
+"NaN","NaN","","<r><time-series><arima><autocorrelation><augmented-dickey-fuller>"
+"0.130188910980824","0.140487871737254","159741","<p>I have 100 simulations of an ARMA(1,2) process, created with R is such a way: </p>
+
+<pre><code>M &lt;- replicate(100, arima.sim(list(order=c(1,0,2),ar=-0.5,ma=c(0.5,-0.7)), mean=1.25,sd=sqrt(0.5),n=60))
+M &lt;- data.matrix(M)
+</code></pre>
+
+<p>Thus each column represents a time series.</p>
+
+<p>Now, my next step is to compute the first two correlation coefficients of each simulation. 
+This is the point in which I'm stuck. 
+My idea is first do a loop over the columns of M, in order to compute the correlation coefficient for each time series and allocate the result in a matrix. (that should be 3x100) </p>
+
+<p>What I have tryed to do in R is the following:</p>
+
+<pre><code>CorrCoeff&lt;- list()
+length(CorrCoeff) &lt;- 300
+dim(CorrCoeff) &lt;- c(3,100)
+CorrCoeff &lt;- data.matrix(CorrCoeff) #empty matrix that I will fill with the loop 
+
+for(i in 1:ncol(M) #loop over the colums
+  { CorrCoeff[,i] &lt;- cbind(acf(M[,i],2)) } 
+CorrCoeff
+</code></pre>
+
+<p>But unfortunately this code doesn't work. </p>
+
+<p>Then I have tried also: </p>
+
+<pre><code>a &lt;- vector(mode=""numeric"")
+for(i in 1:ncol(M))
+  { a[i] &lt;- cbind(acf(M[,i],2)) } 
+</code></pre>
+
+<p>Here I get the acf for each time series but the output is presented is a strange way and I don't know how to put these results in a matrix. </p>
+
+<p>Can someone tell me where I'm wrong or give me some suggestions? 
+Thank you! Cheers</p>
+"
+"0.249292785004635","0.220102194620033","159769","<p>I was checking for seasonality and other dependencies and this is the curve I get . There's no apparent seasonality....but what exctly does the falling slope mean? Any help would be appreciated. Thanks!</p>
+
+<p>Actual Time Series:
+<img src=""http://i.stack.imgur.com/JtJiu.png"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/xTvlQ.png"" alt=""Autocorelation curve for a time series with data over last 9 years""></p>
+
+<p>EDIT: Adding other plots:
+<img src=""http://i.stack.imgur.com/hhStk.png"" alt=""PACF of original time series""></p>
+
+<p>Here is the ACF and PACF of once-differenced
+<img src=""http://i.stack.imgur.com/pGGJM.png"" alt=""ACF,once differentiated"">
+ <img src=""http://i.stack.imgur.com/DyHFW.png"" alt=""PACF, differentiated once""></p>
+
+<p>Some results from running the ARIMA model:</p>
+
+<pre><code>Call:
+**arima(x = meanT2$MeanUnit, order = c(1, 0, 1))**
+
+Coefficients:
+         ar1      ma1  intercept
+      0.9840  -0.3525  1002.8215
+s.e.  0.0169   0.0927   184.1689
+
+Call:
+**arima(x = meanT2$MeanUnit, order = c(1, 0, 0))**
+
+Coefficients:
+         ar1  intercept
+      0.9456  1031.3660
+s.e.  0.0319   110.2209
+
+sigma^2 estimated as 5312:  log likelihood = -651.81,  aic = 1309.62
+
+Call:
+**arima(x = meanT2$MeanUnit, order = c(2, 0, 1))**
+
+Coefficients:
+         ar1      ar2      ma1  intercept
+      1.0455  -0.0599  -0.4046   1002.210
+s.e.  0.2324   0.2258   0.2091    185.629
+
+Call:
+**arima(x = meanT2$MeanUnit, order = c(2, 0, 0))**
+
+Coefficients:
+         ar1     ar2  intercept
+      0.6907  0.2753  1016.3942
+s.e.  0.0898  0.0912   151.4378
+
+sigma^2 estimated as 4908:  log likelihood = -647.45,  aic = 1302.91
+</code></pre>
+
+<p>Edited to add: The residuals plot of the ARIMA(1,0,1) case. For ARIMA(1,0,0) its almost the same 
+<img src=""http://i.stack.imgur.com/8sK5s.png"" alt=""enter image description here""></p>
+
+<p>ACF plot of ARIMA(1,0,1)<img src=""http://i.stack.imgur.com/P63P8.png"" alt=""enter image description here""></p>
+"
+"NaN","NaN","177689","<p>I have a single time series of financial data (stock index returns) and would like to study the autocorrelation among (log-)returns that are classified as ""extreme"", for example via exceedance of a certain threshold. The threshold could be defined by some quantile (5% for example). From filtering the data I can see that this kind of returns commonly occur in clusters.</p>
+
+<ol>
+<li>What would be the right method/approach for this type of problem?</li>
+<li>Does it make sense to separate positive and negative ""extreme"" returns?</li>
+<li>How can I include the temporal distance between ""extreme"" returns and/or return clusters in this problem?</li>
+</ol>
+
+<p>(I'm familiar with Mathematica and GNU R, so advice in this direction is of course welcome too)</p>
+"
+"0.0751646028002829","0.0811107105653813","68966","<p>I am trying to manually estimate the non-seasonal components of an SARIMA (p,d,q)x(P,D,Q)[s]. I thought the estimation is going the same way like in ARIMA, but the output says somehow something different. </p>
+
+<p>I have an autocorrelation in the acf correlogram and one significance bound at lag 1 in the pacf. That means I have an autocorrelation first order.</p>
+
+<p>I'm confused now, why <code>auto.arima</code> is giving me the result (0,1,1)x(0,0,1)[12] instead of (1,1,0)x(0,0,1)[12]</p>
+
+<p>Here is my code example:</p>
+
+<pre><code>timeseries &lt;- ts(daten, start=c(1955,1), freq=12)
+
+&gt; timeseries
+      Jan  Feb  Mar  Apr  May  Jun  Jul  Aug  Sep  Oct  Nov  Dec
+1955  1.8  1.7  1.5  1.2  1.5  1.5  1.6  1.8  1.5  1.5  1.6  1.3
+1956  0.7  0.6  0.4  0.9  0.9  0.8  0.8  0.6  0.6  0.4  0.4  0.2
+1957  0.2  0.1  0.6  0.8  0.3  0.4  0.5  0.7  0.8  0.9  1.0  1.3
+1958  1.7  1.7  1.4  1.0  0.9  1.3  1.3  1.0  1.5  1.4  1.4  2.2
+1959  1.3  1.7  1.7  2.2  2.8  2.5  2.2  2.3  1.8  1.6  1.3  1.4
+1960  2.2  1.8  1.9  1.6  1.1  0.8  1.1  1.1  1.1  1.4  1.2  1.2
+1961  0.9  1.2  1.3  0.9  0.7  0.8  0.8  1.2  1.0  1.0  1.4  1.0
+1962  1.1  0.8  1.1  1.7  2.1  2.0  2.1  2.1  2.0  2.3  2.0  2.3
+1963  1.6  1.9  1.6  1.4  1.6  1.8  1.8  1.9  2.5  2.3  2.2  2.1
+1964  2.1  2.1  1.9  2.3  2.1  2.0  2.1  1.8  1.0  1.1  1.5  1.4
+1965  1.8  1.9  2.0  2.0  2.0  2.0  2.0  2.0  2.7  2.7  3.3  3.1
+1966  2.9  3.0  3.3  2.6  3.1  3.4  3.5  3.3  3.0  2.5  1.4  1.1
+1967  0.9  1.0  0.4  0.8  0.0  0.0 -0.7 -0.1 -0.5 -0.1  0.3  0.8
+1968  0.8  0.5  1.2  1.0  1.2  0.8  1.2  1.0  1.3  1.3  1.6  1.9
+1969  2.0  2.2  2.3  2.7  2.4  2.4  2.6  2.5  2.9  2.9  2.8  2.3
+1970  2.3  2.5  2.3  2.2  2.2  2.0  1.9  2.2  2.1  2.1  1.9  2.0
+1971  1.9  1.8  1.8  1.1  1.6  1.9  1.9   NA 
+
+diffts &lt;- diff(timeseries,12)
+tsdisplay(diffts, lag.max=36)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/2MgzU.jpg"" alt=""enter image description here""></p>
+
+<p>But <code>auto.arima</code> is giving me the following output:</p>
+
+<pre><code>auto.arima(timeseries)
+
+Series: timeseries 
+ARIMA(0,1,1)(0,0,1)[12]                    
+
+Coefficients:
+          ma1     sma1
+      -0.1280  -0.7260
+s.e.   0.0684   0.0584
+
+sigma^2 estimated as 0.07113:  log likelihood=-23.77
+AIC=53.54   AICc=53.66   BIC=63.42
+</code></pre>
+"
+"0.130188910980824","0.140487871737254","178014","<p>As the title states, I want to generate a time series that follows an AR(1) proces and thus has a certain overall level of autocorrelation.</p>
+
+<p>I'm using the <code>arima.sim</code> function (which is implemented as standard in R).</p>
+
+<p>I thought that for example the following command:</p>
+
+<pre><code>arima.sim(model=list(Ar=-0.5),n=400)
+</code></pre>
+
+<p>would generate a time series of length 400 and an autocorrelation of -0.5.
+However, I've noticed that the values you can give to the <code>Ar</code> parameter are not limited to [-1; 1]. For example, you could input <code>10 000</code>.</p>
+
+<p>Can anyone explain to me what the <code>Ar</code> parameter actually represents? Because it apparently is not a correlation coefficient...</p>
+
+<p>After reading on the internet it seems to me that there's not a lot of information there for people who want to simulate time series data using a model as opposed to people who want to fit data to a model...</p>
+"
+"0.301179935289883","0.286769667338202","125414","<p>I have two variables:</p>
+
+<ul>
+<li>urban areas</li>
+<li>protected areas.</li>
+</ul>
+
+<p>My observations are urban areas and protected areas in each year. But these observations are the cumulative ones, so observations in each variable have auto-correlation.</p>
+
+<p>Can I use the general correlation such as yielded by <code>cor()</code> in R to measure the correlation between these two variables? If not, which indicator or method can I use?</p>
+
+<p>I have the scatter plot: the horizontal variable is urban area in a specific year, and the vertical variable is another one in that specific year. And these two variables are increasing as years pass. I can see these two variables present a linear relationship. And my purpose is to find a indicator which can measure this linear relationship. I actually have tested the linear regression: the urban area as independent variable, the protected area as dependent variable, and I put 14 pairs of each year into the regression model, and the coefficients can pass the t-test, and model can pass the t-test, the $R^2$ can reach more than 0.9. </p>
+
+<p>I want to research the relationship between urban development and protected area development. And the scatter plot below is urban and protected area pairs on global scale for 1950-2014 with 5 year intervals (except for 2010 and 2014).</p>
+
+<p>I want to test two questions: First, are these two areas (urban and protected areas) both increasing over the research period? Second, does urbanization (here I mean the development of urban area) cause the development of protected areas?</p>
+
+<p>I want to use some correlation analysis to solve the first question, such as correlation, linear regression or MIC value. However, because my data are time series, I'm not sure it can be used in the calculation of correlation? So I raise this question. In addition, I don't know other methods that could be used to measure strength of linear relationship between two time series. </p>
+
+<p>And for the second question, I want to use Granger causality test to test the causality relationship between these two areas statistically. I know the result of Granger causality can't be sure to determine the causality relationship. And in my opinion, the reasons to improve the development of urban areas or protected areas are both complex, and some of them may be shared. At this level, I simply want to test the causality relationship between these two variables.</p>
+
+<p><img src=""http://i.stack.imgur.com/tHlOm.jpg"" alt=""scatter plot between urban and farm land, the point is a variable pair in a specific year""></p>
+"
+"0.106298800690547","0.114707866935281","31141","<p>I am trying to analyze the lead-lag between time series of two stock prices. 
+In regular time series analysis, we can do Cross Correlaton, VECM (Granger Causality). However how does one handle the same in irregularly spaced time series. </p>
+
+<p>The hypothesis is that one of the instruments leads the other. </p>
+
+<p>I have data for both symbols to the microseconds. </p>
+
+<p>I have looked at RTAQ package and also tried applying VECM. 
+RTAQ is more on a univariate time series while VECM is not significant on 
+these timescales.</p>
+
+<pre><code>&gt; dput(STOCKS[,]))
+structure(c(29979, 29980, 29980, 29980, 29981, 29981, 29991, 
+29992, 29993, 29991, 29990, 29992), .Dim = c(6L, 2L), .Dimnames = list(NULL, c(""Pair_Bid"", ""Calc_Bid"" )), index = structure(c(1340686178.55163, 1340686181.40801, 1340686187.2642, 
+1340686187.52668, 1340686187.78777, 1340686189.36693), class = c(""POSIXct"", ""POSIXt""), tzone = """"), class = ""zoo"")
+</code></pre>
+"
+"0.301179935289883","0.267651689515655","94774","<p>I'm new in the page and pretty new in statistics and R. I'm working on a project for college with the objective of finding the correlation between rain and water flow level in rivers. Once the correlation is proved I want to forecast/predict it.</p>
+
+<p><strong>The data</strong>
+I have a set of data of several years(taken every 5 minutes) for a particular rivers containing: </p>
+
+<ul>
+<li>Rainfall in millimetres</li>
+<li>River flow in cubic meters per second</li>
+</ul>
+
+<p>This river doesn't have snow, so the model is just based on rain and time. There are occasionally freezing temperatures, but I'm thinking on removing those periods out of the data as outliers as that situation is out of scope for my project.</p>
+
+<p><strong>Examples</strong>
+Here you have a couple of plots of sample data the from a rain and the rise of water a few hours later.</p>
+
+<p><img src=""http://i.stack.imgur.com/ssmtM.jpg"" alt=""Bigger example a few days""></p>
+
+<p><img src=""http://i.stack.imgur.com/XSkvv.jpg"" alt=""Shorter example just one rainfall period""></p>
+
+<p>The red line is the river flow. The orange is the rain. You can see it always rains before water raises in river. There is some rain starting again at the end of the time series, but it will affect the river flow later.</p>
+
+<p>The correlation is there. Here is what I've done in R to prove the correlation using ccf in R: </p>
+
+<ul>
+<li>the cross-correlation</li>
+<li>the leading variable</li>
+<li>the lag</li>
+</ul>
+
+<p>This is my R line used for the second example (one rainfall period):</p>
+
+<pre><code>ccf(arnoiaex1$Caudal, arnoiaex1$Precip, lag.max=1000, plot=TRUE, main=""Flow &amp; Rain"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/IT62e.jpg"" alt=""ccf result for small example 2""></p>
+
+<p>My interpretation is: </p>
+
+<ul>
+<li>that the rain leads (happens first),</li>
+<li>there is a significant correlation that peaks at a lag of $\approx 450$ (I can check the exact number, I know that part). </li>
+<li>I don't know how to find out the time that correlation affects the river flow, I think the name is â€œretentionâ€. What I see is the graph follows the same shape of the first graph, when the river losing the water after the rain. I don't if based on that I can say the retention lasts from $\approx 450$ when it peaks to $\approx 800$ (I can check this in the object created in the dataframe returned by <code>ccf</code> and see when the water level comes back to the value of â€œbefore rainâ€. Is that right? Is there a better way to find the retention?</li>
+</ul>
+
+<p>Am I right?</p>
+
+<p><strong>About the time series</strong>.
+This time series doesn't have periodicity or seasonality. Rain can come any time and cause an effect. It does reduce in summer, but it still happens, it's an area with a lot of rain all year around.</p>
+
+<p><strong>Model and forecast.</strong>
+I don't know how to create a model to be able to do a forecast that tells me how much is a river going to increase the volume after a period of rain. I've been trying some <code>arima</code>, <code>auto arima</code> but haven't been very successful. Should I use <code>Arima</code>, <code>vars</code> or other different multivariate model? Any link to a example would be of great help.</p>
+
+<p>Please, let me know if you know the best way to create this prediction, what model should I use. There are a few other things I'm considering doing but taken them out of this explanation for simplicity.
+I can share some data if required.</p>
+"
+"0.168073161363204","0.181369062527503","75020","<p>This is my first post on here, looking for some help. I am relatively new to analysis of temporal datasets. I have experience with R and developing linear models, so I am trying to figure out if the approach I am trying is appropriate with temporal data or if I need to do something different.</p>
+
+<p>Data: Monthly measurements of metal concentrations that span one year, with a few missing months. With the missing months, I am pretty I can't set up a true time series analysis in R (right?). I have several predictor variables (rainfall, temp, etc) that I want to evaluate.</p>
+
+<p>Approach: Construct a GLM with terms for each predictor and sampling month. I am considering using the gls function in nlme package in R so that I could examine autocorrelation.</p>
+
+<p>Goal: Identify factors to explain pattern in temporal water data</p>
+
+<p>Questions: - Can I use a glm approach with temporal data, even if there may be seasonality to the data? - How do i test for temporal autocorrelation in the error terms? I know there are some correlation structures that I could set up in gls but haven't figured out how to set this up and which one is best for testing temporal autocorrelation yet.</p>
+
+<p>Example dataset and approach is below. I would appreciate advice on if what I propose seems appropriate. If not, suggestions of alternative approaches would be a great help.</p>
+
+<pre><code>dat&lt;-data.frame(month=c(""Jan"",""Jan"",""Jan"",""Feb"",""Feb"",""Feb"",""Jun"",""Jun"",""Jun""),
+wat=c(0.4,0.5,0.6,1,1.5,1.8,0.4,0.3,0.8),
+rain = c(100,110,120,200,210,220,300,310,330), 
+temp = c(10,11,12,14,12,13,10,12,8))
+
+m0&lt;-gls(wat~month+rain+temp,correlation = corAR1(),data=dat)
+</code></pre>
+
+<p>Thanks!</p>
+"
+"0.130188910980824","0.0936585811581694","32447","<p>In the following example I have a data frame which consists of a time series of water temperature measurements recorded at 5 depths in the ocean where each value in <code>Temp</code> corresponds to the date in <code>DateTime</code> and the depth in <code>Depth</code>. </p>
+
+<pre><code>set.seed(1)
+Temp &lt;- rnorm(43800,sd=20)
+AirT &lt;- rnorm(8760,sd=20)
+Depth &lt;- c(1:5)
+
+DateTime = seq(from=as.POSIXct(""2010-01-01 00:00""), 
+           to=as.POSIXct(""2010-12-31 23:00""), length=8760)
+Time &lt;- as.POSIXct(DateTime, format = ""%Y-%m-%d %H:%M"")
+
+DatT &lt;- data.frame(Temp)
+
+## bind together
+FinalDat &lt;- cbind(DatT, Date = rep(Time,5))
+
+FinalDat &lt;- cbind(FinalDat, AirT = rep(AirT, 5),
+                  Depth = rep(Depth, each = 8760),
+                  Doy = as.numeric(format(Time,format = ""%j"")),
+                  DecTime = rep(seq(1,366, length = 8760),5))
+</code></pre>
+
+<p>From this I would like to find the similarity between air temperature (<code>AirT</code>) and the water temperature at these different depths. I can calculate the correlation between air temperature and water temperature for the different depths which shows that the correlation decreases with depth, however, I am looking for a more sophisticated method (other than receiving a single value for each time series). Can anyone suggest an appropriate method for achieving this?</p>
+
+<p>Here is a thinned version of my data.frame (FinalDat):</p>
+
+<pre><code>       Temp       Date     AirT Depth
+1    3.4069 2011-01-01  6.52710   0.5
+2    3.2165 2011-01-08  6.77050   0.5
+3    3.5630 2011-01-15  6.61410   0.5
+4    3.8027 2011-01-22 -2.94440   0.5
+5    3.7328 2011-01-29 -2.92900   0.5
+6    4.1008 2011-02-05 12.74800   0.5
+7    5.1825 2011-02-12  8.91900   0.5
+8    5.0460 2011-02-19  4.43910   0.5
+9    5.6156 2011-02-26  8.58090   0.5
+10   5.5237 2011-03-05  1.56630   0.5
+11   5.5110 2011-03-12  7.94470   0.5
+12   6.5645 2011-03-19 -0.25485   0.5
+13   7.8872 2011-03-26  4.11280   0.5
+14   8.9096 2011-04-02 12.88700   0.5
+15  10.8740 2011-04-09  6.34800   0.5
+16  10.9600 2011-04-16  9.44190   0.5
+17  14.6930 2011-04-23 12.37300   0.5
+18  15.1330 2011-04-30 11.40200   0.5
+19  14.2740 2011-05-07 14.48400   0.5
+20  14.5670 2011-05-14  5.68590   0.5
+21  14.0330 2011-05-21  8.36570   0.5
+22  13.3870 2011-05-28 11.03900   0.5
+23  16.5560 2011-06-04 13.10300   0.5
+24  16.4140 2011-06-11  7.56720   0.5
+25  16.2590 2011-06-18 12.02400   0.5
+26  16.5120 2011-06-25 11.43100   0.5
+27  17.9290 2011-07-02  8.75940   0.5
+28  18.7150 2011-07-09 13.06100   0.5
+29  19.4970 2011-07-16 14.96000   0.5
+30  17.7090 2011-07-23 10.06100   0.5
+31  19.5090 2011-07-30 11.76200   0.5
+32  20.4780 2011-08-06 12.56800   0.5
+33  17.8850 2011-08-13 16.93200   0.5
+34  17.7440 2011-08-20 14.82700   0.5
+35  18.1400 2011-08-27 12.14800   0.5
+36  17.0460 2011-09-03 17.19700   0.5
+37  16.5960 2011-09-10 18.45800   0.5
+38  15.6430 2011-09-17 13.07600   0.5
+39  14.9960 2011-09-24 13.19300   0.5
+40  16.9880 2011-10-01 20.17800   0.5
+41  14.5380 2011-10-08 10.92600   0.5
+42  14.3770 2011-10-15  9.64180   0.5
+43  12.6210 2011-10-22 11.71200   0.5
+44  11.7810 2011-10-29  7.32770   0.5
+45  11.8270 2011-11-05 11.15600   0.5
+46  10.9790 2011-11-12 11.30000   0.5
+47  10.3410 2011-11-19 10.77100   0.5
+48   9.6291 2011-11-26  6.81090   0.5
+49   8.5466 2011-12-03  9.11540   0.5
+50   7.1007 2011-12-10  3.52720   0.5
+51   6.3081 2011-12-17  0.32245   0.5
+52   6.1304 2011-12-24  5.40000   0.5
+53   6.1974 2011-12-31 11.93100   0.5
+54   3.2471 2011-01-07  0.44508   4.0
+55   3.4851 2011-01-14  8.43040   4.0
+56   3.8537 2011-01-21 -2.26530   4.0
+57   3.8496 2011-01-28  1.33950   4.0
+58   3.8461 2011-02-04 10.18700   4.0
+59   4.7892 2011-02-11  6.91330   4.0
+60   5.1160 2011-02-18  5.30300   4.0
+61   5.4236 2011-02-25 10.40700   4.0
+62   5.3190 2011-03-04  3.63990   4.0
+63   5.5318 2011-03-11  5.49690   4.0
+64   6.0956 2011-03-18  2.12060   4.0
+65   6.7955 2011-03-25  5.66700   4.0
+66   8.5056 2011-04-01 12.13400   4.0
+67   9.8450 2011-04-08  6.11440   4.0
+68  10.7220 2011-04-15  9.85800   4.0
+69  11.3970 2011-04-22 11.39300   4.0
+70  12.6660 2011-04-29  9.54510   4.0
+71  13.6370 2011-05-06 12.99600   4.0
+72  14.7530 2011-05-13  8.83800   4.0
+73  13.8210 2011-05-20  8.81900   4.0
+74  13.5120 2011-05-27 10.80500   4.0
+75  14.2630 2011-06-03 11.08700   4.0
+76  15.6330 2011-06-10  7.20970   4.0
+77  15.5290 2011-06-17 10.11400   4.0
+78  16.6340 2011-06-24 11.29400   4.0
+79  17.4820 2011-07-01 11.43900   4.0
+80  17.8620 2011-07-08 13.29700   4.0
+81  18.8970 2011-07-15 11.61900   4.0
+82  17.4720 2011-07-22 12.73800   4.0
+83  17.8640 2011-07-29 14.95600   4.0
+84  17.6610 2011-08-05 16.48600   4.0
+85  17.4880 2011-08-12 16.06000   4.0
+86  17.5980 2011-08-19 11.38900   4.0
+87  17.8150 2011-08-26 10.69200   4.0
+88  16.7470 2011-09-02 14.71100   4.0
+89  16.0230 2011-09-09 14.09600   4.0
+90  15.5350 2011-09-16 13.03500   4.0
+91  15.0200 2011-09-23 11.81800   4.0
+92  15.1200 2011-09-30 14.49800   4.0
+93  15.0590 2011-10-07 10.76800   4.0
+94  14.5790 2011-10-14 13.91800   4.0
+95  12.7810 2011-10-21  8.84760   4.0
+96  11.9060 2011-10-28  8.37600   4.0
+97  11.7150 2011-11-04 12.57400   4.0
+98  11.1170 2011-11-11 11.26200   4.0
+99  10.3560 2011-11-18 11.11100   4.0
+100  9.8484 2011-11-25 12.91700   4.0
+101  8.7573 2011-12-02  2.43560   4.0
+102  7.2890 2011-12-09  5.87070   4.0
+103  6.4547 2011-12-16  2.31850   4.0
+104  6.0336 2011-12-23 11.12900   4.0
+105  6.2363 2011-12-30  4.78220   4.0
+106  3.4241 2011-01-06  2.92880   6.0
+107  3.4075 2011-01-13  9.59030   6.0
+108  3.9650 2011-01-20 -1.45990   6.0
+109  3.9061 2011-01-27  3.49050   6.0
+110  3.8072 2011-02-03  6.15450   6.0
+111  4.7597 2011-02-10  8.87270   6.0
+112  4.9920 2011-02-17  4.61980   6.0
+113  5.1485 2011-02-24  7.66730   6.0
+114  5.4556 2011-03-03 -0.73976   6.0
+115  5.4305 2011-03-10  9.08700   6.0
+116  5.9204 2011-03-17  6.57230   6.0
+117  6.4393 2011-03-24  4.21580   6.0
+118  6.7361 2011-03-31  9.55530   6.0
+119  8.9556 2011-04-07 10.24900   6.0
+120 10.7240 2011-04-14  8.15550   6.0
+121 10.4810 2011-04-21  9.75940   6.0
+122 10.6310 2011-04-28  6.43770   6.0
+123 13.2840 2011-05-05 10.70900   6.0
+124 14.1380 2011-05-12  9.11810   6.0
+125 13.7850 2011-05-19  8.26810   6.0
+126 13.6800 2011-05-26 11.65000   6.0
+127 13.8950 2011-06-02 13.10500   6.0
+128 13.8530 2011-06-09 11.09500   6.0
+129 14.6830 2011-06-16 12.63000   6.0
+130 15.3570 2011-06-23 12.66100   6.0
+131 15.5860 2011-06-30  9.57130   6.0
+132 16.2190 2011-07-07 13.84300   6.0
+133 16.1140 2011-07-14 10.93200   6.0
+134 17.1240 2011-07-21 13.44100   6.0
+135 17.2110 2011-07-28 13.41700   6.0
+136 16.9800 2011-08-04 14.81500   6.0
+137 17.4610 2011-08-11 16.33900   6.0
+138 17.5690 2011-08-18 10.04300   6.0
+139 17.3600 2011-08-25 11.87600   6.0
+140 16.6180 2011-09-01 11.71000   6.0
+141 16.1330 2011-09-08 11.84600   6.0
+142 15.6770 2011-09-15 12.17800   6.0
+143 15.1640 2011-09-22 11.90200   6.0
+144 14.8160 2011-09-29 17.07200   6.0
+145 15.0100 2011-10-06 13.21700   6.0
+146 14.4410 2011-10-13 12.01300   6.0
+147 13.0510 2011-10-20  3.75340   6.0
+148 12.0580 2011-10-27  8.76700   6.0
+149 11.6430 2011-11-03 13.96900   6.0
+150 11.1400 2011-11-10 13.03200   6.0
+151 10.5090 2011-11-17  8.26000   6.0
+152  9.8690 2011-11-24 12.02100   6.0
+153  8.9167 2011-12-01  9.64050   6.0
+154  7.3953 2011-12-08  4.99180   6.0
+155  6.5533 2011-12-15  3.73240   6.0
+156  5.9886 2011-12-22 12.69300   6.0
+157  6.3341 2011-12-29  7.12550   6.0
+158  3.4249 2011-01-05  5.66070   8.0
+159  3.4232 2011-01-12  4.42930   8.0
+160  3.9632 2011-01-19  0.04384   8.0
+161  3.9203 2011-01-26  5.33010   8.0
+162  3.7569 2011-02-02  4.74030   8.0
+163  4.6606 2011-02-09  6.48010   8.0
+164  4.9632 2011-02-16  5.92770   8.0
+165  4.9742 2011-02-23  7.15490   8.0
+166  5.3302 2011-03-02  1.52250   8.0
+167  5.3380 2011-03-09  6.46400   8.0
+168  5.7341 2011-03-16  6.49500   8.0
+169  6.1663 2011-03-23  4.01320   8.0
+170  6.1420 2011-03-30 10.23300   8.0
+171  7.1226 2011-04-06 12.10300   8.0
+172  8.4905 2011-04-13  5.66120   8.0
+173  8.7548 2011-04-20  7.94430   8.0
+174  8.7160 2011-04-27  9.66080   8.0
+175 10.1360 2011-05-04  5.13940   8.0
+176  9.6597 2011-05-11 12.00800   8.0
+177 12.8610 2011-05-18 13.42900   8.0
+178 13.1300 2011-05-25  7.96200   8.0
+179 13.6080 2011-06-01  8.94920   8.0
+180 13.4880 2011-06-08 10.58700   8.0
+181 13.6130 2011-06-15 14.82200   8.0
+182 13.4320 2011-06-22 13.28300   8.0
+183 13.3850 2011-06-29 10.09900   8.0
+184 13.1230 2011-07-06 14.30500   8.0
+185 13.2270 2011-07-13 13.44700   8.0
+186 13.3370 2011-07-20 13.27900   8.0
+187 13.4860 2011-07-27 16.17600   8.0
+188 14.1970 2011-08-03 15.40500   8.0
+189 14.0740 2011-08-10 11.20800   8.0
+190 14.2160 2011-08-17 10.92000   8.0
+191 14.7250 2011-08-24 13.57000   8.0
+192 16.2060 2011-08-31 12.35700   8.0
+193 15.6070 2011-09-07 13.77500   8.0
+194 15.7620 2011-09-14 13.05900   8.0
+195 15.1750 2011-09-21 11.50800   8.0
+196 14.7600 2011-09-28 15.44600   8.0
+197 14.7480 2011-10-05 15.41900   8.0
+198 14.3420 2011-10-12 12.46600   8.0
+199 13.3520 2011-10-19  8.04520   8.0
+200 12.1960 2011-10-26  9.85760   8.0
+201 11.6640 2011-11-02  9.94480   8.0
+202 11.1650 2011-11-09  9.83490   8.0
+203 10.6510 2011-11-16  7.18460   8.0
+204 10.0600 2011-11-23  3.36370   8.0
+205  9.1110 2011-11-30  6.19500   8.0
+206  7.7550 2011-12-07  5.57610   8.0
+207  6.7252 2011-12-14  5.46150   8.0
+208  5.9302 2011-12-21  6.02540   8.0
+209  6.4421 2011-12-28  8.87860   8.0
+210  3.5953 2011-01-04 -0.87434  10.0
+211  3.3527 2011-01-11  7.57030  10.0
+212  3.9915 2011-01-18  4.65410  10.0
+213  3.8234 2011-01-25  7.24100  10.0
+214  3.8257 2011-02-01  2.03130  10.0
+215  4.6403 2011-02-08  4.28250  10.0
+216  5.0439 2011-02-15  2.09610  10.0
+217  4.9152 2011-02-22  4.52120  10.0
+218  5.3290 2011-03-01  4.09410  10.0
+219  5.4156 2011-03-08 -0.97393  10.0
+220  5.7129 2011-03-15  5.77950  10.0
+221  6.0155 2011-03-22  4.84410  10.0
+222  5.9742 2011-03-29  4.10630  10.0
+223  6.1641 2011-04-05 10.80000  10.0
+224  6.4420 2011-04-12  7.07030  10.0
+225  6.6906 2011-04-19  9.72580  10.0
+226  6.8168 2011-04-26 11.22400  10.0
+227  6.5933 2011-05-03  7.08340  10.0
+228  7.7907 2011-05-10 10.99000  10.0
+229  6.8976 2011-05-17 12.02200  10.0
+230  7.1110 2011-05-24  9.37830  10.0
+231 10.1990 2011-05-31  7.85870  10.0
+232  9.9413 2011-06-07  9.30420  10.0
+233 10.2710 2011-06-14 10.07000  10.0
+234  9.6727 2011-06-21 15.00500  10.0
+235 10.0280 2011-06-28 13.74500  10.0
+236 10.3870 2011-07-05 17.47700  10.0
+237  9.9664 2011-07-12 15.32100  10.0
+238  9.8633 2011-07-19 13.27000  10.0
+239 10.1500 2011-07-26 11.90700  10.0
+240  9.6085 2011-08-02 17.43300  10.0
+241 10.2650 2011-08-09 13.26100  10.0
+242 10.2090 2011-08-16 13.34400  10.0
+243  9.9657 2011-08-23 16.62600  10.0
+244 10.1730 2011-08-30 13.30700  10.0
+245 10.4790 2011-09-06 14.72500  10.0
+246 10.5400 2011-09-13 14.77800  10.0
+247 11.9570 2011-09-20 15.70200  10.0
+248 12.4710 2011-09-27 11.22700  10.0
+249 12.1980 2011-10-04 13.29700  10.0
+250 13.8790 2011-10-11 16.68600  10.0
+251 13.7680 2011-10-18  7.88400  10.0
+252 12.1430 2011-10-25 13.14200  10.0
+253 11.5050 2011-11-01 13.24000  10.0
+254 11.1610 2011-11-08 10.43400  10.0
+255 10.7390 2011-11-15  9.17300  10.0
+256 10.0850 2011-11-22  9.06990  10.0
+257  9.1183 2011-11-29 12.74600  10.0
+258  7.9380 2011-12-06  4.43310  10.0
+259  6.8017 2011-12-13  9.05250  10.0
+260  5.9501 2011-12-20  7.67070  10.0
+261  6.3240 2011-12-27 10.47900  10.0
+262  3.6034 2011-01-03  0.44518  12.0
+263  3.2966 2011-01-10  1.92110  12.0
+264  3.8193 2011-01-17  5.50270  12.0
+265  3.8413 2011-01-24  2.38370  12.0
+266  3.8157 2011-01-31 -0.20332  12.0
+267  4.3896 2011-02-07 10.31200  12.0
+268  4.9550 2011-02-14  6.72160  12.0
+269  4.9230 2011-02-21  4.14600  12.0
+270  5.3725 2011-02-28  4.17540  12.0
+271  5.4386 2011-03-07 -0.17011  12.0
+272  5.6663 2011-03-14 -0.20653  12.0
+273  5.6173 2011-03-21  9.40060  12.0
+274  5.7879 2011-03-28  3.42890  12.0
+275  5.8027 2011-04-04  5.26820  12.0
+276  5.7847 2011-04-11  8.31470  12.0
+277  5.9425 2011-04-18  8.85620  12.0
+278  6.2409 2011-04-25  6.88140  12.0
+279  5.9921 2011-05-02  9.72310  12.0
+280  6.0906 2011-05-09 12.04900  12.0
+281  6.0394 2011-05-16 12.44600  12.0
+282  6.0922 2011-05-23  9.88280  12.0
+283  6.4765 2011-05-30 12.69800  12.0
+284  6.6011 2011-06-06 11.33400  12.0
+285  6.6846 2011-06-13 15.29900  12.0
+286  6.9803 2011-06-20  9.87070  12.0
+287  6.6561 2011-06-27 19.08300  12.0
+288  7.2964 2011-07-04 12.62800  12.0
+289  6.5017 2011-07-11 11.53500  12.0
+290  7.4560 2011-07-18 13.64600  12.0
+291  7.4972 2011-07-25  9.44130  12.0
+292  7.1581 2011-08-01 18.45400  12.0
+293  7.4089 2011-08-08 11.82800  12.0
+294  7.5630 2011-08-15 12.00700  12.0
+295  7.5153 2011-08-22 12.84500  12.0
+296  7.4694 2011-08-29 11.80500  12.0
+297  7.5982 2011-09-05 11.41900  12.0
+298  7.5733 2011-09-12 13.39300  12.0
+299  7.7114 2011-09-19 13.35600  12.0
+300  7.9359 2011-09-26 15.57900  12.0
+301  7.7604 2011-10-03 15.83000  12.0
+302  8.2146 2011-10-10 16.05000  12.0
+303  8.8018 2011-10-17 11.35400  12.0
+304 12.0390 2011-10-24 14.38700  12.0
+305 11.3230 2011-10-31 14.43600  12.0
+306 11.4140 2011-11-07  2.19910  12.0
+307 10.9020 2011-11-14  9.79220  12.0
+308 10.1070 2011-11-21  9.87410  12.0
+309  9.2805 2011-11-28  4.62830  12.0
+310  8.2556 2011-12-05  2.57670  12.0
+311  6.9548 2011-12-12  4.16250  12.0
+312  6.0980 2011-12-19  1.10680  12.0
+313  6.1540 2011-12-26 12.25600  12.0
+314  3.6293 2011-01-02  2.14550  14.0
+315  3.3969 2011-01-09  4.79400  14.0
+316  3.8152 2011-01-16 11.32500  14.0
+317  3.9532 2011-01-23  0.58015  14.0
+318  3.8262 2011-01-30 -0.96998  14.0
+319  4.1869 2011-02-06 10.84800  14.0
+320  4.7450 2011-02-13  6.02670  14.0
+321  4.9848 2011-02-20  1.09370  14.0
+322  5.2429 2011-02-27  5.34090  14.0
+323  5.3107 2011-03-06  4.29060  14.0
+324  5.5456 2011-03-13  6.86140  14.0
+325  5.6181 2011-03-20  6.71190  14.0
+326  5.6648 2011-03-27  7.01350  14.0
+327  5.6326 2011-04-03  7.26700  14.0
+328  5.7413 2011-04-10  9.25000  14.0
+329  5.7310 2011-04-17  7.36030  14.0
+330  5.6897 2011-04-24  9.62540  14.0
+331  5.8051 2011-05-01  9.68150  14.0
+332  5.6844 2011-05-08 14.67800  14.0
+333  5.7530 2011-05-15  9.46050  14.0
+334  5.7696 2011-05-22 10.65700  14.0
+335  5.8255 2011-05-29 12.23400  14.0
+336  5.8422 2011-06-05 12.08500  14.0
+337  5.9016 2011-06-12  5.82010  14.0
+338  5.8791 2011-06-19 12.82400  14.0
+339  5.9407 2011-06-26 15.17000  14.0
+340  5.9502 2011-07-03 11.82400  14.0
+341  5.8969 2011-07-10 10.83500  14.0
+342  5.9582 2011-07-17 12.44000  14.0
+343  6.1421 2011-07-24 12.59700  14.0
+344  6.0970 2011-07-31 15.59200  14.0
+345  6.1043 2011-08-07 12.65400  14.0
+346  6.1677 2011-08-14 13.57600  14.0
+347  6.3980 2011-08-21 15.59100  14.0
+348  6.4571 2011-08-28 12.29000  14.0
+349  6.0783 2011-09-04 15.58600  14.0
+350  6.5784 2011-09-11 14.65100  14.0
+351  6.5329 2011-09-18  8.72590  14.0
+352  6.5395 2011-09-25 14.24400  14.0
+353  6.8765 2011-10-02 14.41700  14.0
+354  6.5151 2011-10-09 15.62400  14.0
+355  6.5328 2011-10-16 10.04000  14.0
+356  6.7127 2011-10-23 11.33300  14.0
+357  7.0375 2011-10-30 11.93500  14.0
+358  7.1903 2011-11-06  6.52240  14.0
+359  8.4702 2011-11-13  7.77260  14.0
+360  9.5075 2011-11-20  5.02910  14.0
+361  9.3919 2011-11-27 13.07300  14.0
+362  8.3426 2011-12-04  7.68420  14.0
+363  6.9961 2011-12-11  5.19810  14.0
+364  6.2100 2011-12-18  0.97878  14.0
+365  6.0532 2011-12-25 10.49000  14.0
+366  3.5866 2011-01-01  6.52710  16.0
+367  3.6081 2011-01-08  6.77050  16.0
+368  3.5889 2011-01-15  6.61410  16.0
+369  3.9475 2011-01-22 -2.94440  16.0
+370  3.8560 2011-01-29 -2.92900  16.0
+371  4.0730 2011-02-05 12.74800  16.0
+372  4.6510 2011-02-12  8.91900  16.0
+373  5.0101 2011-02-19  4.43910  16.0
+374  4.8702 2011-02-26  8.58090  16.0
+375  5.2720 2011-03-05  1.56630  16.0
+376  5.5106 2011-03-12  7.94470  16.0
+377  5.6273 2011-03-19 -0.25485  16.0
+378  5.6357 2011-03-26  4.11280  16.0
+379  5.6058 2011-04-02 12.88700  16.0
+380  5.6570 2011-04-09  6.34800  16.0
+381  5.6360 2011-04-16  9.44190  16.0
+382  5.6088 2011-04-23 12.37300  16.0
+383  5.6481 2011-04-30 11.40200  16.0
+384  5.6099 2011-05-07 14.48400  16.0
+385  5.6895 2011-05-14  5.68590  16.0
+386  5.6614 2011-05-21  8.36570  16.0
+387  5.6061 2011-05-28 11.03900  16.0
+388  5.6570 2011-06-04 13.10300  16.0
+389  5.6595 2011-06-11  7.56720  16.0
+390  5.6647 2011-06-18 12.02400  16.0
+391  5.6749 2011-06-25 11.43100  16.0
+392  5.6809 2011-07-02  8.75940  16.0
+393  5.6509 2011-07-09 13.06100  16.0
+394  5.6534 2011-07-16 14.96000  16.0
+395  5.6758 2011-07-23 10.06100  16.0
+396  5.8929 2011-07-30 11.76200  16.0
+397  5.8423 2011-08-06 12.56800  16.0
+398  5.8163 2011-08-13 16.93200  16.0
+399  5.8350 2011-08-20 14.82700  16.0
+400  5.8429 2011-08-27 12.14800  16.0
+401  5.8970 2011-09-03 17.19700  16.0
+402  5.8458 2011-09-10 18.45800  16.0
+403  5.9711 2011-09-17 13.07600  16.0
+404  5.9550 2011-09-24 13.19300  16.0
+405  6.1380 2011-10-01 20.17800  16.0
+406  6.0951 2011-10-08 10.92600  16.0
+407  5.9874 2011-10-15  9.64180  16.0
+408  6.1145 2011-10-22 11.71200  16.0
+409  6.1598 2011-10-29  7.32770  16.0
+410  6.1276 2011-11-05 11.15600  16.0
+411  6.2428 2011-11-12 11.30000  16.0
+412  6.2374 2011-11-19 10.77100  16.0
+413  7.8198 2011-11-26  6.81090  16.0
+414  8.4979 2011-12-03  9.11540  16.0
+415  7.0908 2011-12-10  3.52720  16.0
+416  6.3069 2011-12-17  0.32245  16.0
+417  6.1082 2011-12-24  5.40000  16.0
+418  6.1375 2011-12-31 11.93100  16.0
+419  3.5696 2011-01-07  0.44508  18.0
+420  3.0958 2011-01-14  8.43040  18.0
+421  3.8281 2011-01-21 -2.26530  18.0
+422  3.7336 2011-01-28  1.33950  18.0
+423  3.6466 2011-02-04 10.18700  18.0
+424  4.4241 2011-02-11  6.91330  18.0
+425  4.7528 2011-02-18  5.30300  18.0
+426  4.6170 2011-02-25 10.40700  18.0
+427  5.1216 2011-03-04  3.63990  18.0
+428  5.3997 2011-03-11  5.49690  18.0
+429  5.4961 2011-03-18  2.12060  18.0
+430  5.4625 2011-03-25  5.66700  18.0
+431  5.4426 2011-04-01 12.13400  18.0
+432  5.4857 2011-04-08  6.11440  18.0
+433  5.5036 2011-04-15  9.85800  18.0
+434  5.5052 2011-04-22 11.39300  18.0
+435  5.5101 2011-04-29  9.54510  18.0
+436  5.4935 2011-05-06 12.99600  18.0
+437  5.5244 2011-05-13  8.83800  18.0
+438  5.5015 2011-05-20  8.81900  18.0
+439  5.5059 2011-05-27 10.80500  18.0
+440  5.5142 2011-06-03 11.08700  18.0
+441  5.5896 2011-06-10  7.20970  18.0
+442  5.5319 2011-06-17 10.11400  18.0
+443  5.5354 2011-06-24 11.29400  18.0
+444  5.5589 2011-07-01 11.43900  18.0
+445  5.5371 2011-07-08 13.29700  18.0
+446  5.5686 2011-07-15 11.61900  18.0
+447  5.5670 2011-07-22 12.73800  18.0
+448  5.6439 2011-07-29 14.95600  18.0
+449  5.6940 2011-08-05 16.48600  18.0
+450  5.6338 2011-08-12 16.06000  18.0
+451  5.6322 2011-08-19 11.38900  18.0
+452  5.6545 2011-08-26 10.69200  18.0
+453  5.7226 2011-09-02 14.71100  18.0
+454  5.7256 2011-09-09 14.09600  18.0
+455  5.7185 2011-09-16 13.03500  18.0
+456  5.7454 2011-09-23 11.81800  18.0
+457  5.8026 2011-09-30 14.49800  18.0
+458  5.8097 2011-10-07 10.76800  18.0
+459  5.7557 2011-10-14 13.91800  18.0
+460  5.8051 2011-10-21  8.84760  18.0
+461  5.8297 2011-10-28  8.37600  18.0
+462  5.7679 2011-11-04 12.57400  18.0
+463  5.8322 2011-11-11 11.26200  18.0
+464  5.8059 2011-11-18 11.11100  18.0
+465  5.8491 2011-11-25 12.91700  18.0
+466  7.4509 2011-12-02  2.43560  18.0
+467  7.1933 2011-12-09  5.87070  18.0
+468  6.3294 2011-12-16  2.31850  18.0
+469  5.8866 2011-12-23 11.12900  18.0
+470  6.1258 2011-12-30  4.78220  18.0
+471  3.6297 2011-01-06  2.92880  20.0
+472  3.3468 2011-01-13  9.59030  20.0
+473  3.8969 2011-01-20 -1.45990  20.0
+474  3.8649 2011-01-27  3.49050  20.0
+475  3.7189 2011-02-03  6.15450  20.0
+476  4.5689 2011-02-10  8.87270  20.0
+477  4.8594 2011-02-17  4.61980  20.0
+478  4.8374 2011-02-24  7.66730  20.0
+479  5.2294 2011-03-03 -0.73976  20.0
+480  5.3550 2011-03-10  9.08700  20.0
+481  5.5199 2011-03-17  6.57230  20.0
+482  5.5185 2011-03-24  4.21580  20.0
+483  5.5391 2011-03-31  9.55530  20.0
+484  5.5010 2011-04-07 10.24900  20.0
+485  5.5107 2011-04-14  8.15550  20.0
+486  5.5052 2011-04-21  9.75940  20.0
+487  5.5200 2011-04-28  6.43770  20.0
+488  5.5096 2011-05-05 10.70900  20.0
+489  5.5201 2011-05-12  9.11810  20.0
+490  5.5574 2011-05-19  8.26810  20.0
+491  5.5375 2011-05-26 11.65000  20.0
+492  5.5331 2011-06-02 13.10500  20.0
+493  5.5330 2011-06-09 11.09500  20.0
+494  5.5517 2011-06-16 12.63000  20.0
+495  5.5645 2011-06-23 12.66100  20.0
+496  5.5771 2011-06-30  9.57130  20.0
+497  5.5920 2011-07-07 13.84300  20.0
+498  5.5822 2011-07-14 10.93200  20.0
+499  5.6023 2011-07-21 13.44100  20.0
+500  5.6408 2011-07-28 13.41700  20.0
+501  5.6308 2011-08-04 14.81500  20.0
+502  5.6300 2011-08-11 16.33900  20.0
+503  5.6460 2011-08-18 10.04300  20.0
+504  5.6596 2011-08-25 11.87600  20.0
+505  5.6706 2011-09-01 11.71000  20.0
+506  5.6735 2011-09-08 11.84600  20.0
+507  5.6815 2011-09-15 12.17800  20.0
+508  5.6948 2011-09-22 11.90200  20.0
+509  5.6955 2011-09-29 17.07200  20.0
+510  5.7011 2011-10-06 13.21700  20.0
+511  5.7241 2011-10-13 12.01300  20.0
+512  5.7566 2011-10-20  3.75340  20.0
+513  5.7440 2011-10-27  8.76700  20.0
+514  5.7583 2011-11-03 13.96900  20.0
+515  5.7599 2011-11-10 13.03200  20.0
+516  5.7876 2011-11-17  8.26000  20.0
+517  5.7958 2011-11-24 12.02100  20.0
+518  5.8690 2011-12-01  9.64050  20.0
+519  7.2601 2011-12-08  4.99180  20.0
+520  6.4506 2011-12-15  3.73240  20.0
+521  5.9143 2011-12-22 12.69300  20.0
+522  6.2010 2011-12-29  7.12550  20.0
+523  3.7158 2011-01-05  5.66070  22.0
+524  3.3825 2011-01-12  4.42930  22.0
+525  3.9394 2011-01-19  0.04384  22.0
+526  3.8967 2011-01-26  5.33010  22.0
+527  3.8006 2011-02-02  4.74030  22.0
+528  4.6272 2011-02-09  6.48010  22.0
+529  4.8906 2011-02-16  5.92770  22.0
+530  4.8437 2011-02-23  7.15490  22.0
+531  5.2401 2011-03-02  1.52250  22.0
+532  5.2371 2011-03-09  6.46400  22.0
+533  5.4725 2011-03-16  6.49500  22.0
+534  5.5676 2011-03-23  4.01320  22.0
+535  5.5634 2011-03-30 10.23300  22.0
+536  5.5158 2011-04-06 12.10300  22.0
+537  5.5711 2011-04-13  5.66120  22.0
+538  5.5681 2011-04-20  7.94430  22.0
+539  5.5749 2011-04-27  9.66080  22.0
+540  5.5829 2011-05-04  5.13940  22.0
+541  5.5900 2011-05-11 12.00800  22.0
+542  5.5885 2011-05-18 13.42900  22.0
+543  5.6147 2011-05-25  7.96200  22.0
+544  5.6210 2011-06-01  8.94920  22.0
+545  5.6379 2011-06-08 10.58700  22.0
+546  5.6279 2011-06-15 14.82200  22.0
+547  5.6317 2011-06-22 13.28300  22.0
+548  5.6570 2011-06-29 10.09900  22.0
+549  5.6468 2011-07-06 14.30500  22.0
+550  5.6739 2011-07-13 13.44700  22.0
+551  5.6677 2011-07-20 13.27900  22.0
+552  5.6808 2011-07-27 16.17600  22.0
+553  5.6797 2011-08-03 15.40500  22.0
+554  5.7022 2011-08-10 11.20800  22.0
+555  5.7044 2011-08-17 10.92000  22.0
+556  5.7113 2011-08-24 13.57000  22.0
+557  5.7130 2011-08-31 12.35700  22.0
+558  5.7259 2011-09-07 13.77500  22.0
+559  5.7374 2011-09-14 13.05900  22.0
+560  5.7435 2011-09-21 11.50800  22.0
+561  5.7419 2011-09-28 15.44600  22.0
+562  5.7606 2011-10-05 15.41900  22.0
+563  5.7488 2011-10-12 12.46600  22.0
+564  5.7847 2011-10-19  8.04520  22.0
+565  5.7825 2011-10-26  9.85760  22.0
+566  5.7979 2011-11-02  9.94480  22.0
+567  5.7828 2011-11-09  9.83490  22.0
+568  5.8190 2011-11-16  7.18460  22.0
+569  5.8245 2011-11-23  3.36370  22.0
+570  5.8462 2011-11-30  6.19500  22.0
+571  6.8035 2011-12-07  5.57610  22.0
+572  6.6398 2011-12-14  5.46150  22.0
+573  5.8833 2011-12-21  6.02540  22.0
+574  6.0826 2011-12-28  8.87860  22.0
+575  3.7401 2011-01-04 -0.87434  24.0
+576  3.2508 2011-01-11  7.57030  24.0
+577  3.8161 2011-01-18  4.65410  24.0
+578  3.8529 2011-01-25  7.24100  24.0
+579  3.7638 2011-02-01  2.03130  24.0
+580  4.5356 2011-02-08  4.28250  24.0
+581  4.6182 2011-02-15  2.09610  24.0
+582  4.7871 2011-02-22  4.52120  24.0
+583  5.1305 2011-03-01  4.09410  24.0
+584  5.2040 2011-03-08 -0.97393  24.0
+585  5.4503 2011-03-15  5.77950  24.0
+586  5.4623 2011-03-22  4.84410  24.0
+587  5.4744 2011-03-29  4.10630  24.0
+588  5.4610 2011-04-05 10.80000  24.0
+589  5.4958 2011-04-12  7.07030  24.0
+590  5.4913 2011-04-19  9.72580  24.0
+591  5.4967 2011-04-26 11.22400  24.0
+592  5.5384 2011-05-03  7.08340  24.0
+593  5.5223 2011-05-10 10.99000  24.0
+594  5.5361 2011-05-17 12.02200  24.0
+595  5.5549 2011-05-24  9.37830  24.0
+596  5.5721 2011-05-31  7.85870  24.0
+597  5.5697 2011-06-07  9.30420  24.0
+598  5.5709 2011-06-14 10.07000  24.0
+599  5.5695 2011-06-21 15.00500  24.0
+600  5.5792 2011-06-28 13.74500  24.0
+601  5.5783 2011-07-05 17.47700  24.0
+602  5.5969 2011-07-12 15.32100  24.0
+603  5.6055 2011-07-19 13.27000  24.0
+604  5.6135 2011-07-26 11.90700  24.0
+605  5.6078 2011-08-02 17.43300  24.0
+606  5.6343 2011-08-09 13.26100  24.0
+607  5.6386 2011-08-16 13.34400  24.0
+608  5.6365 2011-08-23 16.62600  24.0
+609  5.6493 2011-08-30 13.30700  24.0
+610  5.6607 2011-09-06 14.72500  24.0
+611  5.6561 2011-09-13 14.77800  24.0
+612  5.6629 2011-09-20 15.70200  24.0
+613  5.6921 2011-09-27 11.22700  24.0
+614  5.6948 2011-10-04 13.29700  24.0
+615  5.6826 2011-10-11 16.68600  24.0
+616  5.7206 2011-10-18  7.88400  24.0
+617  5.7105 2011-10-25 13.14200  24.0
+618  5.6953 2011-11-01 13.24000  24.0
+619  5.7325 2011-11-08 10.43400  24.0
+620  5.7176 2011-11-15  9.17300  24.0
+621  5.7275 2011-11-22  9.06990  24.0
+622  5.7293 2011-11-29 12.74600  24.0
+623  5.7733 2011-12-06  4.43310  24.0
+624  6.7186 2011-12-13  9.05250  24.0
+625  5.8346 2011-12-20  7.67070  24.0
+626  5.9464 2011-12-27 10.47900  24.0
+</code></pre>
+"
+"0.150329205600566","0.162221421130763","140673","<p>My raw data consists of a 60-day time series with a downward trend. The data is weekly so the frequency is set to 7.
+<img src=""http://i.stack.imgur.com/lX28r.png"" alt=""Time Series""></p>
+
+<p>I calculated the difference of the data which looks like this</p>
+
+<p><img src=""http://i.stack.imgur.com/QQiXr.png"" alt=""Difference""></p>
+
+<p>When I run ACF and PACF plots on the difference, I seem to get contradictory results? The ACF shows a positive impact of the first lagged term while the PACF shows a negative impact? Could someone help me interpret this? I'm trying to better understand ARIMA. The examples I've seen about PACF and ACF always seem to show the two at least agreeing in direction.</p>
+
+<p><img src=""http://i.stack.imgur.com/tNFKF.png"" alt=""ACF"">
+<img src=""http://i.stack.imgur.com/bE0ks.png"" alt=""PACF""></p>
+"
+"0.184114923579665","0.198679853559757","222727","<p>I would like to create a linear distributed lag model in order to do some forecast and also being able to interpret the results.</p>
+
+<p>Unfortunately I'm a bit confused with the process I should follow.Concept of time series is quite new for me so I'm looking for something simple.</p>
+
+<p>I have a variable Y that I want to express by the lags of several other variables X1,...X4. It seems that the R-package <code>dynlm</code> is well adapted for this kind of model.</p>
+
+<p>At the end, I would like to have this kind of relation :</p>
+
+<p><a href=""http://i.stack.imgur.com/LYhXV.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LYhXV.png"" alt=""what I want""></a></p>
+
+<p>So I would like to ascertain which lags of my exogeneous variables are significant for modeling Y. I first thought using cross-correlation (<code>ccf()</code> in R) but after browsing on CrossValidated, it seems that this is not that simple.</p>
+
+<p>Indeed, all of my variables except one(X3) are not stationary. I could difference all of them but how can I then interpret the results ?</p>
+
+<p>Furthermore, should I also prewhiten my data? (I know there is a function <code>prewhithen()</code> included in <code>TSA</code> package).</p>
+
+<p>Here are my time series :</p>
+
+<pre><code>    ############################################## CROSS VALIDATED ##################################################################
+    library(dynlm)
+    library(tseries)
+
+    Y&lt;-c(2.39,2.29,2.54,2.53,2.57,2.59,2.58,2.64,2.79,2.78,2.81,2.79,2.38,3.09,2.94,2.91,3.15,2.93,2.83,2.92,3.18,3.08,3.10,3.13,0.91,3.28,3.72,3.89,3.97,6.00,5.84,5.66,6.35,6.26,6.14,6.04,4.28,4.55,7.78,7.12,6.43,5.93,5.32,5.26,5.77,5.65,5.52,5.05,4.56,5.21,3.66,4.01,4.11,4.19,3.87,4.06,4.14,4.12,4.15,4.37,4.58,4.32,4.11,3.83,3.66,3.58,3.34,3.41,3.61,3.55,3.51,3.25,3.09,3.14,2.80,2.92,3.09,3.07,2.89,2.93,2.97,2.92,2.83,3.01,2.75,2.60,1.17,1.52,1.80,1.69,1.76,2.30,2.13)
+    X1&lt;-c(3.8,4.0,4.3,4.4,4.7,4.4,5.0,5.2,5.2,5.2,5.4,5.5,5.8,6.3,6.3,6.7,6.9,6.5,5.8,5.5,5.0,5.0,4.9,4.8,5.0,5.0,4.9,5.0,4.8,4.7,4.7,4.7,4.6,4.8,3.6,3.6,3.5,3.3,3.2,3.3,3.4,3.2,3.1,3.0,3.1,3.1,3.0,3.0,3.0,3.2,3.1,3.2,3.1,2.9,2.7,2.8,3.0,2.9,3.0,3.0,3.0,2.9,3.0,2.9,2.8,2.6,2.5,2.5,2.6,2.5,2.6,2.6,2.5,2.5,2.6,2.6,2.7,2.5,2.3,2.4,2.4,2.3,2.3,2.3,2.3,2.3,2.2,2.2,2.2,2.2,2.0,2.1,2.2)
+    X2&lt;-c(NA,6.6,6.9,7.4,6.2,7.3,7.1,7.3,8.1,8.1,8.7,8.3,8.7,9.7,10.1,10.4,9.8,9.4,9.1,9.3,9.8,9.8,9.6,9.0,8.8,8.7,8.1,8.0,8.0,7.7,6.7,6.9,7.9,7.8,7.2,6.8,6.8,7.1,6.7,6.9,6.5,6.5,5.8,6.2,6.1,6.3,7.0,6.1,6.3,6.8,6.1,6.5,6.3,6.0,5.5,6.1,5.6,5.7,5.7,5.7,5.8,5.8,5.8,5.4,5.2,5.0,4.7,4.9,4.9,4.9,4.7,4.5,4.7,4.9,5.0,5.1,5.0,4.5,4.3,4.5,4.3,4.4,4.4,4.1,4.0,4.1,3.9,4.0,3.9,4.2,3.8,4.1,4.1)
+    X3&lt;-c(NA, NA, NA, 9.7, 10.3, 9.8, 10.8, 12.0, 10.7, 12.0, 10.2, 10.7, 10.0, 10.4, 10.3, 10.9, 11.4, 12.5, 11.7, 10.9, 10.4, 9.6, 8.9, 8.2, 8.3, 8.8, 9.3, 14.1, 10.7, 10.3, 9.4, 8.8, 8.8, 10.1, 10.4, 10.0, 11.0, 11.2, 10.4, 10.3, 11.0, 11.3, 10.9, 10.6, 10.2, 12.3, 11.9, 11.1, 10.8, 10.8, 12.1, 11.6, 11.3, 11.8, 11.4, 9.8, 10.2, 12.1, 10.9, 11.4, 12.2, 11.8, 12.0, 11.3, 11.6, 10.4, 10.9, 10.4, 10.2, 11.4, 11.4, 10.6, 11.2, 11.2, 12.1, 12.2, 11.5, 10.7, 10.4, 9.8, 10.6, 11.7, 10.6, 11.0, 10.7, 11.0, 11.2, 10.2, 11.1, 12.1, 10.4, 9.9, 9.5)
+    X4&lt;-c(2.4,2.2,3.0,2.5,2.7,2.7,2.5,3.1,4.0,2.7,3.1,2.5,2.4,3.8,2.7,2.8,4.1,1.8,2.2,3.6,5.3,2.1,3.3,3.5,0.9,5.6,7.8,5.7,4.9,30.9,3.8,3.1,16.9,4.8,4.0,4.2,4.3,4.8,14.2,5.2,3.7,3.4,1.7,4.9,9.8,4.6,4.2,0.0,4.6,5.9,0.6,5.1,4.5,4.6,1.9,5.4,4.8,4.0,4.4,6.8,4.6,4.1,3.7,3.0,3.0,3.2,1.9,3.9,5.3,3.0,3.2,0.2,3.1,3.2,2.1,3.3,3.8,2.9,1.8,3.2,3.3,2.5,1.9,5.0,2.7,2.5,-1.7,2.6,2.9,1.2,2.2,5.9,0.8)
+
+    ## Time series Creation
+    Yts&lt;-ts(Y, start=c(1998,1), end=c(2005,9), frequency = 12)
+    X1ts&lt;-ts(X1,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X2ts&lt;-ts(X2,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X3ts&lt;-ts(X3,start = c(1998,1),end = c(2005,9), frequency = 12)
+    X4ts&lt;-ts(X4,start = c(1998,1),end = c(2005,9), frequency = 12)
+</code></pre>
+
+<p>And this is a plot of my time series :
+<a href=""http://i.stack.imgur.com/iQ8TZ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iQ8TZ.png"" alt=""enter image description here""></a></p>
+
+<p>Tell me if something is unclear, and sorry for my english.</p>
+
+<p>Any help would be much appreciated!</p>
+
+<p><strong>edit</strong> : I reduced a bit my message to make it more concise :) </p>
+"
+"0.130188910980824","0.140487871737254","32363","<p>So I have this data set of 56 users with 52 weeks worth of weekly average data for blood pressure and exercise level recordings. I would like to use change point analysis (https://sites.google.com/site/changepointanalysis/) in R to understand where changes are occurring. However to make CPA usable, the observations need to be independent (at least have no strong autocorrelation). </p>
+
+<p>I performed ACF and the Ljung-box test for lags up to 20, and there is autocorrletion in many of the time series. </p>
+
+<p>So my question is, what is an appropriate way to remove this? </p>
+
+<p>I've looked around and have found some possibilities, but nothing has made it overtly clear why I would choose one over another, or what is a lowest risk approach. </p>
+
+<p>Various possibilities I have seen (some from this site):</p>
+
+<ul>
+<li>Low pass filter, inverse subtraction </li>
+<li>First differences</li>
+<li>Detrending</li>
+<li>Seasonal adjustment </li>
+<li>Data transformation (e.g. convert difference operator into ratio)</li>
+<li>Exploratory data analysis (EDA) smoothing techniques  </li>
+</ul>
+
+<p>One of the people at work said something about using a low pass filter, using inverse subtraction to remove correlation, and then finding the frequency through fast fourier transform or spectrogram analysis. I'm not sure about all that.</p>
+
+<p>I really appreciate any comments, I'm kind of lost at a crossroads right now. Thanks!</p>
+"
+"NaN","NaN","57577","<p>In STATA I can create a Correlogram to find the appropriate lag order in case of time series. E.g. "
+"NaN","NaN","<img src=http://i.stack.imgur.com/8rt9V.png alt=corrgram></p>",""
+"NaN","NaN","<p>I know I can use the acf or Acf of the forecast package to calculate the ACF and PACF and to plot it. But how can I get the significance values? I mean the values in the column Prob>Q? Is this implemented in any package/command?</p>",""
+"NaN","NaN","","<r><time-series><data-visualization><autocorrelation>"
+"0.0751646028002829","0.0811107105653813","57573","<p>How can I omit the zero lag order in an acf plot? See this picture:</p>
+
+<p><img src=""http://i.stack.imgur.com/RP3u1.png"" alt=""enter image description here"">
+generated by</p>
+
+<pre><code>dummy&lt;-c(14,0.004,0.2,1,0.002,-3,-0.042,1.2,-1,1.3,2.1,4,3001,-2,0.3,2,3)
+acf(dummy)
+</code></pre>
+
+<p>The high peak (which is logically 1) is destroying the plot, since the scaling is too big. I would like to omit the high peak at lag order 1, so that the scaling can be reduced to -0.2 up to 0.2 for example, how can I do this?</p>
+"
+"0.150329205600566","0.162221421130763","58090","<p>I want to look at the acf and pacf of my data, to identify the model for my mean equation, so I want to fit an ARMA for my mean equation and later on model the conditional variance by a ARCH/GARCH (I know I have to do jointly model estimation). In the first step I want to look at the ACF and PACF for identifying, I used the standard Acf of the forecast library, but I noticed, that the confidence bands in these plots are given for testing randomness and not for fitting a ARMA.</p>
+
+<p>As <a href=""http://en.wikipedia.org/wiki/Correlogram"" rel=""nofollow"">wikipedia</a> says:</p>
+
+<blockquote>
+  <p>Correlograms are also used in the model identification stage for
+  fitting ARIMA models. In this case, a moving average model is assumed
+  for the data and the following confidence bands should be generated:</p>
+</blockquote>
+
+<p>$   \pm z_{1-\alpha/2}\sqrt{\frac{1}{N}\left(1+2\sum_{i=1}^{k} y_i^2\right)} $
+How can I get these confidence bands, which increase as the lag increases?</p>
+"
+"0.0751646028002829","0.0811107105653813","126664","<ul>
+<li>$R(t)$ corresponds to soil respiration values in function of the time </li>
+<li>$S(t)$ corresponds to solar radiation values in function of the time</li>
+</ul>
+
+<p>$R(t) = a S(t-\delta) + \epsilon$</p>
+
+<p>How calculate the coeficients $a$ and $\delta$ at each time. I would like at the end a graph with the evolution of $\delta$ and $a$ over the time series. </p>
+
+<p>I would like to do it with the software R. </p>
+
+<p>Thank you for your help</p>
+
+<p>Here is my idea for a : </p>
+
+<pre><code>FDC2=subset(FDC_393, SolarRadiation!=0)
+n &lt;- 2:length(FDC2$FluxMean)
+    Coeff&lt;-c()
+    Rsquared&lt;-c()
+    for (i in n) {
+     F=FDC2[c(1:i),]
+     reg2=lm(F$FluxMean ~ F$SolarRadiation)
+     Coeff &lt;- append(Coeff,reg2$coefficients[2])
+     Rsquared&lt;-append(Rsquared,summary(reg2)$r.squared)
+} 
+
+print(Coeff)
+print(Rsquared)
+t=FDC2$Time_Dec2[-1]
+plot(t,Coeff,type=""l"")
+</code></pre>
+"
+"0.130188910980824","0.140487871737254","222378","<p>I am developing a small web application with R and the Shiny-package to conduct easy analysis of single-case time series data. For this purpose, I need a nonparametric test that allows to analyze serial dependencies - e.g. circadian rhythms as in the plot below:</p>
+
+<p><a href=""http://i.stack.imgur.com/z2LWn.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/z2LWn.png"" alt=""circadian sequence""></a>
+(observations: stress level, measured three times a day during five days)</p>
+
+<p>I found an interesting test of J. Dufour (1981) which I think is quite well suited for the type of data the application has to deal with:</p>
+
+<p><a href=""http://www2.cirano.qc.ca/~dufourj/Web_Site/Dufour_1981_JTSA_RankTestsSerialDep.pdf"" rel=""nofollow"">http://www2.cirano.qc.ca/~dufourj/Web_Site/Dufour_1981_JTSA_RankTestsSerialDep.pdf</a></p>
+
+<p>Unfortunately, this test isnâ€™t implemented in R (yet).</p>
+
+<p>In the package randtests I found the Wald-Wolfowitz runs test (runs.test) and the Turning Point test (turning.point.test) which both seem (as stated in the description) to allow to test for serial correlations. Do you know the differences of those tests e.g. concerning the type of date they are best suited for? The application is primarily designed for time series with about 15 to 50 observations (in ordinal values with equally spaced time intervals).</p>
+
+<p>As autocorrelation means - in the perspective of the data pattern - the same as serial correlation (if I understand this right), tests for autocorrelation are likewise possible.
+Other suggestions are welcome, if you know further tests for serial dependency/correlation resp. autocorrelation.</p>
+
+<p>Thanks in advance for your help!</p>
+"
+"0.106298800690547","0.114707866935281","127262","<p>My problem is similar to this one from stack overflow:  <a href=""http://stackoverflow.com/questions/23568275/cannot-remove-time-series-seasonality"">http://stackoverflow.com/questions/23568275/cannot-remove-time-series-seasonality</a></p>
+
+<p>I'll provide some data and make it more detailed.
+Please keep in mind that I am a beginner in time series, so do not overcomplicate my problem.</p>
+
+<pre><code>[1] 7.857481 8.122074 8.074026 8.042699 8.231110 8.346642 8.561210 8.395252
+[9] 8.276903 8.246958 8.205492 8.241440 7.734121 7.984122 8.001355 8.201386
+[17] 8.342364 8.504108 8.633731 8.604105 8.195334 7.971776 8.243283 7.770223
+[25] 7.770223 7.828436 8.032360 8.223627 8.331105 8.372399 8.527935 8.544419
+[33] 8.104703 8.162801 8.240121 8.144969 7.662468 7.833204 8.012018 8.091015
+[41] 8.248529 8.300777 8.393895 8.566935 8.296297 8.030735 8.150468 8.220941
+[49] 7.577634 7.864804 8.195885 7.950150 8.304495 8.184235 8.348775 8.416931
+[57] 7.969704 7.964156 8.137396 8.058011 7.650169 7.687539 7.909857 7.990915
+[65] 8.316789 8.151910 8.291547 8.352083 7.956827 7.971431 8.141190 8.103797
+[73] 7.556951 7.702556 7.749322 7.906179 8.197814 8.100161 8.384119 8.398860
+[81] 7.928046 7.951559 7.947325 8.231642 7.383989 7.584773 7.717796 8.090096
+[89] 8.059592 7.996990 8.304247 8.132119 7.971776 7.845808 8.024862 8.220672
+[97] 7.470224 7.693026 7.695303 7.929126 8.031385 8.128290 8.350194 8.044947
+[105] 7.833600 7.731931 7.959276 8.161090 7.351158 7.570443 7.707962 7.892078
+[113] 8.053569 8.078378 8.322880 8.144969 7.816820 7.761745 8.001690 8.059276
+[121] 7.409136 7.452982 7.871693 7.747597 7.998335 8.090402 8.281724 7.978311
+[129] 7.774856 7.807103 7.966587 7.855157 7.192934 7.430114 7.806696 7.829630
+[137] 7.949444 7.921898 8.138857 8.008366 7.770223 7.609367 7.826842 8.060856
+[145] 7.342779 7.404279 7.655391 7.789455 7.959276 7.945201 8.089482 7.865572
+[153] 7.724888 7.718685 7.841886 7.957177 7.096721 7.252762 7.582738 7.609862
+[161] 7.753194 7.886081 7.980366 7.873217 7.664816 7.479864 7.834392 7.921173
+[169] 7.050989 7.357556 7.583248 7.885705 7.763871 7.860185 7.906179 7.738052
+[177] 7.789869 7.608871 7.937017 7.810758
+"""",""x""
+""1"",7.85748078694253
+""2"",8.12207437536222
+""3"",8.07402621612406
+""4"",8.04269949689764
+""5"",8.23110984032815
+""6"",8.3466420902212
+""7"",8.56121007683301
+""8"",8.39525152061099
+""9"",8.27690348126706
+""10"",8.24695803256818
+""11"",8.20549161312024
+""12"",8.24143968982973
+""13"",7.7341213033283
+""14"",7.98412195870293
+""15"",8.0013550258267
+""16"",8.20138595523861
+""17"",8.34236350038058
+""18"",8.50410795186758
+""19"",8.63373100766419
+""20"",8.60410456340553
+""21"",8.19533366716287
+""22"",7.97177612288063
+""23"",8.24328252304838
+""24"",7.77022320415879
+""25"",7.77022320415879
+""26"",7.82843635915759
+""27"",8.0323601479245
+""28"",8.22362717580548
+""29"",8.33110454805304
+""30"",8.372398606513
+""31"",8.52793528794814
+""32"",8.54441917766983
+""33"",8.10470346837111
+""34"",8.16280135349207
+""35"",8.24012129807647
+""36"",8.14496941708788
+""37"",7.66246781520024
+""38"",7.83320394864106
+""39"",8.01201823915906
+""40"",8.09101504171053
+""41"",8.24852912480022
+""42"",8.30077696085145
+""43"",8.39389497507174
+""44"",8.56693528331105
+""45"",8.29629711264251
+""46"",8.03073492409854
+""47"",8.150467911624
+""48"",8.22094116828139
+""49"",7.57763383260273
+""50"",7.86480400332846
+""51"",8.1958853913148
+""52"",7.95014988765202
+""53"",8.30449489796357
+""54"",8.18423477409482
+""55"",8.34877453979127
+""56"",8.41693076947784
+""57"",7.96970358327866
+""58"",7.96415571884094
+""59"",8.13739583005665
+""60"",8.05801080080209
+""61"",7.650168700845
+""62"",7.68753876620163
+""63"",7.9098566672694
+""64"",7.99091546309133
+""65"",8.31678912707152
+""66"",8.15190987294091
+""67"",8.29154650988391
+""68"",8.35208267135264
+""69"",7.95682712209011
+""70"",7.97143099776935
+""71"",8.14118979345769
+""72"",8.10379671298179
+""73"",7.5569505720129
+""74"",7.70255611326858
+""75"",7.74932246466036
+""76"",7.90617884039481
+""77"",8.1978140322212
+""78"",8.10016144693661
+""79"",8.3841188371909
+""80"",8.39886000445437
+""81"",7.92804560087478
+""82"",7.95155933115525
+""83"",7.94732502701646
+""84"",8.23164217997341
+""85"",7.38398945797851
+""86"",7.5847730776122
+""87"",7.71779621101358
+""88"",8.09009578318096
+""89"",8.05959232888755
+""90"",7.99699040583765
+""91"",8.30424746507847
+""92"",8.13211877295581
+""93"",7.97177612288063
+""94"",7.8458075026378
+""95"",8.02486215028641
+""96"",8.22067217029725
+""97"",7.47022413589997
+""98"",7.69302574841789
+""99"",7.69530313496357
+""100"",7.9291264873068
+""101"",8.03138533062553
+""102"",8.12829017160705
+""103"",8.35019365072007
+""104"",8.04494704961772
+""105"",7.8336002236611
+""106"",7.73193072194849
+""107"",7.9592759601164
+""108"",8.1610895128458
+""109"",7.35115822643069
+""110"",7.57044325205737
+""111"",7.70796153183549
+""112"",7.89207842124812
+""113"",8.05356916913454
+""114"",8.07837810362652
+""115"",8.3228800217699
+""116"",8.14496941708788
+""117"",7.81681996576455
+""118"",7.76174498465891
+""119"",8.00168997809913
+""120"",8.05927622330565
+""121"",7.40913644392013
+""122"",7.45298232946546
+""123"",7.87169266432365
+""124"",7.74759683869289
+""125"",7.99833539595298
+""126"",8.09040229659332
+""127"",8.28172399041139
+""128"",7.97831096986772
+""129"",7.77485576666552
+""130"",7.80710329012598
+""131"",7.9665866976384
+""132"",7.85515700588134
+""133"",7.1929342212158
+""134"",7.4301141385618
+""135"",7.80669637252118
+""136"",7.82963038915019
+""137"",7.94944442025063
+""138"",7.9218984110238
+""139"",8.13885675069633
+""140"",8.00836557031292
+""141"",7.77022320415879
+""142"",7.60936653795421
+""143"",7.82684209815829
+""144"",8.06085575293432
+""145"",7.34277918933185
+""146"",7.40427911803727
+""147"",7.65539064482615
+""148"",7.78945456608667
+""149"",7.9592759601164
+""150"",7.94520113241276
+""151"",8.08948247436075
+""152"",7.86557175768479
+""153"",7.72488843932307
+""154"",7.71868549519847
+""155"",7.84188592898462
+""156"",7.95717732345947
+""157"",7.09672137849476
+""158"",7.25276241805319
+""159"",7.58273848891441
+""160"",7.60986220091355
+""161"",7.75319426988434
+""162"",7.88608140177575
+""163"",7.98036576511125
+""164"",7.87321705486274
+""165"",7.66481578528574
+""166"",7.47986413116503
+""167"",7.83439230291044
+""168"",7.92117272158701
+""169"",7.05098944706805
+""170"",7.35755620091035
+""171"",7.58324752430336
+""172"",7.88570539124302
+""173"",7.76387128782022
+""174"",7.86018505747217
+""175"",7.90617884039481
+""176"",7.73805229768932
+""177"",7.78986855905471
+""178"",7.60887062919126
+""179"",7.93701748951545
+""180"",7.81075811652936
+</code></pre>
+
+<p>I uploaded two types of the data. They are exactly the same. One is copy from R directly, and the latter is export.csv from R.</p>
+
+<p>First, I plot acf for data and get this:</p>
+
+<p>Well, I cannot post images. But you can get the image by a simple acf command in R.</p>
+
+<p>Then, I difference lag 12 by datadif &lt;- data[13:180] - data[1:168], and the new act plot is:</p>
+
+<p>From the second figure, you can see that lag 12 is still significant. Even I try diff for datadif, I fail to remove seasonality.</p>
+
+<p>What is this phenomenon? Briefly, how can we deal with it? I did not find the answer in the textbook.</p>
+
+<p>Thanks in advance.</p>
+"
+"0.168073161363204","0.181369062527503","167044","<p>I am interested in analyzing the correlation between nationwide home prices and nationwide unemployment rates, both of which are leading economic indicators. I have data on nationwide home prices by using the Case-Shiller nationwide home price index (found here: <a href=""http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index"" rel=""nofollow"">http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index</a>), and I have data on nationwide unemployment rates from the Bureau of Labor Statistics. </p>
+
+<p>Preliminary hypothesis/background info: Home prices are high when economy is doing well, and unemployment rates are low when the economy is doing well. So common sense tells me that as the unemployment rate rises, then the Case Shiller home price index decreases, which means there should be a negative correlation. But I don't know how to prove this. Here is a summary of the data I have:</p>
+
+<p>I have the data for the Case-Shiller nationwide Home Price index for every month over the last ten years (1/1/2005-12/31/2014) which means 120 data points. I also have all the data for the nationwide Unemployment Rate over the same time period (1/1/2005-12/31/2014), which also means 120 data points. Both data are collected for the end of the month over the same time period, which means there is zero lag in the data sets.</p>
+
+<p>What kind of correlation analysis do I need to do to determine if there is any correlation between these two data sets? Cross-correlation? Time-series analysis?</p>
+
+<p>Thank you so much for any advice on how to start this research! Any help on what direction I should go would be incredibly appreciate. </p>
+
+<p>Thank you!</p>
+"
+"0.168073161363204","0.181369062527503","129825","<p>I've been learning about time series analysis because I want to understand how much groundwater level changes in an aquifer affect land subsidence (land sinking). I have two time series: (1) measurements of aquifer water levels and (2) measurements of relative land surface movement. Both series are regularly sampled; monthly measurements for 40 years (480 observations). </p>
+
+<p>First, I decomposed each of the time series for exploratory purposes (the series seemed like ""trend stationary""). Then conducted ADF tests to check for stationarity, for which I found they're not. Proceeded to run ADF tests on the 1st differences for each time series and found that the differences are stationary. Finally, I ran a cross-correlation on the differences and got that the series are correlated at different lags. </p>
+
+<p>From the literature, I know that groundwater levels influence land surface elevation. Just by looking at the plots, I can see that the rate at which the land was sinking has slowed down and reversed as the aquifer water levels recovered over time.</p>
+
+<p><img src=""http://i.stack.imgur.com/dSTz1.png"" alt=""enter image description here"">
+<img src=""http://i.stack.imgur.com/eVd1k.png"" alt=""enter image description here""></p>
+
+<p>After all the time series analysis research I've done, I still cannot grasp <strong>how  to get at an estimate of the percent of the variation in land surface movement explained by groundwater level.</strong></p>
+
+<p>Any insights are greatly appreciated.</p>
+"
+"0.106298800690547","0.114707866935281","207347","<p>I'm trying to calculate time-weighted Pearson correlation as described in <a href=""http://goo.gl/HoqwI7"" rel=""nofollow"">http://goo.gl/HoqwI7</a> The coefficient is given by</p>
+
+<p>$$\rho_t(X,Y) = \left ( \frac{1-r}{1-r^N} \right ) \sum_{i=0}^{N} r^{i-1} \frac{(x_{-i} - \mu_X)(y_{-i} - \mu_Y)}{\sigma_X\sigma_Y},$$</p>
+
+<p>where $N+1$ is the number of observations, $t=0,1,...,N$ indicates time period when the coefficient is calculated ($t = N$ in my case, i.e. I'm calculating the correlation based on full sample), $\sigma_X$, $\mu_X$, $x_{-i}$ denote standard deviation, expectation, and the $i$th latest observation in $X$ respectively, $r$ is the decay constant, equal to a real number less than 1.</p>
+
+<p>My problem is that $\rho_t(X,X) \neq 1$ when calculating it based on the formula above. Below is an example of how I calculate it in R. </p>
+
+<pre><code>set.seed(314)
+N &lt;- 1000
+x &lt;- cumsum(rnorm(N+1)) # random walk
+
+cor(x, x) # Pearson correlation
+# Result is 1
+
+r &lt;- 0.998
+sigma &lt;- sd(x)
+mu &lt;- mean(x)
+
+(1 - r)/(1 - r^N) * sum( r^(0:N-1) * (x - mu)^2/sigma^2 ) # rho_t(x, x)
+# Result is 1.171462
+</code></pre>
+
+<p>Please correct me if I have a bug in my code or suggest how I should modify the formula if it contains a mistake (my gut feeling says that the normalisation might be wrong).</p>
+"
+"0.249292785004635","0.244557994022259","146919","<p>Please, be kind, as I'm totally noob in stats and R...</p>
+
+<p>I'm the owner of a small restaurant in a commercial center, and I managedd to collect two main dataset, commercial-center (cc) and restaurant (rest).</p>
+
+<p>cc <a href=""https://www.dropbox.com/s/7k6k1rjimrcfqlq/cc.csv?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/7k6k1rjimrcfqlq/cc.csv?dl=0</a> <br/>
+DAY 10:00-12.00 12:00-14:00 14:00-16:00 16:00-18:00 18:00-20:00 20:00-22:00 SUB-TOTAL<br/>
+01/01/2012  0   825,55  534,85  879,7   964,725 161,975 3366,8</p>
+
+<p>till today</p>
+
+<p>rest <a href=""https://www.dropbox.com/s/rtoqwg64tu4poxs/rest.csv?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/rtoqwg64tu4poxs/rest.csv?dl=0</a> <br/>
+is a database of all the restaurant sales from 04 dec 2014<br/>
+I have managed to make it in a similar fashion as the above format<br/>
+It contains many NA values (periods we were closed)</p>
+
+<p>Also, I gathered other data: <br/>
+events <br/>
+is a dataset containing holidays and other events (it has to be categorized, as some increase sales, some the opposite)</p>
+
+<p>weather <br/>
+a collection of calculated observation for a spot 2 km away from the restaurant, each observation (wind speed, temp, cloudness and rain) have been turned in a value on a scale of 4 values</p>
+
+<p>My objectives are:</p>
+
+<ol>
+<li>understand 'rest' seasonalities (daily/weekly, yearly)</li>
+<li>understand how weather and other independet variables (not fixed events i.e. Easter or concerts) modify 'rest' and find a coefficient to apply to the model </li>
+<li>forecast next days, weeks, months sales movements</li>
+<li>verificate the restaurant trend, net of seasonalities and other variables</li>
+</ol>
+
+<p>An SD up to 30-40% on model/observed is still a good point to me as long as error distribution is not well spread but with a solid peak on 0</p>
+
+<p>After many testing and try, I have found that the best model to choose is TBATS (BATS is deadly slow to me), expecially for managing multiple seasonality (which is a main point in my study).</p>
+
+<p>The method I was thinking was to:</p>
+
+<ol>
+<li>Find indipendent variables coefficient for 'rest' and 'cc' and apply them to the data</li>
+<li>Load 'rest' and 'c'c, with modifications at point 1, in an msts object and throw them to TBATS</li>
+<li>Find correlations or other kind of link between the seasonalities of 'rest' and 'cc', get coefficients and use them for modeling future 'rest' data</li>
+</ol>
+
+<p>Not sure whether I can post multiple questions in here, if not just answer to this please: am I choosing the proper work method, or is anything better out there?</p>
+
+<p>I'm struggling myself with many questions:</p>
+
+<p><ol>
+<li>How can I properly describe the data I have in R for using in TBATS, with sampling every 2 hours, starting at 10 and finishing at 22? Should I create a model for each column?</li>
+<li>TBATS is not allowing for independent variables (events), is it? How to manage them?</li>
+<li>TBATS does not accept NA values? How to manage the closing periods or days (NA) in the 'rest' dataset? Some weeks we were closed on Mondays, some Tuesday, some others we were always opening; we have some afternoon openings.... big mess... Maybe use regressions..?</li>
+<li>If I do:</p>
+
+<blockquote>
+  <p>export &lt;- data.frame(DAYS=date,tbats.components(cc-SUBTOTAL.msts.tbats),errors=resid(cc-SUBTOTAL.msts.tbats))</li>
+  </ol>
+  how should I interpretate data? <br/>
+  i.e. If I do level+season1+season2+errors=cObserved, I get figures which are slightly different from the ""real"" observed: sd(cObserved/observed)=3% which is fine for my objectives... is it correct?</p>
+</blockquote>
+
+<ol start=""5"">
+<li>In TBATS, is trend some kind of SMA? at which window?</li>
+</ol>
+"
+"0.184114923579665","0.16556654463313","108417","<p>I have some daily data from city A, B, C. 
+Values from city A are highly correlated with values from other cities for lag -1,-2,-3 and -4.
+I want to use Random Forest, SVM and ANN to predict values for city A. My idea is:</p>
+
+<ol>
+<li>Split data into training and testing set.</li>
+<li><p>Use the formula: valueA ~ valueB-1 + valueB-2 + valueB-3 + valueB-4 + valueC-1 + valueC-2 + valueC-3 + valueC-4</p></li>
+<li><p>Try different methods (Random Forest, SVM and ANN) on
+training set and use createTimeSlices to cross-validation for model
+training and parameter tuning, like in this example - <a href=""http://stackoverflow.com/a/22338029/2602477"">http://stackoverflow.com/a/22338029/2602477</a></p></li>
+<li>Evaluate obtained model on the testing set (using R2, RMSE, etc.)</li>
+</ol>
+
+<p>My questions are:</p>
+
+<ul>
+<li>How to properly split data into training and testing set? I'm not sure, but boostraping or k-fold cross-validation doesn't sound right.</li>
+<li>Are given formula is correct for this case?</li>
+</ul>
+"
+"0.170457296918141","0.122627867896993","147619","<p>I'm trying to build a model that can predict streamflow for an alpine (snowmelt-fed) watershed using snow albedo (roughly, the energy reflectance of the snow) data. Albedo controls the melt of the snowpack, and higher albedo means slower melt, and vice versa. I have daily time-series data for both the snow albedo and streamflow, for 12 years from 2002-2013. The albedo time-series was obtained by spatially-averaging albedo data (raster files) from NASA's MODIS satellite.</p>
+
+<p>I have tried various methods (simple regression, GLMs, GAMs, decision trees and random forests) to build the flow prediction model, but all of them fail because of the autocorrelated relationship between albedo and flow. Since the albedo is a snowpack property, there is a lag between it and the flow (related to snowmelt).</p>
+
+<p>The Cross correlation function (CCF) between albedo and flow is shown below:</p>
+
+<p><a href=""http://imgur.com/PpW1Kpy"" rel=""nofollow""><img src=""http://i.imgur.com/PpW1Kpy.png"" title=""source: imgur.com"" /></a></p>
+
+<p>I have tried to include albedo lags of various days into the models, but I'm not able to mimic the distributed lag relationship between albedo and flow. I have tried to add precipitation, temperature and other climatic data to the predictors, but they don't seem to help. There are similar lagged and cross-correlation problems between these other predictors and flow.</p>
+
+<p>The albedo, flow, precipitation and air temperature time-series are shown below:</p>
+
+<p><a href=""http://imgur.com/Kb8Ta6q"" rel=""nofollow""><img src=""http://i.imgur.com/Kb8Ta6q.png"" title=""source: imgur.com"" /></a></p>
+
+<p>Is there a statistical or machine learning technique in R that I can explore to build the albedo-streamflow model?</p>
+
+<p>Thank you.</p>
+"
+"0.130188910980824","0.140487871737254","214382","<p>If a predictor is negatively correlated with a variable you are trying to forecast in an Arima model, will Arima pick up the negative correlation when you add the predictor in the xreg argument?  Is there anything that needs to be done to the predictor when it is added in the xreg argument in order to indicate that it is negatively correlated with the variable you are trying to predict?</p>
+"
+"0.0751646028002829","0.0811107105653813","38710","<p>I generate this data in R: </p>
+
+<pre><code>set.seed(111)
+ds=rnorm(1000)
+</code></pre>
+
+<p>When I perform Box-Ljung test to test the independency:</p>
+
+<pre><code>Box.test(ds,type='Ljung',lag=log(length(ds)))
+</code></pre>
+
+<p>it gave me p-value=0.5957, which is reasonable. However, when I perform this:</p>
+
+<pre><code>Box.test(ds[180:299],type='Ljung',lag=log(length(ds[180:299])))
+</code></pre>
+
+<p>it gave me p-value=0.00162045, which means the autocorrelation of this sub-sequence is significantly different from zero. This also happens for some other subsequences. However, I generated the time series using <code>$rnorm$</code> function in R with 1000 data points. Could anybody please explain this? Thanks very much in advance.</p>
+
+<p>For the convenience of you readers who are not using R, the sub-sequence ds[180:299] can be obtained here: <a href=""http://ykang.hostoi.com/ds120.pdf"" rel=""nofollow"">http://ykang.hostoi.com/ds120.pdf</a> </p>
+"
+"0.130188910980824","0.140487871737254","126001","<p>I have two time series. After calculating the ACF, they are like the plot below. </p>
+
+<p>Does anyone know the meaning of this ACF plot? </p>
+
+<p>I know it's non-stationary time series, but I don't know how the lags can help me to build the model. </p>
+
+<p>My data are as below: </p>
+
+<p>Year,Parea,Uarea</p>
+
+<p>1950,3435829.43 ,144179.7476</p>
+
+<p>1955,3619503.16 ,168028.4699</p>
+
+<p>1960,3881482.63 ,196839.0495</p>
+
+<p>1965,4310040.34 ,229032.161</p>
+
+<p>1970,4950230.51 ,262543.7928</p>
+
+<p>1975,6216028.19 ,297502.4439</p>
+
+<p>1980,7062749.74 ,337481.6276</p>
+
+<p>1985,8187770.34 ,381059.4338</p>
+
+<p>1990,9893501.67 ,432255.4666</p>
+
+<p>1995,12011196.93 ,487330.1703</p>
+
+<p>2000,13327189.88 ,546829.7056</p>
+
+<p>2005,15231484.09 ,612606.1358</p>
+
+<p>2010,16986859.05 ,683200.605</p>
+
+<p>2014,18097951.40 ,743693</p>
+
+<p>And I have doubts about my sample size and time-series data analysis~
+My purpose for these data analysis are:</p>
+
+<p>1) do the Granger Causal Relation Test between PArea and UArea. </p>
+
+<p>2) build ARIMAs for PArea and UArea, respectively. </p>
+
+<p>But my data points are only 14, may be insufficient for purpose of my data analysis~
+I wander if I can interpolate the values between the middle years to extend sample range?</p>
+
+<p><img src=""http://i.stack.imgur.com/gieSt.jpg"" alt=""ACF of a time-series data with 14 points""></p>
+"
+"0.0751646028002829","0.0811107105653813","85431","<p>I would like to determine the relationship between two variables after controlling for a third. Specifically, I want to know if the prices of mercury and gold over time are correlated with each other more than or less than they are correlated with a generic metals price index. Is there some special signal in the relationship between these commodities or are they just moving in line with the overall index?</p>
+
+<p>I have a data set with 32 annual values (1980-2011) for mercury price, gold price, and metals index. I am using R. </p>
+
+<p>Below I have posted time series plots of each of the three variables.
+<img src=""http://i.stack.imgur.com/9gF4O.png"" alt=""enter image description here"">   </p>
+"
+"0.309911596653163","0.314755790145853","149799","<p>I want to code for Detrended Cross Correlation in R for time-series data but I'm still stuck. I don't know why the coefficient is not in range -1 : 1. I try to write following these equation below</p>
+
+<p><a href=""http://arxiv.org/pdf/1310.3984.pdf"" rel=""nofollow"">Measuring correlations between non-stationary series with DCCA coefficient</a></p>
+
+<p>Detrened cross-correlation coefficient is calculated as detrended covariance of two dataset over detrened variance of two integrated series </p>
+
+<p><img src=""http://i.stack.imgur.com/7EjJX.png"" alt=""enter image description here"">  (Equation 1)</p>
+
+<p>For time-series {xt}, use integrated series profile</p>
+
+<p><img src=""http://i.stack.imgur.com/JNdJv.png"" alt=""enter image description here"">   (Equation 2)</p>
+
+<p>where the data must be detrended by local trend in box of size s</p>
+
+<p><img src=""http://i.stack.imgur.com/eMg8Z.png"" alt=""enter image description here"">  (Equation 3)</p>
+
+<p><img src=""http://i.stack.imgur.com/SfhD3.png"" alt=""enter image description here"">(Equation 4)</p>
+
+<p>The X_hat is linear fit value evaluated by least square method</p>
+
+<p>Detrended covariance of two profiles</p>
+
+<p><img src=""http://i.stack.imgur.com/aiHyX.png"" alt=""enter image description here""> (Equation 5)</p>
+
+<p>Average the covariance over all boxes</p>
+
+<p><img src=""http://i.stack.imgur.com/ixtwd.png"" alt=""enter image description here"">  (Equation 6)</p>
+
+<pre><code>## data_1
+    x= c(-1.042061,-0.669056,-0.685977,-0.067925,0.808380,1.385235,1.455245,0.540762 ,0.139570,-1.038133,0.080121,-0.102159,-0.068675,0.515445,0.600459,0.655325,0.610604,0.482337,0.079108,-0.118951,-0.050178,0.007500,-0.200622)
+    ## data_2
+    y= c(-2.368030,-2.607095,-1.277660,0.301499,1.346982,1.885968,1.765950,1.242890,-0.464786,0.186658,-0.036450,-0.396513,-0.157115,-0.012962,0.378752,-0.151658,0.774253,0.646541,0.311877,-0.694177,-0.412918,-0.338630,0.276635)
+    ## window size = 6
+    k=6
+    DCCA_CC=function(x,y,k){
+      ## calculate cumulative sum profile of all t
+    xx&lt;- cumsum(x - mean(x))  ## Equation 2
+    yy&lt;- cumsum(y - mean(y))  ## Equation 2
+
+      ## Divide in to overlapping boxes of size k
+
+  slide_win_xx = mat_sliding_window(xx,k)
+  slide_win_yy = mat_sliding_window(yy,k)
+  ## calculate linear fit value in each box 
+  x_hat = t(apply(slide_win_xx,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+  y_hat = t(apply(slide_win_yy,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+
+##  Get detrend variance in each box with linear fit value (detrend by local trend).
+  F2_dfa_x = c()
+  F2_dfa_y = c()
+  for(i in 1:nrow(x_hat)){
+ ## Equation 4
+    F2_dfa_x = c(F2_dfa_x,mean((xx[i:(i+k-1)]-x_hat[i,])^2))
+  }
+  for(i in 1:nrow(y_hat)){
+## Equation 4
+    F2_dfa_y = c(F2_dfa_y,mean((yy[i:(i+k-1)]-y_hat[i,])^2))
+  }
+  ## Average detrend variance over all boxes to obtain fluctuation
+  F2_dfa_x = mean(F2_dfa_x) ## Equation 3
+  F2_dfa_y = mean(F2_dfa_y) ## Equation 3
+
+  ## Get detrended covariance of two profile
+  F2_dcca = c()
+  for(i in 1:nrow(x_hat)){
+  ## Equation 5
+    F2_dcca = c(F2_dcca,mean((xx[i:(i+k-1)]-x_hat[i,]) * (yy[i:(i+k-1)]-y_hat[i,]) ))
+  }
+
+## Equation 6
+  F2_dcca = mean(F2_dcca)
+
+## Calculate correlation coefficient 
+  rho = F2_dcca / (F2_dfa_x * F2_dfa_y) ## Equation 1
+  return(rho)
+}
+
+mat_sliding_window = function(xx,k){
+## Function to generate boxes given dataset(xx) and box size (k)
+  slide_mat=c()
+  for (i in 1:(length(xx)-k+1)){
+    slide_mat = rbind(slide_mat,xx[i:(i+k-1)] )
+  }
+  return(slide_mat)
+}
+
+print(DCCA_CC(x,y,k)) ##This give me 3.392302
+</code></pre>
+
+<p>I'm not sure if something wrong in integrated profile.</p>
+"
+"0.31889640207164","0.305887645160749","172904","<p>I am trying to build a regression model for the forecast of stock market returns. The regression takes about <strong>100 variables</strong> as input and my training data consists of <strong>n=234</strong> weekly data points. I am using a lasso regression for the regression + variable selection.</p>
+
+<p>My problem is that before I can input the data into the regression I need to find the ""optimal lag"" time for it. The variables can be <strong>categorised into 4 groups</strong> and I have got data for the variables up to <strong>113 weeks before the first point in time of my training data</strong>. To calculate the ""optimal"" lag time I tried following approach:</p>
+
+<p>Take every variable for one categorie and apply a rolling window to the training data, which moves forward in quarters e.g. datapoints 1:13,14:26,... This gives <strong>18 seperate</strong> quarters for the training data. For the first quarter calculate the correlation (spearman in this case) between the stock course and every variable in the categorie with a lag of 0. Then take the average of the absoulte correlation of all the variables for this quarter and enter it into a matrix at point [1,1]. Repeat this for every possible lack time up to 113 and then move on to the next quarter. </p>
+
+<p>This results in a <strong>[114,18] matrix</strong> which includes the average absolute correlation for every lag in every quarter. Now I just take the average for every row in the matrix and the row with the highest average correlation should give me the most reliable lag for my data of that category.</p>
+
+<p><strong>Q:</strong> Has anyone seen a similar approach like this in literature before? Is there something I am missing? E.g. would it be smarter to just calculate the correlation over the whole trainingset at once and look for the optimal lag that way? As far as I am concerned that is the most common approach in literature, but it seems to me that it gives you a pretty biased result.</p>
+
+<p>For some more insight you can find my code below:</p>
+
+<pre><code>Correlation.Maximiser = function(Stock, Category){
+
+  Result = matrix(nrow = 114,ncol =  18)
+
+  for(tmp in 1:18){
+    Start.Test=1+(tmp-1)*13
+    End.Test=13+(tmp-1)*13
+    Sample = Stock[Start.Test:End.Test]
+
+    for(i in 0:113){
+      int.low=101-i+13*tmp
+      int.high=113-i+13*tmp
+      NA.omitter = cor(Sample,Category[int.low:int.high,-1], method = ""spearman"")
+      NA.omitter[is.na(NA.omitter)] = 0 #some Variables have a lot of 0 values so that it can happen that they are only zero in the quarter we look at which results in an NA
+      Result[i+1,tmp]=mean(abs(NA.omitter))
+    }
+  }  
+  return(Result)
+}
+</code></pre>
+
+<p><strong>EDIT:</strong> I just realised that the comparison in categories makes no real sense, since some variables might have a positive while others might have a negativ correlation to the dependent variable. I tried to compensate that by averaging over the absolute correlation, but I realised that this would not penalise variables that change sign from quarter to quarter and such behavior would be really bad for the regression. In general my question stays the same though. Only now the procedure is applied to every variable on its own.</p>
+"
+"0.184114923579665","0.198679853559757","135852","<p>I'm trying to replicate an analysis done in Stata with R that involves calculating the autocorrelation for a particular outcome measured in many different areas. I've already run a linear regression on the data, which produced residuals for the outcome of interest. While I can't post my actual data, here is what it sort of looks like:</p>
+
+<pre><code>year&lt;-c('2003', '2004', '2005','2003', '2004', '2005','2003', '2004', '2005')
+location&lt;-c(rep('North', 3), rep('South',3), rep('West',3))
+resid &lt;-c(-2.42, -3.563, -2.112, -0.543, 2.391, -1.556, -0.177, 0.983, 1.225)
+mydata&lt;-data.frame(location,year, resid)
+mydata
+
+  location year resid
+1    North 2003  -2.420
+2    North 2004  -3.563
+3    North 2005  -2.112
+4    South 2003  -0.543
+5    South 2004   2.391
+6    South 2005  -1.556
+7     West 2003  -0.177
+8     West 2004   0.983
+9     West 2005   1.225
+</code></pre>
+
+<p>I'm interested in the autocorrelation in the residuals, so I'm running the following:</p>
+
+<pre><code> myacf &lt;-acf(mydata$resid, plot=F)
+</code></pre>
+
+<p>I'm not getting the same autocorrelation values as I got with Stata. I'm wondering if I should be specifying somehow that my data aren't a continuous time series from t=1 to t=9, but rather 3 sets of 3 time points that were measured in different locations (so really there can only be lag of 1 or 2, at least in the toy data above). </p>
+
+<p>Also, above, I've made it so every region has 3 years of outcomes, but in my real (more complicated) dataset, some regions might have more rows than others (e.g., North might have 7 rows for 2000-2006, but South might only have 5 because we missed the outcome in 2003 and 2006 so there are no residuals for those 2 years, etc.). Any help would be appreciated in understanding whether acf() is the right way to approach this problem or not, and if so, what I might consider changing.</p>
+"
+"0.150329205600566","0.162221421130763","189778","<p>I have 2 band pass filtered time series for 30-90 day band I would like to understand the lagged correlation between these 2 series in this band. The issue is that autocorrelations exist in both series and also the effect of filtering. I am unclear on how to separate out these and find the true lagged relation if any among the 2 series. Apparently there is a strong lagged correlation between the two series around 10 days lag. And there is strong ACF in both series at around 20 days. So it is difficult for me to interpret the cross correlation. </p>
+
+<p>The plot is at below:</p>
+
+<p><a href=""http://i.stack.imgur.com/mEzGz.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/mEzGz.png"" alt=""enter image description here""></a></p>
+
+<p>The data is at below link:</p>
+
+<p><a href=""https://drive.google.com/file/d/0B3heUQNme7G5T2JjeTlDNzdkX00/view?usp=sharing"" rel=""nofollow"">https://drive.google.com/file/d/0B3heUQNme7G5T2JjeTlDNzdkX00/view?usp=sharing</a></p>
+
+<p>R code: </p>
+
+<pre><code>dc = read.csv('test_dat.csv', header=TRUE)
+par(mfrow=c(3,1))
+acf(dc$sst, 365)
+acf(dc$t2m, 365)
+ccf(dc$sst, dc$t2m, 365)
+</code></pre>
+"
+"0.212597601381094","0.200738767136742","44617","<p>I'm trying to measure the impact that rainfall causes in the number of incoming calls in a insurance-company. I have 4 years of daily data.</p>
+
+<p>The plots below shown the correlation plot for each year:
+<img src=""http://i.stack.imgur.com/KTdSX.png"" alt=""enter image description here""></p>
+
+<p>The same plots as above, but now taken the weekly-mean for each variable:
+<img src=""http://i.stack.imgur.com/0iZnQ.png"" alt=""enter image description here""></p>
+
+<p>The rainfall has a <strong>yearly</strong> seasonality and the call-center data has a <strong>weekly pattern</strong>. The idea is to come up with a <em>weekly-based model</em>, so that i can measure the impact that a <em>weekly mean rainfall forecast</em> will cause.</p>
+
+<p>Plotting the whole dataset, taken weekly-means (image below):
+<img src=""http://i.stack.imgur.com/CrSb9.png"" alt=""enter image description here""></p>
+
+<p>I'd like some suggestions on how to measure this variable 'impact' - i can try to split the rainfall data into 3 categories (low, normal, high), then build some model.</p>
+
+<p>Thanks for any help! (i'm using R for analysis).</p>
+"
+"0.130188910980824","0.140487871737254","190586","<p>I am using cross correlation to demonstrate a potential link between two time series (ext &amp; co). Both series are strongly autocorrelated, so it is difficult to assess the dependence between the two series. For a quick preliminary analysis, the cross correlation shows a clear (somehow delayed) link between the two time series, although it might spurious. <a href=""http://i.stack.imgur.com/eHUnj.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/eHUnj.jpg"" alt=""CCF""></a>. Prewhitening seems to be the best option; I will prewhiten my x variable by fitting an ARIMA process and then use the coefficients to filter my variable y. My question is if I should estimate the coefficients of the ARIMA process (for example using <code>auto.arima</code>) using my series x or by using the residuals of the OLS regression of x on y.</p>
+"
+"0.168073161363204","0.181369062527503","45921","<p>I knwo that the autocorrelation in MA(1) process varies between -.5 and +.5, if we consider d(t)=c+e(t)âˆ’Î¸â‹…e(tâˆ’1),then for positive values of Theta, autocorrelation is negative and for negative values of Theta autocorrelation is positive. Now I'm wondering if the autocorrelation of IMA(1,1) process also follows the same pattern as MA(1)? If the process is IMA(1,1) as follows d(t)=c+d(t-1)+e(t)âˆ’Î¸â‹…e(tâˆ’1),
+whether for negative values autocorrelation is positive and for positive values autocorrelation is negatve? how can I calculate the range of autocorrelation for IMA(1,1) process?</p>
+"
+"0.0751646028002829","0.0811107105653813","101341","<p>Is there a way to use correlation to interpolate missing data?</p>
+
+<p>I know the wind speed in 6 locations every hour. This shows the correlation between the separate locations. <a href=""https://dl.dropboxusercontent.com/u/100778374/Wind%20Data/5MinuteData_CWP_Capacity.csv"" rel=""nofollow"">Hourly Data</a></p>
+
+<p>I know the wind speed in one of the locations every 5 minutes.  <a href=""https://dl.dropboxusercontent.com/u/100778374/Wind%20Data/Wind_Locations.csv"" rel=""nofollow"">5 Min Data</a> </p>
+
+<p>Is there a way to use this information to create 5 minute wind speed information for all locations?</p>
+
+<p>I have been using Python to analyze my data so far but can use R as well, just less familiar with R.   </p>
+"
+"0.106298800690547","0.114707866935281","112899","<p>I have Beta as my independent variable and Economic value added (EVA) as my dependent variable. 
+To calculate EVA I need to use Cost of capital and to calculate that I have to use Beta, so is it possible to use EVA as the dependent variable. thank you </p>
+
+<blockquote>
+  <p>EVA= Net Operating Profit After Taxes (NOPAT) - (Capital * Cost of Capital) </p>
+</blockquote>
+"
+"0.130188910980824","0.140487871737254","214379","<p>I'm working on an Arima model to forecast a given variable and so I'm looking in my data for variables with correlation to the variable I'm trying to predict, to add as predictors in the xreg argument.  I've found several that have correlation between 0.1 and 0.3.  I was wondering is there a way to combine predictors with lower correlation to a variable to create a predictor with higher correlation to a variable?</p>
+"
+"0.106298800690547","0.114707866935281","101467","<p>I have calculated  autocorrelation on time series data on the patterns of movement of a fish based on its positions: <em>X</em> (<code>x.ts</code>) and <em>Y</em> (<code>y.ts</code>).</p>
+
+<p>By using R, I ran the following functions and produced the following plots:</p>
+
+<pre><code>acf(x.ts,100)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/Jmh60.jpg"" alt=""enter image description here""></p>
+</blockquote>
+
+<pre><code>acf(y.ts,100)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/s3CET.jpg"" alt=""enter image description here""></p>
+</blockquote>
+
+<p>My question is, how do I interpret these plots? What information is needed to report any sort of pattern? I have been surfing the internet and have yet to find a concise way that effectively explains it.</p>
+
+<p>Also, how do you decide the correct amount of lag to use? I used 100, but I am not sure if that is too much.</p>
+"
+"0.0751646028002829","0.0811107105653813","70041","<p>Is it possible to filter only positive correlations on R?</p>
+
+<p>The point is to make clusters of time series using the correlation as a distance measure, but without clustering the series that have negative correlations.
+Thanks!</p>
+"
+"0.184114923579665","0.198679853559757","155121","<p>First cross-validated question so please be gentle :o)</p>
+
+<p>I have two datasets all gathered and managed in '<strong>R</strong>'... </p>
+
+<p><strong>Dataset 1</strong> - News Corpus. Contains 3,270 entries from the period 1/Apr/13 to 31/Mar/14.  There are often multiple stories on any one day, and indeed days with no stories at all (which I believe makes for an incomplete time series and problems).  The dataset structure is;</p>
+
+<pre><code>Date - (a date)
+Domain - (a string) with 8 levels i.e. there are 8 web domains
+DomainType - (a string) with 4 levels e.g. ""other news"" or ""technology news""
+Sentiment_Title - (a numeric) a score that currently sits in range -4:4
+Sentiment_Description - (a numeric) a score that currently sits in range -6:7
+Sentiment_Body - (a numeric) a score that currently sits in range -53:146
+CCAT - (logical)
+ECAT - (logical)
+GCAT - (logical)
+MCAT - (logical)
+</code></pre>
+
+<p><a href=""https://mega.co.nz/#!HVQTkCJJ!UUFJMzN6i0xI_GKDEtzVV1WfUzkphYCEiB36oMsOINo"" rel=""nofollow"">DOWNLOAD corpusData.csv from Mega</a></p>
+
+<p><strong>Dataset 2</strong> - Bitcoin Market Data. 365 day time series of weighted price, volume and intra-day spread for four different exchanges.  </p>
+
+<p><a href=""https://mega.co.nz/#!3RokVLKB!8rsEBIL8N-F-SXP2lucsjnUfo40MBfN13YRFPGAMSlQ"" rel=""nofollow"">DOWNLOAD finData.csv from Mega</a> </p>
+
+<p><strong>The Problem</strong>
+What I really want to know is which features (if any) of dataset 1 (the corpus) are significantly related to the time series and how.  I guess the time series also needs leads and lags applied to know which direction any relationship goes and how far away from the story publication date that relationship lays.</p>
+
+<p>I have spent a couple of weeks applying the very basic stats knowledge I have to the task and have spent a couple of hours with a post-grad stats support group who also proved unable to find a method that could be readily applied.</p>
+
+<p>I (we) looked at basic Pearson's and Spearman's, moved on to look at linear regression and generalised linear models and so far there appears to be issues with the residuals that makes the output bunkum apparently.  I believe vector-autoregression could also be applied but we are way off into realms I just don't understand yet.</p>
+
+<p><strong>The Question</strong> Given the datasets (and, ideally R) can anyone suggest or indeed offer up an approach to solving my problem?  Even better some simple explanation of how to interpret the results of any such approach.</p>
+"
+"0.106298800690547","0.114707866935281","46479","<p>I'd like to generate more than two (i.e 3) correlated series, take an example when the series follows an IMA(1,1) process, at first I want to generate three correlated random errors <code>e[i]</code> and then I use the following equation to build the series: <code>d[i,] &lt;- mu + d[i-1,] - theta*(e[i-1,])+e[i,]</code> 
+this is what we need to do for two series, how can we develop it for more than two series?</p>
+
+<pre><code>library(mvtnorm)
+rho &lt;- 0.5
+mu &lt;- c(10,10)
+phi &lt;- c(0.2,0.8)
+theta &lt;- c(0.3,-0.7)
+d &lt;- ts(matrix(0,ncol=2,nrow=50))
+e &lt;- ts(rmvnorm(50,sigma=cbind(c(1,rho),c(rho,1))))
+for(i in 2:50)
+  d[i,] &lt;- mu + phi*d[i-1,] - theta*(e[i-1,]+e[i,])
+plot(d)
+</code></pre>
+"
+"0.212597601381094","0.143384833669101","115506","<p>Forecasting airline passengers seasonal time series using auto arima</p>
+
+<p>Hi, I am trying to model some airline data in an attempt to provide an accurate monthly forecast for June-December this year using monthly data from January 2003 onwards.  The data is taken from: <a href=""http://www.transtats.bts.gov/Data_Elements.aspx?Data=1"" rel=""nofollow"">http://www.transtats.bts.gov/Data_Elements.aspx?Data=1</a></p>
+
+<p>Here is the time series plot and ACF</p>
+
+<p><a href=""http://imgur.com/EGh40pR"" rel=""nofollow""><img src=""http://i.imgur.com/EGh40pR.jpg"" title=""Hosted by imgur.com""/></a> </p>
+
+<p><a href=""http://imgur.com/BJy78dn"" rel=""nofollow""><img src=""http://i.imgur.com/BJy78dn.jpg"" title=""Hosted by imgur.com""/></a></p>
+
+<p>I have used auto.arima to develop two models and checked that they correspond to the autocorrelation functions.  Basically I am having trouble deciding whether to use:</p>
+
+<ol>
+<li>The following seasonal ARIMA model</li>
+</ol>
+
+<p><a href=""http://imgur.com/0k2Q8I4"" rel=""nofollow""><img src=""http://i.imgur.com/0k2Q8I4.jpg"" title=""Hosted by imgur.com""/></a></p>
+
+<ol start=""2"">
+<li><p>The following non-seasonal ARIMA model of $N_t$ after I first decomposed the model into a trend, seasonal component and random component $X_t = T_t +S_t +N_t $ using a 12-point moving average (basically did the same thing as the <code>decompose()</code> function manually)</p>
+
+<p><a href=""http://imgur.com/r4TkpxX"" rel=""nofollow""><img src=""http://i.imgur.com/r4TkpxX.jpg"" title=""Hosted by imgur.com""/></a></p></li>
+</ol>
+
+<p>I have analysed the important properties of both models such as ensuring residuals are close to a white noise process and so on but am unsure which of the above 2 models is most suitable for forecasting purposes and why?</p>
+
+<p>Also I am unsure how to compute forecast for the trend component vector if I use the classical decomposition model $X_t = T_t + S_t +N_t$.  Is it even possible to create forecasts using this type of model?</p>
+
+<p>Edit:
+Here is the output of <code>dput(IAP)</code> (the raw data without trend or seasonal component removed)</p>
+
+<blockquote>
+  <p>dput(IAP)
+  structure(c(9726436L, 8283372L, 9538653L, 8309305L, 8801873L, 
+  10347900L, 11705206L, 11799672L, 9454647L, 9608358L, 9481886L, 
+  10512547L, 10252443L, 9310317L, 10976440L, 10802022L, 10971254L, 
+  12159514L, 13502913L, 13203566L, 10570682L, 10772177L, 10174320L, 
+  11244427L, 11387275L, 9945067L, 12479643L, 11521174L, 12164600L, 
+  13140061L, 14421209L, 13703334L, 11325800L, 11107586L, 10580099L, 
+  11812574L, 11724098L, 10167275L, 12707241L, 12619137L, 12610793L, 
+  13690835L, 14912621L, 14171796L, 12010922L, 11517228L, 11222687L, 
+  12385958L, 12072442L, 10590281L, 13246293L, 12795517L, 12978086L, 
+  14170877L, 15470687L, 15120200L, 12321953L, 12381689L, 12004268L, 
+  13098697L, 12767516L, 11648482L, 14194753L, 12961165L, 13602014L, 
+  14413771L, 15449821L, 15327739L, 11731364L, 11921490L, 11256163L, 
+  12463351L, 12075267L, 10412676L, 12508793L, 12629805L, 11806548L, 
+  13199636L, 14953615L, 14844821L, 11659775L, 11905529L, 11093714L, 
+  12659154L, 12393439L, 10694165L, 13279320L, 12398700L, 13380664L, 
+  14406776L, 16026852L, 15317926L, 12599149L, 12874707L, 11651314L, 
+  12915663L, 12668763L, 10944610L, 13473705L, 13537152L, 13935132L, 
+  14814672L, 16623674L, 15753387L, 13220884L, 13185627L, 12144742L, 
+  13546071L, 13206682L, 11732944L, 14387677L, 13995377L, 14291285L, 
+  15582335L, 16969590L, 16621336L, 13791714L, 13397785L, 12762536L, 
+  14096567L, 13766673L, 12023339L, 15177069L, 14278932L, 15306328L, 
+  16232176L, 17645538L, 17517022L, 14239561L, 14209627L, 13133257L, 
+  15083929L, 14589637L, 12385546L, 15486317L, 14857685L, 15615732L
+  ), .Tsp = c(2003, 2014.33333333333, 12), class = ""ts"")</p>
+</blockquote>
+
+<p>Here is the output of <code>dput(IAP.res)</code> (the random component from the decomposition)</p>
+
+<blockquote>
+  <p>dput(IAP.res)
+  structure(c(NA, NA, NA, NA, NA, NA, -669127.347569446, -168943.285069446, 
+  225871.456597222, 271337.106597223, 711896.11076389, 284583.435763889, 
+  165401.360763887, 622993.194097221, -268299.21423611, -9406.73506944434, 
+  -233904.910069446, -147124.755902779, -260973.055902776, -163628.243402778, 
+  -43056.7100694457, 121365.814930555, 205106.485763889, -107464.272569445, 
+  247575.569097221, 279399.444097225, 309270.160763888, -166333.068402778, 
+  129823.798263889, 22571.1190972265, -113455.59756944, -384199.160069444, 
+  62061.8315972222, -155858.226736111, 13600.0274305546, -87564.1475694429, 
+  71845.7357638887, 8145.86076388881, 47627.494097226, 442212.72326389, 
+  73639.5065972234, 60882.5774305568, -135204.389236112, -437744.576736112, 
+  203832.581597222, -264145.435069444, 179945.61076389, 15812.1024305553, 
+  -49648.0975694434, -61460.8059027772, 89656.3690972241, 118205.931597224, 
+  -84196.4517361106, 4197.78576389072, -134118.722569442, -87234.4517361117, 
+  -126555.418402776, -57714.9350694417, 293250.152430556, 59462.6857638892, 
+  10340.8190972245, 416646.652430557, 526459.702430556, -135041.068402776, 
+  239767.631597222, 67034.9940972247, -221066.180902774, 207611.839930556, 
+  -424486.00173611, -94779.3517361115, 89796.4857638886, 130285.644097223, 
+  104776.152430555, 16099.8607638888, -317097.047569448, 335867.264930556, 
+  -796342.285069446, -446777.464236111, -93681.7225694442, 242962.798263888, 
+  -143380.293402778, 135423.439930556, 28934.7357638923, 186390.185763891, 
+  116969.777430558, -113617.264236109, -39733.9225694438, -471572.526736109, 
+  130389.423263891, 80446.7857638926, 298895.444097222, 38486.7982638846, 
+  143712.123263886, 419260.898263889, -113385.347569445, -181233.730902779, 
+  -178686.680902779, -412733.597569445, -380106.797569444, 172783.973263888, 
+  220863.173263891, 11443.2440972247, 392297.319097224, -62825.8267361117, 
+  176278.664930556, 139372.439930556, -174159.88923611, -111755.439236109, 
+  -206233.264236111, -197431.097569445, -55065.5892361099, 48314.3065972236, 
+  -6745.32673610683, 193492.494097225, 155009.569097224, 241747.214930556, 
+  209670.99826389, -173438.47673611, -101510.63923611, -128948.689236113, 
+  -222773.597569443, -498474.472569441, 146856.619097224, -275463.026736109, 
+  386273.214930557, 213400.994097223, 171865.11076389, 464391.381597217, 
+  1489.99826388643, -9918.39340277936, -362009.847569447, NA, NA, 
+  NA, NA, NA, NA), .Tsp = c(2003, 2014.33333333333, 12), class = ""ts"")</p>
+</blockquote>
+"
+"NaN","NaN","214810","<p>The DCC model is defined through the proxy $Q_t$ as
+$$Q_t=(1-\alpha-\beta) \overline{Q} +\alpha\epsilon_{t-1}\epsilon_{t-1}' + \beta Q_{t-1}$$which is then normalized to find the correlation matrix $R_t$
+$$R_t=\frac{q_{ij,t}}{\sqrt{q_{ii,t}q_{jj,t}}}$$</p>
+
+<p>I've been using the <code>rmgarch</code> package and its copula-garch commands (<code>cgarchspec</code> and <code>cgarchfit</code>) to couple time series with either a normal or Student-t copula and a DCC dependence structure.</p>
+
+<p>All results are nice and everything, but my question is on a problem which is present also at the univariate GARCH level: how is $Q_0$ chosen for the first estimation of $Q_1$? I've been going through the <code>rmgarch</code> document and other references on the Internet but haven't found any relevant info. </p>
+"
+"0.130188910980824","0.0936585811581694","71764","<p>Can someone please explain the difference behind <strong>WHY</strong> the cross correlation function <code>ccf()</code> chooses to keep the same denominator for all lags and chooses to ignore the reduction in observations?  Here's an example of the two methods not matching:</p>
+
+<pre><code>x = c(1,2,3,4,5,6,7,8,9,10)
+y = c(3,3,3,5,5,5,5,7,7,11)
+round(cor(x,y),3)
+[1] 0.896
+
+# Think ""Lag -1""  
+# x[-10] = 1,2,3,4,5,6,7,8,9
+# y[-1] = 3,3,5,5,5,5,7,7,11
+round(cor(x[-10],y[-1]),3)
+[1] 0.894
+
+# Think ""Lag -2"" 
+# x[-10:-9] = 1,2,3,4,5,6,7,8
+# y[-1:-2] = 3,5,5,5,5,7,7,11
+round(cor(x[-10:-9],y[-1:-2]),3)
+[1] 0.878
+
+print(ccf(x,y,lag.max=3))
+Autocorrelations of series â€˜Xâ€™, by lag
+
+    -3     -2     -1      0      1      2      3 
+ 0.197  0.466  0.699  0.896  0.436  0.221 -0.018 
+</code></pre>
+
+<p>Notice how the Lag-0 cases matches the output of ccf(), but the negative ""manual"" lags do not.  This is because (to my understanding) the cross correlation function will construct the ""covariance"" (numerator) by comparing the lagged items to the ""full"" 10-item mean(x) and mean(y); in addition, I believe the denominator will keep the ""full"" series as well.</p>
+
+<p>At the end of the day, I can prove why the above <code>Lag -1 of 0.894</code> does NOT match the <code>ccf() -1 of 0.699</code> but I'm struggling to understand <strong>WHY</strong> the <code>ccf()</code> functions chooses to do what it does?</p>
+
+<p>I'm guessing it has something to do with adjusting for some sort of bias...?</p>
+"
+"0.150329205600566","0.121666065848072","72911","<p>This is my very first post on CV so comment if I can improve my post.</p>
+
+<p>I have two webs that sell very similar products and also have a very similar group of customers.</p>
+
+<p>I was trying to prove that concept that ""Fast Moving Inventory From Web A Will Also Move Fast on Web B""</p>
+
+<p>I have the daily snapshots of the inventory of both WebA and WebB. For example, for the product A from Web A, data looks like this:</p>
+
+<pre><code>TimeStamp  Product  Stock  UnitPrice
+Oct 1st    A        100    1.2
+Oct 2nd    A        90     1.2
+Oct 3rd    A        40     1.2
+Oct 4th    A        240    1.2
+..
+</code></pre>
+
+<p>For those two Webs, some of their products are exactly the same. For example, WebA and WebB both have product A. I am wondering is there a way to use R to do some time series analysis so I can prove that for those products that they have in common. There is a very high correlation (WebA sell product A crazy last weekend, which is also a good sale reflected on Web B's data)?</p>
+
+<p>Is there some R functions to do what I want? Then I can tell Web B that you need to carry those top selllers of Web A but Web B doesn't carry now.</p>
+"
+"0.130188910980824","0.140487871737254","29239","<p>We are trying to create auto-correlated random values which will be used as timeseries. We have no existing data we refer to and just want to create the vector from scratch.</p>
+
+<p>On the one hand we need of course a random process with distribution and its SD.</p>
+
+<p>On the other hand the autocorrelation influencing the random process has to be described. The values of the vector are autocorrelated with decreasing strength over several timelags. e.g. lag1 has 0.5, lag2 0.3, lag1 0.1 etc.</p>
+
+<p>So in the end the vector should look something that:
+2, 4, 7, 11, 10 , 8 , 5, 4, 2, -1, 2, 5, 9, 12, 13, 10, 8, 4, 3, 1, -2, -5 </p>
+
+<p>and so on.</p>
+"
+"0.260377821961648","0.257561098184966","103288","<p>I'm working on a time series problem where the spacing between observations is usually 12 or 24 hours, but this is not guaranteed.  I'd really like to estimate the auto-correlation function, and I've coded up a solution in R (shown at the bottom of this question).  Basically, I'm looping through all the observations in the dataset and for each observation I'm looking for other observations 1,2,3,... days in the past.  If that observation exists, then I use this pair in my computation of the acf, otherwise I don't.  </p>
+
+<p>To verify my function works, I've been comparing it with R's base acf() on a simulated dataset where the spacing is equal.  The agreement is close but not perfect (for n=10000 there's hardly any difference in the estimated acf's, but at n=100 I'm seeing differences as large as 0.05).</p>
+
+<p>My question is: how is the acf computed, exactly?  I realize it's a correlation between lagged observations, but what estimates do we use?  For example, I'm using:</p>
+
+<p>$$S_{X,Y} = \frac{\sum X_{i+t} X_i - (\sum X_{i+t}) (\sum X_i)/n}{n-1}$$
+$$S_{X,X} = \frac{\sum X_i^2 - (\sum X_i)^2/n}{n-1}$$
+$$\widehat{AR(1)} = S_{X,Y}/S_{X,X}$$</p>
+
+<p>where $X_i$ is the current observation, $X_{i+t}$ is the observation that is exactly 1 day (or 2,3,...) in the past, and all summations are over pairs that have exactly that difference.  So, I'm guessing that one of my $n$'s should be $n-1$ or vice versa, as asymptotically my estimator agrees with R's, but I can't figure it out.  Any suggestions?</p>
+
+<pre><code>acfUnequal = function( data, data.col=5, maxLags=10 )
+{
+  lags = 1:maxLags
+  data = data[!is.na(data[,data.col]),] #Can't use for acf anyways, and causes problems in calcs
+  reqCols = c(""Date"", ""Hour"")
+  test = reqCols %in% colnames(data)
+  if( any(!test) )
+    stop(paste0(""Missing the following columns: "", paste(reqCols[!test],collapse="", "")))
+  if(ncol(data)&lt;data.col)
+    stop(""data.col is larger than ncol(data)"")
+
+  diffT = as.numeric(diff(data$Date)) + diff(data$Hour)/2400
+  Exy = rep(0,length(lags)) #E(XY), computed by adding up all X*Y then dividing by count
+  Exx = rep(0,length(lags)) #E(X^2), computed by adding up all X^2 then dividing by count
+  Eyy = rep(0,length(lags)) #E(Y^2), computed by adding up all Y^2 then dividing by count
+  Ex = rep(0,length(lags)) #E(X), computed by adding up all X then dividing by count
+  cnt = rep(0,length(lags)) #Count, used to compute E(XY), E(X), E(Y)
+  for(i in 2:nrow(data))
+  {
+    diffCurr = 0
+    j = i
+    for(lag in lags)
+    {
+      while(diffCurr&lt;lag-0.05 &amp; j&gt;=2)
+      {
+        j = j-1
+        diffCurr = diffCurr + diffT[j]
+      }
+      if(!diffCurr&gt;lag+.05) #time lag within 0.05 days detected, use data to compute acf
+      {
+        Exy[lag] = Exy[lag] + data[i,data.col]*data[j,data.col]
+        Exx[lag] = Exx[lag] + data[i,data.col]*data[i,data.col]
+        Eyy[lag] = Eyy[lag] + data[j,data.col]*data[j,data.col]
+        Ex[lag] = Ex[lag] + data[i,data.col]
+        Ey[lag] = Ey[lag] + data[j,data.col]
+        cnt[lag] = cnt[lag] + 1
+      }
+    }
+  }
+  sxy = (Exy - Ex*Ey/cnt)/(cnt-1)
+  sxx = (Exx - Ex^2/cnt)/(cnt-1)
+  acf = sxy/sxx
+  return(acf)
+}
+</code></pre>
+"
+"0.130188910980824","0.140487871737254","226934","<p>I have bi-weekly data for an event for which I am trying to build a forecasting model. When I plot the ACF and PACF, I get the following plots:</p>
+
+<p><a href=""http://i.stack.imgur.com/Ak0gL.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Ak0gL.png"" alt=""enter image description here""></a></p>
+
+<p><a href=""http://i.stack.imgur.com/7LAjO.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/7LAjO.png"" alt=""enter image description here""></a></p>
+
+<p>From what I understand, the plots show that the data are seasonal and seasonality has almost a fixed period of length 13 (as there are 13 bars in each block in the ACF plot). The data also seem to have a downward trend because of the auto correlation diminishes from left to right in the plot. My questions are:</p>
+
+<ol>
+<li>Am I interpreting the plots correctly?</li>
+<li>What types of models should I try with such data?</li>
+</ol>
+
+<p>I have already tried <code>auto.arima()</code> and <code>HoltWinters()</code> from the <code>forecast</code> package without much success. Any guidance is appreciated! Thanks!</p>
+"
+"NaN","NaN","195338","<p>I'm working with  <strong>time series data</strong>. And there is a use of <code>acf</code> ( auto correlation function ) being applied to the <code>log</code> of a series. </p>"
+"NaN","NaN","<p>Basically the <code>log</code> of the data with <code>acf</code> was the correct way while the <code>acf</code> without <code>log</code> was not. </p>",""
+"NaN","NaN","<p>Why I would use a <code>log</code> function in a <strong>auto correlation function.</strong> ??</p>",""
+"NaN","NaN","<p>Example: </p>",""
+"NaN","NaN","<pre><code>Acf(log(data)) # correct ",""
+"NaN","NaN","Acf(data) # wrong ",""
+"NaN","NaN","</code></pre>",""
+"NaN","NaN","<p>Please any help would be great. </p>",""
+"NaN","NaN","","<r><time-series><autocorrelation>"
+"NaN","NaN","178363","<p>I have time bins (every 0.5 million years) with measures of two variables (Diversity and CO2).</p>
+
+<pre><code>&gt;head(matrix)
+
+  Age       Diversity    CO2
+1 0.0       0.4971946 1.0000000
+2 0.5       0.4039132 0.9982684
+3 1.0       0.4062398 0.9957440
+4 1.5       0.4093916 0.9950622
+5 2.0       0.4128504 1.0039857
+6 2.5       0.4138772 1.0311683
+. ..            .        .
+
+&gt;plot(matrix$Diversity ~ matrix$CO2, xlab = ""CO2"", ylab=""Diversity"")
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/KWOvq.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/KWOvq.jpg"" alt=""enter image description here""></a></p>
+
+<p>Although correlation exists</p>
+
+<pre><code>&gt;cor(matrix$Extinction_Rate,matrix$CO2)
+[1] -0.8303699
+</code></pre>
+
+<p>the resulted plot is pretty odd (temporal autocorrelation?). I was thinking that maybe resampling (bootstrap) several times each of the x,y rows of the matrix might help, but I am not sure about that. Any ideas?</p>
+"
+"0.368524785009705","0.334049500562283","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"
+"0.184114923579665","0.198679853559757","180305","<p>I have a time series data (in day format) of 5 places for 15 days stored as a <code>matrix</code>. The structure of data is </p>
+
+<pre><code>meter_daywise&lt;-structure(c(24.4745528484842, 21.5936510486629, 58.9120896540103, 
+49.4188338105575, 568.791971631185, 27.1682608244523, 23.3482757939878, 
+74.710966227615, 82.6947717673258, 704.212340152625, 23.7581651139442, 
+21.154634543401, 64.9680107059625, 420.903181621575, 672.629513512841, 
+128.22871420984, 601.521395359887, 74.6606087800009, 335.87599588534, 
+576.451039365565, 641.329910104503, 1010.78497435794, 72.6159099850862, 
+225.153924410613, 582.652388366075, 529.082673064516, 1151.87208010484, 
+76.9939865858514, 198.567927906582, 641.511944831027, 280.685806121688, 
+998.647413766557, 73.2033388656998, 337.966543898629, 847.24874747014, 
+76.7357959402453, 1065.75153722813, 220.286408574643, 301.120955096701, 
+552.703945876515, 206.496034127105, 1053.49582469841, 206.187963352323, 
+219.791668265415, 655.496754449233, 172.87981151456, 1018.01514547636, 
+544.551001017031, 227.116788647859, 656.566145328213, 373.484460701849, 
+1503.65562864399, 117.732932835236, 251.383369528816, 802.871808716031, 
+150.471195301885, 1414.88799728991, 14.6490905509617, 203.429955747521, 
+622.731792495107, 548.093577186778, 1076.5618643676, 15.5135269483705, 
+256.581499048612, 644.572474965446, 63.2304035656636, 1538.07906461011, 
+15.0980567507389, 261.513768642083, 622.17970609429, 210.786387991582, 
+996.998005580537, 15.8138368515615, 157.390773346978, 573.477606081416
+), .Dim = c(5L, 15L), .Dimnames = list(c(""apFac_401"", ""apFac_403"", 
+""apFac_501"", ""apFac_503"", ""apFac_601""), c(""D1"", ""D2"", ""D3"", ""D4"", 
+""D5"", ""D6"", ""D7"", ""D8"", ""D9"", ""D10"", ""D11"", ""D12"", ""D13"", ""D14"", 
+""D15"")))
+</code></pre>
+
+<p>Earlier, I was calculating correlation between different series using</p>
+
+<pre><code>library(corrplot)# for plotting correlation matrix
+corrplot(cor(t(meter_daywise)),method = ""number"",type=""lower"")# have taken transpose of above structure
+</code></pre>
+
+<p>So, with this I am getting a nice correlation matrix showing correlation between different series.
+<a href=""http://i.stack.imgur.com/lVP29m.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/lVP29m.png"" alt=""enter image description here""></a></p>
+
+<p>But, while observing correlation values I find something is wrong and on  searching I found this <a href=""http://stats.stackexchange.com/questions/29096/correlation-between-two-time-series"">link</a>, where it mentions that we need to compute <strong>cross-correlation</strong>. Therefore, now I need to calculate cross correlation matrix like the above one. Accordingly, I found some functions like</p>
+
+<pre><code>  1. ccf() #in base packages
+  2. diss(meter_daywise,METHOD = ""CORT"",deltamethod = ""DTW"")#in TSclust package
+</code></pre>
+
+<p>I am facing two issues with above functions:</p>
+
+<ol>
+<li><code>ccf</code> do not take full matrix as input</li>
+<li><code>diss()</code> takes input matrix and produces some matrix, but while observing the values I find that it is not a cross-correlation matrix because the values are not between <code>-1</code> and <code>1</code>. </li>
+</ol>
+
+<p>So the question is how do we compute cross-correlation matrix of different time-series values in R? </p>
+
+<p>Note: I have already asked the same question on stack overflow at <a href=""http://stackoverflow.com/q/33537687/3317829"">link</a>, but I did not get any response . </p>
+"
+"0.0751646028002829","0.0811107105653813","219574","<p>I have a monthly time series data (for five years) on a particular store about its sales, marginal sales, inventory, etc. I also have monthly cross-sectional data (for five years) on the same. </p>
+
+<p>I want to find out for a year/over 5 years, if there is any correlation between sales and inventory for a particular branch, and how cross-sectional stores are correlated.</p>
+
+<ul>
+<li>How and what do I need to know, do, and check, to solve this task?</li>
+<li>What R packages might help me in doing so?</li>
+</ul>
+"
+"0.184114923579665","0.16556654463313","175996","<p>I have been studying a few simple statistical models for (univariate) time series. From my understanding,</p>
+
+<ul>
+<li><p>ARIMA and its siblings are used to model the <em>mean</em> of a time series. Rather than a static measure like <code>mean()</code>, the result is a series estimating the mean.</p></li>
+<li><p>ARCH and its brothers are used to model the <em>volatility</em> of a time series. Rather than the usual <code>sd()</code>, the result is a series estimating the variance. </p></li>
+</ul>
+
+<h2>Question</h2>
+
+<p>What would be a credible model for the correlation of two time series?</p>
+
+<h2>Notes</h2>
+
+<p>While mean models explore the idea of regressing lagged values of the time series, volatility models (eg. ARCH model) explore the idea of regressing lagged residuals where residuals are the difference of a mean model to its original time series.</p>
+
+<p>In its general sense and for a variety of reasons, ARIMA and ARCH are <em>superior</em> models than rolling windows with <code>mean()</code> (popularly known as moving averages outside statistics world) and <code>sd()</code>.</p>
+
+<p>However, there is no such a thing for the <em>correlation</em> of two time series X and Y to my knowledge.</p>
+
+<p>The closest thing would be rolling a sad, straight window with <code>cor()</code>, Pearson's coefficient function in R, and work around the resulting series.</p>
+
+<h2>A poor solution</h2>
+
+<p>Trying to replicate Pearson's correlation model,</p>
+
+<pre><code>p_(X,Y) = cov(X,Y) / (sd(X) sd(Y))
+        = E((X-mean(X))(Y-mean(Y))) / (sd(X) sd(Y)),
+</code></pre>
+
+<p>to the time series world, I had the above without the intended success.</p>
+
+<pre><code>library('forecast')
+library('fGarch')
+
+X &lt;- 1:200 + rnorm(200, sd=10)
+Y &lt;- 50 + (1:200)/100 + rnorm(200, sd=5)
+
+plot(1:200, X, t='l', main=""What would be a resulting ts correlation of X and Y?"")
+lines(1:200, Y, t='l', col='blue')
+
+# Mimic Pearson correlation, cov(X,Y)/(sd(X)*sd(Y)).
+Xm &lt;- as.vector(X) - as.vector(fitted(Arima(X, order=c(2,0,1))))
+Ym &lt;- as.vector(Y) - as.vector(fitted(Arima(Y, order=c(2,0,1))))
+
+Xv &lt;- garchFit(formula=~arma(2,1) + garch(2,1), data=X)@sigma.t
+Yv &lt;- garchFit(formula=~arma(2,1) + garch(2,1), data=Y)@sigma.t
+
+correlation &lt;- Xm * Ym / (Xv * Yv)    # this can be forecast
+
+plot(correlation, t='l', col='blue', ylim=c(-2, 2), main='Correlation models')
+abline(h=c(-1, 1))
+abline(h=cor(X, Y), col='red', lwd=5)
+
+# Correlation rolling window of size 10.
+df &lt;- data.frame(X, Y)
+crw &lt;- rep(NA, 10)
+for (i in 11:nrow(df))
+  crw &lt;- c(crw, cor(df[(i-10):i, 1], df[(i-10):i, 2]))
+
+lines(crw, col='darkgreen', lwd=5)
+
+legend('topright',
+  c('pearson mimic', 'static cor()', 'rolling cor() like moving averages'),
+  col=c('blue', 'red', 'darkgreen'), lwd=c(1, 5, 5))
+</code></pre>
+"
+"0.352553237555315","0.328564370336385","162204","<p>I've got two time series (parameters of a model for males and females) and aim to identify an appropriate ARIMA model in order to make forecasts. My time series looks like:</p>
+
+<p><img src=""http://i.stack.imgur.com/t8JkR.jpg"" alt=""enter image description here""></p>
+
+<p>The plot and the ACF show non-stationary (the spikes of the ACF cut off very slowly). Thus, I use differencing and obtain:</p>
+
+<p><img src=""http://i.stack.imgur.com/Zy1kC.jpg"" alt=""enter image description here""></p>
+
+<p>This plot indicate that the series might now be stationary and the application of the kpss test and the adf test support this hypothesis.</p>
+
+<p>Starting with the Male series, we make the following observations:</p>
+
+<ul>
+<li>The empirical autocorrelations at Lags 1,4,5,26 and 27 are significant different from zero.</li>
+<li>The ACF cuts off (?), but I'm concerned about the relatively big spikes at lag 26 and 27.</li>
+<li>Only the empirical partial autocorrelations at Lags 1 and 2 are significant different from zero.</li>
+</ul>
+
+<p>On ground of these observations alone, if I had to choose a pure AR or MA model for the differenced time series, I would tend to choose either an AR(2) model by arguing that:</p>
+
+<ul>
+<li>We have no significant partial autocorrelations for lag greater than 2 </li>
+<li>The ACF cuts off except for the region around lag 27. (Are these few outliers alone an indicator, that a mixed ARMA model would be appropriate?)</li>
+</ul>
+
+<p>or an MA(1) model by arguing that:</p>
+
+<ul>
+<li>The PACF clearly cuts off</li>
+<li>We have for lags greater 1 only 4 spikes exceeding the critical value in magnitude. This is ""only"" one more than the 3 spikes (95% out of 60) which would be allowed to lie outside the dotted area.</li>
+</ul>
+
+<p>There are no characteristica of an ARIMA(1,1,1) model and choosing orders of p and q of an ARIMA model on grounds of ACF and PACF for p+q > 2 gets difficult.</p>
+
+<p>Using auto.arima() with the AIC criterion (Should I use AIC or AICC?) gives:</p>
+
+<ol>
+<li>ARIMA(2,1,1) with Drift; AIC=280.2783</li>
+<li>ARIMA(0,1,1) with Drift; AIC=280.2784</li>
+<li>ARIMA(2,1,0) with Drift; AIC=281.437</li>
+</ol>
+
+<p>All three considered models show white noise residuals:</p>
+
+<p><img src=""http://i.stack.imgur.com/WM0By.jpg"" alt=""enter image description here""></p>
+
+<p>My summed up questions are:</p>
+
+<ol>
+<li>Can you still describe the ACF of the time series as cutting of despite the spikes around lag 26?</li>
+<li>Are these outliers an indicator that a mixed ARMA model might be more appropriate?</li>
+<li>Which Information Criterion should I choose? AIC? AICC?</li>
+<li>The residuals of the three models with the highest AIC do all show white noise behavior, but the difference in the AIC is only very small. Should I use the one with the fewest parameters, i.e. an ARIMA(0,1,1)?</li>
+<li>Is my argumentation in general plausible?</li>
+<li>Are their further possibilities to determine which model might be better or should I for example, the two with the highest AIC and perform backtests to test the plausibility of forecasts?</li>
+</ol>
+
+<p>Thanks!</p>
+
+<p><strong>EDIT:</strong> Here is my data:</p>
+
+<pre><code>-5.9112948202 -5.3429985122 -4.7382340534 -3.1129015623 -3.0350910288 -2.3218904871 -1.7926701792 -1.1417358384 -0.6665592055 -0.2907748318 0.2899480865 0.4637205370  0.5826312749  0.3869227286  0.6268379174  0.7439125292 0.7641139207  0.7613140511  3.0143912244 -0.7339255839  2.0109976796 0.8282394650 -2.5668367983  5.9826406394  1.9569198553  2.3860893476 2.0883339390  1.9761894580  2.2601997245  2.2464027995  2.5131158613 3.4564765529  4.2307335557  4.0298688374  3.7626317439  3.1026407174 2.1690168737  1.5617407254  2.6790460788  0.4652054768 -0.0501046517 -1.0157683791 -0.5113698054 -0.0180401353 -1.9471272198 -0.2550365250 -1.1269988523  0.5152074134  0.2362626753 -2.9978337017  1.4924705528 -1.4907767844 -0.5492041416 -0.7313021018 -0.6531515868 -0.4094159299 -0.5525401626 -0.0611454515 -0.5256272882 -1.1235247363 -1.7299848758 -1.3807763611 -1.6999054476 -4.3155973110 -4.7843298990
+</code></pre>
+"

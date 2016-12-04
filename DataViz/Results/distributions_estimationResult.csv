@@ -1,0 +1,789 @@
+"V1","V2","V3","V4"
+"0.466252404120157","0.466252404120157"," 15022","<p>I'm familiar with very basic plotting in R, but I'm not sure how best to create the reasonably-complicated plot described below.</p>
+
+<p>I have developed a density estimation method that essentially fits an empirical distribution to multiple univariate samples, under distinct conditions. To be clear, let $\mathbf{x}_i^\mathrm{j}$ be a vector of univariate values for the $i^\mathrm{th}$ sample under condition $j$. My method allows me to approximate the distribution from which the values in $\mathbf{x}_i^\mathrm{j}$ were drawn. Although in principle, $j$ could take on many values, in practice I am interested in just two conditions (e.g., $j$ specifies whether the sample is for a pre- or post-intervention condition).</p>
+
+<p>In particular, the method I have developed attempts to establish correspondences between common features of the fitted density estimates (e.g., modes). I want to be able to plot curves for all the density estimates in such a way as to allow comparison between the two conditions, and between corresponding features of the distributions.</p>
+
+<p>I would like to create a grid of subplots (e.g., <em>m</em> Ã— <em>n</em> if there are a total of 2 Ã— <em>m</em> Ã— <em>n</em> samples; note that <em>m</em> and <em>n</em> are only specified so that the overall plot has a convenient aspect ratio, they do not relate to the design of the experiment etc.). Each subplot would show two curves: one for the distribution underlying $\mathbf{x}_i^\mathrm{pre}$ and the other for $\mathbf{x}_i^\mathrm{post}$. Further, to allow the correspondences to be compared, I would like to color the line used to draw the curves using a â€œrainbowâ€ (or other color map), so that one could, for example, look at the red regions of two curves and visually determine whether they do in fact correspond. To this end, I can provide vectors (<em>x</em>, p(<em>x</em>), <em>c</em>), where <em>x</em> is an arbitrary value on the horizontal axis of the density estimate plot, p(<em>x</em>) is the density estimate for <em>x</em>, and <em>c</em> is a value in (0, 1), such that a particular value of <em>c</em> should correspond across all density estimates, and should, therefore, be plotted in the same color (e.g., a value of 0.2 might sit at the peak of the mode of the distributions).</p>
+
+<p>Lastly, in order to allow the two curves in each subplot to be distinguished, I'd like to be able to style each differently, for example by using a thin line for the pre condition and a thick line for the post condition.</p>
+
+<p>Thanks.</p>
+"
+"NaN","NaN"," 33616","<p>I am using the <strong>pearsonFitML</strong> function in the <strong>PearsonDS</strong> package to do maximum likelihood estimation of parameters in R. </p>
+
+<p>I am particularly interested in fitting <strong>Pearson Type 5</strong> distributions to my data. Does anyone know how I can 'fix' this function so it only tries fitting a type 5 distribution? This may just be a straightforward issue of syntax but I've been playing round for a while and haven't got this sorted yet!</p>
+
+<p>Many thanks,</p>
+
+<p>Faith </p>
+"
+"0.390094748802747","0.390094748802747"," 38394","<p>I would like to obtain the ratio between two distribution densities and I wonder whether there is some well-founded and established approach to do that.</p>
+
+<p>Let's say that I have two samples for the random variable $X$ coming from two populations, $P_1$ and $P_2$, that are likely to be distributed differently across the valid range of $X$. </p>
+
+<p>Then I'll like to at least approximate the function $f(X)$ of the ratio between the densities in both populations across the range of $X$.</p>
+
+<p>$$f(x)=\frac{Density(x|P_1)}{Density(x|P_2)}$$</p>
+
+<p>What I am currently doing in R is to estimate the density of each sample using kernel density estimation (<code>density()</code> function). Then I can approximate $f(X)$ for any given value  by interpolating the closest point estimates returned by <code>density()</code> on each sample and dividing the resulting values. </p>
+
+<p>Although this is satisfactory to some extent I wonder whether there is a better way. Specially, if there is an existing implementation in R. For example, I am afraid that the ratio could be extremely variable in regions where one or both distributions have very low density and I wonder whether there is a method to also obtain some estimate of uncertainty. </p>
+"
+"0.329690236697893","0.329690236697893"," 50250","<p>I am trying to fit the Weibull distribution to a dataset in R. I have a dataset, ""loss"", as a .csv file, and use <code>fitdistr(loss,""invexp"")</code>. I received the message:  </p>
+
+<blockquote>
+  <p>Failure infitdistr(loss, ""invweibull"") : unsupported distribution</p>
+</blockquote>
+
+<p>How can I fit the inverse Weibull Distribution to a dataset in R?</p>
+
+<hr>
+
+<p>Thank you! I am wonder both how to get this done in R and why I have an error when using a function fitdistr to make maximum-likelihood estimation. My error message is about function ""invweibull"" in R. The same problem I have for the frechet distribution. 
+My dataset is the following: </p>
+
+<blockquote>
+  <p>336.893
+  2.468.001
+  572.651
+  426.581
+  501.593
+  433.167
+  708.431
+  736.761
+  1.405.323
+  2.161.790
+  492.029
+  1.429.564
+  585.885
+  563.030
+  408.345
+  4.840.762
+  308.791
+  1.201.796
+  1.463.367
+  849.336
+  510.141
+  282.088
+  648.475
+  699.729
+  849.677
+  606.299
+  380.988</p>
+</blockquote>
+
+<p>I am not sure if I can simply fit a Weibull to the inverse of the observations and say then that parameters are the same for inversed weibull. I use paket ""actuar"" and function ""invweibull"" and ""frechet"" and become a failure unsupported distribution. Simple question is, why the estimations can not be done for this dataset and may be somebody know how is it possible to fit inverse weibull and frechet distributions in R? Thank you very much for your respond to my question!</p>
+"
+"0.208514414057075","0.208514414057075"," 59155","<p>I want to obtain the full distribution of a Gamma (or Inverse Gaussian) distributed $y_i$ given a vector of $\bar x_i$ that have been used in the linear predictor of a coefficient. Suppose also for the Gamma GLM I have used the log-link instead of the canonical link.</p>
+
+<p>Since both distributions are bi-parametric I know I can get the estimation of the mean parameter by <code>predict(glmObj, ..., type=""response"")</code> whichever distribution whichever link I have used. I'm not sure about the conditional variance. I know that $var\left(y_i\right)=\phi*V\left(\mu_i\right)$. My questions are:</p>
+
+<ol>
+<li><p>Is it correct to estimate $\phi$, the dispersion parameter, as the square root of <code>glmObj$deviance/glmObj$df.residual</code>, regardless of the distribution and canonical link?</p></li>
+<li><p>Is $V\left(\mu_i\right)$ dependent on the canonical link?</p></li>
+</ol>
+"
+"0.208514414057075","0.208514414057075"," 65866","<pre><code>plot(density(rexp(100))
+</code></pre>
+
+<p>Obviously all density to the left of zero represents bias.</p>
+
+<p>I'm looking to summarize some data for non-statisticians, and I want to avoid questions about why non-negative data has density to the left of zero.  The plots are for randomization checking; I want to show the distributions of variables by treatment and control groups. The distributions are often exponential-ish.  Histograms are tricky for various reasons.  </p>
+
+<p>A quick google search gives me work by statisticians on non-negative kernels, e.g.:  <a href=""http://www.ism.ac.jp/editsec/aism/pdf/052_3_0471.pdf"">this</a>.  </p>
+
+<p>But has any of it been implemented in R?  Of implemented methods, are any of them ""best"" in some way for descriptive statistics?</p>
+
+<p>EDIT:  even if the <code>from</code> command can solve my current problem, it'd be nice to know whether anyone has implemented kernels based on literature on non-negative density estimation</p>
+"
+"NaN","NaN"," 71735","<p>I'm trying to estimate a specific point in a bimodal distributions, It's the point that I indicated in my picture with the A.
+<img src=""http://i.stack.imgur.com/YQhXE.png"" alt=""enter image description here""></p>
+
+<p>As example we can generate a mixture of guassian and then try to determinate the point A(x,f(x)).</p>
+
+<p>This problem is I think a problem of optimization and estimation. My question is, though, how would I go about that in detail? Maybe I'm just missing a good tutorial somehow.</p>
+"
+"0.255376959227625","0.255376959227625"," 82401","<p>I am trying to estimate parameters defining the rate of a Poisson bivariate distributions. (...following Maher's 1982 paper ""Modelling association football scores""). Basically I have random variables $Z_{i,j} = X_{i,j}\cdot Y_{i,j}$ (here the $X_{i,j}$ and the $Y_{i,j}$ are independent and follow Poisson distributions with rates $\alpha_i\cdot \beta_j$ and $\alpha_j\cdot \beta_i\cdot\rho$ respectively, and $\alpha_i,\beta_j$ and $\rho$ are positive numbers for $1\le i,j \le N$. I have $M$ samples $(x,y)$.</p>
+
+<p>Depending on the case, $N$ is under one hundred, and $M$ in the thousands.</p>
+
+<p>So what is the best approach here to estimate the parameters? I haven't found a solver for the bivariate case. I'd need to optimize functions of the sort
+$$
+{\mathcal L}(x_i,y_j; \alpha_i,\beta_j:1\le i,j\le N) =\sum_{k=1}^M -(\alpha_{i_k}\beta_{j_k}) + x_k\log(\alpha_{i_k}\beta_{j_k}) - (\alpha_{j_k}\beta_{i_k}\rho)+y_k\log(\alpha_{i_k}\beta_{j_k})
+$$
+where the index $k$ is an ordering of the sample and, e.g., the $k$-th sample is drawn from the distribution $P(\alpha_{i_k}\beta_{j_k})P(\alpha_{j_k}\beta_{i_k}\rho)$.</p>
+
+<p>Alternatively, I considered this as a univariate problem, first estimating the $\alpha$s, then the $\beta$s. I have successfully done this using scipy.optimize: basically </p>
+
+<ol>
+<li>I start with the initial guesses $\hat\alpha_i=\frac{1}{\sqrt{\sum_{1\le i,j\le N,i\neq j} x_{i,j}}} \sum_{j\neq i}x_{i,j}$ and $\hat\beta_j=\frac{1}{\sqrt{\sum_{1\le i,j\le N,i\neq j} x_{i,j}}} \sum_{j\neq i}x_{i,j}$ suggested by Maher,</li>
+<li>I estimate the $\alpha_i$s using Nelder-Mead optimization method from scipy.optimize with function 
+$$
+{\mathcal L}_\alpha(\alpha_i;x_k,\beta_j:1\le i,j\le N,1\le k\le M) =\sum_{k=1}^M -(\alpha_{i_k}\beta_{j_k}) + x_k\log(\alpha_{i_k}\beta_{j_k})
+$$ 
+I update the initial guess $\hat \alpha_i$s with the newfound estimation, and next I estimate the $\beta_j$s.</li>
+<li>I loop over the above procedure.</li>
+<li>I do the same with the $\gamma_i$ and $\delta_j$.</li>
+</ol>
+
+<p>As I write this, I am running experiments checking the prediction's accuracy from historical data. Results tend to be a little over %50.</p>
+"
+"0.361157559257308","0.361157559257308"," 82530","<p>Currently I am trying to find a well-known distribution that fits to my positive skewed dataset (n=70) the best. First I used the <code>fitdistrplus</code> R package to estimate parameters for Gamma, Weibull, Lognormal and Exponential distributions (using Maximum Likelihood estimation, though I am unsure if MLE is the best choice with 70 observations (better one?)).</p>
+
+<p>In the second step, I selected the model with the smallest AIC. But of course the model should also pass a goodness of fit test. The first idea was simply using an Kolmogorv-Smirnov test with the estimated parameter, but this doesn't seem to be a good idea since KS-Tests with estimated parameters lead to more or less useless p values.</p>
+
+<p>During my search on the web, I stumbled over <a href=""http://stats.stackexchange.com/questions/45033/can-i-use-kolmogorov-smirnov-test-and-estimate-distribution-parameters"">Greg Snows' suggestion</a> and apart from that over <a href=""http://users.dimi.uniud.it/~massimo.franceschet/R/fit.html"">this page</a> which describes an interesting monte carlo approach (from <a href=""http://scholar.google.com/scholar?hl=en&amp;q=A.+Clauset%2C+C.+R.+Shalizi%2C+M.+E.+J.+Newman.+Power-law+distributions+in+empirical+data.+%23+SIAM+Review+51%2C+661-703+%282009%29&amp;btnG=&amp;as_sdt=1%2C5&amp;as_sdtp="">Clauset et al.</a>). An exemplary adapted R code sample which uses the <code>fitdistrplus</code> package for maximum likelihood estimation for the log norm distribution looks as follows:</p>
+
+<pre><code>lognormal = function(d, limit=2500) {
+  # MLE for lognormal distribution
+  fit &lt;- fitdist(d,""lnorm"", method=""mle"")
+
+  # compute KS statistic
+  t = ks.test(d, ""plnorm"", meanlog = fit$estimate[""meanlog""], sdlog = fit$estimate[""sdlog""]);
+
+  # compute p-value
+  count = 0;
+  for (i in 1:limit) {
+    syn = rlnorm(length(d), meanlog = fit$estimate[""meanlog""], sdlog = fit$estimate[""sdlog""]);
+    fit2 &lt;- fitdist(syn, ""lnorm"", method=""mle"")
+    t2 = ks.test(syn, ""plnorm"", meanlog = fit2$estimate[""meanlog""], sdlog = fit2$estimate[""sdlog""]);
+    if(t2$stat &gt;= t$stat) {count = count + 1};
+  }
+
+  return(list(meanlog = fit$estimate[""meanlog""], sdlog = fit$estimate[""sdlog""], stat = t$stat, p = count/limit, KSp = t$p));
+}
+</code></pre>
+
+<p>What I am currently asking me (and you) is, does this approach makes sense with respect to the small sample size (or should I use moment/... estimators or is MLE ok) and is the way the goodness of fit is tested suitable?</p>
+"
+"0.571040240720161","0.532970891338817"," 95994","<p>I`d like to extract the parameters of a two-component mixture distribution of noncentral student t distributions which first has to be fitted to a one-dimensional sample.</p>
+
+<p>My question is closely related to this thread, but as pointed out I want to use Student t components for the mixture:
+<a href=""http://stats.stackexchange.com/questions/10062/which-r-package-to-use-to-calculate-component-parameters-for-a-mixture-model?newreg=fe1454a4702e4532a03bd2c705fe3b02"">Which R package to use to calculate component parameters for a mixture model</a></p>
+
+<p>There are many packages for R that are capable of handling mixture distributions in one way or another. Some in the context of a Bayesian framework requiring kernels. Some in a regression framework. Some in a nonparametric framework. ...</p>
+
+<p>In general the ""mixdist""-package seems to come closest to my wish. This package fits parametric mixture distributions to a sample of data. Unfortunately it doesn`t support the student t distribution.</p>
+
+<p>I have also tried to manually set up a likelihood function as described here:
+<a href=""http://stackoverflow.com/questions/6485597/r-how-to-fit-a-large-dataset-with-a-combination-of-distributions"">http://stackoverflow.com/questions/6485597/r-how-to-fit-a-large-dataset-with-a-combination-of-distributions</a>
+But my result is far from perfect.</p>
+
+<p>The ""gamlss.mx""-package might be helping, but originally it seems to be set up for another context, i.e. regression. I tried to regress my data on a constant and then extract the parameters for the estimated mixture error distribution. Is this a valid approach? </p>
+
+<p>But with this approach the estimated parameters seem to be not directly accessable individually by some command (such as fit1$sigma). And more importantly there seem to be serious estimation problems even in pretty simple and nonambiguous cases.
+E.g. in example 2 (see syntax below) I simulated a mixture which looks like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/MG7AA.jpg"" alt=""kernel density estimate of the mixture""></p>
+
+<p>When trying to fit a two-component student t mixture to these data either I get this error message (the deeper meaning of which I don't understand):</p>
+
+<p><img src=""http://i.stack.imgur.com/UPvg4.jpg"" alt=""enter image description here""></p>
+
+<p>or I get wrong results (convergenve is reached only after approximately two hours as can be seen from the output):</p>
+
+<p><img src=""http://i.stack.imgur.com/HjlfW.jpg"" alt=""enter image description here""></p>
+
+<p>The means could be estimated well, but both the variance and the degrees of freedom are estimated badly. In the TF2 implementation of the student t, the sigma parameter denotes the standard deviation. Its estimate is NEGATIVE for the first component! And for the second component the degrees of freedom estimate is also NEGATIVE. Probably one should not use these results in practice :(</p>
+
+<p>By the way: Is there a way to restrict these degree-of-freedom coefficient estimates to be natural numbers? </p>
+
+<p>The following syntax is my gamlss.mx-setup so far:</p>
+
+<pre><code>library(gamlss.dist)
+library(gamlss.mx)
+library(MASS)
+
+# example 1 (real data):
+data(geyser)
+plot(density(geyser$waiting) )
+fit1 &lt;- gamlssMX( waiting~1,data=geyser,family=""TF2"",K=2 )
+fit1
+# works fine
+
+# example 2 (simulated data):
+N &lt;- 100000
+components &lt;- sample(1:2,prob=c(0.6,0.4),size=N,replace=TRUE)
+mus &lt;- c(3,-6)    # denotes the mean of component 1 and 2, respectively
+sds &lt;- c(1,9)     # ... the standard deviations
+nus &lt;- c(25,3)    # ... the degrees of freedom
+mixsim &lt;-data.frame(rTF2( N,mu=mus[components],sigma=sds[components],nu=nus[components] ))
+colnames(mixsim) &lt;- ""MCsim""
+plot(density(mixsim$MCsim) , xlim=c(-50,50))
+fit2 &lt;- gamlssMX(MCsim~1,data=mixsim,family=""TF2"",K=2)
+fit2
+# error message or strange results (this also happens when using a sample of S&amp;P500 returns)
+</code></pre>
+
+<p>I would be very grateful for any advice!
+I've read through many related manuals and vignettes so far but I`m still lost.</p>
+
+<p>Thanks a lot in advance!!
+Jo</p>
+"
+"0.489009646921826","0.489009646921826","113145","<p>I am trying to estimate parameters and latent variables in a split Poisson model that describes observable and unobservable counts in time assuming the split probability is $\pi$. An observable event in time is denoted as $O_t$ while an unobservable event is denoted $U_t$. The distributions of $O_{t+1}$ and $U_{t+1}$ are assumed to follow the conditional distribution:</p>
+
+<p>$O_{t+1}|O_{t},U_{t}$ ~  Poisson$[\pi(\mu_{t}O_{t}+\mu U_{t})]$ </p>
+
+<p>$U_{t+1}|O_{t},U_{t}$ ~  Poisson$[(1-\pi)(\mu_{t}O_{t}+\mu U_{t})]$</p>
+
+<p>$\mu$ and $\mu_r$ are type specific rates  where $\mu_{t} = \mu$ if $t \le C$ and $\mu_t = \mu_r$ if $t \gt C$; $t=1,2,\ldots,C-1 , C, C+1, \ldots,N$.</p>
+
+<p>Data is available for all $O_t$. Each latent variable $U_t$ is to be updated using the relation above and assuming that $U_{t} = 0$. It is desired to estimate parameters $\pi$, $\mu$, $\mu_r$ and the latent variables $U_{t}$ for all $t$. Bayesian method is chosen to carry out these estimations and my code is given below:</p>
+
+<pre><code>    library(R2jags)
+    # sample observable data for 30 time points
+    o &lt;- c(1, 1, 2, 11, 15, 30, 60, 46, 60, 54, 51, 44, 27, 20, 16, 10, 7, 7, 4, 4, 6, 10, 8, 10, 2, 4, 4, 1, 0, 0)
+    # setting the input for jags model function
+    oo &lt;- data.frame(o)
+    datain &lt;- as.list(oo)
+    datain$n &lt;- nrow(oo)
+    datain$C &lt;- C
+    model &lt;- function() {
+        u[1] &lt;- 0    #bringing in the data through loop and minding the rate conditions
+        for (i in 2:C) {
+            o[i]~dpois(pi*(mu*o[i-1]+mu*u[i-1]))
+        }
+        for (i in (C+1):n){
+            o[i]~dpois(pi*(mur*o[i-1]+mu*u[i-1]))
+        }
+        pi~dunif(0,1)     # setting non-informative priors
+        mu ~ dunif(0,10)
+        mur ~ dunif(0,1)
+
+        for(j in 2:C){    # the priors for the latent variable are updated via the conditional relation
+            u[j]~dpois((1-pi)*(mu*o[j-1]+mu*u[j-1]))
+        }
+        for(j in (C+1):n){
+            u[j]~dpois((1-pi)*(mur*o[j-1]+mu*u[j-1]))
+        }
+
+    }
+
+    parameters &lt;- c('pi','mu','mur','u[10]','u[15]','u[20]') # usually we obtain distribution for all latent variables but only decide to choose these three.
+    jagsfit &lt;- jags(datain, model=model,parameters=parameters,
+            n.chains=2,n.iter=5000000,n.burnin=100000,n.thin=5000)
+    jagsfit
+                  mu.vect     sd.vect         2.5%          25%          50%                  75%
+    u[10]    1.402007e+04    2037.291 1.103313e+04 1.213150e+04 1.397350e+04 1.561675e+04
+    u[15]    1.251555e+06  130601.609 1.055833e+06 1.132489e+06 1.251471e+06 1.352963e+06
+    u[20]    1.136881e+08 7039334.938 1.028741e+08 1.072936e+08 1.138424e+08 1.191725e+08
+    mu       2.466000e+00       0.021 2.431000e+00 2.449000e+00 2.465000e+00 2.485000e+00
+    mur      1.860000e-01       0.157 8.000000e-03 6.500000e-02 1.470000e-01 2.570000e-01
+    pi       0.000000e+00       0.000 0.000000e+00 0.000000e+00 0.000000e+00 0.000000e+00
+    deviance 1.512097e+04     143.825 1.487507e+04 1.499773e+04 1.510491e+04 1.524422e+04
+                    97.5%  Rhat n.eff
+    u[10]    1.771087e+04 0.998   200
+    u[15]    1.488133e+06 0.997   200
+    u[20]    1.262587e+08 0.998   200
+    mu       2.499000e+00 0.997   200
+    mur      6.220000e-01 1.004   200
+    pi       0.000000e+00 1.001   200
+    deviance 1.534904e+04 0.997   200
+</code></pre>
+
+<p>I simulated the observed data above by fixing parameters and writing function below:</p>
+
+<pre><code>    set.seed(123)
+    C =7;mu=2;mur =0.4;pi=0.7
+    o &lt;- numeric(); u &lt;- numeric()
+    o[1] &lt;- 1; u[1] &lt;- 0
+    f &lt;- function(){
+        for(i in 2:30){
+            if(i &lt;= C){
+        o[i] &lt;&lt;- rpois(1,pi*(mu*o[i-1]+mu*u[i-1]))
+        u[i] &lt;&lt;- rpois(1,(1-pi)*(mu*o[i-1]+mu*u[i-1]))
+    }else{
+        o[i] &lt;&lt;- rpois(1,pi*(mur*o[i-1]+mu*u[i-1]))
+        u[i] &lt;&lt;- rpois(1,(1-pi)*(mur*o[i-1]+mu*u[i-1]))
+    }
+}
+return(list(o,u))
+}
+
+f()
+</code></pre>
+
+<p>In this case, the unobservable is:</p>
+
+<pre><code>u &lt;- c(0, 1, 3, 0, 7, 12, 31, 32, 26, 20, 22, 15, 13, 8, 4, 2, 4, 4, 3, 4, 4, 4, 5, 5, 4, 2, 1, 0, 0, 0)   
+</code></pre>
+
+<p>I want to recover the parameters and the latent variables back but the results I got were not OK and was thinking I have mis-specified some of the distributions. Can anyone please help look this problem? Thanks!</p>
+"
+"0.255376959227625","0.255376959227625","133387","<p>I'm trying to create a prediction model for estimation of continuous variable based on about 35 Independent variables.My data set has circa 27k observartions.
+Here is the summary of the the targeted continuous variable:</p>
+
+<pre><code>              Frequency Percent
+(0,5]              2706  10.053
+(5,10]             5226  19.415
+(10,25]            4397  16.335
+(25,100]           7142  26.533
+(100,1e+03]        6465  24.018
+(1e+03,1e+05]       981   3.645
+Total             26917 100.000
+</code></pre>
+
+<p>I tried (by using R) Random Forest (RandomForest package),Linear regression, Conditional Inference Trees (ctree function in party package) but all of them have results that have a significant overestimation.
+Here are the results of the prediction where I counted number of observations by thier distance from the actual values:
+Any idea how can i balance the results?</p>
+
+<p><img src=""http://i.stack.imgur.com/y70OM.png"" alt=""enter image description here""></p>
+
+<p>Here are some views on the data:
+The target variable is LTV for a user, I would like to predict LTV value after 180 days  based on users behavior of the first 7 days.
+Here Is a summary fot the target variavle:</p>
+
+<pre><code>  vars     n   mean     sd median trimmed   mad  min      max    range skew kurtosis   se
+1    1 26917 178.35 622.29  33.49   66.63 39.28 0.03 22103.73 22103.71 14.1   325.08 3.79
+</code></pre>
+
+<p>UPDATE:
+Here are the distributions of the targeted variable (first)and the prediction (secound)results:
+<img src=""http://i.stack.imgur.com/b3MBs.png"" alt=""targeted variable"">
+<img src=""http://i.stack.imgur.com/3N7d1.png"" alt=""prediction results based on the linear regression model that was the best""></p>
+"
+"0.300964632714423","0.300964632714423","142693","<p><strong><em>Is the following a reasonable illustration of the OVB problem?</em></strong></p>
+
+<p>We build up fictional data around the regression line:</p>
+
+<p>$$y = 7.2 + 2.3 \, x_1 + 0.1 \, x_2 + 1.5 \, x_3 + 0.013 \, x_4 + eps$$</p>
+
+<p>by using this function:</p>
+
+<pre><code>correlatedValue = function(x, r){
+  r2 = r**2
+  ve = 1 - r2
+  SD = sqrt(ve)
+  e  = rnorm(length(x), mean = 0, sd = SD)
+  y  = r * x + e
+}
+</code></pre>
+
+<p>-thank you, @gung for this post:
+<a href=""http://stats.stackexchange.com/questions/38856/how-to-generate-correlated-random-numbers-given-means-variances-and-degree-of"">How to generate correlated random numbers (given means, variances and degree of correlation)?</a></p>
+
+<p>And the following function, which generates four variables (<strong><em>x1</em></strong>, <strong><em>x2</em></strong>, <strong><em>x3</em></strong> and <strong><em>x4</em></strong>) as well as noise (<strong><em>eps</em></strong>). <strong><em>x1</em></strong> and <strong><em>x3</em></strong> are sample from normal distributions; <strong><em>x2</em></strong> is extracted from a uniform; and <strong><em>x4</em></strong> from a Poisson.</p>
+
+<pre><code>variables &lt;- function(){
+x &lt;- rnorm(1000)
+x1 &lt;- 50 + 15 * x
+x3 &lt;- 28 + 11 * correlatedValue(x = x, r = 0.6)
+x2 &lt;- runif(1000, 0, 100)
+x4 &lt;- rpois(1000,50)
+eps &lt;- rnorm(1000,5, 7)
+y = 7.2 + 2.3 * x1 + 0.001 * x2 + 1.5 * x3 + 0.013 * x4 + eps
+dat &lt;- as.data.frame(cbind(y, x1, x2, x3, x4))
+c &lt;- as.numeric(coef(lm(y ~ x2 + x3 + x4, dat))[3])
+d &lt;- as.numeric(coef(lm(y ~ x1 + x2 + x3 + x4, dat))[4])
+c(c,d)
+}
+</code></pre>
+
+<p><strong><em>x1</em></strong> and <strong><em>x3</em></strong> are highly influential on <strong><em>y</em></strong> and are correlated with each other, setting the values up to observe <strong><em>OVB</em></strong>. <strong><em>x2</em></strong> and <strong><em>x4</em></strong> are less influential.</p>
+
+<p>Here is the plotting of <strong><em>y</em></strong> against <strong><em>x1</em></strong>, <strong><em>x2</em></strong>, <strong><em>x3</em></strong>  and <strong><em>x4</em></strong>, and <strong><em>x1</em></strong> over <strong><em>x3</em></strong> with added regression lines:</p>
+
+<p><img src=""http://i.stack.imgur.com/I4u0S.png"" alt=""enter image description here""></p>
+
+<p>And following is the variance-covariance matrix:</p>
+
+<pre><code>             y           x1           x2         x3          x4
+y   1.00000000  0.944410945  0.014421682 0.77571067 -0.01463981
+x1  0.94441094  1.000000000 -0.001726526 0.56504020 -0.03562991
+x2  0.01442168 -0.001726526  1.000000000 0.03537959  0.02253922
+x3  0.77571067  0.565040198  0.035379590 1.00000000  0.02573827
+x4 -0.01463981 -0.035629906  0.022539218 0.02573827  1.00000000
+</code></pre>
+
+<p>Predictably, the regression including all variables shows similar coefficients to the initial equation:</p>
+
+<pre><code>coef(lm(y~.,dat))[2:5]
+         x1          x2          x3          x4 
+2.253353226 0.004899445 1.547915198 0.017710038 
+</code></pre>
+
+<p>Wrapping up, a quick simulation is carried out to obtain the mean of the <strong><em>x3</em></strong> coefficient in 1,000 simulations <em>WITHOUT</em> including <strong><em>x1</em></strong> (""coef_x3"") and then <em>WITH</em> <strong><em>x1</em></strong> (""coef_x3_full""):</p>
+
+<pre><code>coef_x3 &lt;- NULL
+coef_x3_full &lt;- NULL
+for (i in 1:1000){
+  coef_x3[i] = variables()[1]
+  coef_x3_full[i] = variables()[2]
+}
+mean(coef_x3)
+mean(coef_x3_full)
+</code></pre>
+
+<p>obtaining a coefficient for <strong><em>x3</em></strong> of <strong>3.383</strong> when <strong><em>x1</em></strong> is excluded versus a coefficient for <strong><em>x3</em></strong> of <strong>1.502</strong> when included. So when <strong><em>x1</em></strong> is included we have an unbiased estimation of the true <strong><em>x3</em></strong> coefficient (<strong><em>1.5</em></strong>), whereas the estimation is biased when we exclude <strong><em>x1</em></strong>.</p>
+"
+"0.466252404120157","0.419627163708141","144570","<p>I just thought  of a neat (not necessarily good) way of creating one dimensional density estimates and my question is:</p>
+
+<p><strong>Does this density estimation method have a name? If not, is it a special case of some other method in the literature?</strong></p>
+
+<p>Here is the method: We have a vector $X = [x_1,x_2,...,x_n]$ which we assume is drawn from some unknown distribution we would like to estimate. A way of doing this is to take all possible pairs of values in $X$ and for each pair $[x_i,x_j]_{i \neq j}$ fit a Normal distribution using maximum likelihood. The resulting density estimate is then the mixture distribution that consists of all the resulting Normals, where each Normal is given equal weight.</p>
+
+<p>The figure below illustrates using this method on the vector $[-1.3,0.15,0.73,1.4]$. Here the circles are the datapoints, the coloured Normals are the maximum likelihood distributions estimated using each possible pair and the thick black line shows the resulting density estimate (that is, the mixture distribution).</p>
+
+<p><img src=""http://i.stack.imgur.com/yipGl.png"" alt=""enter image description here""></p>
+
+<p>By the way, it is really easy to implement a method in R that draws a sample from the resulting mixture distribution:</p>
+
+<pre><code># Generating some ""data""
+x &lt;- rnorm(30)
+
+# Drawing from the density estimate using the method described above.
+density_estimate_sample &lt;- replicate(9999, {
+  pair &lt;- sample(x, size = 2)
+  rnorm(1, mean(pair), sd(pair))
+})
+
+# Plotting the density estimate compared with 
+# the ""data"" and the ""true"" density.
+hist(x ,xlim=c(-5, 5), main='The ""data""')
+hist(density_estimate_sample, xlim=c(-5, 5), main='Estimated density')
+hist(rnorm(9999), xlim=c(-5, 5), main='The ""true"" density')
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/pwMtt.png"" alt=""enter image description here""></p>
+"
+"0.255376959227625","0.255376959227625","155046","<p>I estimated the density function (adaptive kde) from two samples and the cdf using approxfun() and integrate(). Now, I would implement a ks test to know if the two distributions are similar. I guess I have two options: Either, I draw two samples and use the function ks.test but how can I generate samples from my density estimation? Or I calculate the D-statistic (comparing the two cdfs) and the related p-value but how can I calculate the p-value from my estimated cdfs?  </p>
+"
+"0.329690236697893","0.329690236697893","156275","<p>I have two paired samples following normal distributions N(0, $\sigma_1^2$) and N(0, $\sigma_2^2$). Samples represent estimation errors (residuals) of two linear regression models used to predict the same response variable using two different methods/independent variables. I have 30 pairs of residuals, so I would like to apply Wilcoxon signed-rank test to check whether means of absolute values or relative errors are different. Since absolute values do not follow normal distribution, I cannot use t-test or something similar.</p>
+
+<p>I would like to find type II error and statistic power of Wilcoxon signed-rank test.
+Is there some R function (or any other tool) that can be used? I have found a number of functions for testing the power of tests here <a href=""http://www.statmethods.net/stats/power.html"" rel=""nofollow"">http://www.statmethods.net/stats/power.html</a>  but Iâ€™m not sure could they be applied on Wilcoxon signed-rank test. If there is no built-in function is there some other tool or algorithm to manually calculate error?   </p>
+"
+"NaN","NaN","172168","<p>I have a dataset containing 50 datapoints to which I need to fit some non-standard continuous distributions (the functional form is known) using maximum likelihood estimation. I presume there are functions like 'optim' or 'nlm' in R that do the job. However, I would like to know how to choose the starting parameter vector in these procedures. </p>
+"
+"0.147441956154897","0.147441956154897","199582","<p>If I have two posterior prediction distributions, each sampled 1000's of times using MCMC in rJAGS, can I use those MCMC samples (N = several thousand) to compare the two groups using Bayesian estimation (Kruschke 2013), or is there anything inherently wrong with doing so?</p>
+
+<p>Thanks in adavance for any help!</p>
+"
+"0.642684586917151","0.642684586917151","199729","<p>I am exploring the use of product space methods, coded in JAGS within R, for Bayesian model selection/comparison. I am particularly interested in using this method to test hypotheses about random effects/hierarchical levels, e.g. should we use a model which includes a random intercept or slope versus one that does not. Some papers on this method in general are: </p>
+
+<p>Lodewyckxa et al. 2011
+A tutorial on Bayes factor estimation with the product space method
+<a href=""http://www.sciencedirect.com/science/article/pii/S0022249611000423"" rel=""nofollow"">http://www.sciencedirect.com/science/article/pii/S0022249611000423</a></p>
+
+<p>Tenan et al. 2014
+Bayesian model selection: The steepest mountain to climb
+<a href=""https://www.researchgate.net/publication/261714566_Bayesian_model_selection_The_steepest_mountain_to_climb"" rel=""nofollow"">https://www.researchgate.net/publication/261714566_Bayesian_model_selection_The_steepest_mountain_to_climb</a></p>
+
+<p>An intuitive explanation of model comparison as a case of hierarchical modelling can also be found in John K. Kruschke's <em>Doing Bayesian Data Analysis</em> (2nd edition) or in:</p>
+
+<p>Kruschke, 2011. 
+Bayesian Assessment of Null Values Via Parameter Estimation and Model Comparison
+<a href=""http://pps.sagepub.com/content/6/3/299.abstract"" rel=""nofollow"">http://pps.sagepub.com/content/6/3/299.abstract</a></p>
+
+<p>I would particularly like people's opinions about explicitly using model comparison approaches such as these for testing the importance of including random effects/hierarchical components into a model. I am not interested in a point null hypothesis approach (testing if the random effect is zero) due to well documented theoretical problems with this thinking. </p>
+
+<p>The basic idea (as I am aware!) is that all relevant models <em>M</em> = <em>1 ... j</em> one is interested in are estimated concurrently at each step of the MCMC chain, creating a mixture model, providing <em>P(Data | M=j)</em> and allowing the estimation of the probability model <em>j</em> was chosen over other models (e.g. in the form of a Bayes factor). </p>
+
+<p>To avoid autocorrelation in the chains, and to properly define the mixture model, pseudo priors are used for the 'unactivated' model at each step of the MCMC chain, such that when <em>M=1</em> is being estimated, <em>M=2</em> is still defined in the global product space but has no influence on the results computationally (see equation  6 in Lodewyckxa et al., 2011). However, they may influence the dynamics of MCMC convergence. </p>
+
+<p>The following approach can be coded in JAGS (or BUGS) using a top level hierarchical model index M,  that denotes which model should be estimated at each time, with each model given their own prior probabilities. </p>
+
+<p>I am interested in using this method to test whether certain hierarchical levels or classical 'random effects' are 'significant'. For instance, whether <em>M = 1</em> which estimates a certain hierarchical level (e.g. a random intercept) freely using an uninformative prior for the variance is chosen more often than a model <em>M = 2</em> that has its mass at or around zero. </p>
+
+<p>Here is some code below using the sleepstudy data from lme4 to estimate whether a model with freely estimated heterogeneous variances (i.e. heteroscedasticity) for each subject/id is better than a model where the heterogeneity of variance is a priori assumed to be around zero, i.e. zero for all practical purposes. I first ran the model with an uninformative prior on the heterogeneous variances to see what was estimated, and the Highest Density Interval was 0.22 - 0.64 (mode ~ 0.4) for the standard deviation. Let's say that we assume the prior probability of a model with heteroscedasticity 30% of the time, compared to a model with heteroscedasticity in the variances near zero, e.g. between 0 and 0.1 standard deviations in the code below. </p>
+
+<pre><code>library(rjags)
+library(runjags)
+library(coda)
+library(lme4)
+
+data(""sleepstudy"")
+
+modelString = "" 
+
+model { 
+
+
+ # Likelihood 
+ for( i in 1:length(y)) { 
+   y[i] ~ dnorm( mu[i] , 1 / (sigmaRes[i])^2 )
+    mu[i] &lt;- alpha[id[i]] + beta1 * days[i]
+    log(sigmaRes[i]) &lt;- delta[id[i]]     # sigmaRes assumed to be log-normally distributed
+  }
+
+ for( s in 1:Nid ) {
+  alpha[s] ~ dnorm( alphaMu , 1 / (alphaSigma)^2 )     # 'random' intercept
+  delta[s] ~  dnorm( deltaMu , 1 / (deltaSigma[M])^2 ) # 'random' heterogeneous variances
+                                                       # Model index in deltaSigma
+  }
+
+ # model 1: V stands for 'Variable'
+ deltaSigma[1] &lt;- deltaSigmaV[M]   # when deltaSigma[M = 1]
+ deltaSigmaV[1] &lt;- deltaSigmaV_prior # real prior
+ deltaSigmaV[2] &lt;- deltaSigmaV_pseudo # pseudo prior
+ deltaSigmaV_prior ~ dunif( 0.001 , 100 ) # variability estimated with an uninformative prior     
+ deltaSigmaV_pseudo ~ dunif( deltaSigmaV_psM , deltaSigmaV_psSig ) # set in dataList below
+
+ # model 2: NV stands for 'Non variable'
+ deltaSigma[2] &lt;- deltaSigmaNV[M] # when deltaSigma[ M = 2 ] 
+ deltaSigmaNV[1] &lt;- deltaSigmaNV_pseudo
+ deltaSigmaNV[2] &lt;- deltaSigmaNV_prior
+ deltaSigmaNV_prior ~ dunif( 0, 0.1 ) # a strong prior belief the variance is small  
+ deltaSigmaNV_pseudo ~ dunif( deltaSigmaNV_psM , deltaSigmaNV_psSig )
+
+ # other priors 
+ alphaSigma ~ dunif( .001 , 100 )
+ alphaMu ~ dnorm( 0 , .001 )
+ deltaMu ~ dnorm( 0 , .001 )
+ beta1 ~ dnorm( 0 , .001 )
+
+
+ # Model index
+ M ~ dcat( p[] )
+ p[1] &lt;- 0.3    # prior probabilities for models 
+ p[2] &lt;- 0.7
+ postr1 &lt;- 2 - M
+ postr2 &lt;- M - 1
+
+}
+
+""  
+writeLines( modelString , con=""fit1.txt"" )
+
+params = c( ""alphaMu"" , ""alphaSigma"" , ""deltaSigmaV"" , ""deltaSigmaNV"" , 
+            ""beta1"" , ""M"" , ""postr1"" , ""postr2"" ) 
+
+deltaSigmaV_psM &lt;- deltaSigmaNV_psM &lt;- 0 
+deltaSigmaV_psSig &lt;-deltaSigmaNV_psSig &lt;- 10 # not quite sure about the acceptability of these pseuodopriors
+
+
+dataList = list( y = sleepstudy$Reaction ,
+                     deltaSigmaV_psM = deltaSigmaV_psM,
+                     deltaSigmaNV_psM = deltaSigmaNV_psM ,
+                     deltaSigmaV_psSig = deltaSigmaV_psSig , 
+                     deltaSigmaNV_psSig = deltaSigmaNV_psSig ,
+                     days = sleepstudy$Days , 
+                     id = sleepstudy$Subject , 
+                     Nid = length(unique(sleepstudy$Subject))
+              )
+
+fit1 = run.jags( method = ""parallel"" ,
+                 model = ""fit1.txt"" ,
+                 data = dataList , 
+                 monitor = params,
+                 modules = ""glm"" ,
+                 n.chains = 3 , 
+                 adapt = 1000 , 
+                 burnin = 1000, 
+                 sample = 20000 ,
+                 thin = 1
+                )
+
+print(fit1)
+</code></pre>
+
+<p>The output of the above model is: </p>
+
+<pre><code>JAGS model summary statistics from 60000 samples (chains = 3; adapt+burnin = 2000):
+
+                   Lower95   Median  Upper95     Mean      SD    Mode     MCerr     MC%ofSD     SSeff      AC.20    psrf
+alphaMu            155.35   209.15   246.43   205.11  24.772  217.81       0.30236     1.2  6712  -0.004533  1.0004
+alphaSigma         33.996   58.677   97.907   61.564  18.454  49.739       0.23964     1.3  5930  0.0048678  1.0001
+deltaSigmaV[1]    0.18627  0.42297  0.75606  0.82805   2.269  0.3973      0.026096     1.2  7560    0.31051  1.2969
+deltaSigmaV[2]    0.10491   4.9789   9.5944   4.9932  2.8798  5.1943       0.01722     0.6 27970  0.0049252  1.0002
+deltaSigmaNV[1]   0.19409   4.9686   9.6706   4.9806  2.8778   4.786      0.017048     0.6 28494  0.0011323 0.99997
+deltaSigmaNV[2] 0.0049819 0.052105 0.099723 0.051497 0.02925 0.07688     0.0002117     0.7 19090   0.049137  1.0064
+beta1              9.1481   10.656   12.206   10.651 0.77986  10.669     0.0058312     0.7 17886 0.00086161   1.001
+M                       1        1        1    1.044  0.2051       1       0.10432    50.9     4         --       $
+postr1                  1        1        1    0.956  0.2051       1       0.10432    50.9     4         --       $
+postr2                  0        0        0    0.044  0.2051       0       0.10432    50.9     4         --       $
+
+Note: parameters marked with '$' were non-stochastic in some chains - these parameters can not be assumed to have converged!
+Total time taken: 12.6 Seconds
+</code></pre>
+
+<p>The means of <code>postr1</code> and <code>postr2</code> suggest that model 1 (uninformative prior) was chosen 95.6% of the time over model 2 (prior with its mass near zero). Model one estimates the SD of individuals' residual variation (deltaSigmaV[1]) as 0.19 - 0.76, close to the output of the non-model comparison case. Thus, modelling heterogeneous variances seems preferable. </p>
+
+<p>One problem with above approach is that I don't believe it takes parsimony into account, whereas a number of authors use model comparison, like that above, to test models with different numbers of parameters. In this situation, the model with fewer parameters has an inherent advantage. For instance, Kruschke (2015: 290) writes,</p>
+
+<blockquote>
+  <p>""Bayesian model comparison compensates for model complexity by the fact that each model must have a prior distribution over its parameters, and more complex models must dilute their prior distributions over larger parameter spaces than simpler models.""</p>
+</blockquote>
+
+<p>I am unsure how to create a model that does and does not have a term for the random individual variance component, and I am not sure whether this is desired at all, since it is like testing a point null hypothesis. </p>
+
+<p>I've already written too much, so my questions are:</p>
+
+<ul>
+<li>Is the above approach a viable option for testing the importance of a random effect?</li>
+<li>Does anyone have different coding options that would explicate the hypothesis that heterogeneous variances are importantly non-zero? </li>
+</ul>
+
+<p>Sorry if what is written above is neither clear nor specific enough. I will try to amend it if it is either!</p>
+"
+"0.41702882811415","0.41702882811415","202973","<p>Suppose I have a data set of <code>N</code> observations <code>(n = 1...N)</code> for out-of-sample estimation and values of ($y_n$). I have also <code>I</code> statistical models <code>(i= 1...I)</code> which every model has its own estimate on each data point ($\hat{y}^i_n$).</p>
+
+<p>In addition I have a model selection method $\phi$ which would pick a model's estimate among the model set as its own according to its assessment on previous performance of the models ($\hat{y}^\phi_n = \min_i\{\hat{f_i}(y_n), i \in I\} $).</p>
+
+<p>My claim should be ""model selection's performance is better than all models it picks estimates from"". I am trying to find a proper method to describe the statistical power of the model selection method, compared to individual models in the model set.</p>
+
+<p>All individual models follow different assumptions, distributions and dependence structure. Some are iid, some have heteroskedasticity. Actually, there is no restriction on models except it should yield an estimate.</p>
+
+<p>Some The models are employed on time series but what they do is asset pricing on different assets and contracts. But for a broaded audience I will make the following analogy.</p>
+
+<p>Suppose you have a machine that predicts the scores on basketball matches. It does not only predict the final score, it also predicts a distribution of the scores throughout the time. It also predicts which player will score when.</p>
+
+<p>Suppose you have many machines of this sort and all have different predictions. All of them had been right on some occasion (That is what statistics is after all right? No model is perfect.). </p>
+
+<p>I am trying to figure out which machine is better at predicting what and when, using the previous performance of the machines. I can say stuff like 'oh machine A was good at predicting scores occured in the last 10 mins, but for the last 2 months model B became better'. </p>
+
+<p>It turns out my estimates using the machines are better than any machine could do it alone in the long run. I checked for several error terms starting with MAPE and MSE. But I want to show that it is not a coincidence but a statistically significant fact. I have a fair sample size (~100k) over a good enough time period (5 years).</p>
+
+<p>I fiddled with some thoughts about proportion of $\phi$ selecting the model with the lowest error and some logistic regression on that according to the criteria it uses to pick the models. But I lack the comprehensive knowledge on this domain of statistics.</p>
+
+<p>ps. R package suggestions are also appreciated.</p>
+"
+"0.329690236697893","0.329690236697893","206066","<p>Does anyone have any suggestions (short of transforming my data) on how to fit a mixed effect model to a continuous response variable that is left-skewed? Other words, what probability density function should be used? My ultimate goal is to fit a nice global model so I can perform model selection using maximum likelihood estimation. Because the data are so left skewed I'm assuming Gaussian is out of the question.   I've looked into skew-normal distributions but can't figure out how to incorporate it into a model in R. I'm using lme4 to analyze my data. I've also thought about using generalized linear mixed models with a Gamma distribution but everything I've looked at for gamma distributions are right skewed data. And when I do try to analyze with a Gamma distribution I get an error. Attached is a histogram of my distribution and also my residuals when I fit a linear mixed-effect model. Clearly the residuals are no good. Any advice would be awesome. Thanks!<img src=""http://i.stack.imgur.com/i0fRg.jpg"" alt=""Histogram of response variable""><a href=""http://i.stack.imgur.com/yW8O0.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/yW8O0.jpg"" alt=""Residuals from linear mixed-effect model""></a></p>
+"
+"0.255376959227625","0.255376959227625","206070","<p>I am trying to estimate the parameters for a mixture of two von Mises distributions. </p>
+
+<p>I am using the movMF package in R to do the estimation. </p>
+
+<p>My sample sizes are quite reasonable for the estimation. I have of the values for approximate 150-300 events for each subject. I have to run the estimation for 73 subjects.</p>
+
+<p>Here's my problem. In about 25% of the subjects, the predicted values from the parameters are pathological and don't even come close to the observations. I have tried using E= ""softmax"" as well as ""hardmax"" and kappa options ranging from ""default"", ""hybrid"", ""Sra_2012"" etc. that are available in movMF. I have tried increasing ""nruns"" and ""maxiter"" options also. </p>
+
+<p>Is there a way to make the parameter estimation more robust? Is there an R or other implementation of the Suguru Yasutomi and Toshihisa Tanaka method (<a href=""http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7041707"" rel=""nofollow"">http://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7041707</a>) for von Mises mixtures  </p>
+"
+"0.364900224599881","0.41702882811415","213456","<p>I have a bivariate normal distribution composed of the univariate normal distributions $X_1$ and $X_2$ with $\rho \approx 0.3$.</p>
+
+<p>$$
+\begin{pmatrix}
+ X_1 \\
+ X_2
+\end{pmatrix}  \sim \mathcal{N} \left( \begin{pmatrix}
+ \mu_1 \\
+ \mu_2
+\end{pmatrix} , \begin{pmatrix}
+ \sigma^2_1 &amp;  \rho \sigma_1 \sigma_2 \\
+ \rho \sigma_1 \sigma_2 &amp;  \sigma^2_2
+\end{pmatrix} \right)
+$$</p>
+
+<p>Is there a simple way to calculate in R the cumulative probability of $X_1$ being less than a value $z$ given a particular slice of $X_2$ (between two values $a,b$) given we know all the parameters $\mu_1, \mu_2, \sigma_1, \sigma_2, \rho$?</p>
+
+<p>$P(X_1 &lt; z | a &lt; X_2 &lt; b)$</p>
+
+<p>Can the distribution function I am looking for match (or be approximated by) the distribution function of a univariate normal distribution (to use <code>qnorm</code>/<code>pnorm</code>)? Ideally this would be the case so I can perform the calculation with less dependencies on libraries (e.g. on a MySQL server).</p>
+
+<p>This is the bivariate distribution I am using:</p>
+
+<pre><code>means &lt;- c(79.55920, 52.29355)
+variances &lt;- c(268.8986, 770.0212)
+rho &lt;- 0.2821711
+
+covariancePartOfMatrix &lt;- sqrt(variances[1]) * sqrt(variances[2]) * rho
+sigmaMatrix &lt;- matrix(c(variances[1],covariancePartOfMatrix,covariancePartOfMatrix,variances[2]), byrow=T, ncol=2)
+
+n &lt;- 10000
+dat &lt;- MASS::mvrnorm(n=n, mu=means, Sigma=sigmaMatrix)
+
+plot(dat)
+</code></pre>
+
+<p>This is my numerical attempt to get the correct result. However it uses generated data from the bivariate distribution and I'm not convinced it will give the correct result.</p>
+
+<pre><code>a &lt;- 79.5
+b &lt;- 80.5
+z &lt;- 50
+
+sliceOfDat &lt;- subset(data.frame(dat), X1 &gt; a, X1 &lt; b)
+estimatedMean &lt;- mean(sliceOfDat[,c(2)])
+estimatedDev &lt;- sd(sliceOfDat[,c(2)])
+
+estimatedPercentile &lt;- pnorm(z, estimatedMean, estimatedDev)
+</code></pre>
+
+<h3>Edit - R implementation of solution based on whuber's answer</h3>
+
+<p>Here is an implementation of the accepted solution using <code>integrate</code>, compared against my original idea based on sampling. The accepted solution provides the expected output 0.5, whereas my original idea deviated by a significant amount (0.41). <strong>Update - See wheber's edit for a better implementation.</strong></p>
+
+<pre><code># Bivariate distribution parameters
+means &lt;- c(79.55920, 52.29355)
+variances &lt;- c(268.8986, 770.0212)
+rho &lt;- 0.2821711
+
+# Generate sample data for bivariate distribution
+n &lt;- 10000
+
+covariancePartOfMatrix &lt;- sqrt(variances[1]) * sqrt(variances[2]) * rho
+sigmaMatrix &lt;- matrix(c(variances[1],covariancePartOfMatrix,covariancePartOfMatrix,variances[2]), byrow=T, ncol=2)
+dat &lt;- MASS::mvrnorm(n=n, mu=means, Sigma=sigmaMatrix)
+
+# Input parameters to test the estimation
+w = 79.55920
+
+a &lt;- w - 0.5
+b &lt;- w + 0.5
+z &lt;- 52.29355
+
+# Univariate approximation using randomness
+sliceOfDat &lt;- subset(data.frame(dat), X1 &gt; a, X1 &lt; b)
+estimatedMean &lt;- mean(sliceOfDat[,c(2)])
+estimatedDev &lt;- sd(sliceOfDat[,c(2)])
+
+estimatedPercentile &lt;- pnorm(z, estimatedMean, estimatedDev)
+# OUTPUT: 0.411
+
+# Numerical approximation from exact solution
+adaptedZ &lt;- (z - means[2]) / sqrt(variances[2])
+adaptedB &lt;- (b - means[1]) / sqrt(variances[1])
+adaptedA &lt;- (a - means[1]) / sqrt(variances[1])
+
+exactSolutionCoeff &lt;- 1 / (pnorm(adaptedB) - pnorm(adaptedA))
+integrand &lt;- function(x) pnorm((adaptedZ - rho * x) / sqrt(1 - rho * rho)) * dnorm(x)
+exactSolutionInteg &lt;- integrate(integrand, adaptedA, adaptedB)
+# 0.0121, abs.error 1.348036e-16, ""OK""
+exactPercentile = exactSolutionCoeff * exactSolutionInteg$value
+# OUTPUT: 0.500
+</code></pre>
+"
+"0.41702882811415","0.41702882811415","229624","<p>I have been working to fit a normal distribution to data that is truncated to only be zero or greater. Given my data, which I have at the bottom, I previously used the following code: </p>
+
+<pre><code>library(fitdistrplus)
+library(truncnorm)
+fitdist(testData, ""truncnorm"", start = list(a = 0, mean = 0.8, sd = 0.9))
+</code></pre>
+
+<p>Which, of course, won't work for a number of reasons, not least of which being that the mle estimator provides increasingly negative estimates as <code>a</code> tends towards zero. I previously got some very helpful information about fitting a normal distribution to this data <a href=""http://stackoverflow.com/questions/38838343/fitting-truncnorm-using-fitdistrplus/38839835#38839835"">here</a>, where two basic options were presented:</p>
+
+<p>I might either use a low, negative value for <code>a</code>, and try out a number of different values</p>
+
+<pre><code>fitdist(testData, ""truncnorm"", fix.arg=list(a=-.15),
+        start = list(mean = mean(testData), sd = sd(testData)))
+</code></pre>
+
+<p>or I might set lower bounds for the parameters</p>
+
+<pre><code>fitdist(testData, ""truncnorm"", fix.arg=list(a=0),
+        start = list(mean = mean(testData), sd = sd(testData)),
+        optim.method=""L-BFGS-B"", lower=c(0, 0))
+</code></pre>
+
+<p>Either way, though, it seems that some information is being lost - in the first case, because <code>a</code> isn't being truncated at zero, and in the second because the parameters have arbitrary lower bounds - I'm only concerned with achieving a good fit of the data, not with having positive a positive mean for the distribution. Given that mle estimators tend negative as <code>a</code> goes to zero, would it be better to use non-mle estimation? Does it make sense to have negative values of a if the data itself can't be negative?</p>
+
+<p>This question applies more generally as well, as I have been using the <code>truncdist</code> package to try to fit Weibull, Log Normal, and Logistic distributions as well (for the Weibull, of course, there is no need to truncate at zero).</p>
+
+<p>Finally, here's the data:</p>
+
+<pre><code>testData &lt;- c(3.2725167726, 0.1501345235, 1.5784128343, 1.218953218, 1.1895520932, 
+              2.659871271, 2.8200152609, 0.0497193249, 0.0430677458, 1.6035277181, 
+              0.2003910167, 0.4982836845, 0.9867184303, 3.4082793339, 1.6083770189, 
+              2.9140912221, 0.6486576911, 0.335227878, 0.5088426851, 2.0395797721, 
+              1.5216239237, 2.6116576364, 0.1081283479, 0.4791143698, 0.6388625172, 
+              0.261194346, 0.2300098384, 0.6421213993, 0.2671907741, 0.1388568942, 
+              0.479645736, 0.0726750815, 0.2058983462, 1.0936704833, 0.2874115077, 
+              0.1151566887, 0.0129750118, 0.152288794, 0.1508512023, 0.176000366, 
+              0.2499423442, 0.8463027325, 0.0456045486, 0.7689214668, 0.9332181529, 
+              0.0290242892, 0.0441181842, 0.0759601229, 0.0767983979, 0.1348839304
+)
+</code></pre>
+"

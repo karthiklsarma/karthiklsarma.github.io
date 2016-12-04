@@ -1,0 +1,2009 @@
+"V1","V2","V3","V4"
+"0.251976315339485","0.25298221281347","  3841","<p>I have two years of data which looks basically like this:</p>
+
+<p>Date   <strong><em>_</em>__<em></strong>    Violence Y/N? _</em>  Number of patients</p>
+
+<p>1/1/2008    <strong><em>_</em>___<em></strong>    0  <strong></em>__<em>_</em>__<em>_</em>____</strong> 11</p>
+
+<p>2/1/2008 <strong><em>_</em>__<em>_</em></strong>       0  <strong><em>_</em>__<em>_</em>__<em>_</em>__</strong> 11</p>
+
+<p>3/1/2008 <strong><em>_</em>____</strong><em>1  <strong></em>__<em>_</em>__<em>_</em>____</strong> 12</p>
+
+<p>4/1/2008 <strong><em>_</em>____</strong><em>0  <strong></em>__<em>_</em>__<em>_</em>____</strong> 12</p>
+
+<p>...</p>
+
+<p>31/12/2009_<strong><em>_</em>__</strong>      0_<strong><em>_</em>__<em>_</em>__<em>_</em>__</strong>                 14</p>
+
+<p>i.e. two years of observations, one per day, of a psychiatric ward, which indicate whether there was a violence incident on that day (1 is yes, 0 no) as well as the number of patients on the ward. The hypothesis that we wish to test is that more patients on the ward is associated with an increased probability of violence on the ward.</p>
+
+<p>We realise, of course, that we will have to adjust for the fact that when there are more patients on the ward, violence is more likely because there are just more of them- we are interested in whether each individualâ€™s probability of violence goes up when there are more patients on the ward.</p>
+
+<p>I've seen several papers which just use logistic regression, but I think that is wrong because there is an autoregressive structure (although, looking at the autocorrelation function, it doesnâ€™t get above .1 at any lag, although this is above the â€œsignificantâ€ blue dashed line that R draws for me).</p>
+
+<p>Just to make things more complicated, I can if I wish to break down the results into individual patients, so the data would look just as it does above, except I would have the data for each patient, 1/1/2008, 2/1/2008 etc. and an ID code going down the side so the data would show the whole history of incidents for each patient separately (although not all patients are present for all days, not sure whether that matters).</p>
+
+<p>I would like to use lme4 in R to model the autoregressive structure within each patient, but some Googling comes up with the quotation â€œlme4 is not set up to deal with autoregressive structuresâ€. Even if it were, Iâ€™m not sure I grasp how to write the code anyway.</p>
+
+<p>Just in case anyone notices, I asked a question like this a while ago, they are different datasets with different problems, although actually solving this problem will help with that one (someone suggested I use mixed methods previously, but this autoregression thing has made me unsure how to do this).</p>
+
+<p>So Iâ€™m a bit stuck and lost to be honest. Any help gratefully received!</p>
+"
+"0.235702260395516","0.236643191323985"," 17480","<p>I've created a few Cox regression models and I would like to see how well these models perform and I thought that perhaps a ROC-curve or a c-statistic might be useful similar to this articles use:</p>
+
+<p><a href=""http://onlinelibrary.wiley.com/doi/10.1002/bjs.6930/abstract"" rel=""nofollow"">J. N. Armitage och J. H. van der Meulen, â€Identifying coâ€morbidity in surgical patients using administrative data with the Royal College of Surgeons Charlson Scoreâ€, British Journal of Surgery, vol. 97, num. 5, ss. 772-781, Maj 2010.</a></p>
+
+<p>Armitage used logistic regression but I wonder if it's possible to use a model from the survival package, the <a href=""http://cran.r-project.org/web/packages/survivalROC/index.html"" rel=""nofollow"">survivalROC</a> gives a hint of this being possible but I can't figure out how to get that to work with a regular Cox regression. </p>
+
+<p>I would be grateful if someone would show me how to do a ROC-analysis on this example:</p>
+
+<pre><code>library(survival)
+data(veteran)
+
+attach(veteran)
+surv &lt;- Surv(time, status)
+fit &lt;- coxph(surv ~ trt + age + prior, data=veteran)
+summary(fit)
+</code></pre>
+
+<p>If possible I would appreciate both the raw c-statics output and a nice graph</p>
+
+<p>Thanks!</p>
+
+<h2>Update</h2>
+
+<p>Thank you very much for answers. @Dwin: I would just like to be sure that I've understood it right before selecting your answer. </p>
+
+<p>The calculation as I understand it according to DWin's suggestion:</p>
+
+<pre><code>library(survival)
+library(rms)
+data(veteran)
+
+fit.cph &lt;- cph(surv ~ trt + age + prior, data=veteran, x=TRUE, y=TRUE, surv=TRUE)
+
+# Summary fails!?
+#summary(fit.cph)
+
+# Get the Dxy
+v &lt;- validate(fit.cph, dxy=TRUE, B=100)
+# Is this the correct value?
+Dxy = v[rownames(v)==""Dxy"", colnames(v)==""index.corrected""]
+
+# The c-statistic according to the Dxy=2(c-0.5)
+Dxy/2+0.5
+</code></pre>
+
+<p>I'm unfamiliar with the validate function and bootstrapping but after looking at prof. Frank Harrel's answer <a href=""http://r.789695.n4.nabble.com/Interpreting-the-example-given-by-Prof-Frank-Harrell-in-Design-validate-cph-tt3316820.html#a3324516"" rel=""nofollow"">here on R-help</a> I figured that it's probably the way to get the Dxy. The help for validate states:</p>
+
+<blockquote>
+  <p>... Somers' Dxy rank correlation to be computed at each resample (this
+  takes a bit longer than the likelihood based statistics). The values
+  corresponting to the row Dxy are equal to 2 * (C - 0.5) where C is the
+  C-index or concordance probability.</p>
+</blockquote>
+
+<p>I guess I'm mostly confused by the columns. I figured that the corrected value is the one I should use but I haven't really understood the validate output:</p>
+
+<pre><code>      index.orig training    test optimism index.corrected   n
+Dxy      -0.0137  -0.0715 -0.0071  -0.0644          0.0507 100
+R2        0.0079   0.0278  0.0037   0.0242         -0.0162 100
+Slope     1.0000   1.0000  0.2939   0.7061          0.2939 100
+...
+</code></pre>
+
+<p>In the <a href=""http://r.789695.n4.nabble.com/Interpreting-the-example-given-by-Prof-Frank-Harrell-in-Design-validate-cph-tt3316820.html#a3324516"" rel=""nofollow"">R-help question</a> I've understood that I should have ""surv=TRUE"" in the cph if I have strata but I'm uncertain on what the purpose of the ""u=60"" parameter in the validate function is. I would be grateful if you could help me understand these and check that I haven't made any mistakes.</p>
+"
+"0.0890870806374748","0.0894427190999916"," 52785","<p>I'm only a linguist, so my knowledge of statistics is very basic.</p>
+
+<p>I fitted a logistic regression model with R (with <code>lrm(formula, y=T, x=T)</code>), and when I use the option <code>validate(lrm)</code>, I get some statistics I don't really understand.</p>
+
+<pre><code>index.orig   training   test optimism index.corrected     n
+Dxy           0.5984   0.6112  0.5461   0.0651          0.5333 40
+R2            0.3258   0.3676  0.2929   0.0747          0.2511 40
+Intercept     0.0000   0.0000 -0.0105   0.0105         -0.0105 40
+Slope         1.0000   1.0000  0.8427   0.1573          0.8427 40
+Emax          0.0000   0.0000  0.0399   0.0399          0.0399 40
+D             0.2713   0.3176  0.2394   0.0782          0.1931 40
+U            -0.0177  -0.0177  0.0092  -0.0269          0.0092 40
+Q             0.2890   0.3353  0.2302   0.1051          0.1839 40
+B             0.1864   0.1772  0.1972  -0.0201          0.2064 40
+g             1.4632   1.6642  1.3460   0.3182          1.1449 40
+gp            0.2840   0.3011  0.2703   0.0308          0.2532 40
+</code></pre>
+
+<p>I don't really understand most of that. I think <code>R2</code> and <code>Dxy</code> are supposed to be statistics of how good the predictors are, but I'm not sure how I should interpret the values, does the corrected <code>Dyx = 0.651</code> mean that there is a strong correlation, while the corrected <code>R2 = 0.0747</code> means that the correlation is very weak? I think the model is overfitted, but I'm not sure if I'm right.</p>
+
+<p>Also, the other statistics are totally strange to me. What are <code>Emax, D, U, Q, B, g</code>, and <code>gp</code>?</p>
+"
+"0.154303349962092","0.154919333848297"," 57448","<p>I am running a model (logistic regression) with 20 independent variables in R. </p>
+
+<p>Before running the model I calculated the correlation between all the variables and finally selected my variables by also checking ""visually"" the histograms of each variable in the case of presence and again in the case of absence. In situations where I don't see any obvious distribution associated to both presence &amp; absence, I discard the variable.</p>
+
+<p>I would like to make ""official"" calculations for the level of relation between Presence/Absence and each variable (how much each variable contributes to the Presence/Absence), for example with <code>Cramer's V index</code>, but the available function I find is from the package <code>vcd</code> and has some limitations: 
+doesn't give the <code>Cramer's V</code> (as well as the Phi-Coefficient Contingency Coeff.) for each independent variable, and it doesn't run for one independent variable.</p>
+
+<p>I might be missing some other obvious way to do this. Any help is appreciated.</p>
+"
+"0.154303349962092","0.154919333848297"," 59311","<p>I'm working on a behavoural scorecard modelling exercise, and many of the decisions taken to date have been based on the experience of a consulting credit analyst (whose experience software-wise is SAS) as I am primarily in BI. So far I have:</p>
+
+<ul>
+<li>a linux pc with 32gb of ram and an i7 processor</li>
+<li>an observation window  </li>
+<li>~90 potential characteristics </li>
+<li>a binary outcome</li>
+</ul>
+
+<p>In <strong>R</strong>, I have</p>
+
+<ol>
+<li>loaded the dataset (225k obs of 88 vars, 1 outcome)</li>
+<li>split the dataset up based on the recommendations/examples in the package <strong>caret</strong> i.e. predictors and outcomes split up (150k obs in training sample)</li>
+<li>removed any variables showing a high degree of correlation (caret::findCorrelation)</li>
+<li>cut all continuous variables into categorical intervals </li>
+<li>reduced the number of variables based on near zero variance, missing values, and low information value (IV) (150k obs of 48 vars)</li>
+<li>tried bestglm::bestglm, caret::train (with glm and glmnet), FWDselect::selection, FWDselect::qselection but eventually had to interrupt each of these due to not completing after 4 hours of 100% CPU usage</li>
+<li>used FactoMineR:MCA to perform a multiple correspondence analysis (on predictors only)</li>
+</ol>
+
+<p>What I would like to do is have a selection of logistic regression models for say 4, 8, 12, and 16 variables that are the most predictive models at each point.  I'm not sure if I'm going in the correct direction here with MCA as I've mainly been simply trying to find something that works in a timely fashion for reducing my variables further or going directly to variable selection steps.</p>
+
+<p>I would appreciate any advice on how to do any of step 6 better, whether 7 makes sense and what step 8 should be. </p>
+
+<p>Thanks,</p>
+
+<p>Steph</p>
+
+<p>PS Design decisions up to 6&amp;7 can't be revised so please, no telling me off for them! </p>
+"
+"0.199204768222399","0.2"," 76490","<h2>Background</h2>
+
+<p>A laboratory wants to evaluate whether a certain form of <a href=""http://en.wikipedia.org/wiki/Polyacrylamide_gel_electrophoresis"" rel=""nofollow"">gel electrophoresis</a> is suited as a classification method for the quality of a certain substance. Several gels were loaded, each with a clean sample of the substance and with a sample that contains impurities. In addition, a molecular marker was also loaded which serves as a reference. The following picture illustrates the setup (the picture doesn't show the actual experiment, I have taken it from Wikipedia for illustration):</p>
+
+<p><img src=""http://i.stack.imgur.com/vC53q.png"" alt=""Example of a gel electrophoresis""></p>
+
+<p>Two parameters were measured for each gel and each lane:</p>
+
+<ol>
+<li>The <strong>molecular weight</strong> (that is how ""high up"" a compound wandered during the electrophoresis)</li>
+<li>The <strong>relative quantity.</strong> The total quantity of each lane is normalized to 1 and the density of each band is measured which results in the relative quantity of each band.</li>
+</ol>
+
+<p>A scatterplot of the relative quantity vs. molecular weight is then produced which could look something like this (it's artificial data):</p>
+
+<p><img src=""http://i.stack.imgur.com/ndzh9.png"" alt=""Example scatterplot""></p>
+
+<p>This graphic can be read as follows: Both the ""good"" (blue points) and ""impure"" (red points) substance exhibit two bands, one at around a molecular weight of 120 and one at around 165. The bands of the ""impure"" substance at a molecular weight around 120 are considerably less dense than the ""good"" substance and can be well distinguished.</p>
+
+<hr>
+
+<h2>Goal</h2>
+
+<p>The goal is to determine two boxed (see graphic below) which determine a ""good"" substance. These boxes will then be used for classification of the substance in the future into ""good"" and ""impure"". If a substance exhibits lanes that fall within the boxes it is classified as ""good"" and else as ""impure"".</p>
+
+<p>These decision-rules should be <em>simple</em> to apply for someone in the laboratory. That's why it should be boxes instead of curved decision boundaries.</p>
+
+<p>False-negatives (i.e. classify a sample as ""impure"" when it's really ""good"") are considered worse than false-positives. That is, an emphasis should be placed on the <a href=""http://en.wikipedia.org/wiki/Sensitivity_and_specificity#Sensitivity"" rel=""nofollow"">sensitivity</a>, rather than on the <a href=""http://en.wikipedia.org/wiki/Sensitivity_and_specificity#Specificity"" rel=""nofollow"">specificity</a>.</p>
+
+<p><img src=""http://i.stack.imgur.com/vhzEW.png"" alt=""Example decision boxed""></p>
+
+<hr>
+
+<h2>Question</h2>
+
+<p>I'm am no expert in machine learning. I know, however, that there are quite a few machine learning algorithms/techniques that could be helpful: $k$-nearest neighbors (e.g. <code>knn</code> in <code>R</code>), classification trees (e.g. <code>rpart</code> or <code>ctree</code>), support vector machines (<code>ksvm</code>), logistic regression, boosting and bagging methods and many more.</p>
+
+<p>One problem of many of those algorithms is that they don't provide a simple ruleset or linear boundaries. In addition, the <strong>sample size</strong> is around <strong>70.</strong></p>
+
+<p>My questions are:</p>
+
+<ul>
+<li>Has anyone an idea of how to proceed here?</li>
+<li>Does it make sense to split the dataset into training- and test-set?</li>
+<li>What proportion of the data should the training set be (I thought around a 60/40-split).</li>
+<li>What, in general, is the workflow for such an analysis? Something like: Splitting dataset -> fit algorithm on the training set -> predict outcome for the test set?</li>
+<li>How to avoid overfitting (i.e. boxes that are too small)?</li>
+<li>What is a good statistic to assess the predictive performance in this case? AUC? Accurary? Positive predictive value? <a href=""http://en.wikipedia.org/wiki/Matthews_correlation_coefficient"" rel=""nofollow"">Matthews correlation coefficient</a>?</li>
+</ul>
+
+<p>Assume that I'm familiar with <code>R</code> and the <code>caret</code> package. Thank you very much for you time and help.</p>
+
+<hr>
+
+<h2>Example data</h2>
+
+<p>Here is an example dataset.</p>
+
+<pre><code>structure(list(mol.wt = c(125.145401455869, 118.210252208676, 
+165.048583787746, 126.003687476776, 170.149347112565, 127.761533014759, 
+155.523172614798, 120.094514977175, 161.234986765321, 168.471542655269, 
+156.522990530521, 154.377948321209, 165.365756398877, 167.965538771316, 
+116.132241687833, 115.143539160903, 156.696830822196, 162.578494491556, 
+136.830624758899, 123.886594633942, 124.247484227948, 126.257226352824, 
+160.684010454816, 166.618872115047, 126.599387146887, 165.690375912529, 
+159.786861142652, 114.520735974329, 125.753594471656, 157.551537154148, 
+157.320636890647, 171.5759136115, 158.580005438661, 125.647463565197, 
+130.404710783509, 127.128218318572, 162.144126888907, 161.804616951055, 
+167.917268243627, 168.582197247178), rel.qtd = c(57.68339235957, 
+54.0514508510085, 25.0703901938793, 37.6933881305906, 36.6853653723001, 
+53.6650555524679, 52.268438087776, 52.8621831466857, 43.1242291166037, 
+46.6771236380788, 38.0328239221277, 40.0454611708371, 44.6406366176158, 
+40.8238699987682, 51.9464749018547, 54.0302533272953, 37.9792331383524, 
+48.3853988095525, 38.2093977349102, 42.2636098418388, 42.9876895407144, 
+40.8018728193786, 40.1097096927465, 38.7432550253867, 39.2633283608111, 
+43.4673723102812, 53.3740718733815, 49.1067921475768, 52.3002598744634, 
+44.9847844953241, 44.3014423068017, 44.0191971364465, 47.0805245356855, 
+55.0124134796556, 57.9938440244052, 62.8314454977068, 45.8093815891894, 
+43.2300677500964, 39.4801550161538, 51.6253515591173), quality = structure(c(2L, 
+2L, 2L, 1L, 2L, 2L, 1L, 2L, 2L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 1L, 
+1L, 1L, 1L, 1L, 1L, 1L, 2L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 
+2L, 2L, 2L, 2L, 2L, 2L, 1L), .Label = c(""bad"", ""good""), class = ""factor"")), .Names = c(""mol.wt"", 
+""rel.qtd"", ""quality""), row.names = c(10L, 14L, 47L, 16L, 57L, 
+54L, 45L, 12L, 43L, 67L, 25L, 21L, 1L, 55L, 20L, 22L, 37L, 15L, 
+8L, 38L, 46L, 64L, 51L, 65L, 52L, 61L, 63L, 32L, 50L, 27L, 19L, 
+69L, 23L, 42L, 6L, 48L, 11L, 13L, 5L, 71L), class = ""data.frame"")
+</code></pre>
+"
+"0.154303349962092","0.154919333848297"," 82981","<p>I am exploring hierarchical logistic regression, using glmer from the lme4 package. To my understanding, one of the first steps in multilevel modeling is to estimate the degree of clustering of level-1 units within level-2 units, given by the intraclass correlation (to ""justify"" the additional cost of estimating parameters to account for the clustering). When I run a fully unconditional model with glmer</p>
+
+<pre><code>fitMLnull &lt;- glmer(outcome ~ 1 + (1|level2.ID), family=binomial)
+</code></pre>
+
+<p>the glmer fit gives me the variance in the intercept for outcome at level-2, but the residual level-1 variance in outcome is nowhere to be found. I read somewhere (can't track it down now) that the residual level-1 variance is <em>not</em> estimated in HGLM (or at least in glmer). Is this true? If so, is there an alternative way to approximate the degree of clustering in the data? If not, how can I access this value to calculate the ICC?</p>
+"
+"0.125988157669742","0.0632455532033676"," 90536","<p>We have two huge correlation matrices at different experimental conditions. If we want to identify the significant differences between these matrices , what would be the ideal method. I have implemented PCA for dimentionality reduction for the two matrices, and compared both row by row. Will it give some information regarding the differences. More over how about LDA and logistic regression. Will it give any information.   </p>
+"
+"0.218217890235992","0.219089023002066"," 95891","<p>I'm running a logistic regression model where anecdotally I expected age to be a very large factor. If you see from the charts I made in Excel before running the model through R, this is how the support lines up by age:</p>
+
+<p><img src=""http://i.stack.imgur.com/oEVZQ.jpg"" alt=""enter image description here""></p>
+
+<p>Looks pretty significant.</p>
+
+<p>Though when I run the model, as you can see below, age is the <em>only</em> thing that's not significant -- which was very surprising:</p>
+
+<pre><code>&gt; attach(mydata) 
+&gt; 
+&gt; # Define variables 
+&gt; 
+&gt; Y &lt;- cbind(support)
+&gt; X &lt;- cbind(sex, region, age, supportscore1, supportscore2, county)
+&gt;
+&gt; # Logit model coefficients 
+&gt; 
+&gt; logit &lt;- glm(Y ~ X, family=binomial (link = ""logit""), na.action = na.exclude) 
+&gt; 
+&gt; summary(logit) 
+
+Call:
+glm(formula = Y ~ X, family = binomial(link = ""logit""), na.action = na.exclude)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.1019  -0.7609   0.5231   0.7101   2.3965  
+
+Coefficients:
+                       Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)            4.013446   0.440962   9.102  &lt; 2e-16 ***
+Xsex                  -0.229256   0.104859  -2.186 0.028792 *  
+Xregion               -1.103308   0.091497 -12.058  &lt; 2e-16 ***
+Xage                   0.004569   0.003209   1.424 0.154512    
+Xsupportscore1        -0.019262   0.005732  -3.360 0.000778 ***
+Xsupportscore2         0.019810   0.005264   3.764 0.000168 ***
+Xcounty               -0.047581   0.011161  -4.263 2.02e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 2871.5  on 2072  degrees of freedom
+Residual deviance: 2245.5  on 2066  degrees of freedom
+  (66 observations deleted due to missingness)
+AIC: 2259.5
+
+Number of Fisher Scoring iterations: 4
+</code></pre>
+
+<p>My only guess on this is that the previous support scores (both 0-100 numerical values) I'm using may have already taken age into account, and the model doesn't want to count it twice. Though, to compare, region and county are just two different ways of cutting up the geography -- and those both seem significant.</p>
+
+<p>Can somebody let me know what you would think if your model told you that age wasn't significant when in clearly is? Trying to figure out if there's a way of thinking about it that I'm missing or if something in my code is wrong.</p>
+
+<p>Thanks!</p>
+
+<p>--
+<strong>EDIT</strong></p>
+
+<p>Pairs plot added to show correlation (despite some factors being categorical):</p>
+
+<pre><code>pairs(~sex + region +  age + supportscore1 + supportscore2 + county, data=mydata)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/N2IG4.jpg"" alt=""enter image description here""></p>
+"
+"0.125988157669742","0.126491106406735"," 97834","<p>I ran a mixed model using lme4::glmer for a logistic regression and consistently got these warning messages. I noticed there are still regular results even so, but are they accurate estimates?</p>
+
+<pre><code>    &gt; glmm.ms1&lt;-glmer(as.formula(paste(paste(y[1], x, sep=""~""), mix[1], sep=""+"")),
+    +             data=rtf2,control=glmerControl(optimizer=""bobyqa"",
+    +             optCtrl=list(maxfun=100000),family=binomial)
+Warning messages:
+1: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 0.8766 (tol = 0.001)
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge: degenerate  Hessian with 1 negative eigenvalues
+
+&gt; coef(summary(glmm.ms1))
+                       Estimate Std. Error    z value  Pr(&gt;|z|)
+(Intercept)           1.810e+00  6.558e-01   2.760464 5.772e-03
+lepidays             -3.340e+00  2.770e-01 -12.059620 1.726e-33
+cldaysbirth          -1.555e+00  5.224e-01  -2.975934 2.921e-03
+rotaarm              -2.057e-01  3.209e-01  -0.641102 5.215e-01
+cldaysbirth2         -3.072e-01  2.955e-01  -1.039510 2.986e-01
+bfh2                 -1.043e+01  1.160e+03  -0.008996 9.928e-01
+bfh3                  4.653e-01  4.806e-01   0.968103 3.330e-01
+bfh4                  2.547e-01  4.994e-01   0.509966 6.101e-01
+bfh5                  3.744e-01  9.926e-01   0.377213 7.060e-01
+ruuska               -1.020e-01  5.928e-02  -1.720396 8.536e-02
+genderMale           -4.008e-01  2.645e-01  -1.515453 1.297e-01
+epiexlbf              6.078e-04  2.796e-03   0.217391 8.279e-01
+haz.epi              -7.211e-02  1.373e-01  -0.525039 5.996e-01
+cldaysbirth:rotaarm   6.928e-01  4.771e-01   1.452148 1.465e-01
+rotaarm:cldaysbirth2  5.181e-01  3.352e-01   1.545527 1.222e-01
+Warning messages:
+1: In vcov.merMod(object, use.hessian = use.hessian) :
+  variance-covariance matrix computed from finite-difference Hessian is
+not positive definite: falling back to var-cov estimated from RX
+2: In vcov.merMod(object, correlation = correlation, sigm = sig) :
+  variance-covariance matrix computed from finite-difference Hessian is
+not positive definite: falling back to var-cov estimated from RX
+</code></pre>
+
+<p>Due to data's sensitivity, I can't post the whole process for generating same messages, but I would like to know how to handle these warnings. I don't think it's suitable to keep my eye blind here.</p>
+"
+"0.17817416127495","0.178885438199983","104485","<p>I have more of a programming background, and I am fairly new to statistics. I am currently trying to solve some sample exercises to get more familiar with data science / modelling. </p>
+
+<h3>Problem Background</h3>
+
+<p>A user posts a request on a forum. Considering number of responses / number of up votes / users' reputation / etc., can you predict if the request will be fulfilled? There are about 4000 rows of test data available.</p>
+
+<h3>Current Attempts</h3>
+
+<p>I have created basic graphs to investigate correlation, and applied a few transformations to the data. 
+I have decided to go with logistic regression, and based on the graphs, have chosen 2 factors for the initial model. </p>
+
+<h3>Problem</h3>
+
+<p>I have created the basic model using R, and I can see some summary stats, but I am a bit lost when I try to understand (a) How well the model fits the data and (b) whether the model is accurate. I tried Googling around, but most of the articles were too technical for me. Is there a cheat sheet/quick test of some sort that I can apply? Or can somebody suggest the simplest ""complicated"" article?</p>
+"
+"0.30952380952381","0.33466401061363","112670","<p>I'm working on a dataset with the following variables:</p>
+
+<pre><code>Y:  a boolean telling whether the subject has experienced a seizure
+ID:  the id of the subject
+Sess:  the subject's session number (a subject has been observed multiple times)
+X3:  numeric measurements of the subject's behavior during the session 
+X4:  ""
+X6:  ""
+</code></pre>
+
+<p>The idea is to see if the behavior measurements(X3,X4,X6) can be used predict the Seizure status (Y) in the population.  If there were just one session per subject I'd model the data with a logistic regression, but since each subject has multiple sessions the observations cannot be assumed independent.</p>
+
+<p>It seems a GEE logistic model makes the most sense for this dataset, but I'm having trouble understanding the results when compared to a regular glm.  When introducing correlation structure to the GEE equation the signs of the coefficients are reversed, and the predicted values are opposite of what they would be with an independent correlation structure.</p>
+
+<pre><code>library(""geepack"")
+#regular logistic model
+mod0 = glm(Y~X3+X4+X6, family=binomial(""logit""), data=mice)
+#gee logistic model, independent correlation structure
+mod1 = geeglm(Y~X3+X4+X6, id=ID, family=binomial(""logit""), corstr=""indep"", scale.fix=T, waves=Sess, data=mice)
+#gee logistic model, exchangeable correlation structure
+mod2 = geeglm(Y~X3+X4+X6, id=ID, family=binomial(""logit""), corstr=""exchangeable"", scale.fix=T, waves=Sess, data=mice)
+</code></pre>
+
+<p>As expected, the parameter estimates of the glm model(mod0) and the independent correlation gee model(mod1) are the same.  But when an exchangeable correlation structure(mod2) is introduced, the estimates are completely different and change sign.</p>
+
+<pre><code>&gt; 
+&gt; summary(mod1)                    
+
+Call:
+geeglm(formula = Y ~ X3 + X4 + X6, family = binomial(""logit""), 
+    data = mice, id = ID, waves = Sess, corstr = ""indep"", scale.fix = T)
+
+ Coefficients:
+            Estimate Std.err  Wald Pr(&gt;|W|)    
+(Intercept)   -1.494   0.459 10.59  0.00114 ** 
+X3            -2.377   0.626 14.42  0.00015 ***
+X4             1.090   0.398  7.50  0.00619 ** 
+X6             1.233   0.403  9.36  0.00222 ** 
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Scale is fixed.
+
+Correlation: Structure = independenceNumber of clusters:   28   Maximum cluster size: 4 
+&gt; summary(mod2)
+
+Call:
+geeglm(formula = Y ~ X3 + X4 + X6, family = binomial(""logit""), 
+    data = mice, id = ID, waves = Sess, corstr = ""exchangeable"", 
+    scale.fix = T)
+
+ Coefficients:
+            Estimate Std.err Wald Pr(&gt;|W|)   
+(Intercept)  -0.8928  0.4255 4.40   0.0359 * 
+X3            0.1059  0.0383 7.64   0.0057 **
+X4           -0.0427  0.0299 2.04   0.1535   
+X6           -0.0528  0.0213 6.16   0.0131 * 
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Scale is fixed.
+
+Correlation: Structure = exchangeable  Link = identity 
+
+Estimated Correlation Parameters:
+      Estimate Std.err
+alpha     1.09   0.133
+Number of clusters:   28   Maximum cluster size: 4 
+</code></pre>
+
+<p>My biggest concern is that the predicted Y's of the two GEE models show opposite trends, i.e. behaviors that would predict a positive seizure status in mod1, predict a negative seizure status in mod2.    </p>
+
+<pre><code>plot(mod1$fitted, mod2$fitted)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/nAogH.png"" alt=""scatter plot of fitted values from mod1, mod2""></p>
+
+<p>Also, what's with the estimated correlation parameter of alpha = 1.09 in mod2?  Unless I'm interpreting this wrong, shouldn't this always fall between -1 and 1?</p>
+
+<pre><code>Correlation: Structure = exchangeable  Link = identity 
+
+Estimated Correlation Parameters:
+      Estimate Std.err
+alpha     1.09   0.133
+</code></pre>
+
+<p>It seems odd to me that the results are completely flipped depending on whether or not the observations are assumed to have dependence structure.  Can anyone else offer insight on this behavior?</p>
+
+<p>Here is the data:</p>
+
+<pre><code>&gt; dput(mice)
+structure(list(Y = c(0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 1L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 1L, 1L, 1L, 1L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 1L, 0L, 
+0L, 0L, 1L, 1L, 1L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 1L, 1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L
+), ID = c(1L, 1L, 1L, 2L, 2L, 2L, 3L, 3L, 3L, 4L, 4L, 4L, 5L, 
+5L, 5L, 6L, 6L, 6L, 7L, 7L, 8L, 8L, 9L, 9L, 10L, 10L, 11L, 11L, 
+11L, 12L, 12L, 12L, 13L, 13L, 13L, 13L, 14L, 14L, 14L, 14L, 15L, 
+15L, 15L, 15L, 16L, 16L, 16L, 16L, 17L, 17L, 17L, 18L, 18L, 18L, 
+19L, 19L, 19L, 20L, 20L, 20L, 21L, 21L, 21L, 22L, 22L, 22L, 23L, 
+23L, 23L, 23L, 24L, 24L, 24L, 24L, 25L, 25L, 25L, 25L, 26L, 26L, 
+26L, 26L, 27L, 27L, 27L, 27L, 28L, 28L, 28L, 28L), Sess = c(2L, 
+3L, 4L, 2L, 3L, 4L, 2L, 3L, 4L, 2L, 3L, 4L, 2L, 3L, 4L, 2L, 3L, 
+4L, 3L, 4L, 3L, 4L, 3L, 4L, 3L, 4L, 1L, 3L, 4L, 1L, 3L, 4L, 1L, 
+2L, 3L, 4L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 4L, 2L, 
+3L, 4L, 2L, 3L, 4L, 2L, 3L, 4L, 2L, 3L, 4L, 1L, 2L, 3L, 1L, 2L, 
+3L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 
+4L, 1L, 2L, 3L, 4L, 1L, 2L, 3L, 4L), X3 = c(0.511015060794264, 
+0.898356533693696, 0.798280430157052, 1.31144372617517, 0.829923189452201, 
+0.289089506643144, -0.763028944257538, -0.944459588217789, -1.16474609928919, 
+-0.182524267014845, -0.338967193889711, -0.896037509887988, 0.00426073081308205, 
+0.0576592603165749, -1.4984737260339, 1.34752684212464, 0.106461438449047, 
+-0.108424579472268, -2.85991432039569, -0.230115838261355, -1.54479536845993, 
+-1.23693649938367, -1.53704616612456, -1.04825100254239, 0.142768659484482, 
+0.28358135516745, -0.236302896321009, 0.708743856986942, -0.507503006972081, 
+0.401550711842527, -0.16928449007327, 0.867816722958898, 0.487459858572122, 
+1.35172112260613, 0.14742652989871, 0.742155288774287, 0.348552056119878, 
+-0.82489952485408, 0.0366834636917457, -0.731010479377091, 0.979544093857171, 
+1.4161996712129, 0.661035838980077, 0.600235250313596, -1.10872641912335, 
+-0.212101744145196, -0.919575135240643, -0.813993077336991, -0.547068540188791, 
+-0.0260198210967738, -0.0962240349391501, -0.251025721625606, 
+0.894913664382802, -0.21993004239326, 0.0628839847717805, 1.77763503559622, 
+0.718459471596243, 0.984412886705251, 0.77603470471174, 0.486187732642953, 
+1.78012655684609, 1.31622243756713, 1.29635178661133, 0.427995111986702, 
+0.993748401511881, 0.387623239882247, 0.42006794384777, -0.815889182132972, 
+-0.897540332229183, -1.041943103505, 0.379425827374942, -1.00707718576756, 
+-0.889182530787803, 0.148432805676879, -0.287928359114935, -0.747152636892815, 
+-1.41003790431546, -0.611571256991109, -1.02569548477235, -1.02700056733181, 
+-1.45808867127733, -1.47973458605138, 2.23643966561508, 2.69397876103083, 
+0.81841473415516, 2.12167589051282, 0.267133799544379, -0.326215175076418, 
+-1.08788244901967, -1.18733017947214), X4 = c(0.050598970482242, 
+-0.0279694583060402, 0.999225143631274, 0.199872317584803, 0.779316284168575, 
+-0.3552692229881, -0.232161792808608, -0.333479851296274, -0.748169603107953, 
+-0.57785843363913, -0.480747933235349, -0.740466500603612, -0.618559437949564, 
+-0.591541699294345, -0.538855647639331, 0.431376763414175, -0.327931008191724, 
+-0.469416282917978, -0.659224551441466, -0.55285236403596, -0.637082867133913, 
+-0.780321541069982, -0.40539035027884, -0.54024676972473, -0.185562290173831, 
+0.054439450703482, 0.624097793456316, 0.24018937319873, -0.264194638773171, 
+-0.389590537012038, -0.42771343162755, -0.738790918078674, -0.122411831542788, 
+0.600119921164627, 0.0442597161778152, -0.0955011351192086, -0.521259643827527, 
+-0.550050365103255, -0.504566887441653, -0.506571005423286, 0.523650149759566, 
+0.341920916685254, -0.396343801985993, -0.366532239883921, -0.739276449002057, 
+-0.56054127343218, -0.587601788901296, -0.56798329186843, -0.454937006653748, 
+-0.672730639942183, -0.564864467446687, -0.678853515419629, 0.573072971483937, 
+0.596973680548765, 0.0403978228634349, 1.93617633381248, 2.54301964691615, 
+0.363075891004736, 0.0205658396444095, 0.560923287570261, 1.24212005971229, 
+2.32518793880728, 2.69979166871713, 0.626868716830008, 0.219463581391793, 
+0.236477261174534, -0.115429539698909, -0.49754151674106, -0.40827433350644, 
+-0.0433283703798658, -0.578451015506926, -0.714208713291922, 
+-0.802387726290423, -0.836794085697031, -0.471800405613954, -0.668030208971065, 
+-0.610945789491312, -0.780838257914176, -0.411360572155088, -0.494388869332376, 
+-0.63231547268951, -0.743853022088574, 4.90627675753856, 3.38455016460328, 
+0.859445571488139, 2.42212262705776, -0.324759764820016, -0.541581784452693, 
+-0.485324968098865, -0.770539730529603), X6 = c(0.0150287583709043, 
+-0.151984283645294, -0.347950002037732, 0.379891135882966, 0.129107019894704, 
+-0.314047917638528, -0.516381047940779, -0.751192211830495, -0.884460389494645, 
+-0.462363867892961, -0.397583161539858, -0.559528880497725, -0.842987555132397, 
+-0.922797893301111, -1.01175722882932, 0.32346425626624, -0.610909601293237, 
+-0.605155952259822, -1.29840867980623, 0.0793710626694382, -0.806959976634144, 
+-0.674523251142452, -0.960113466801064, -0.783836535852452, -0.0665321645536412, 
+0.482235339656537, -0.319499220427413, -0.115345965733089, -0.30806448545927, 
+0.251747727063608, -0.305013811851957, -0.931916656036151, 0.415032839884745, 
+0.337184728843034, 0.0584335852357015, -0.0712185313438638, 0.78632612201797, 
+0.490831043388539, 0.8902425262631, 0.160088439571744, 0.90343086944952, 
+0.928495373121098, -0.389259569427933, -0.304578433259833, -0.593364448723133, 
+-0.411333868741105, -0.882691663964141, -0.91208274239495, -0.708633954450382, 
+-0.339396626779965, -0.420927315080057, -0.421383857909298, 0.407474183771483, 
+0.629710767351175, -0.438726438495567, 2.40977730548689, 2.47250810430208, 
+0.783562677342961, 0.781304150896319, 0.563221804716475, 1.85514126067038, 
+1.30723846671955, 1.94869625911545, 0.876751836832149, 0.626629859119409, 
+0.067113945916172, 3.54280776301513, 0.0082773667305384, -0.311414481848668, 
+-0.732779325538588, -0.594477082903005, -1.0385239418576, -1.04141739541776, 
+-0.99472304141247, -0.599659297534257, -0.804801224448196, -1.13096932958525, 
+-0.641957537144073, -0.722959119516237, -0.671146043591047, -0.714432955420477, 
+-0.766750949574034, 1.20993739830475, 2.79011376379402, 2.64532317075082, 
+2.54251033029822, -0.539516582572252, -0.6419726544563, -0.663768795224503, 
+-0.644829826467113)), .Names = c(""Y"", ""ID"", ""Sess"", ""X3"", ""X4"", 
+""X6""), row.names = c(NA, -90L), class = ""data.frame"")
+</code></pre>
+"
+"0.199204768222399","0.2","113252","<p>I am so sorry, I am beginner in statistic analysis, I have project using R to analyze the correlation between dependent variables and independents variables. </p>
+
+<p>In this case I have two dependent variables (1. Extrovert, 2. Introvert). 
+And the independent variables i have the data from (Call Log-> how long they call everyday, how many they call everyday, SMS log-> how length text in SMS body every day, how many they sent/received sms for each day).</p>
+
+<p>I am so confused how I can do it, please anyone can give me some good references about it. 
+I also have some questions such as : </p>
+
+<ol>
+<li>I use the different type of variables, independent variables (data type : numeric) but dependent variable (data type is categorical), so it is possible to apply logistic regression and Pearson? </li>
+<li>Or any someone will give me some advice the better solution such as another methods for solving this problem. </li>
+</ol>
+
+<p>The example of data from dput()</p>
+
+<pre><code>structure(list(sumcallin = c(462L, 998L, 335L, 179L, 34L, 0L, 
+0L, 0L, 0L, 0L), caountcallin = c(7L, 5L, 8L, 5L, 1L, 1L, 0L, 
+1L, 1L, 1L), sumcallout = c(1068L, 81L, 519L, 393L, 342L, 0L, 
+583L, 1902L, 358L, 1017L), countcallout = c(15L, 3L, 10L, 5L, 
+6L, 0L, 3L, 3L, 3L, 3L), sumreceived = c(322L, 75L, 20L, 35L, 
+8L, 35L, 135L, 103L, 471L, 173L), countreceived = c(15L, 4L, 
+2L, 3L, 1L, 2L, 7L, 3L, 18L, 5L), sumsent = c(171L, 31L, 25L, 
+23L, 8L, 55L, 87L, 9L, 400L, 258L), countsent = c(10L, 4L, 1L, 
+3L, 1L, 3L, 4L, 1L, 13L, 8L), personality = structure(c(2L, 2L, 
+2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L), .Label = c(""extro"", ""intro""), class = ""factor"")), .Names = c(""sumcallin"", 
+""caountcallin"", ""sumcallout"", ""countcallout"", ""sumreceived"", 
+""countreceived"", ""sumsent"", ""countsent"", ""personality""), row.names = c(1L, 
+2L, 3L, 4L, 5L, 37L, 38L, 39L, 40L, 41L), class = ""data.frame"")
+</code></pre>
+
+<p>Thank you for your help.</p>
+"
+"0.295468420142639","0.269679944985297","114728","<p>I'm trying to run a QAP logistic regression to predict the odds of a tie in a social network (represented as a binary adjacency matrix) given two independent variables (also binary matrices) but am getting opposite results depending on whether I run the analysis in R or UCINET.</p>
+
+<p>All three matrices are rectangular (30 x 75). The 30 rows are people I've interviewed and the 75 columns are the entire population (including the 30 interviewees). All matrices include the person IDs as row and column names.</p>
+
+<p>Running the analysis in R (see code at the bottom of the question), I get the following output:</p>
+
+<pre><code>            Estimate  Exp(b)       Pr(&lt;=b) Pr(&gt;=b) Pr(&gt;=|b|)
+(intercept) -5.298525  0.004998961 0.0001  0.9999  0.0001   
+indep1       1.797138  6.032358591 0.9693  0.0307  0.2393   
+indep2       3.194162 24.389724184 1.0000  0.0000  0.0030   
+</code></pre>
+
+<p>But after exporting the variables to .csv files and re-running it in UCINET, I get:</p>
+
+<pre><code>                  1       2       3       4       5       6       7       8       9 
+               Coef OddsRat     Sig      SD     Avg     Min     Max   P(ge)   P(le) 
+            ------- ------- ------- ------- ------- ------- ------- ------- ------- 
+1 Intercept  -3.931   0.020   0.000   0.540  -2.785  -3.931  -1.783       1   0.000 
+2    indep1   2.391  10.925   0.003   1.508  -0.239  -5.089  15.437   0.003   0.998 
+3    indep2   1.458   4.296   0.000   0.504  -0.026 -15.991   1.458   0.000       1 
+</code></pre>
+
+<p>Any ideas why this might be happening?</p>
+
+<p>In case it's important, the (QAP) correlation coefficient between the two independent variables is 0.382</p>
+
+<p>I've only included the 30 interviewees in the matrix rows because they are the only people from whom there might be a tie. The networks and QAP regressions are directed.</p>
+
+<p>Incidentally, if I run the QAP logit using full 75x75 adjacency matrices (all people in the columns also appear as rows), I get the same output in both programs.</p>
+
+<p>I also have a related question... A colleague suggested I could run the analysis using the 75x75 matrices but replace the rows of people I haven't interviewed with NAs. This gives me the same results in R and UCINET. Does this seem like a sensible approach, rather than using rectangular matrices?</p>
+
+<p>Thanks!</p>
+
+<p>Reproducible example in R:</p>
+
+<pre><code>library(sna)
+
+# row and column labels
+rowIDs &lt;- c(""1"",  ""2"",  ""3"",  ""5"",  ""9"",  ""16"", ""18"", ""19"", ""26"", ""27"", ""34"", ""35"", ""36"", ""40"", ""46"", ""49"", ""60"", ""64"", ""70"", ""72"", ""73"", ""74"", ""75"", ""76"", ""77"", ""82"", ""85"", ""86"", ""97"", ""100"")
+colIDs &lt;- c(""1"", ""2"", ""3"", ""4"", ""5"", ""6"", ""7"", ""8"", ""9"", ""10"", ""12"", ""13"", ""14"", ""15"", ""16"", ""17"", ""18"", ""19"", ""20"", ""21"", ""23"", ""26"", ""27"", ""34"", ""35"", ""36"", ""38"", ""40"", ""41"", ""43"", ""45"", ""46"", ""47"", ""49"", ""51"", ""52"", ""53"", ""57"", ""59"", ""60"", ""61"", ""62"", ""63"", ""64"", ""65"", ""66"", ""67"", ""68"", ""70"", ""72"", ""73"", ""74"", ""75"", ""76"", ""77"", ""78"", ""79"", ""81"", ""82"", ""83"", ""84"", ""85"", ""86"", ""87"", ""88"", ""89"", ""91"", ""92"", ""93"", ""94"", ""95"", ""96"", ""97"", ""100"", ""101"")
+
+# create matrices
+adj.dep &lt;- as.matrix( read.csv(header=F, text=
+               ""0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0""))
+
+adj.indep1 &lt;- as.matrix( read.csv(header=F, text=
+               ""0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1""))
+
+adj.indep2 &lt;- as.matrix( read.csv(header=F, text=
+               ""0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+                0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+                0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+                0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+                0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1
+                1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0
+                1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0
+                0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1""))
+
+# assign row/column names
+rownames(adj.dep) &lt;- rowIDs
+colnames(adj.dep) &lt;- colIDs
+rownames(adj.indep1) &lt;- rowIDs
+colnames(adj.indep1) &lt;- colIDs
+rownames(adj.indep2) &lt;- rowIDs
+colnames(adj.indep2) &lt;- colIDs
+
+# set up independent variables
+g.indeps &lt;- array(dim=c(2, nrow(adj.indep1), ncol(adj.indep1)))
+g.indeps[1,,] &lt;- adj.indep1
+g.indeps[2,,] &lt;- adj.indep2
+
+# run the analysis
+# (warning, this command takes a bit of time to run with 10,000 reps)
+nl &lt;- netlogit(adj.dep, g.indeps, reps=10000, nullhyp=""qap"")
+# print output
+summary(nl)
+</code></pre>
+"
+"0.282889474930502","0.309838667696593","115356","<p>I'm a beginner in statistics and I have to run multilevel logistic regressions. I am confused with the results as they differ from logistic regression with just one level. </p>
+
+<p>I don't know how to interpret the variance and correlation of the random variables. And I wonder how to compute the ICC.</p>
+
+<p>For example : I have a dependent variable about the protection friendship ties give to individuals (1 is for individuals who can rely a lot on their friends, 0 is for the others). There are 50 geographic clusters of respondant and one random variable which is a factor about the social situation of the neighborhood. Upper/middle class is the reference, the other modalities are working class and underprivileged neighborhoods. </p>
+
+<p>I get these results :</p>
+
+<pre><code>&gt; summary(RLM3)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: Arp ~ Densite2 + Sexe + Age + Etudes + pcs1 + Enfants + Origine3 +      Sante + Religion + LPO + Sexe * Enfants + Rev + (1 + Strate |  
+    Quartier)
+   Data: LPE
+Weights: PONDERATION
+Control: glmerControl(optimizer = ""bobyqa"")
+
+     AIC      BIC   logLik deviance df.resid 
+  3389.9   3538.3  -1669.9   3339.9     2778 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2216 -0.7573 -0.3601  0.8794  2.7833 
+
+Random effects:
+ Groups   Name           Variance Std.Dev. Corr       
+ Neighb. (Intercept)     0.2021   0.4495              
+          Working Cl.    0.2021   0.4495   -1.00      
+          Underpriv.     0.2021   0.4495   -1.00  1.00
+Number of obs: 2803, groups:  Neigh., 50
+
+Fixed effects:
+</code></pre>
+
+<p>The differences with the ""call"" part is due to the fact I translated some words.</p>
+
+<p>I think I understand the relation between the random intercept and the random slope for linear regressions but it is more difficult for logistics ones. I guess that when the correlation is positive, I can conclude that the type of neighborhood (social context) has a positive impact on the protectiveness of friendship ties, and conversely. But how do I quantify that ?</p>
+
+<p>Moreover, I find it odd to get correlation of 1 or -1 and nothing more intermediate.</p>
+
+<p>As for the ICC I am puzzled because I have seen a post about lmer regression that indicates that intraclass correlation can be computed by dividing the variance of the random intercept by the variance of the random intercept, plus the variance the random variables, plus the residuals. </p>
+
+<p>But there are no residuals in the results of a glmer. I have read in a book that ICC must be computed by dividing the random intercept variance by the random intercept variance plus 2.36 (piÂ²/3). But in another book, 2.36 was replaced by the inter-group variance (the first level variance I guess). 
+What is the good solution ?</p>
+
+<p>I hope these questions are not too confused.
+Thank you for your attention !</p>
+"
+"0.199204768222399","0.2","115637","<p>I have a reasonably large dataset (d) with predictor variables x1...xn and a target variable y. I can use recursive partitioning (such as CART or rpart in R) to find subsets of d with a high (or low) average y. However, I am interested in subsets with a high <strong>correlation</strong> between x1 and y. For example, suppose that in the subset defined by d[x2>5 &amp; x3&lt;7], the linear model y = a*x1 + b has an r^2 of 90%, which I will call 'high.' I am looking for an algorithm that will take in dataset d, find the subset d[x2>5 &amp; x3&lt;7] (as well as others that would produce a high r^2 using the linear model), and give me, as output, the list of subsets found and the r^2 of each. Just like in recursive partitioning, this algo would look for subsets as large as possible, and try to arrive at them using as few 'steps' or 'cuts' as possible (e.g. d[x2>5 &amp; x3&lt;7] would be two 'cuts')</p>
+
+<p>In an ideal world, I would even get to specify the model - i.e. instead of using a linear model y = a*x1 + b, I would like to use a logistic model, since y is binary in my particular dataset.</p>
+
+<p>Is there an algorithm that can find those subsets for me automatically? Is this algorithm perchance implemented in R?</p>
+
+<p>Thank you!</p>
+"
+"0.218217890235992","0.219089023002066","122039","<p><strong>SOLVED</strong>: an elastic net model, as any other logistic regression model, will not generate more coefficients than input variables. Check Zach's answer to understand how from an (apparent) low number of inputs, more coefficients can be generated. The cause of this question was a code bug, as the users pointed out.</p>
+
+<p>This is a simple question. I've fitted a model with 1334 variables using elastic net to perform feature selection and regularization. I'm now trying to interpret the obtained coefficients in order to find correlations between the input variables and the output. The only problem is that instead of the (expected) 1335 coefficients (intercept+1334), extracting the coefficients through <code>coef(model,s=""lambda.min"")</code> yields around 1390 coefficients. This seems highly counterintuitive and stops me from mapping a single coefficient to a single input variable, so I suppose I'm not understanding some of the insides of the elastic net. Any idea would be very helpful. Thanks in advance.</p>
+
+<p>PS: just in case someone wonders so, I've not included interaction terms nor any synthetic variable, just the original 1334 ones.</p>
+
+<p>PS2: elastic net references:</p>
+
+<ul>
+<li>Mathematical paper: <a href=""http://web.stanford.edu/~hastie/Papers/B67.2%20(2005)%20301-320%20Zou%20&amp;%20Hastie.pdf"" rel=""nofollow"">http://web.stanford.edu/~hastie/Papers/B67.2%20(2005)%20301-320%20Zou%20&amp;%20Hastie.pdf</a></li>
+<li>R package tutorial: <a href=""http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html"" rel=""nofollow"">http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html</a></li>
+</ul>
+
+<p>PS3: about the code used to fit the model:</p>
+
+<p>it is a 250 line script, so unless you specifically need it, I think it'd only clutter the question. Basically, the algorithm takes as an input a data frame of 1393 colums, where the last one is the target variable and the first 1392 are the input variables. So, after separating those into two matrices, input and output, the actual model fitting is done in this call:</p>
+
+<p><code>cv.glmnet(x=input_matrix,y=output_matrix,family=""binomial"",type.measure=""auc"")</code></p>
+
+<p>If you need to, I can actually generate a reproducible file with the data I use and the whole script. </p>
+"
+"0.487950036474267","0.489897948556636","127479","<p>I'm using a mixed effects model with logistic link function (using lme4 version 1.1-7 in R).  However, I noticed that the estimates of significance for fixed effects change depending on the order of the rows in the dataset.  </p>
+
+<p>That is, if I run a model on a dataset, I get certain estimate for my fixed effect and it has a certain p-value.  I run the model again, and I get the same estimate and p-value.  Now, I shuffle the order of rows (the data is not mixed, just the rows are in a different order).  Running the model a third time, the p-value is very different.</p>
+
+<p>For the data I have, the estimated p-value for the fixed effect can be between p=0.001 and p=0.08.  Obviously, these are crucial differences given conventional significance levels. </p>
+
+<p>I understand that the estimates are just estimated, and there will be differences between values for a number of reasons.  However, the magnitude of the differences for my data seem large to me, and I wouldn't expect the order of my dataframe to have this effect (we discovered this problem by chance when a colleague ran the same model but got different results.  It turned out they had ordered their data frame.).  </p>
+
+<p>Here is the output of my script:
+(X and Y are binary variables which are contrast-coded and centred, Group and SubGroup are categorical variables)</p>
+
+<pre><code>&gt; # Fit model
+&gt; m1 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; # Shuffle order of rows
+&gt; d = d[sample(1:nrow(d)),]
+&gt; # Fit model again
+&gt; m2 = glmer(X ~Y+(1+Y|Group)+(1+Y|SubGroup),family=binomial(link='logit'),data=d)
+&gt; summary(m1)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5421        
+              Y1          0.1847   0.4298   -0.79
+ Group        (Intercept) 0.2829   0.5319        
+              Y1          0.4640   0.6812   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1325  -8.214   &lt;2e-16 ***
+Y1            0.3772     0.2123   1.777   0.0756 .  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.112 
+&gt;
+&gt; # -----------------
+&gt; summary(m2)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) 
+      ['glmerMod']
+ Family: binomial  ( logit )
+Formula: X ~ Y + (1 + Y | Group) + (1 + Y | SubGroup)
+   Data: d
+
+      AIC       BIC    logLik  deviance  df.resid 
+ 200692.0  200773.2 -100338.0  200676.0    189910 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1368 -0.5852 -0.4873 -0.1599  6.2540 
+
+Random effects:
+ Groups       Name        Variance Std.Dev. Corr 
+ SubGroup     (Intercept) 0.2939   0.5422        
+              Y1          0.1846   0.4296   -0.79
+ Group        (Intercept) 0.2829   0.5318        
+              Y1          0.4641   0.6813   -0.07
+Number of obs: 189918, groups:  SubGroup, 15; Group, 12
+
+Fixed effects:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -1.0886     0.1166  -9.334  &lt; 2e-16 ***
+Y1            0.3773     0.1130   3.339 0.000841 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+     (Intr)
+Y1 0.074 
+</code></pre>
+
+<p>I'm afraid that I can't attach the data due to privacy reasons. </p>
+
+<p>Both models converge.  The difference appears to be in the standard errors, while the differences in coefficient estimates are smaller.  The model fit (AIC etc.) are the same, so maybe there are multiple optimal convergences, and the order of the data pushes the optimiser into different ones.  However, I get slightly different estimates every time I shuffle the data frame (not just two or three unique estimates).  In one case (not shown above), the model did not converge simply because of a shuffling of the rows.</p>
+
+<p>I suspect that the problem lies with the structure of my particular data.  It's reasonably large (nearly 200,000 cases), and has nested random effects.  I have tried centering the data, using contrast coding and feeding starting values to lmer based on a previous fit.  This seems to help somewhat, but I still get reasonably large differences in p-values.  I also tried using different ways of calculating p-values, but I got the same problem.</p>
+
+<p>Below, I've tried to replicate this problem with synthesised data.  The differences here aren't as big as with my real data, but it gives an idea of the problem.</p>
+
+<pre><code>library(lme4)
+set.seed(999)
+
+# make a somewhat complex data frame
+x = c(rnorm(10000),rnorm(10000,0.1))
+x = sample(x)
+y = jitter(x,amount=10)
+a = rep(1:20,length.out=length(x))
+y[a==1] = jitter(y[a==1],amount=3)
+y[a==2] = jitter(x[a==2],amount=1)
+y[a&gt;3 &amp; a&lt;6] = rnorm(sum(a&gt;3 &amp; a&lt;6))
+# convert to binary variables
+y = y &gt;0
+x = x &gt;0
+# make a data frame
+d = data.frame(x1=x,y1=y,a1=a)
+
+# run model 
+m1 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# shuffle order of rows
+d = d[sample(nrow(d)),]
+
+# run model again
+m2 = glmer(x1~y1+(1+y1|a1),data=d,family=binomial(link='logit'))
+
+# show output
+summary(m1)
+summary(m2)
+</code></pre>
+
+<p>One solution to this is to run the model multiple times with different row orders, and report the range of p-values.  However, this seems inelegant and potentially quite confusing.</p>
+
+<p>The problem does not affect model comparison estimates (using anova), since these are based on differences in model fit.  The fixed effect coefficient estimates are also reasonably robust.  Therefore, I could just report the effect size, confidence intervals and the p-value from a model comparison with a null model, rather than the p-values from within the main model.</p>
+
+<p>Anyway, has anyone else had this problem?  Any advice on how to proceed?</p>
+"
+"0.125988157669742","0.126491106406735","131349","<p>Following Dormann et al 2007 Ecography, I have employed a GLMM approach in R to account for spatial autocorrelation in a binomial regression model (logistic regression) that does not have random terms. Using data from mtcars (just so we all have the same numbers), my code looks as follows:</p>
+
+<pre><code>library(MASS)
+data &lt;- mtcars
+data$group &lt;- factor(rep(""A"", nrow(data)))
+mod1 &lt;- glmmPQL(vs ~ mpg, random=~1|group, correlation=corExp(form=~disp+qsec),
+        data=data, family=binomial)
+</code></pre>
+
+<p>Question 1: Is this a reasonable way to account for spatial autocorrelation in a binomial model, as Dormann et al suggest?</p>
+
+<p>Question 2: Should/can I demonstrate that there is no longer spatial autocorrelation (SAC) in the error for this model? Can a vario/correlagram be used? How? I have had trouble finding information about how to look for SAC in GLMMs, and the variogram I've managed to create looks very funky -- hard to interpret.</p>
+"
+"0.199204768222399","0.2","134837","<p>My data has a binary outcome (attack or not attack), day (20 day in repeated measured design) and some covariates (nestlingâ€™s movement).
+The objectives of my experiment are testing the effect of time and other factors and selecting useful variables affecting outcomes.</p>
+
+<p>My data look like below</p>
+
+<pre><code>subject outcome Day nestling.move
+   1        A    1      N 
+   2        A    1      Y 
+   3        A    1      Y 
+   4        N    1      Y 
+   5        N    1      Y 
+   6        N    1      Y 
+   7        N    1      Y 
+   8        N    1      N 
+   9        N    1      N 
+   .        .    .      . 
+   .        .    .      . 
+   1        A    20     N 
+   2        A    20     N   
+</code></pre>
+
+<p>First of all, I simply transformed outcomes to ratios(attack rate for each day) and test if there is a correlation between attack rates and days by using Spearmanâ€™s rank correlation. But I think it is not a good way to test the effect of time on outcome.</p>
+
+<p>I checked other <a href=""http://stats.stackexchange.com/questions/81246/unable-to-fit-repeated-measures-in-r"">post</a>. and I think I should used an AR1 model with logistic regression since it could be a time-varying processes. However, I don't know how to do this with R or SPSS. </p>
+
+<p>Is this the correct syntax to use in R?</p>
+
+<pre><code>model&lt;- glmmPQL(outcome ~  nestling.move + Day, data=mydata, family=binomial,  random = ~ 1 | subject, correlation = corAR1(form=~Day|subject)) 
+</code></pre>
+"
+"0.125988157669742","0.126491106406735","138671","<p>I was doing logistic regression in R on 'Smarket' data set available in the ISLR library.
+Since correlation between variables were less, I used all variables in my model and I was getting the following result</p>
+
+<p><img src=""http://i.stack.imgur.com/esOCA.png"" alt=""Logistic Regression Output""></p>
+
+<p>Here p -values are greater then 0.05 for all the variables.</p>
+
+<p>Then I checked the misclassification error and the error was almost zero.</p>
+
+<p><img src=""http://i.stack.imgur.com/tF8iq.png"" alt=""Misclassification Output""></p>
+
+<p>I have tried removing some variables. But still the p values are greater than 0.05 and the misclassification error rates are high for those models.</p>
+
+<p>Can I use this model ??
+Is p-value insignificant in logistic regression?</p>
+"
+"0.17817416127495","0.178885438199983","147923","<p>I have a data set with continuous variable and a binary target variable (0 and 1). </p>
+
+<p>I need to discretize the continuous variables (for logistic regression) with respect to the target variable and with the constrained that the frequency of observation in each interval should be balanced. I tried machine learning algorithms like Chi Merge, decision trees. Chi merge gave me intervals with very unbalanced numbers in each interval (an interval with 3 observations and another one with 1000). The decision trees were hard to interpret.</p>
+
+<p>I came to the conclusion that an optimal discretization should maximise the $\chi^2$ statistic between the discretized variable and the target variable and should have intervals containing roughly the same amount of observations. </p>
+
+<p>Is there an algorithm for solving this?</p>
+
+<p>This how it could look like in R (def is the target variable and x the variable to be discretized). I calculated Tschuprow's $T$ to evaluate the ""correlation"" between the transformed and the target variable because $\chi^2$ statistics tends to increase with the number of intervals. I'm not certain if this is the right way.</p>
+
+<p>Is there another way of evaluating if my discretization is optimal other than Tschuprow's $T$ (increases when number of classes decreases)? </p>
+
+<pre><code>chitest &lt;- function(x){
+  interv &lt;- cut(x, c(0, 1.6,1.9, 2.3, 2.9, max(x)), include.lowest = TRUE)
+  X2 &lt;- chisq.test(df.train$def,as.numeric(interv))$statistic
+  #Tschuprow
+  Tschup &lt;- sqrt((X2)/(nrow(df.train)*sqrt((6-1)*(2-1))))
+  print(list(Chi2=X2,freq=table(interv),def=sum.def,Tschuprow=Tschup))
+}
+</code></pre>
+"
+"0.356348322549899","0.357770876399966","156465","<p>The following multilevel logistic model with
+one explanatory variable at level 1 (individual level) and
+one explanatory variable at level 2 (group level) : </p>
+
+<p>$$\text{logit}(p_{ij})=\pi_{0j}+\pi_{1j}x_{ij}\ldots (1)$$
+$$\pi_{0j}=\gamma_{00}+\gamma_{01}z_j+u_{0j}\ldots (2)$$
+$$\pi_{1j}=\gamma_{10}+\gamma_{11}z_j+u_{1j}\ldots (3)$$</p>
+
+<p>where , the group-level residuals $u_{0j}$ and $u_{1j}$ are assumed to have a multivariate normal distribution with expectation zero . The variance of the residual errors  $u_{0j}$ is specified as $\sigma^2_0$ , and the variance of the residual errors  $u_{1j}$ is specified as $\sigma^2_1$ .</p>
+
+<p>I want to estimate the parameter of the model and I like to use  <code>R</code> command <code>glmmPQL</code> . </p>
+
+<p>Substituting  equation (2) and (3) in equation (1) yields ,</p>
+
+<p>$$\text{logit}(p_{ij})=\gamma_{00}+\gamma_{10}x_{ij}+\gamma_{01}z_j+\gamma_{11}x_{ij}z_j+u_{0j}+u_{1j}x_{ij}\ldots (4)$$</p>
+
+<p>There are 30 groups$(j=1,...,30)$ and 5 individual in each group .</p>
+
+<p>R code  :</p>
+
+<pre><code>   #Simulating data from multilevel logistic distribution 
+   library(mvtnorm)
+   set.seed(1234)
+
+   J &lt;- 30             ## number of groups
+   n_j &lt;- rep(5,J)     ## number of individuals in jth group
+   N &lt;- sum(n_j)
+
+   g_00 &lt;- -1
+   g_01 &lt;- 0.3
+   g_10 &lt;- 0.3
+   g_11 &lt;- 0.3
+
+   s2_0 &lt;- 0.13  ##variance corresponding to specific ICC
+   s2_1 &lt;- 1     ##variance standardized to 1
+   s01  &lt;- 0     ##covariance assumed zero
+
+   z &lt;- rnorm(J)
+   x &lt;- rnorm(N)
+
+   #Generate (u_0j,u_1j) from a bivariate normal .
+   mu &lt;- c(0,0)
+  sig &lt;- matrix(c(s2_0,s01,s01,s2_1),ncol=2)
+  u &lt;- rmvnorm(J,mean=mu,sigma=sig,method=""chol"")
+
+  pi_0 &lt;- g_00 +g_01*z + as.vector(u[,1])
+  pi_1 &lt;- g_10 + g_11*z + as.vector(u[,2])
+  eta &lt;- rep(pi_0,n_j)+rep(pi_1,n_j)*x
+  p &lt;- exp(eta)/(1+exp(eta))
+
+  y &lt;- rbinom(N,1,p)
+</code></pre>
+
+<p>Now the parameter estimation .</p>
+
+<pre><code>  #### estimating parameters 
+  library(MASS)
+  library(nlme)
+
+  sim_data_mat &lt;- matrix(c(y,x,rep(z,n_j),rep(1:30,n_j)),ncol=4)
+  sim_data &lt;- data.frame(sim_data_mat)
+  colnames(sim_data) &lt;- c(""Y"",""X"",""Z"",""cluster"")
+  summary(glmmPQL(Y~X*Z,random=~1|cluster,family=binomial,data=sim_data,,niter=200))
+</code></pre>
+
+<h3>OUTPUT :</h3>
+
+<pre><code>      iteration 1
+      Linear mixed-effects model fit by maximum likelihood
+      Data: sim_data 
+
+      Random effects:
+      Formula: ~1 | cluster
+              (Intercept)  Residual
+      StdDev: 0.0001541031 0.9982503
+
+      Variance function:
+      Structure: fixed weights
+      Formula: ~invwt 
+      Fixed effects: Y ~ X * Z 
+                      Value Std.Error  DF   t-value p-value
+      (Intercept) -0.8968692 0.2018882 118 -4.442404  0.0000
+      X            0.5803201 0.2216070 118  2.618691  0.0100
+      Z            0.2535626 0.2258860  28  1.122525  0.2712
+      X:Z          0.3375088 0.2691334 118  1.254057  0.2123
+      Correlation: 
+           (Intr) X      Z     
+      X   -0.072              
+      Z    0.315  0.157       
+      X:Z  0.095  0.489  0.269
+
+      Number of Observations: 150
+      Number of Groups: 30 
+</code></pre>
+
+<ul>
+<li><p>Why does it take only $1$ iteration while I mentioned to take $200$ iterations inside the function <code>glmmPQL</code> by the argument <code>niter=200</code> ?</p></li>
+<li><p>Also p-value of group-level variable $(Z)$ and cross-level interaction $(X:Z)$ shows they are not significant . Still why in this <a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1955447/"" rel=""nofollow"">article</a>, they keep the group-level variable $(Z)$ and cross-level interaction $(X:Z)$ for further analysis ?</p></li>
+<li><p>Also How are the degrees of freedom <code>DF</code> being calculated ?</p></li>
+<li><p>It doesn't match with the relative bias of the various estimates of <a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC1955447/table/T1/"" rel=""nofollow"">the table</a> .  I tried to calculate the relative bias as :</p>
+
+<pre><code> #Estimated Fixed Effect parameters :
+
+ hat_g_00 &lt;- -0.8968692 #overall intercept
+ hat_g_10 &lt;- 0.5803201  # X
+ hat_g_01 &lt;-0.2535626   # Z
+ hat_g_11 &lt;-0.3375088   #X*Z
+
+fixed &lt;-c(g_00,g_10,g_01,g_11)
+hat_fixed &lt;-c(hat_g_00,hat_g_10,hat_g_01,hat_g_11)
+
+
+#Estimated Random Effect parameters :
+
+hat_s_0 &lt;-0.0001541031  ##Estimated Standard deviation of random intercept 
+hat_s_1 &lt;-  0.9982503 
+
+std  &lt;- c(sqrt(0.13),1) 
+hat_std  &lt;- c(0.0001541031,0.9982503) 
+
+##Relative bias of Fixed Effect :
+rel_bias_fixed &lt;- ((hat_fixed-fixed)/fixed)*100
+[1] -10.31308  93.44003 -15.47913  12.50293
+
+##Relative bias of Random Effect :
+rel_bias_Random &lt;- ((hat_std-std)/std)*100
+[1] -99.95726  -0.17497
+</code></pre></li>
+<li>Why doesn't the relative bias match with the table ?</li>
+</ul>
+"
+"0.125988157669742","0.126491106406735","156780","<p>I am running a logistic regression with 5 continuous independent variables (IV). The problem is that IV4 when taken alone has a positive correlation with outcome (coeff > 0), and when taken with the other variables has a negative correlation (coeff &lt; 0). I evaluated correlation between IV4 and the other variables, and the results are: 
+IV4 vs. IV1 (-0.51), IV4 vs. IV2 (-0.48), IV4 vs. IV3 (0.61) and IV4 vs. IV5 (0.73).</p>
+
+<p>I ran other logistic regressions <em>eliminating one at a time all the other variables</em> to look if one of them was responsible for the sign change, and I noticed that when eliminating IV1, the sign of V4 coefficient became positive.</p>
+
+<p>Thus, it seems that IV1 changes the sign of the coefficient of IV4. 
+Is there someone who knows what might be the cause and (possibly) the solution?</p>
+
+<p>Practically, do I have to eliminate the IV4 (or IV1) from the model and explain why?</p>
+
+<p>Thanks a lot for answering</p>
+
+<p>Leonardo Frazzoni, MD</p>
+"
+"0.0890870806374748","0.0894427190999916","164110","<p>I am running a logistic regression on a data set containing Continuous, Ordinal, Categorical and Dichotomic variables.</p>
+
+<p>I would like to know how to calculate the correlation for all possible combinations (see matrix below - cases marked with an X do not occur in my data set) in order to check for colinearity. I can do this either with SAS or R.</p>
+
+<hr>
+
+<pre><code>             Continuous    Ordinal    Categorical     Dichotomic
+Continuous        X           1             2              3
+Ordinal                       5             6              7
+Categorical                                 8              9
+Dichotomic                                                 X
+</code></pre>
+
+<p>Case 8 I use <code>proc freq data=data chisq ;</code> to return Cramer's V.</p>
+
+<p>As for the rest I am unsure - is it possible for cases 3, 7 and 9 to consider a dichotomic variable as categorical in two classes in order to compute Cramer's V?</p>
+"
+"0.125988157669742","0.126491106406735","173828","<p>I have a data set shown below, the 1st, 2nd,3rd column are dependent variable(dv), and 2 independent variables (iv1 &amp; iv2) respectively, I expected the regression coefficient of the ""iv1"" shows a positive value, as there is a positive correlation between dv and iv1. However, The result shows a negative regression coefficient for iv1 (beta_iv1 = -0.55), I am wondering why this happened, I appreciate if anyone can help.</p>
+
+<p>dv    iv1     iv2</p>
+
+<p>1     0.00    7.70<br>
+1     2.90    0.00<br>
+1     0.00    7.70<br>
+1     2.90    0.50<br>
+1     0.00    9.50<br>
+1     1.50    7.70<br>
+1     5.70    0.50<br>
+1     7.10    2.30<br>
+1     5.70    4.10<br>
+1     0.00    4.10<br>
+1     4.30    4.10<br>
+1     0.00    10.00<br>
+1     0.00    4.10<br>
+1     2.90    0.50<br>
+1     0.00    9.50<br>
+0     0.00    9.50<br>
+1     0.00    5.90<br>
+1     0.00    4.10<br>
+1     1.50    5.90<br>
+1     5.70    2.30<br>
+1     1.50    0.00<br>
+0     0.00    10.00<br>
+1     5.70    0.00<br>
+1     5.70    0.50<br>
+1     4.30    2.30<br>
+0     0.00    10.00<br>
+1     2.90    5.90<br>
+1     0.00    5.90<br>
+1     0.00    5.90<br>
+1     2.90    2.30<br>
+1     1.50    2.30<br>
+1     2.90    0.50<br>
+1     5.70    4.10<br>
+1     1.50    0.00<br>
+1     0.00    7.70  </p>
+
+<p>I run this using R with package ""logistf"" which overcomes separation problem of logistic regression. The code I run this data set is as below:</p>
+
+<blockquote>
+  <p>library(logistf);<br>
+      tempT=read.table(fileS);<br>
+     fit&lt;-logistf(dv ~ iv1+iv2, data=tempT);</p>
+</blockquote>
+
+<p>and the result shows below:  </p>
+
+<pre><code>           coef  se(coef) lower 0.95  upper 0.95     Chisq      p
+</code></pre>
+
+<blockquote>
+  <p>(Intercept)  9.0086382 5.1741382   1.650380 61.61244068 7.6897111 
+  0.005553652<br>
+  tempT[, 2]  -0.5509122 0.6567110  -6.013208  1.55280975 0.5490404 0.458710039<br>
+  tempT[, 3]  -0.9051062 0.5597601  -6.317335 -0.06328166 4.8315401 0.027943657</p>
+</blockquote>
+
+<p>Likelihood ratio test=7.213821 on 2 df, p=0.02713555, n=35</p>
+"
+"0.218217890235992","0.219089023002066","179751","<p>In generating a logistic regression model for a data set of c.8000 observations over c.40 variables (not including interactions) I am trying to figure the relations between the variables. Most variables are binary. 
+The purpose is to be able to combine different variables which explains the same variance in the data. 
+I have done some web-research of different possibilities but have found their contribution to the process somehow limited. Most of the 2x2 tests points out their is significantly no correlation between any of the pairs. The reason is, as I understand it, that the numbers are relatively big, for instance:</p>
+
+<p><a href=""http://i.stack.imgur.com/leP3C.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/leP3C.png"" alt=""enter image description here""></a></p>
+
+<p>It seems like their is some kind of correlation between both sets though due to the big data sets differences are significant. </p>
+
+<p>Is there any suggestion of how to capture even low value correlations between binary variables? or other ways to understand these relations? </p>
+
+<p>Many thanks.</p>
+"
+"0.585429387046263","0.574988908499946","191810","<h2>Study design</h2>
+
+<p>504 individuals were all sampled 2 times. Once before and once after a celebration.</p>
+
+<p>The goal is to investigate if this event (Celebration) as well as working with animals (sheepdog) have an influence on the probability that an individual gets infected by a parasite. (out of 1008 observations only 22 are found to be infected)</p>
+
+<p><strong>Variables</strong></p>
+
+<ul>
+<li>dependent variable = ""T_hydat"" (infected or not) </li>
+</ul>
+
+<p>(most predictiv variables are categorical) </p>
+
+<ul>
+<li>""Celebration"" (yes/no)</li>
+<li>""sex"" (m/f)</li>
+<li>""RelAge"" (5 levels)</li>
+<li>""SheepDog"" (yes/no)</li>
+<li>""Area"" (geographical area = 4 levels)</li>
+<li>""InfectionPeriodT_hydat"" (continuous --> Nr Days after deworming"")</li>
+<li>""Urbanisation (3 levels)</li>
+</ul>
+
+<h2>Question 1:</h2>
+
+<p>1) Should I include Individual-ID (""ID"") as a random Effekt as I sampled each Ind. 2 times? (Pseudoreplication?) </p>
+
+<pre><code>mod_fail &lt;- glmer( T_hydat ~ Celebration + Sex + RelAge + SheepDog + InfectionPeriodT_hydat + Urbanisation + (1|ID), family = binomial)
+
+Warnmeldungen:
+1: In (function (fn, par, lower = rep.int(-Inf, n), upper = rep.int(Inf,  :
+  failure to converge in 10000 evaluations
+2: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model failed to converge with max|grad| = 1.10808 (tol = 0.001, component 10)
+3: In checkConv(attr(opt, ""derivs""), opt$par, ctrl = control$checkConv,  :
+  Model is nearly unidentifiable: large eigenvalue ratio
+ - Rescale variables?
+</code></pre>
+
+<p>--> unfortunately this model fails to converge (is it a problem that ID = 504 levels with only 2 observations per level?) 
+Convergence is achieved with glmmPQL() but after droping some unsignficant preditiv variables the model fails to converge again ? What is the Problem here? Could geeglm() be a solution?</p>
+
+<p>In an other attempt I run the model only with ""Area"" (4 levels) as random effect (my expectation is that Ind. in the same geogr. Area are suffering from the same parasite pressure etc.) and received the follwoing p-Values. </p>
+
+<h2>My model in R:</h2>
+
+<pre><code>mod_converges &lt;- glmer( T_hydat ~ Celebration + Sex + RelAge + SheepDog + InfectionPeriodT_hydat + Urbanisation + (1|Area), family = binomial)
+</code></pre>
+
+<h2>mod_converges output:</h2>
+
+<p>summary(mod_converges)</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + sex + SheepDog + RelAge + Urbanisation +  
+    InfectionPeriodT_hydat + (1 | Area)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   203.0    262.0    -89.5    179.0      996 
+
+Scaled residuals: 
+   Min     1Q Median     3Q    Max 
+-0.461 -0.146 -0.088 -0.060 31.174 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ Area   (Intercept) 0.314    0.561   
+Number of obs: 1008, groups:  Area, 4
+
+Fixed effects:
+                       Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)            -6.81086    1.96027   -3.47  0.00051 ***
+Celebration1            1.36304    0.57049    2.39  0.01688 *  
+sexm                   -0.18064    0.49073   -0.37  0.71279    
+SheepDog1               2.02983    0.51232    3.96  7.4e-05 ***
+RelAge2                 0.34815    1.18557    0.29  0.76902    
+RelAge3                 0.86344    1.05729    0.82  0.41412    
+RelAge4                -0.54501    1.43815   -0.38  0.70471    
+RelAge5                 0.85741    1.25895    0.68  0.49584    
+UrbanisationU           0.17939    0.78669    0.23  0.81962    
+UrbanisationV           0.01237    0.59374    0.02  0.98338    
+InfectionPeriodT_hydat  0.00324    0.01159    0.28  0.77985    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<h2>glmmPQL-Model output below (added after the first reply by usÎµr11852)</h2>
+
+<p>This model converges with ""Sample_ID"" as a random effect, however, as statet by 
+<strong>usÎµr11852</strong> the varaince of the random effect is quiet high  4.095497^2 = 16.8. And the std.error of Area5 is far to high (complete separation).
+Can I just remove Datapoints from Area5 to overcome this Problem? </p>
+
+<pre><code>#     T_hydat
+#  Area   0   1
+#     1 226   4
+#     2 203   3
+#     4 389  15
+#     5 168   0  ## here is the problematic cell
+
+Linear mixed-effects model fit by maximum likelihood
+ Data: dat 
+  AIC BIC logLik
+   NA  NA     NA
+
+Random effects:
+ Formula: ~1 | Sample_ID
+        (Intercept)  Residual
+StdDev:    4.095497 0.1588054
+
+Variance function:
+ Structure: fixed weights
+ Formula: ~invwt 
+Fixed effects: T_hydat ~ Celebration + sex + SheepDog + YoungOld + Urbanisation +      InfectionPeriodT_hydat + Area 
+                            Value Std.Error  DF    t-value p-value
+(Intercept)            -20.271630     1.888 502 -10.735869  0.0000
+Celebration1             5.245428     0.285 502  18.381586  0.0000
+sexm                    -0.102451     0.877 495  -0.116865  0.9070
+SheepDog1                3.356856     0.879 495   3.817931  0.0002
+YoungOldyoung            0.694322     1.050 495   0.661017  0.5089
+UrbanisationU            0.660842     1.374 495   0.480990  0.6307
+UrbanisationV            0.494653     1.050 495   0.470915  0.6379
+InfectionPeriodT_hydat   0.059830     0.007 502   8.587736  0.0000
+Area2                   -1.187005     1.273 495  -0.932576  0.3515
+Area4                   -0.700612     0.973 495  -0.720133  0.4718
+Area5                  -23.436977 28791.059 495  -0.000814  0.9994
+ Correlation: 
+                       (Intr) Clbrt1 sexm   ShpDg1 YngOld UrbnsU UrbnsV InfPT_ Area2  Area4 
+Celebration1           -0.467                                                               
+sexm                   -0.355  0.018                                                        
+SheepDog1              -0.427  0.079  0.066                                                 
+YoungOldyoung          -0.483  0.017  0.134  0.045                                          
+UrbanisationU          -0.273  0.005 -0.058  0.317 -0.035                                   
+UrbanisationV          -0.393  0.001 -0.138  0.417 -0.087  0.586                            
+InfectionPeriodT_hydat -0.517  0.804  0.022  0.088  0.016  0.007  0.003                     
+Area2                  -0.044 -0.035 -0.044 -0.268 -0.070 -0.315 -0.232 -0.042              
+Area4                  -0.213 -0.116 -0.049 -0.186 -0.023 -0.119  0.031 -0.148  0.561       
+Area5                   0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.000
+
+Standardized Within-Group Residuals:
+          Min            Q1           Med            Q3           Max 
+-14.208465914  -0.093224405  -0.022551663  -0.004948562  14.733133744 
+
+Number of Observations: 1008
+Number of Groups: 504 
+</code></pre>
+
+<p><strong>Output from logistf (Firth's penalized-likelihood logistic regression)</strong></p>
+
+<pre><code>logistf(formula = T_hydat ~ Celebration + sex + SheepDog + YoungOld + 
+    Urbanisation + InfectionPeriodT_hydat + Area, data = dat, 
+    family = binomial)
+
+Model fitted by Penalized ML
+Confidence intervals and p-values by Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood Profile Likelihood 
+
+                               coef   se(coef)  lower 0.95  upper 0.95       Chisq
+(Intercept)            -5.252164846 1.52982941 -8.75175093 -2.24379091 12.84909207
+Celebration1            1.136833737 0.49697927  0.14999782  2.27716500  5.17197661
+sexm                   -0.200450540 0.44458464 -1.09803320  0.77892986  0.17662930
+SheepDog1               2.059166246 0.47197694  1.10933774  3.12225212 18.92002321
+YoungOldyoung           0.412641416 0.56705186 -0.66182554  1.77541644  0.50507269
+UrbanisationU           0.565030324 0.70697218 -0.98974390  1.97489240  0.56236485
+UrbanisationV           0.265401035 0.50810444 -0.75429596  1.33772658  0.25619218
+InfectionPeriodT_hydat -0.003590666 0.01071497 -0.02530179  0.02075254  0.09198425
+Area2                  -0.634761551 0.74958750 -2.27274031  0.90086554  0.66405078
+Area4                   0.359032194 0.57158464 -0.76903324  1.63297249  0.37094569
+Area5                  -2.456953373 1.44578029 -7.36654837 -0.13140806  4.37267766
+                                  p
+(Intercept)            3.376430e-04
+Celebration1           2.295408e-02
+sexm                   6.742861e-01
+SheepDog1              1.363144e-05
+YoungOldyoung          4.772797e-01
+UrbanisationU          4.533090e-01
+UrbanisationV          6.127483e-01
+InfectionPeriodT_hydat 7.616696e-01
+Area2                  4.151335e-01
+Area4                  5.424892e-01
+Area5                  3.651956e-02
+
+Likelihood ratio test=36.56853 on 10 df, p=6.718946e-05, n=1008
+Wald test = 32.34071 on 10 df, p = 0.0003512978
+</code></pre>
+
+<p>** glmer Model (Edited 28th Jan 2016)**</p>
+
+<p>Output from glmer2var: Mixed effect model with the 2 most ""important"" variables (""Celebration"" = the factor I am interested in and ""SheepDog"" which was found to have a significant influence on infection when data before and after the celebration were analysed separately.) The few number of positives make it impossible to fit a model with more than two explanatory variables (see commet EdM). </p>
+
+<p>There seems to be a strong effect of ""Celebration"" that probably cancels out the effect of ""SheepDog"" found in previous analysis.</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + SheepDog + (1 | Sample_ID)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   113.0    132.6    -52.5    105.0     1004 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5709 -0.0022 -0.0001  0.0000 10.3491 
+
+Random effects:
+ Groups    Name        Variance Std.Dev.
+ Sample_ID (Intercept) 377.1    19.42   
+Number of obs: 1008, groups:  Sample_ID, 504
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -19.896      4.525  -4.397  1.1e-05 ***
+Celebration1    7.626      2.932   2.601  0.00929 ** 
+SheepDog1       1.885      2.099   0.898  0.36919    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+            (Intr) Clbrt1
+Celebratin1 -0.908       
+SheepDog1   -0.297 -0.023
+</code></pre>
+
+<h2>Question 2:</h2>
+
+<p>2) Can I use drop1() to get the final model and use the p-Values from summary(mod_converges) for interpretation? Does my output tell me if it makes sense to include the random effect (""Area"") ?</p>
+
+<pre><code>Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: T_hydat ~ Celebration + SheepDog + (1 | Area)
+   Data: dat
+
+     AIC      BIC   logLik deviance df.resid 
+   190.8    210.4    -91.4    182.8     1004 
+
+Scaled residuals: 
+   Min     1Q Median     3Q    Max 
+-0.369 -0.135 -0.096 -0.071 17.438 
+
+Random effects:
+ Groups Name        Variance Std.Dev.
+ Area   (Intercept) 0.359    0.599   
+Number of obs: 1008, groups:  Area, 4
+
+Fixed effects:
+             Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)    -5.912      0.698   -8.47  &lt; 2e-16 ***
+Celebration1    1.287      0.512    2.51    0.012 *  
+SheepDog1       2.014      0.484    4.16  3.2e-05 ***
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Correlation of Fixed Effects:
+            (Intr) Clbrt1
+Celebratin1 -0.580       
+SheepDog1   -0.504  0.027
+</code></pre>
+
+<p>I know there are quite a few questions but I would really appreciate some advice from experienced people. Thanks!</p>
+"
+"0.17817416127495","0.178885438199983","194867","<p>At several time points, I sample different individuals from a population (say 60 ind/time point). I assign to each of them one category (either low &lt; middle &lt; high). I then want to model this ordinal dependent variables using several covariates including time (to evaluates temporal changes in proportions/probabilities). </p>
+
+<p>If I had only one time point, I would use ordered logistic regression in R with polyR, vglm... But these time series, I fear to have residual autocorrelation. Can I easily check residual autocorrelation with these models? Should I include the lagged dependent variable as a covariate to remove it? What are the different alternatives to analyse this kind of data in R?</p>
+
+<p>For the moment, I analysed separately each of the categorical variable level with binomial regression and the lagged dependent variable as one of the covariates but hope to find a better solution.</p>
+"
+"0.220479275922049","0.25298221281347","204145","<p><strong>Background and Problem</strong></p>
+
+<p>I have a question concerning a meta-analysis combining effects from between- and within-subject designs using log-odds ratios (OR) as the metric of interest. I am familiar with conducting meta-analyses and will be undertaking my calculations in R (using the <code>metafor</code> and <code>lme4</code> packages). To provide greater context, the studies in question ask research subjects to make a binary decision with respect to a personal preference across one of two conditions. In some cases, each participant is assigned to a single condition (making only a single binary response); in others, each subject takes part in both conditions (making two binary responses). For now, presume I have the raw data in all cases. The issue I face is how best to calculate an OR that is comparable across design and whether I should take the correlation between conditions into account for the within-subject designs.</p>
+
+<p><strong>My Current Approach</strong></p>
+
+<p>I presently use logistic regression to estimate the OR for between-subject designs. The slope represents the OR and the sampling variance can be calculated by squaring the SE of the slope coefficient. Using this approach produces estimates comparable to equations reported in common texts such The Handbook of Research Synthesis and Meta-Analysis, 2nd Edition (p. 243). I then extend this approach to use a multilevel logistic regression model including a random intercept by subject to estimate the OR for within-subject designs while account for the dependency between conditions. The OR and sampling variance are otherwise calculated in the same fashion. </p>
+
+<p><strong>My Questions:</strong></p>
+
+<p>With this in mind, I would like to ask:</p>
+
+<ol>
+<li>Is it reasonable to meta-analytically aggregate OR calculated using standard and multilevel logistic regression?</li>
+<li>Would it be better to use standard logistic regression for both designs (ignoring the correlation between conditions for the within-subject designs)?</li>
+</ol>
+"
+"0.199204768222399","0.2","206039","<p>I am looking at a logistic regression model for predicting hospital acquired infection likelihood (HAI) from predictors of whether germs are found on the  x number of patients (Patient), x number of environmental spots (Env), x number of air samples (Air) or x number of nurses' hands (Hand).</p>
+
+<pre><code>   Month Patient Env Air Hand HAI HAIcat BedOccupancy
+      1       4   0   0    1   1    yes            9
+      2       2   0   2    0   0     no            9
+      3       2   1   0    1   0     no            5
+      4       1   2   0    2   2    yes            7
+      5       2   3   0    1   1    yes            6
+      6       1   2   0    0   1    yes            5
+      7       4   0   0    2   1    yes            7
+      8       2   0   0    1   3    yes            7
+      9       3   2   2    0   1    yes            8
+     10       3   0   0    1   1    yes            8
+</code></pre>
+
+<p>For example for Month 1, the percentage of HAI would be HAI/BedOccupancy=1/9.
+So I'd like to know if bed occupancy or other contamination is significant in predicting HAI. I run a Logistic regression, but it says it's junk. What does a statistician do now?</p>
+
+<pre><code>model&lt;-glm(cbind(MR$HAI,MR$BedOccupancy)~MR$Patient+MR$Env+MR$Air+MR$Hand,family = ""binomial"")
+</code></pre>
+
+<p>But I get a bad fit and non-significant correlation:</p>
+
+<pre><code>Call:
+glm(formula = cbind(MR$HAI, MR$BedOccupancy) ~ MR$Patient + MR$Env + MR$Air + 
+        MR$Hand, family = ""binomial"")
+
+Deviance Residuals: 
+       1         2         3         4         5         6         7         8         9        10  
+-0.12882  -1.08046  -1.33787   0.01400  -0.10685  -0.02229  -0.04008   1.03688   0.75723  -0.23824  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -1.30758    1.34049  -0.975    0.329
+MR$Patient  -0.22920    0.39350  -0.582    0.560
+    MR$Env      -0.02415    0.37672  -0.064    0.949
+MR$Air      -0.46851    0.64611  -0.725    0.468
+    MR$Hand      0.16054    0.58277   0.275    0.783
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 6.6594  on 9  degrees of freedom
+Residual deviance: 4.6929  on 5  degrees of freedom
+AIC: 30.911
+
+Number of Fisher Scoring iterations: 5
+</code></pre>
+"
+"0.235702260395516","0.236643191323985","215532","<p>I am a clinicians (limited statistical knowledge) who is trying to use mlogit pkg in R to analyze a clinical dataset, running logistic regression on it. I am trying to ascertain if there is any correlation seen in patients with many vars and heart block (var = block (0s and 1s))</p>
+
+<p>I have a dataset with these variables</p>
+
+<pre><code> [1] ""Age""                    ""Sex""                    ""Race""                       ""Obesity""               
+ [5] ""CAD""                    ""HTN""                    ""DM""                     ""HLD""                   
+ [9] ""CHF""                    ""COPD""                   ""Asthma""                 ""Thyroid.disorder""      
+[13] ""Smoking""                ""Illicit.drug.use""       ""Alcohol""                ""INR""                   
+[17] ""TB""                     ""AST""                    ""ALT""                    ""Cirrhosis""             
+[21] ""Adenosine""              ""Amiodarone""             ""Beta.blocker""           ""CCB""                   
+[25] ""Digoxin""                ""TCA""                    ""SSRI""                   ""Antipsychotic""         
+[29] ""AV.block""               ""Bundle.branch.block""    ""PAC.PVC""                ""Afib""                  
+[33] ""Other.Arrythmia""        ""Nonspecific.ST.wave""    ""Anterioseptal..ST.wave"" ""Anteriolateral.ST.wave""
+[37] ""Inferior.ST.wave""       ""Posterior.ST.wave""      ""Axis.deviation""         ""Low.voltage""           
+[41] ""Qt.prolongation""        ""Hypertrophy""            ""block""
+</code></pre>
+
+<p>Now I have used the mlogit pkg in R</p>
+
+<p>My Code is</p>
+
+<pre><code># Reshaping data
+mydata &lt;- mlogit.data(data=mydata, shape=""wide"", choice=""block"")
+
+# Creating Model with all Vars
+model &lt;- mlogit(data=mydata, formula=block~0|Age+Sex+Race+Obesity+CAD+HTN+DM+HLD+CHF+COPD+Asthma+Thyroid.disorder+Smoking+Illicit.drug.use+Beta.blocker+CCB+Digoxin+TCA+SSRI+Antipsychotic+Hypertrophy+INR+TB+AST+ALT)
+</code></pre>
+
+<p>Generates this error :</p>
+
+<pre><code> Error in solve.default(H, g[!fixed]) : 
+ Lapack routine dgesv: system is exactly singular: U[43,43] = 0
+</code></pre>
+
+<p>Now if I break the variables into different variables like..</p>
+
+<pre><code>model1 &lt;- mlogit(data=mydata, formula=block~0|Age+Sex+Race+Obesity+CAD+HTN+DM+HLD+CHF+COPD+Asthma+Thyroid.disorder+Smoking)
+model2 &lt;- mlogit(data=mydata, formula=block~0|Illicit.drug.use+Beta.blocker+CCB+Digoxin+TCA+SSRI+Antipsychotic+Hypertrophy)
+model3 &lt;- mlogit(data=mydata, formula=block~0|INR+TB+AST+ALT)
+</code></pre>
+
+<p>IT WORKS without any errors.</p>
+
+<p>But here I would like to know,
+how breaking into different models would change my Coefficients?
+What should I do to avoid the error and try to incorporate all variables in one model?
+How should I interpret my results if break into 3 different models as opposed to one?</p>
+
+<p>Any help is highly appreciated.</p>
+"
+"0.345032779671177","0.346410161513775","220001","<p>I'm trying to model a logistic regression in R between two simple variables:</p>
+
+<ul>
+<li>Rating: An independent ordered categorical one, ranging from 1 to 99 (1, 2, 3, 4, 5, 99 in particular, 1 is the best)</li>
+<li>Result: A dependent binary variable (0-1, not accepted/accepted)</li>
+</ul>
+
+<p>The formula I use is </p>
+
+<pre><code>glm(formula = result_dummy ~ best_rating, family = binomial(link = ""logit""), 
+    data = cd[1:10000, ])
+</code></pre>
+
+<p>result_dummy is a 0/1 numerical variable (original result column was a factor) and scaled_rating is the rating column after use the R <code>scale</code> function.</p>
+
+<p>My thought here was to find a negative correlation (low rating -> more probability to accept) but the more samples I use the more odd results I find:</p>
+
+<pre><code>10 samples:
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)     0.6484     0.7413   0.875    0.382
+scaled_rating  -5.9403     5.8179  -1.021    0.307
+</code></pre>
+
+<hr>
+
+<pre><code>100 samples:
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)   -0.09593    0.27492  -0.349  0.72714   
+scaled_rating -5.06251    1.76645  -2.866  0.00416 **
+</code></pre>
+
+<hr>
+
+<pre><code>1000 samples:
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)   -0.03539    0.09335  -0.379    0.705    
+scaled_rating -6.81964    0.62003 -10.999   &lt;2e-16 ***
+</code></pre>
+
+<hr>
+
+<pre><code>10000 samples:
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     0.2489     0.0291   8.553   &lt;2e-16 ***
+scaled_rating  -7.2319     0.2004 -36.094   &lt;2e-16 ***
+</code></pre>
+
+<hr>
+
+<p>Notes:
+I know that after the fit I should check residual plot, normality assumptions, etc. etc. but nonetheless I find really strange this behaviour.</p>
+
+<p>I also have similar results using simply the rating column instead of the scaled one.</p>
+
+<p>Edit:
+The <code>rating</code> variable is not really an ordinal one, so as pointed out by @Scortchi maybe it would be better to treat it as a categorical one.
+I have surely better results and model stability, obviously the model is a simple one and the residual error would be always high (because some variables as not been included in the model).
+Indeed, including the frequency table as requested shows that the rating variable IS NOT sufficient for having a clear separation between the result outcome.</p>
+
+<pre><code>          0      1
+  1    2881  42564
+  2   13878 129292
+  3   36839 179500
+  4   43511  97148
+  5   37330  47002
+  6   31801  21228
+  7   19096   6034
+  99  10008      3
+</code></pre>
+"
+"0.308606699924184","0.309838667696593","225283","<p>Iâ€™m analyzing crowdsourced Twitter data, where workers labeled tweets. Within my dataset (N=2,400), I have one IV (call it â€˜dsâ€™) with 2 levels that differentiates which dataset the workers labeled. I have four factors of interest (what workers labeled) -- these are my DVs (let's call them f1, f2, f3, f4). Three of those factors are binomial &lt;0,1>, and one multinomial &lt;0, 1, 2>. Even though the latter can be treated as ordinal, I'm working under the assumption it is nominal. Finally, my datasets are of unequal lengths.</p>
+
+<p>My goal is to analyze the relationship between each of the labeled factors for each level of the IV. More specifically, <strong>I want to tease out the different contributions of each of those factors on each dataset quantitatively, i.e., show amount of variance explained</strong> (e.g., ds1 influenced f1 more than f2, while the inverse for ds2). The end game is to model each factor into a scoring function, which allows me to compute a unified score. Hence, I need to back up the parameter weights for this function.</p>
+
+<p>A snippet of my data frame looks like this:</p>
+
+<pre><code>   f1 f2 f3 f4 ds
+1   1  0  1  0  1
+2   0  0  0  2  1
+3   0  0  1  1  2
+4   1  1  0  2  2
+</code></pre>
+
+<p>What I initially did was to compute correlations between each factor, and used the strengths of those correlations to back up my scoring function. However, given the many posts and tutorials I've been reading, it seems I need to make use of a mix of logistic and multinomial regression. What I have done so far is run binomial logit (using ?glm with class â€˜binomial') on the first 3 factors, and multinomial regression (using ?nnet) on f4. However, it seems I can only assess one outcome variable at a time.</p>
+
+<p>For f1-f3, I have run the following R code:</p>
+
+<pre><code>fit &lt;- glm(f1 ~ ds, data = xx, family = ""binomial"")
+summary(fit)
+confint.default(fit)
+wald.test(b = coef(fit), Sigma = vcov(fit), Terms = 2)
+</code></pre>
+
+<p>For f4:</p>
+
+<pre><code>fit &lt;- multinom(f4 ~ ds, data = xx)
+summary(fit)
+z &lt;- summary(fit)$coefficients/summary(fit)$standard.errors
+p &lt;- (1 - pnorm(abs(z), 0, 1))*2
+</code></pre>
+
+<p>My questions:</p>
+
+<p><strong>1.</strong> Is running such logistic regression analyses appropriate for what I want to do, namely to tease out contributions of each factor? If so, is it meaningful to compare the coefficients of each factor with the other, when computed separately? Or is simply showing a correlation matrix sufficient in my case?</p>
+
+<p><strong>2.</strong> Are there alternative techniques to assess all outcome variables/DVs at once, with respect to each level of my IV? If so, could you please provide me with some pointers (ideally for R)? I'm now looking into hierarchical multinomial marginal (HMM) models... </p>
+
+<p>If something is unclear above, Iâ€™d be happy to clarify.</p>
+"
+"NaN","NaN","225645","<p>I am trying to perform a logistic regression with the following code </p>
+
+<blockquote>
+  <p><code>Y ~ x1+x2+x3,data=data, family=binomial(link=""logit"")</code>. </p>
+</blockquote>
+
+<p>However on inspection of both the outcome and predictors i noticed that they are characterized by spatial auto-correlation. My question is, how do I account for the spatial auto-correlation, to get better coefficients? </p>
+"
+"0.295468420142639","0.296647939483827","229598","<p>This isn't a problem with correlation between predictors - I have two models, each considers only one of the variables. That is the only difference between the models.  </p>
+
+<p>I'm estimating the probability of an diagnosis given some confounders and a measure of monthly temperature. I have two possible temperature definitions I'm considering: monthly average temperature and monthly average <em>high</em> temperature. I don't expect the response to temperature to be linear, so I broke average temperature into 5 degree bins with bottom and top coding at &lt; 40 and > 90. I did the same with average high temperature but shifted the bins slightly with bottom and top coding &lt; 50 and > 100. </p>
+
+<p>I estimate the first logistic model </p>
+
+<pre><code>event ~ age + sex + ... + mean_temp_group
+</code></pre>
+
+<p>and get the response I'd expect from my theorized process. However, I'd prefer to report the results using mean high temperature since average temperature is misleadingly low (average temp of 70, for instance, is pretty warm with highs in the 80s but people think ""70 degrees? That's wonderful!""). So I estimate the same model but instead replace <code>mean_temp_group</code> with <code>mean_high_group</code>:</p>
+
+<pre><code>event ~ age + sex + ... + mean_high_group
+</code></pre>
+
+<p>and the results don't match either my theory or what I saw with <code>mean_temp_group</code>. </p>
+
+<p>That seems weird given how similar the two variables are. The average and average high variables have a correlation coefficient of 0.9939. In essence the average high is the average plus a constant (on average, 9.4 degrees with a standard deviation of 2.1). </p>
+
+<p>At first I assumed this was a problem with the code, so I re-pulled the data (still have the same problem and the data extraction seems to be accurate). I also took the model with <code>mean_temp_group</code> and edited the formula in place to read <code>mean_high_group</code> lest I omitted/included a different variable between the models (I didn't). </p>
+
+<p>I assume it has something to do with the binning or something along those lines - any ideas? I'm very confused by two variables that basically appear to be an additive shift of each other giving very different results. </p>
+"
+"0.154303349962092","0.154919333848297","229702","<p>In a follow up to one of the business problem i have discussed here,<br>
+for one of the logistic regression model, i have 19 predictor variables of     which around 8 are categorical with multiple categories.   </p>
+
+<p>Instead of including all in the model where one could correlate to another,<br>
+i am thinking of using a chi square test of independence at a given p value.<br>
+With this i would come to realization if there is any correlation among the     categorical predictors.  </p>
+
+<p>If so i would include the correlated variables one by one in the model<br>
+and would used the significant one.<br>
+I have researched on this on SE where they have suggested to use chi-<br>
+square but unsure if my approach to drop these correlated var is justified.<br>
+Please advice. </p>
+"
+"0.199204768222399","0.2","229884","<p>I have a cancer classification problem (type A vs type B) on radiological images from which i have generated 756 texture-based predictive features (wavelet transform followed by texture analysis, i.e., features described by Haralick, Amasadun etc) and 8 semantic features based on subjective assessment by expert radiologist. This is entirely for research and publication to show that these predictive features may be useful in this particular problem. I do not intend to deploy the model for practitioners. </p>
+
+<p>I have 107 cases. 60% cases are type A and 40% type B (in keeping with their natural proportions in population). I have done several iterations of model development with varying results. One particular method is giving me an 80% 80% classification accuracy but I am suspicious that my method is not going to stand critical analysis. I am going to outline my method and a few alternatives. I will be grateful if someone can pick if it is flawed. I have used R for this:</p>
+
+<p>Step 1: Split into 71 training and 36 test cases.<br>
+Step 2: remove correlated features from training dataset (766 -> 240) using findcorrelation function in R (caret package)<br>
+Step 3: rank training data features using Gini index (Corelearn package)<br>
+Step 4: Train multivariate logistic regression models on top 10 ranked features using subsets of sizes 3 , 4, 5 ,and 6 in all possible combination (<sup>10</sup>C<sub>3</sub>=252, <sup>10</sup>C<sub>4</sub>=504, <sup>10</sup>C<sub>5</sub>=630). So <strong>total 1386 multivariate logistic regression models were trained</strong> using 10-fold cross-validation and tested on test dataset.<br>
+Step 5: Of these I selected a model which gave the best combination of training and test dataset accuracy, i.e., 3 feature model with 80% 80% accuracy.<p></p>
+
+<p>Somehow running 1300 permutations seems quite dodgy to me and seems to have introduced some false discovery. Just want to confirm if this is a valid ML technique or whether I should skip step 4 and only train on top 5 ranked features without running and permutations.</p>
+
+<p>Thanks. <p> PS I experiemented a bit with naive bayes and random forests but get rubbish test set accuracy so dropped them</p>
+
+<p>====================</p>
+
+<h1>UPDATE</h1>
+
+<p>Following discussion with SO members, i have changed the model drastically and thus moved more recent questions regarding model optimisation into a new post <a href=""http://stats.stackexchange.com/questions/232829/lasso-regularised-classification-highly-variable-choice-of-lambda-min-on-repeate"">LASSO regularised classification highly variable choice of lambda.min on repeated cv</a></p>
+"
+"0.471685035258458","0.489897948556636","231872","<p>For a better understanding of how r is conducting a logistic regression I created the following test-data (the two predictors and the criterion are binary variables):</p>
+
+<pre><code>   UV1 UV2 AV
+1    1   1  1
+2    1   1  1
+3    1   1  1
+4    1   1  1
+5    1   1  1
+6    1   1  1
+7    1   1  1
+8    0   0  1
+9    0   0  1
+10   0   0  1
+11   1   1  0
+12   1   1  0
+13   1   0  0
+14   1   0  0
+15   1   0  0
+16   1   0  0
+17   1   0  0
+18   0   0  0
+19   0   0  0
+20   0   0  0
+</code></pre>
+
+<p>AV = dependent variable/criterion</p>
+
+<p>UV1 / UV2 = both independant variables/predictors</p>
+
+<p>For measuring the UVs effect on the AV a logistic regression is necessary, as the AV is a binary variable. Hence i used the following code</p>
+
+<pre><code>&gt; lrmodel &lt;- glm(AV ~ UV1 + UV2, data = lrdata, family = ""binomial"")
+</code></pre>
+
+<p>including <strong>""family = ""binomial""""</strong>. Is this correct ( I think so :-))?</p>
+
+<p>Regarding my test-data, I was wondering about the whole model, especially
+the estimators and sigificance:</p>
+
+<pre><code>&gt; summary(lrmodel)
+
+
+Call:
+glm(formula = AV ~ UV1 + UV2, family = ""binomial"", data = lrdata)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-1.7344  -0.2944   0.3544   0.7090   1.1774  
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept) -4.065e-15  8.165e-01   0.000    1.000
+UV1         -1.857e+01  2.917e+03  -0.006    0.995
+UV2          1.982e+01  2.917e+03   0.007    0.995
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 27.726  on 19  degrees of freedom
+Residual deviance: 17.852  on 17  degrees of freedom
+AIC: 23.852
+
+Number of Fisher Scoring iterations: 17
+</code></pre>
+
+<ol>
+<li><p>Why is UV2 not significant. See therefore that for group AV = 1 there are 7 cases with UV2 = 1, and for group AV = 0 there are only 3 cases with UV2 = 1. 
+I was expecting that UV2 is a significant discriminator.</p></li>
+<li><p>Despite the not-significance of the UVs, the estimators are - in my opinion- very high (e.g. for UV2 = 1.982e+01). How is this possible?</p></li>
+<li><p>Why isn't the intercept 0,5?? We have 5 cases with AV = 1 and 5 cases with AV = 0.</p></li>
+</ol>
+
+<p>Further: I created UV1 as a predictor I expected not to be significant:  for group AV = 1 there are 5 cases withe UV1 = 1, and for group AV = 0 there are 5 cases withe UV1 = 1 as well.</p>
+
+<p>The whole ""picture"" I gained from the logistic is confusing me...</p>
+
+<p>What was consuming me more:
+When I run a ""NOT-logistic"" regression (by omitting <strong>""family = ""binomial""</strong>)</p>
+
+<pre><code>&gt; lrmodel &lt;- glm(AV ~ UV1 + UV2, data = lrdata,)
+</code></pre>
+
+<p>I get the expected results</p>
+
+<pre><code>Call:
+glm(formula = AV ~ UV1 + UV2, data = lrdata)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7778  -0.1250   0.1111   0.2222   0.5000  
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)   0.5000     0.1731   2.889  0.01020 * 
+UV1          -0.5000     0.2567  -1.948  0.06816 . 
+UV2           0.7778     0.2365   3.289  0.00433 **
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for gaussian family taken to be 0.1797386)
+
+    Null deviance: 5.0000  on 19  degrees of freedom
+Residual deviance: 3.0556  on 17  degrees of freedom
+AIC: 27.182
+
+Number of Fisher Scoring iterations: 2
+</code></pre>
+
+<ol>
+<li>UV1 is not significant! :-)</li>
+<li>UV2 has an positive effect on AV = 1! :-)</li>
+<li>The intercept is 0.5! :-)</li>
+</ol>
+
+<p>My overall question: Why isn't logistic regression (including ""family = ""binomial"") producing results as expected, but a ""NOT-logistic"" regression (not including ""family = ""binomial"") does?</p>
+
+<p>Update:
+are the observations described above because of the correlation of UV1 and UV 2. Corr = 0.56
+After manipulating the UV2's data </p>
+
+<p>AV: 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0</p>
+
+<p>UV1: 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0</p>
+
+<p>UV2: <strong>0, 0, 0,</strong> 1, 1, 1, 1, <strong>1, 1, 1</strong>, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0</p>
+
+<p>(I changed the positions of the three 0s with the three 1s in UV2 to gain a correlation &lt; 0.1 between UV1 and UV2) hence:</p>
+
+<pre><code>UV1 UV2 AV
+1    1   0  1
+2    1   0  1
+3    1   0  1
+4    1   1  1
+5    1   1  1
+6    1   1  1
+7    1   1  1
+8    0   1  1
+9    0   1  1
+10   0   1  1
+11   1   1  0
+12   1   1  0
+13   1   0  0
+14   1   0  0
+15   1   0  0
+16   1   0  0
+17   1   0  0
+18   0   0  0
+19   0   0  0
+20   0   0  0
+</code></pre>
+
+<p>to avoid correlation, my results come closer to my expectations:</p>
+
+<pre><code>Call:
+glm(formula = AV ~ UV1 + UV2, family = ""binomial"", data = lrdata)
+
+Deviance Residuals: 
+     Min        1Q    Median        3Q       Max  
+-1.76465  -0.81583  -0.03095   0.74994   1.58873  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)  -1.1248     1.0862  -1.036   0.3004  
+UV1           0.1955     1.1393   0.172   0.8637  
+UV2           2.2495     1.0566   2.129   0.0333 *
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 27.726  on 19  degrees of freedom
+Residual deviance: 22.396  on 17  degrees of freedom
+AIC: 28.396
+
+Number of Fisher Scoring iterations: 4
+</code></pre>
+
+<p>But why does the correlation influence the results of the logistic regression and not the results of the ""not-logistic"" regression? </p>
+"

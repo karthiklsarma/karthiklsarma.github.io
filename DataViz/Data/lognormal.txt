@@ -1,0 +1,1 @@
+lognormal=21distributions=13bayesian=3regression=3data-visualization=3correlation=2mean=2weibull=2nlme=1simulation=1probability=1anova=1glmer=1qq-plot=1estimation=1quantiles=1median=1glmm=1function=1aic=1dataset=1

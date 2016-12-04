@@ -1,0 +1,8 @@
+prediction=2
+bernoulli-distribution=2
+distributions=2
+bayesian=1
+lme4=1
+regression=1
+poisson=1
+binomial=1

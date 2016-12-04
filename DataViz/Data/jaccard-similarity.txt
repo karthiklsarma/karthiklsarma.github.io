@@ -1,0 +1,5 @@
+jaccard-similarity=3
+clustering=3
+mathematical-statistics=1
+matrix=1
+permutation=1

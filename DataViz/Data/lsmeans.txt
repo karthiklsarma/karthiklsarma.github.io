@@ -1,0 +1,16 @@
+lsmeans=22
+lmer=12
+lme4=8
+repeated-measures=8
+anova=4
+glmm=3
+regression=3
+nlme=2
+glmer=2
+logistic=2
+tukey-hsd=2
+time-series=1
+statistical-significance=1
+estimation=1
+ggplot2=1
+permutation=1

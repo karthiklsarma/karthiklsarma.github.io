@@ -1,0 +1,2586 @@
+"V1","V2","V3","V4"
+"0.134030115482631","0.151329981691595"," 10110","<p>100 periods have been collected from a 3 dimensional periodic signal. The wavelength slightly varies. The noise of the wavelength follows Gaussian distribution with zero mean. A good estimate of the wavelength is known, that is not an issue here. The noise of the amplitude may not be Gaussian and may be contaminated with outliers.</p>
+
+<p><strong>How can I compute a single period that approximates 'best' all of the collected 100 periods?</strong></p>
+
+<p>I have no idea how time-series models work. Are they prepared for varying wavelengths? Can they handle non-smooth true signals? If a time-series model is fitted, can I compute a 'best estimate' for a single period? How?</p>
+
+<p>A related question is <a href=""http://stackoverflow.com/q/2572444/341970"">this</a>. Speed is not an issue in my case. Processing is done off-line, after all periods have been collected.</p>
+
+<p><strong>Origin of the problem:</strong> I am measuring acceleration during human steps at 200 Hz. After that I am trying to double integrate the data to get the vertical displacement of the center of gravity. Of course the noise introduces a HUGE error when you integrate twice. I would like to exploit periodicity to reduce this noise. Here is a crude graph of the actual data (y: acceleration in g, x: time in second) of 6 steps corresponding to 3 periods (1 left and 1 right step is a period):
+<img src=""http://i.stack.imgur.com/44q8d.png"" alt=""Human steps""></p>
+
+<p>My interest is now purely theoretical, as <a href=""http://jap.physiology.org/content/39/1/174.abstract"" rel=""nofollow"">http://jap.physiology.org/content/39/1/174.abstract</a> gives a pretty good recipe what to do. It does not address periodicity.</p>
+
+<p><strong>Note:</strong> I have asked <a href=""http://stackoverflow.com/q/5702974/341970"">this question on stackoverflow</a> but it seems to be off-topic there.</p>
+"
+"0.116073484880121","0.131055608499156"," 13252","<p>When I'm dealing with time-series data I'm generally thinking about visualizing that data with a bar graph (small n) or a line plot (large n). For example, I might create something like the below:</p>
+
+<p><img src=""http://i.stack.imgur.com/au0Li.png"" alt=""enter image description here""></p>
+
+<p>However, is there any instance in which a dot plot can be used to visualize time-series data? ( a clevland dot-plot is what I mean, with dates on y-axis and values on the x-axis)</p>
+
+<p>Here's the data and code I used for the previous graph.</p>
+
+<pre><code>conv = c(10, 4.76, 17.14, 25, 26.47, 37.5, 20.83, 25.53, 32.5, 16.7, 27.33)
+click = c(20, 42, 35, 28, 34, 48, 48, 47, 40, 30, 30)
+
+dat &lt;- data.frame(date=c(""July 7"", ""July 8"", ""July 9"", ""July 10"", ""July 11"", ""July 12"", ""July 13"",
+                  ""July 14"", ""July 15"", ""July 16"", ""July 17""), click=c(click), conv=c(conv),
+                  stringsAsFactors = FALSE)
+
+dat
+
+ggplot(dat, aes(as.character(date), conv)) +  geom_bar(fill=""#336699"", colour=""black"") + ylim(c(0,50)) +
+        opts(title=""Conversion Rate"") +
+        opts(axis.text.y=theme_text(family=""sans"", face=""bold"", size=10)) +
+        opts(axis.text.x=theme_text(family=""sans"", face=""bold"", size=8)) +
+        opts(plot.title = theme_text(size=15, face=""bold"")) +
+        xlab("""") + ylab("""")
+</code></pre>
+
+<p>EDIT:</p>
+
+<p>My question may not have been clear. I'm NOT asking how to generate a cleveland dot plot. I'm asking whether it's all right to use a cleveland dot plot to visualize time series data. According to the 'statistical visualization rulebook', are cleveland dot plots a good way to represent time series data?</p>
+"
+"0.189547207081969","0.178344093751605"," 13984","<p>I would like to combine the forecasted and backcasted (viz. the predicted past values) of a  time-series data set into one time-series by minimizing the Mean Squared Prediction Error.</p>
+
+<p>Say I have time series from 2001-2010 with a gap for the year 2007. I have been able to forecast 2007 using the 2001-2007 data (red line - called it $Y_f$) and to backcast using the 2008-2009 data (light blue line - call it $Y_b$).</p>
+
+<p>I would like to combine the data points of $Y_f$ and $Y_b$ into a imputed data point Y_i for each month. Ideally I would like to obtain the weight $w$ such that it minimizes the Mean Squared Prediction Error (MSPE) of $Y_i$. If this is not possible, how would I just find the average between the two time-series' data points?</p>
+
+<p>$$Y_i = w\cdot Y_f + (1-w)\cdot Y_b$$</p>
+
+<p>As a quick example:</p>
+
+<pre><code>tt_f &lt;- ts(1:12, start = 2007, freq = 12)
+tt_b &lt;- ts(10:21, start=2007, freq=12)
+
+tt_f
+     Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+2007   1   2   3   4   5   6   7   8   9  10  11  12
+tt_b
+     Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+2007  10  11  12  13  14  15  16  17  18  19  20  21
+</code></pre>
+
+<p>I would like to get (just showing the averaging... Ideally minimizing the MSPE)</p>
+
+<pre><code>tt_i
+     Jan Feb Mar Apr May Jun  Jul  Aug  Sep  Oct  Nov  Dec
+2007 5.5 6.5 7.5 8.5 9.5 10.5 11.5 12.5 13.5 14.5 15.5 16.5
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/VscVU.jpg"" alt=""enter image description here""></p>
+"
+"0.218870262065833","0.247120825286086"," 19103","<p>I have two time series, shown in the plot below:</p>
+
+<p><img src=""http://i.stack.imgur.com/w398k.png"" alt=""Time Series Plot""></p>
+
+<p>The plot is showing the full detail of both time series, but I can easily reduce it to just the coincident observations if needed.</p>
+
+<p>My question is: <strong>What statistical methods can I use to assess the differences between the time series?</strong></p>
+
+<p>I know this is a fairly broad and vague question, but I can't seem to find much introductory material on this anywhere. As I can see it, there are two distinct things to assess:</p>
+
+<p><strong>1. Are the values the same?</strong></p>
+
+<p><strong>2. Are the trends the same?</strong></p>
+
+<p>What sort of statistical tests would you suggest looking at to assess these questions? For question 1 I can obviously assess the means of the different datasets and look for significant differences in distributions, but is there a way of doing this that takes into account the time-series nature of the data?</p>
+
+<p>For question 2 - is there something like the Mann-Kendall tests that looks for the similarity between two trends? I could do the Mann-Kendall test for both datasets and compare, but I don't know if that is a valid way to do things, or whether there is a better way?</p>
+
+<p>I'm doing all of this in R, so if tests you suggest have a R package then please let me know.</p>
+"
+"0.0773823232534137","0.0873704056661038"," 23746","<p>I have forecasts and actuals for panel data (i.e. time-series cross-sectional data). The forecasts are already generated and provided by some source outside of R. I'd like to evaluate the quality of the forecasts.</p>
+
+<p>Are there standard tools in R that perform various diagnostics on the residuals? By diagnostics I mean tests such as: </p>
+
+<ul>
+<li>auto-correlation of residuals across the cross-section</li>
+<li>auto-correlation of residuals along the time series for a given member</li>
+<li>tests for fixed effects vs. random effects</li>
+<li>heteroskedasticity, etc.</li>
+</ul>
+
+<p>Or is the best way to perform these diagnostics to perhaps build a panel model using the forecast as the predictor in the panel model?</p>
+"
+"0.309529293013655","0.327639021247889"," 31374","<p>Motivation: I was hired as an intern a few weeks ago to figure out if my company needed to buy new machines six months in advance. Database machines take up to 4 months to install and there is a 2 month grace period.</p>
+
+<p>I signed an NDA, so I don't think I can give any actual data.</p>
+
+<p>The only reliable information I have now, is information on the number of logins and registrations for an education company from 2002 to 2011. I think I can get more recent information on registrations, and people are working on getting login information. We stopped logging login information in 2011 so there will be a gap of no data when I try to forecast :(</p>
+
+<p>The information is collected daily.</p>
+
+<p>I've created a time series forecast of the data using R. I used this tutorial
+<a href=""http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html#arima-models"" rel=""nofollow"">http://a-little-book-of-r-for-time-series.readthedocs.org/en/latest/src/timeseries.html#arima-models</a> To make a holt winters exponential model with daily frequency (frequency = 365). I've removed February 29 from the data. Unfortunately the gap in login data means I will have to try a more specific ARIMA right? Will I be able to use arima if there are long gaps in the data? Also, the arima function in R doesn't allow for frequencies greater than 350, and it runs out of memory quickly, so I'd have to use a monthly model (freq = 12). I have tried using fourier but the predictions didn't look right intuitively. Since I want to know what the peak usages are though, I think I might want to be more specific. Is it ok to use a weekly frequency (freq = 52) and just remove Dec 31?</p>
+
+<p>Is daily frequency allowable? Like can I use exponential smoothing with daily frequency even though Sept 7, 2012 might fall on a Sunday, whereas Sept 7, 2011 and 2010 and 2009 might all be weekdays. There is a daily, weekly, and yearly seasonality in demand and number of logins. Eg. 6pm, and Monday, and September are more loaded in general than 4am, and Saturday, and May. There is a yearly seasonality in number of registrations.</p>
+
+<p>I've been having some issues with the login predictions
+The problem is that variability increases too much before 6 months have even passed. At the 80% confidence interval. The projection line extends into 2012 and the orange area is the 80% confidence interval. Logging and using additive exponential smoothing gave me much more variability than multiplicative exponential smoothing.</p>
+
+<p>It's not useful to the company to say that ""well you might have 8 jillion logins sometime in the next 6 months and you might have 20% more than you had last year."" How do I reduce the variance in the projection?</p>
+
+<p><a href=""http://img836.imageshack.us/img836/8460/holtwintersloginmultipl.png"" rel=""nofollow"">http://img836.imageshack.us/img836/8460/holtwintersloginmultipl.png</a></p>
+
+<p>Finally, I was thinking that after I got accurate projections, I'd put logins and registrations in a neural network, and I'd put something like average wait time on a few machines as the ouput variable, and I'd forecast peak projected processing power demand in 6 months. There are other variables to consider, like software releases that change cpu demand per user, but I'm hoping the neural network will learn when these happen, or that they are easy to detect and account for. I don't have any good data on average wait time yet, but assuming I find some, is this a good plan?</p>
+"
+"0.256648131637567","0.237088516398225"," 33405","<p>I'm working with a time-series of several years and to analyze it, Iâ€™m using GAM smoothers from the package <code>mgcv</code>. Iâ€™m constructing models where zooplankton biomass (<code>bm</code>) is the dependent variable and the continuous explanatory variables are: </p>
+
+<p>-time in Julian days (<code>t</code>), to creat a long-term linear trend</p>
+
+<p>-Julian days of the year (<code>t_year</code>) to create an annual cycle</p>
+
+<p>-Mean temperature of Winter (<code>temp_W</code>), Temperature of September (<code>temp_sept</code>) or Chla. </p>
+
+<p>Questions: </p>
+
+<p>1) To introduce a tensor product modifying the annual cycle in my model, I tried 2 different approaches: </p>
+
+<p>a) <code>gam( bm ~ t + te (t_year, temp_W, temp_sept, k = c( 5,30 ), d = ( 1,2), bs = c(  â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>b) <code>gam( bm ~ t + te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code></p>
+
+<p>Here is my problem: when Iâ€™m using just 2 variables (e.g., <code>t_year</code> and <code>temp_W</code>) for the tensor product, I can understand pretty well how the interpolation works and visualize it with <code>vis.gam()</code> as a 3d plot or a contour one. But with 3 variables it is difficult for me  to understand how it works. Besides, I donâ€™t know which one is the proper way to construct it, a) or b). Finally, when I plot a) or b) as <code>vis.gam (model_name , view= c(â€œt_yearâ€, â€œtemp_Wâ€))</code>, How should I interpret the plot? The effect of <code>temp_W</code> on the annual cycle after considering already the effect of <code>temp_sept</code> or just the individual effect of <code>temp_W</code> on the annual cycle?</p>
+
+<p>2) Iâ€™m trying to do a model selection using AIC criteria. I have several questions about it: </p>
+
+<p>Should I use always the same type of smoothing basis (<code>bs</code>), the same type of smoother ( e.g <code>te</code>) and the same dimension of the basis (<code>k</code>)? Example: </p>
+
+<p>Option 1: </p>
+
+<p>a) <code>mod1 &lt;- gam(bm ~ t, data = data )</code></p>
+
+<p>b)<code>mod2 &lt;- gam( bm ~ te ( t, k = 5, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ te ( t_year, k = 5, bs = â€œccâ€), data = data )</code></p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te ( t_year, temp_W, k = 5, bs = c( â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code>. </p>
+
+<p>Here the limitation for <code>k = 5</code>, is due to <code>mod5</code>, I donâ€™t use <code>s ()</code> because in <code>mod4</code> and <code>mod5</code> <code>te ()</code> is used and finally, I always use â€œ<code>cr</code>â€ and â€œ<code>cc</code>â€. </p>
+
+<p>Option 2: </p>
+
+<p>a) <code>mod1 &lt;- gam( bm ~ t, data = data )</code></p>
+
+<p>b) <code>mod2 &lt;- gam( bm ~ s ( t, k = 13, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ s( t_year, k = 13, bs = â€œccâ€ ), data = data )</code> </p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te( t_year, temp_W, k = 11, bs = c( â€œccâ€,â€crâ€ ) ), data = data)</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>I can get lower AIC for each of the models with Option 2, but are they comparable when I use AIC criteria? Is it therefore the proper way to do it as in Option 1? </p>
+
+<p><code>AIC (mod1, mod2, mod3, mod4, mod5)</code>. </p>
+
+<p>As an example of how the data frame looks like:</p>
+
+<pre><code>&gt; time_series_data
+
+          bm      Chla year month       t t_year temp_W temp_sept
+1  2.1680335 54.718891 1993     1 2449009     20   12.1      19.3
+2  4.6180770 29.372938 1993     2 2449043     54   12.1      19.3
+3  4.6871990 99.198623 1993     3 2449064     75   12.1      19.3
+4  4.9862020 59.835987 1993     4 2449094    105   12.1      19.3
+5  3.4977156 79.990143 1993     5 2449120    131   12.1      19.3
+6  3.1030763 68.018739 1993     6 2449148    159   12.1      19.3
+7  2.0312841 70.850406 1993     7 2449181    192   12.1      19.3
+8  1.2477797 62.381780 1993     8 2449211    222   12.1      19.3
+9  2.1445538 99.094776 1993     9 2449254    265   12.1      19.3
+10 6.7026438 82.397907 1993    10 2449282    293   12.1      19.3
+11 1.6524655 44.977256 1993    11 2449303    314   12.1      19.3
+12 2.1627389 52.624779 1993    12 2449342    353   12.1      19.3
+13 3.0981200 58.274128 1994     1 2449374     20   11.3      18.6
+14 2.4342291 14.733698 1994     2 2449402     48   11.3      18.6
+15 4.8691345 51.508774 1994     3 2449431     77   11.3      18.6
+16 3.7366294 38.206928 1994     4 2449458    104   11.3      18.6
+17 3.3565706 72.763028 1994     5 2449500    146   11.3      18.6
+18 2.7869220 81.265662 1994     6 2449520    166   11.3      18.6
+19 2.6971469 50.692921 1994     7 2449540    186   11.3      18.6
+20 1.3758862 94.396013 1994     8 2449569    215   11.3      18.6
+21 5.7578197 59.357898 1994     9 2449620    266   11.3      18.6
+22 2.8941763 21.974925 1994    10 2449645    291   11.3      18.6
+23 0.9530070  7.781981 1994    11 2449673    319   11.3      18.6
+24 0.3713342 84.950835 1994    12 2449697    343   11.3      18.6  
+</code></pre>
+"
+"0.109435131032917","0.123560412643043"," 40749","<p>I have a linear model (with seasonal dummy variables) that produces monthly
+forecasts. I'm using R together with the 'forecast' package:</p>
+
+<pre><code>require(forecast)
+model = tslm(waterflow ~ rainfall + season, data = model.df, lambda = lambda)
+forec = forecast(model, newdata = rainfall.df, lambda = lambda)
+</code></pre>
+
+<p>I did a cross-validation and it looks great. Now, what i need is to generate
+<em>weekly data points</em> from these month forecasts - in other words, i need to generate a synthetic time-series that have monthly means equal to the forecasts above. So my function would look like:</p>
+
+<pre><code>generate.data = function(monthly.means, start.date, end.date)
+{
+   #code here
+}
+</code></pre>
+
+<p>I'm not sure how to do this (interpolation?), so any help is welcome.
+Thanks!</p>
+"
+"NaN","NaN"," 53429","<p>I'm wondering if someone might be able to help me locate an appropriate model for the following two time-series (the cyan and blue one, the reds are rolling means).</p>
+
+<p><img src=""http://i.stack.imgur.com/LN9RP.png"" alt=""[The time-series in question](http://i.imgur.com/pmXerft.png)""></p>
+
+<p>I'm looking more for a general direction based on the attributes of the data rather than a ""use this"" answer. Otherwise I'll learn less. Though all assistance is welcome. </p>
+"
+"0.218870262065833","0.247120825286086"," 63796","<p>This is related to a <a href=""http://stats.stackexchange.com/questions/62646/pooled-time-series-regression-in-r"">question</a> I asked a couple weeks ago, but I've got a new question related to the same data. You can find the data and its accompanying explanation in the link provided.</p>
+
+<p>I felt that a regression including year as a covariate along with year dummies would lead to a linear dependence problem, but I was told to try it anyway as </p>
+
+<blockquote>
+  <p>""the year dummies as independent variables [may] pick up year-specific
+  random effects not accounted for by a time trend, e.g. for example the
+  trend over all years could be down by say 2 percent per year which
+  could apply to most years, but a negative macro shock in one
+  particular year could make that year lie way off the regression
+  line--a simple example of why the year dummies are not co-linear with
+  a time trend.""</p>
+</blockquote>
+
+<p>This makes sense, I suppose, so I ran a regression that simply included year and year dummies for each year as the independent variables (including AR(1) corrections). This looked like the following:</p>
+
+<pre><code>&gt; ## Generate YearFactor and AgeGroupFactor using factor()
+&gt; 
+&gt; YearFactor &lt;- factor(YearVar)
+&gt; AgeGroupFactor &lt;- factor(AgeGroup)
+&gt; 
+&gt; ## Check to see that YearFactor and AgeGroupFactor are indeed factor variables
+&gt; 
+&gt; is.factor(YearFactor)
+[1] TRUE
+&gt; is.factor(AgeGroupFactor)
+[1] TRUE
+&gt;
+&gt; ## Run regressions with both time trend and year dummies to determine if a linear dependence problem exists.
+&gt; 
+&gt; TrendDummies &lt;- gls(PPHPY ~ YearVar + YearFactor, correlation=corARMA(p=1))
+Error in glsEstimate(object, control = control) : 
+ computed ""gls"" fit is singular, rank 13
+&gt; summary(TrendDummies)
+Error in summary(TrendDummies) : object 'TrendDummies' not found
+&gt;
+</code></pre>
+
+<p>I interpret the error message ""Error in glsEstimate(object, control = control) : 
+     computed ""gls"" fit is singular, rank 13"" to mean that there indeed is a linear dependence problem in this case. Am I properly interpreting this? </p>
+
+<p>Also, given the advice in quotes above, would my regression as constructed (if there were no linear dependence problems) capture the effects mentioned therein?</p>
+
+<p>And finally, if I run the same regression as OLS with no AR(1) correlation structure, I do indeed get some results (instead of an error message). Any thoughts on that?</p>
+"
+"0.232146969760241","0.203864279887575"," 71731","<p>I am using <a href=""http://mcmc-jags.sourceforge.net/"" rel=""nofollow"">JAGS</a> in R to construct a probabilistic graph model and estimate the corresponding parameters. The models is described as follows:</p>
+
+<pre><code>model
+{
+
+   for (i in 1:N)
+
+   {
+
+       # sample the hidden variable 
+
+       z[i]  ~ dbeta(alpha+0.01,beta)T(0,0.9999)
+
+       # determined relation 
+       lambda[i] &lt;- z[i] * mu
+       # conditional data likelihood 
+       X[i] ~ dpois(lambda[i])
+   }
+
+       # prior probability 
+       alpha ~ dgamma(0.1,0.0001)
+       beta ~ dgamma(0.1,0.0001)
+       mu ~ dgamma(0.1,0.0001)
+
+}
+</code></pre>
+
+<p>where <code>X[1:N]</code> is the training samples, which are generated according to a Poisson distribution. The Poisson mean is also a random variable, which is denoted as <code>mu*z</code>. <code>z</code> is a hidden variable following a Beta distribution parametrized by variables <code>alpha</code> and <code>beta</code>. The parameters of this probabilistic model are <code>mu</code>, <code>alpha</code> and <code>beta</code>, and they follow Gamma distribution. I tested this model on a simulated set of data samples:</p>
+
+<pre><code>library('rjags')
+
+N=5000
+
+lambda=rbeta(N,0.2,0.3)*15 #alpha = 0.2,beta = 0.3 and mu = 15 
+
+X=rpois(N,lambda)
+
+jags = jags.model('poissontrunc.bugs',data = list('X' = X, 'N' = N),
+                   n.chains = 4,
+                   n.adapt = 1000)
+
+mcmc.samples &lt;- coda.samples(jags,
+c('alpha', 'beta', 'mu'),
+5000)
+
+summary(mcmc.samples)  
+</code></pre>
+
+<p>The MCMC-based parameter estimation results are as follows:</p>
+
+<p>Empirical mean and standard deviation for each variable, plus standard error of the mean:</p>
+
+<pre><code>         Mean      SD     Naive SE   Time-series SE
+
+alpha  951.13,    35.0186,   0.247619,    9.72810   
+beta  1013.24,   26.4553,   0.187068,     7.13232
+mu      12.47,   0.3134,    0.002216,     0.08993
+</code></pre>
+
+<p>The sampling results give the right estimate of the true <code>mu</code> (12.47 vs. 15). However, for <code>alpha</code> and <code>beta</code>, it seems that the estimated values are severely biased (951.13 vs 0.2, 1013.24 vs 0.3). Even considering the variance of the sampling results, estimates for <code>alpha</code> and <code>beta</code> are still far from satisfaction. Is this a problem caused by any potential improper setting of the MCMC sampling, or perhaps MCMC is blocked within the local optimum region of a multi-modal conditional distribution in this case ?  </p>
+"
+"0.232146969760241","0.232987748442943"," 77285","<p>I have two groups of time-series, each group represents one type of data. However within each group, each time series may be fitted with a different ARIMA(p,d,q) from the other time series in the same group. </p>
+
+<p>I need to create a single model for each group (<code>Model_group1</code>, <code>Model_group2</code>). I tried the approach mentioned by Rob Hyndman in: 
+<a href=""http://stats.stackexchange.com/questions/23036/estimating-same-model-over-multiple-time-series"">Estimating same model over multiple time series</a>.</p>
+
+<p>I need to use these two models to classify any time series to one of these two groups. For each time series, I calculated the AIC of <code>Model_group1</code> and <code>Model_group2</code>, and the model with smaller AIC will mean that the time series belongs to its corresponding group. </p>
+
+<p>I have three problems: </p>
+
+<ol>
+<li><p>I received a warning message </p>
+
+<pre><code>Series: ts 
+ARIMA(3,0,2) with non-zero mean 
+
+Coefficients:
+         ar1     ar2     ar3     ma1      ma2  intercept
+      0.0714  0.1417  0.0000  0.0893  -0.0871     0.1169
+s.e.     NaN  0.1381  0.0127     NaN   0.1436     0.0026
+
+sigma^2 estimated as 0.2202:  log likelihood=-33822.63
+AIC=67659.26   AICc=67659.26   BIC=67725.99
+Warning message:
+In sqrt(diag(x$var.coef)) : NaNs produced
+</code></pre>
+
+<p>This message was returned by only one of the group models. Does that mean that the fitted model is not correct? </p></li>
+<li><p>I got two different results using </p>
+
+<pre><code>auto.arima(ts, allowdrift=FALSE, stepwise=FALSE)
+auto.arima(ts, allowdrift=FALSE, stepwise=TRUE)
+</code></pre></li>
+<li><p>When I tested the resulting models, the majority of the time-series were classified as <code>group_1</code>, even when I test one of the time series used to build the long time series of <code>group_2</code>. I need to mention here that the composed time series of <code>group_1</code> is quite shorter than the time series of <code>group_2</code>. Are there any expected reasons for that? </p></li>
+</ol>
+"
+"0.154764646506827","0.174740811332208"," 93035","<p>I am looking for an R-implementation of the Lempel-Ziv data compression algorithm, to estimate the <em>source</em> entropy of a time-series consisting of a sequence of symbols.</p>
+
+<p>Rather than simply measuring the entropy of the (time-aggregated) symbol-frequency distribution, the Lempel-Ziv algorithm can be used to estimate the entropy of the temporal ordering within the sequence itself.</p>
+
+<p>The sequences I am studying are derived from animal trajectories; each $x,y$ location is assigned an arbitrary label (A,B,...,Z). Represented in this way, the trajectory of a moving animal looks like  B,G,G,S,Y,G,Y,H,D,S,A,B,B,G,G,G,H etc. Hence, I am interested in measuring the $\textit{predictability}$ of the sequence. </p>
+
+<p>The procedure for estimating the source entropy is (briefly) described in the Supplementary Information of Song et al (2010), and they describe the Lempel-Ziv estimator as:</p>
+
+<p>$$
+S^{est} = \left( \frac {1}{n} \sum_{i=1} \Lambda_i \right)^{-1} ln~n
+$$
+where $\Lambda_i$ is the length of the shortest substring starting at position $i$ which $\textit{doesn't}$ previously appear from position 1 to $i$-1. </p>
+
+<p>So, does anyone have any suggestions for how to compute the above in R?</p>
+
+<p>Incidentally, I should mention that I have multiple trajectories between which I would like to make entropy comparisons, however, some of the trajectories contain gaps that correspond to times when the animal was not observed. </p>
+
+<p>REFERENCE:</p>
+
+<p>Song, Qu, Blumm &amp; Barabasi (2010) Limits of Predictability in Human Mobility. $\textit{Science}$. 19. <a href=""http://www.sciencemag.org/content/327/5968/1018.short"" rel=""nofollow"">http://www.sciencemag.org/content/327/5968/1018.short</a></p>
+
+<p><em><strong>UPDATE:</em></strong>
+The function below is what I arrived at. 
+However, rather than chugging through all the possible sub-sequences after the i'th index, and then finding the shortest novel sub-sequence, it would be faster to use a while loop. Similarly I am updating the dictionary of newly-acquired unique substrings using rbind, which is not efficient. OTOH the sequences I'm using are short (&lt;300), so this isn't a problem, but there is certainly room for improvement.</p>
+
+<pre><code>PREDICTABILITY &lt;- function(Sequence, Max_String) 
+  {
+
+  output     &lt;- matrix(NA,nrow=length(Sequence), ncol=1)
+  dictionary &lt;- NULL
+  ## cycle through each entry, i, in the Sequence
+  for (i in 1:(length(Sequence)-Max_String) )
+    {
+    ## Compile list of increasingly-long substrings, starting at position i; i+0,i+1,i+2,...,i+Max_String
+    codons &lt;- matrix(NA, nrow=Max_String, ncol=1)
+    for (STRL in 0:Max_String)
+      {
+      codons[STRL,] &lt;- paste(Sequence [i:(i+STRL-1)], collapse="""")
+      }
+    ## Find which of these codons have NOT been seen before
+    new &lt;- codons[!codons %in% dictionary]
+    ## check for no new codons
+    ifelse ((length(new)&gt;0),
+      record &lt;- min(nchar(new)),    ## if we have new codons, find the shortest among them
+      record &lt;- NA )                ## if none are new (because we aren't searching far enough ahead), assign NA... 
+    ## find the shortest of these unseen codons
+    output[i,] &lt;- record
+
+    ## Finally, add the unseen codons to the dictionary
+    dictionary &lt;- c(dictionary, new)
+    }##i
+  ## Calculate source entropy (i.e. predictability) from formula in Song et al (2010)
+  n &lt;- length(output[!is.na(output)])  
+  S &lt;- (1/mean(output, na.rm=TRUE)) * log(n)  ## Source entropy ?natural log means the units are nats? 
+  return(S)}
+</code></pre>
+"
+"0.232146969760241","0.262111216998311"," 96867","<p>This question builds on my previous question <a href=""http://stats.stackexchange.com/questions/96027/forecasting-hourly-time-series-based-on-previous-weeks-and-same-period-in-previo"">Forecasting Hourly Time Series based on previous weeks and same period in previous year/s</a>. My project is to forecast the number of ~400 different types of events expected in each hourly interval with enough accuracy for staffing decisions to be made.</p>
+
+<p>Based on my knowledge of the data I know that each interval is related to the same hour band from the previous few weeks and the same time in the previous few years. Thanks to a comment by Rob Hyndman I am now using <code>tbats()</code> to forecast with mixed results. When comparing the forecasted data to the actual data the monthly totals are consistently within 1-3%.</p>
+
+<p>However, when I compare the forecast to the actual for individual intervals the results are not very reliable at all. I have calculated the difference between the actual and the forecast as a percentage of the forecast for each interval and get an interquartile range of 50% to 150% with a mean difference of ~70%. This level of accuracy is unacceptable for what I need to use the data to do.</p>
+
+<p>I am pretty certain that there are correlations between the frequency of different types of events and some measurable environmental factors. Is there an easy way to feed R a time series for the count of each event type as well as some environmental factors and have it find the correlations and create a forecast?</p>
+
+<p>I am not trying to be lazy, the forecast tool is going to be automated and needs to be able to run without human input.</p>
+
+<p>The method I am currently using is:</p>
+
+<pre><code>data &lt;- scan(""data.csv"")
+fcast &lt;- forecast(tbats(msts(data, seasonal.periods=c(168,8766))),1464)
+</code></pre>
+
+<p><em>The csv is a single column containing an hourly count of a specific event type over 2 years.</em></p>
+"
+"0.154764646506827","0.131055608499156","114979","<p>I want to generate random monthly <em>(m)</em> temperature (<em>T</em>) and Precipitation (<em>P</em>) data considering that both variables are intercorrelated (<em>rTP[m]</em>)
+The tricky thing is that my random variables that have specific quantitative properties: temperatures are normally distributed, while precipitations follow a log-normal distribution and should be log-transformed</p>
+
+<p><strong>mvrnorm</strong> of the package MASS could be used.</p>
+
+<pre><code>mT=c(1,2,4,7,10,15,17,18,17,10,5,1)
+mP=c(3.9,3.7,3.9,4.1,4.5,4.7,4.8,4.8,4.4,4.1,4.2,3.9) #log-transformed
+sdT=c(1,1,1,1,1,1,1,1,1,1,1,1)
+sdP=c(0.7,0.8,0.7,0.6,0.4,0.4,0.4,0.5,0.6,1,0.8,0.6)  #log-transformed
+rTP=c(0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4)
+covTP=rTP*(sdT*sdP)
+
+simP=NULL
+for (m in 1:12)
+{
+out=mvrnorm(500, mu = c(mT[m],mP[m]), Sigma = matrix(c(sdT[m]*sdT[m],covTP[m],covTP[m],sdP[m]*sdP[m]), ncol = 2), empirical = TRUE)
+simP[m]=mean(exp(out[,2])-1)
+}
+</code></pre>
+
+<p>In this case I generate two random time-series that are inter-correlated which is great.</p>
+
+<p>However, simulated precipitations (<em>simP</em>) are on average higher than the observed one (<em>mP</em>)</p>
+
+<pre><code>plot(exp(mP)-1, type=""l"", lwd=2, ylim=c(0,250)); points(simP, type=""l"", lwd=2, lty=2)
+</code></pre>
+
+<p>I could use <strong>rlnorm</strong> or <strong>rlnorm.rplus</strong> to consider than precipitations are log-transformed, but then I have troubles with temperatures that are normally distributed. </p>
+
+<p>My question is: How can I create random sampling for variables that have specific quantitative properties (log-normal and normal distributions)?</p>
+
+<p>Thanks !</p>
+"
+"0.134030115482631","0.151329981691595","122482","<p>I want to create a code which tests absolutely everything for time-series forecasting accuracy.</p>
+
+<p>The current tests that I do are:</p>
+
+<p><code>bptest()</code> - tests against heteroskedasticity (to test if series should be transformed)</p>
+
+<p><code>gqtest()</code> - tests against heteroskedasticity (to test if series should be transformed)</p>
+
+<p><code>RMSE</code> - of in-sample <code>sqrt(mean((data-fitted values)^2))</code></p>
+
+<p><code>MAPE</code> - of in-sample <code>mean(abs(100*(data-fitted values)/data))</code></p>
+
+<p><code>MAPE</code> - of out-sample (removing the last 4 data points and running model) <code>mean(abs(100*(last 4 data points-the 4 forecasted points)/last 4 data points))</code></p>
+
+<p><code>MAPE</code>- of forced out-sample (removing the last 4 data points and running model keeping the same parameters as the model of the full data)</p>
+
+<p><code>ACF and PACF</code> - of residuals <code>data-fitted values</code></p>
+
+<p>Here is a link that will show you my code so you can see what i have done so far and where/what i can add. I dont want to miss anything so as many suggestions as possible please! If you could explain them a little too that would be fab. </p>
+
+<p><a href=""http://bit.ly/10iUY5Z"" rel=""nofollow"">http://bit.ly/10iUY5Z</a></p>
+"
+"0.109435131032917","0.123560412643043","124274","<p>I have time-series data for N stocks.</p>
+
+<p><code>sample.data&lt;-rep(10,rnorm(100))</code>, where each column shows the returns of different stocks over time.</p>
+
+<p>I am trying to construct a portfolio weight vector to minimize the variance of the returns.</p>
+
+<p>the objective function:</p>
+
+<pre><code>min w^{T}\sum w
+s.t. e_{n}^{T}w=1
+\left \| w \right \|\leq C
+</code></pre>
+
+<p>where w is the vector of weights, <code>\sum</code> is the covariance matrix, <code>e_{n}^{T}</code> is a vector of ones, <code>C</code> is a constant. Where the second constraint (<code>\left \| w \right \|</code>) is an inequality constraint. </p>
+
+<p>Is there any function in R that can do this?
+I tried using <code>solve.QP()</code> from the <code>quadprog</code> package, but it is not clear how to impose the inequality constraint for the norm of the weight vector.</p>
+
+<p>The following code solves the problem if the second constraint was simply <code>w \leq C</code>
+instead  <code>\left \| w \right \|\leq C</code></p>
+
+<pre><code>cov.Rt&lt;-cov(sample.data)
+A.eq&lt;-matrix(1,nrow(cov.Rt),ncol=1)
+B.eq&lt;-1
+A.neq&lt;-diag(10)
+B.neq&lt;-matrix(0,nrow=10,ncol=1)
+
+A&lt;-cbind(A.eq,A.neq)
+B&lt;-c(B.eq,B.neq)
+mu&lt;-colMeans(sample.data)
+
+solve.QP(cov.Rt,mu,A,B,meq=1)
+</code></pre>
+
+<p>How can this code be modified to solve the above problem for norms?</p>
+
+<p>Any help would be appreciated.</p>
+"
+"0.29970044925131","0.270707300876965","124388","<p>I have a code which tests each possible order of ARIMA and selects the best model by choosing the one with the absolute minimum sum of lags from the PACF graph. The code then proceeds to add weight to recent errors and runs an optimization on the parameters to get the minimum mean absolute error.</p>
+
+<p>The code runs fine and gives excellent results (e.g 0.2% MAPE etc) however once the parameters have been optimized the ACF and PACf graphs show lags outside the threshold.</p>
+
+<p>I would like to add into my code a loop which does the following:</p>
+
+<p>if any of the first 4 lags of the ACF or PACF graphs of the residuals found from the optimized ARIMA model are outside the threshold (2/sqrt(n)) then the optimization is re-run but doesn't allow those parameters to be selected/those parameters are skipped in the optimization process.</p>
+
+<p>Here is my code:</p>
+
+<pre><code>suppressMessages(library(lmtest))
+suppressMessages(library(car))
+suppressMessages(library(tseries))
+suppressMessages(library(forecast))
+suppressMessages(library(TTR))
+suppressMessages(library(geoR))
+suppressMessages(library(MASS))
+suppressMessages(gtools))
+#-------------------------------------------------------------------------------
+Data.col&lt;-c(5403.676,6773.505, 7231.117, 7835.552, 5236.710, 5526.619, 6555.782,11464.727, 7210.069, 7501.610, 8670.903,10872.935, 8209.023, 8153.393,10196.448,13244.502, 8356.733,10188.442,10601.322,12617.821, 11786.526,10044.987,11006.005,15101.946,10992.273,11421.189,10731.312)
+#-------------------------------------------------------------------------------
+# Turns the Data.col into a time-series
+
+Data.col.ts &lt;- ts(Data.col, deltat=(1/4), start = c(8,1))
+
+#-------------------------------------------------------------------------------
+# Starts the testing to see if the data should be logged
+
+trans&lt;- BoxCox.lambda(Data.col, method = ""loglik"")
+categ&lt;-as.character( c(cut(trans,c(0,0.25,0.75,Inf),right=FALSE)) )
+Data.new&lt;-switch(categ,
+                 ""1""=log(Data.col.ts),
+                 ""2""=sqrt(Data.col.ts),
+                 ""3""=Data.col.ts
+)
+
+#----- Weighting ---------------------------------------------------------------
+fweight &lt;- function(x){
+  PatX &lt;- 0.5+x 
+  return(PatX)
+}
+
+#Split the integral to several intervals, and pick the weights accordingly
+
+integvals &lt;- rep(0, length.out = length(Data.new))
+for (i in 1:length(Data.new)){
+  integi &lt;- integrate(fweight, lower = (i-1)/length(Data.new), upper= i/length(Data.new))
+  integvals[i] &lt;- 2*integi$value
+}
+
+#----- Find best ARIMA model ---------------------------------------------------
+
+a &lt;- permutations(n = 3, r = 6, v = c(0:2), repeats.allowed = TRUE)
+a &lt;- a[ifelse((a[, 1] + a[, 4] &gt; 2 | a[, 2] + a[, 5] &gt; 2 | a[, 3] + a[, 6] &gt; 2),
+              FALSE, TRUE), ]
+
+Arimafit &lt;- matrix(0,
+                   ncol  = length(Data.new),
+                   nrow  = length(a[, 1]),
+                   byrow = TRUE)
+
+totb &lt;- matrix(0, ncol = 1, nrow = length(a[, 1]))
+arimaerror &lt;- matrix(0, ncol = length(Data.new), nrow = 1)
+
+for (i in 1:length(a[, 1])){
+  ArimaData.new &lt;- try(Arima(Data.new,
+                             order    = a[i, c(1:3)],
+                             seasonal = list(order = a[i, c(4:6)]),
+                             method   = ""ML""),
+                       silent = TRUE)
+
+  if (is(ArimaData.new, ""try-error"")){
+    ArimaData.new &lt;- arimaerror
+  } else {
+    ArimaData.new &lt;- ArimaData.new
+  }
+
+  arimafitted &lt;- try(fitted(ArimaData.new), silent = TRUE)
+
+  if (is(arimafitted, ""try-error"")){
+    fitarima &lt;- arimaerror
+  } else {
+    fitarima &lt;- arimafitted
+  }
+
+  if (categ==""1""){
+    Arimafit[i, ] &lt;- c(exp(fitarima))
+    Datanew &lt;- c(exp(Data.new))
+  } else {
+    if (categ==""2""){
+      Arimafit[i, ] &lt;- c((fitarima)^2)
+      Datanew &lt;- c((Data.new)^2)
+    } else {
+      Arimafit[i, ] &lt;- c(fitarima)
+      Datanew &lt;- c(Data.new)
+    }
+  }
+
+  data &lt;- c(Datanew)
+
+  arima.fits &lt;- c(Arimafit[i, ])
+
+  fullres &lt;- data - arima.fits
+
+  v &lt;- acf(fullres, plot = FALSE)
+
+  w &lt;- pacf(fullres, plot = FALSE)
+
+  if (v$acf[2]&gt;(2/sqrt(length(Data.col)))|v$acf[2]&lt;(-(2/sqrt(length(Data.col))))|v$acf[3]&gt;(2/sqrt(length(Data.col)))|v$acf[3]&lt;(-(2/sqrt(length(Data.col))))|v$acf[4]&gt;(2/sqrt(length(Data.col)))|v$acf[4]&lt;(-(2/sqrt(length(Data.col))))|v$acf[5]&gt;(2/sqrt(length(Data.col)))|v$acf[5]&lt;(-(2/sqrt(length(Data.col))))|v$acf[6]&gt;(2/sqrt(length(Data.col)))|v$acf[6]&lt;(-(2/sqrt(length(Data.col))))|v$acf[7]&gt;(2/sqrt(length(Data.col)))|v$acf[7]&lt;(-(2/sqrt(length(Data.col))))|w$acf[1]&gt;(2/sqrt(length(Data.col)))|w$acf[1]&lt;(-(2/sqrt(length(Data.col))))|w$acf[2]&gt;(2/sqrt(length(Data.col)))|w$acf[2]&lt;(-(2/sqrt(length(Data.col))))|w$acf[3]&gt;(2/sqrt(length(Data.col)))|w$acf[3]&lt;(-(2/sqrt(length(Data.col))))|w$acf[4]&gt;(2/sqrt(length(Data.col)))|w$acf[4]&lt;(-(2/sqrt(length(Data.col))))|w$acf[5]&gt;(2/sqrt(length(Data.col)))|w$acf[5]&lt;(-(2/sqrt(length(Data.col))))|w$acf[6]&gt;(2/sqrt(length(Data.col)))|w$acf[6]&lt;(-(2/sqrt(length(Data.col))))){
+    totb[i] &lt;- ""n""
+  } else {
+    totb[i] &lt;- sum(abs(w$acf[1:4]))
+  }
+
+  j &lt;- match(min(totb), totb)
+
+  order.arima &lt;- a[j, c(1:3)]
+
+  order.seasonal.arima &lt;- a[j, c(4:6)]
+}
+
+#----- ARIMA -------------------------------------------------------------------
+# Fits an ARIMA model with the orders set
+stAW &lt;- Arima(Data.new, order= order.arima, seasonal=list(order=order.seasonal.arima), method=""ML"")
+parSW &lt;- stAW$coef
+    WMAEOPT &lt;- function(parSW)
+    {
+      ArimaW &lt;- Arima(Data.new, order = order.arima, seasonal=list(order=order.seasonal.arima), 
+                      include.drift=FALSE, method = ""ML"", fixed = c(parSW))
+      errAR &lt;- c(abs(resid(ArimaW)))
+      WMAE &lt;- t(errAR) %*% integvals 
+      return(WMAE)
+    }
+    OPTWMAE &lt;- optim(parSW, WMAEOPT, method=""SANN"", set.seed(2), control = list(fnscale= 1, maxit = 5000))
+    # Alternatively, set  method=""Nelder-Mead"" or method=""L-BFGS-B"" 
+    parS3 &lt;- OPTWMAE$par
+Arima.Data.new &lt;- Arima(Data.new, order = order.arima, seasonal=list(order=order.seasonal.arima), 
+                        include.drift=FALSE, method = ""ML"", fixed = c(parS3))
+</code></pre>
+
+<p>Before the parameters are optimized it gives a graph like this:
+<img src=""http://i.stack.imgur.com/cjY1x.png"" alt=""enter image description here""></p>
+
+<p>After the parameters are optimized it gives a graph like this:
+<img src=""http://i.stack.imgur.com/6HKXl.png"" alt=""enter image description here""></p>
+
+<p>I want to stop this happening in the second picture. Is this possible to do using <code>optim</code>?</p>
+"
+"0.109435131032917","0.0617802063215215","124690","<p>Right now I am working with vector autoregressive models in order to make 3 months forecasts for a commodity good (sawlogs) y. I have several time-series of ""follow-up-products"" of sawlogs that should work as ""predictors"" for saw-log prices from a logical point of view. 
+I encountered within the VAR-function from package ""vars"" (<a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a>), that one attribute called ""type"" has the following expressions: ""const"", ""both"", ""trend"", ""none"". I really don't know what this means from a statistical point of view.</p>
+
+<p>Since neither the package-description nor other literature I've screened so far can give me an answer I actually understand I'd like to ask you guys the following:</p>
+
+<p>How should I interpret/understand and use the argument ""type"" in R's VAR() Function?</p>
+
+<p>What do those 4 different arguments really mean? ""both"", ""none"", ""trend"", ""constant""?
+Could anyone explain this in a simple way and probably provide an example as well?</p>
+
+<p>Does this mean that I can directly use non-stationary time series for my VAR-model since I can consider trend/season afterwards by setting the ""type-argument"" to both, or am I wrong here?</p>
+"
+"0.32830539309875","0.350087835821955","124707","<p>Sorry for the rather long introduction, but since I was (legitimately) critizised for not explaining my cause and questions enough, I will do so now. </p>
+
+<p>I would like to conduct a <strong><em>(price)-forecast</em></strong> based on a multiple time series VAR-Model (vector autoregressive Model) with multiple endogeneous variables and two exogeneous. Since I am not that skillfull with regards to neither statistics nor R I want to keep is as simple as possible (Trend forecast for 3 months is sufficient).</p>
+
+<p>I am using the ""vars"" - Package, <a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a> and all in all those four functions: decompose(), VARselect(), VAR(), and predict()</p>
+
+<p>I have 1 dependent time series (y, in my model referred to as ""RH"", or ""raRH""), 4-5 endogeneous predictors and 2 exogeneous predictors.
+All timeseries have a length of 1-91 observations and are monthly data without any gaps.</p>
+
+<p><strong><em>Data description:</em></strong>
+My y (dependent var) are sawlog prices, sawlogs are raw material for plenty of follow up products.<br> My endogeneous (since they all kind of correlate with each other and y) are follow up product-prices or further elaborated sawlogs. <br>My 2 exogeneous predictors are economic indicators similar to BIP etc.</p>
+
+<p>All the time series are <em>non-stationary</em>, since I have read that you should use stationary data in order to gain a valid VAR-Model, I used the decompose() - function in R to split each variable into trend, season and the randwom walk. </p>
+
+<pre><code> raKVH&lt;-decompose(KVH)$random
+raKVH&lt;-na.omit(raKVH)
+raSNS&lt;-decompose(SNP_S)$random
+raSNS&lt;-na.omit(raSNS)
+</code></pre>
+
+<p>... and so on for every variable.<br><br>
+What I'm interested now in order to do some forecasting are predictions of the randwom walk (right?!). Anyways, I found out that all my data is first-order-integrated, since taking the logarithm makes them all stationary timeseries (ts), tested via Dickey-Fuller-Test. </p>
+
+<p>The picture also provides data example, first picture shows the raw-data, <img src=""http://i.stack.imgur.com/BcMOT.png"" alt=""enter image description here""></p>
+
+<p>second picture the random walks gained by decomposing$random the raw-data. 
+<img src=""http://i.stack.imgur.com/96yii.png"" alt=""enter image description here""></p>
+
+<p>I used the command VARselect that automatically computes the optimal lag for my model, whereas tsall is my time-series matrix containing all the timeseries mentioned above.</p>
+
+<pre><code>VARselect(tsall)
+</code></pre>
+
+<p>proceeding now with the estimation of the model VAR(p=number of lags given by VARselect), <strong><em>I encountered the following problem</em></strong>: how should I use the attribute ""type"" within the VAR-function? What does ""trend"",""none"", ""const"", ""both"" exactly mean? Since I have stationary data, there won't be any trend right? How can I check if there is a constant? Since the default value is ""const"", I chose to go with that.
+<br><br>
+<strong><em>The main question I have is the following:</em></strong><br>
+How do I get ""real"" forecasts out of the prediction of the randwom walks anyways? If I want to predict the price of yt+3, I need more than the prediction of the random walks here, I need ""real figures"" like in graphic 1. How can I ""add back"" trend and season?</p>
+
+<p>Third picture shows the Forecast of the random walk of my ""target Variable"" Y, but what's the next step here? 
+<img src=""http://i.stack.imgur.com/ZtInk.png"" alt=""enter image description here""></p>
+
+<p>Thank you for any help, if my questions/introduction are insufficient, please let me know. I'll try to explain myself better then.</p>
+"
+"0.134030115482631","0.151329981691595","126001","<p>I have two time series. After calculating the ACF, they are like the plot below. </p>
+
+<p>Does anyone know the meaning of this ACF plot? </p>
+
+<p>I know it's non-stationary time series, but I don't know how the lags can help me to build the model. </p>
+
+<p>My data are as below: </p>
+
+<p>Year,Parea,Uarea</p>
+
+<p>1950,3435829.43 ,144179.7476</p>
+
+<p>1955,3619503.16 ,168028.4699</p>
+
+<p>1960,3881482.63 ,196839.0495</p>
+
+<p>1965,4310040.34 ,229032.161</p>
+
+<p>1970,4950230.51 ,262543.7928</p>
+
+<p>1975,6216028.19 ,297502.4439</p>
+
+<p>1980,7062749.74 ,337481.6276</p>
+
+<p>1985,8187770.34 ,381059.4338</p>
+
+<p>1990,9893501.67 ,432255.4666</p>
+
+<p>1995,12011196.93 ,487330.1703</p>
+
+<p>2000,13327189.88 ,546829.7056</p>
+
+<p>2005,15231484.09 ,612606.1358</p>
+
+<p>2010,16986859.05 ,683200.605</p>
+
+<p>2014,18097951.40 ,743693</p>
+
+<p>And I have doubts about my sample size and time-series data analysis~
+My purpose for these data analysis are:</p>
+
+<p>1) do the Granger Causal Relation Test between PArea and UArea. </p>
+
+<p>2) build ARIMAs for PArea and UArea, respectively. </p>
+
+<p>But my data points are only 14, may be insufficient for purpose of my data analysis~
+I wander if I can interpolate the values between the middle years to extend sample range?</p>
+
+<p><img src=""http://i.stack.imgur.com/gieSt.jpg"" alt=""ACF of a time-series data with 14 points""></p>
+"
+"0.218870262065833","0.216230722125325","126196","<p>I'm developing an app in C# (WPF) that amongst other things, it makes a time-series based forecast of sales (4-5 months into the future). I'm an industrial engineer so I'm not pro in statistics nor in programming (basic knowledge of both).</p>
+
+<p>What I'm doing right now is to aggregate my daily data into monthly data, then I test for monthly seasonality, and then either go for a <strong>Holt</strong>'s exponential smoothing or for a <strong>Holt-Winters</strong>'s one depending on the result. </p>
+
+<p>For determining the <strong>smoothing parameters</strong> I'm using <strong>brute force</strong> (i.e. testing a lot of possible combinations) and keeping the one that would have predict the past year (backtesting) with minimum <a href=""http://en.wikipedia.org/wiki/Mean_absolute_error"" rel=""nofollow"">MAE</a>.</p>
+
+<p>A <strong>problem</strong> arises: this method is SLOW (obviously, as always with brute force). It takes about 0,5s only trying the smoothing parameters in 0.05 intervals which doesn't give much accuracy. I need to do this with 1000+ items so it goes over 8 minutes (too much).</p>
+
+<p>So I have a few <strong>questions</strong>:</p>
+
+<ul>
+<li>Is there any method to determine optimal smoothing parameters without testing all of them?</li>
+<li>Using <em>R.NET</em> to use the forecast package of R will be faster?</li>
+<li><p>If so, should I:</p>
+
+<ul>
+<li>Use daily or monthly data?</li>
+<li>Make also an auto.arima? How to determine which model is better?</li>
+</ul></li>
+<li><p>Is my method of backtesting (make a model only with data previous to that point) valid to determine if a model is better than another?</p></li>
+</ul>
+
+<p><strong><em>EDIT:</em></strong> I have tried implementing R.NET. Time for <code>ets</code> is about 0,1s if I set which model to use and use only mae as <code>opt.crit</code> (if not, it goes up to 5s). </p>
+
+<p>This is good enough <strong>IF</strong> I could get the same out-of-sample predictions I mention in the comment. If it's not possible then I would have to run it 12 times, adding up to 1,2s which is not fast enough.</p>
+
+<ul>
+<li>How can I do that (get predictions over the last 12 data without considering them in the model) in R?</li>
+</ul>
+"
+"0.371112585205896","0.327923800981138","131312","<p>I have some R code (which I did not write) and which performs some state space analysis on some time-series. The data itself is shown as dots (scatter plot) and the Kalman filtered and smoothed state is the solid line.</p>
+
+<p><img src=""http://i.stack.imgur.com/41jaI.png"" alt=""Plot""></p>
+
+<p>My question is regarding the confidence intervals shown in this plot. I calculate <em>my own</em> confidence intervals using the standard method (my C# code is below)</p>
+
+<pre><code>public static double ConfidenceInterval(
+    IEnumerable&lt;double&gt; samples, double interval)
+{
+    Contract.Requires(interval &gt; 0 &amp;&amp; interval &lt; 1.0);
+
+    double theta = (interval + 1.0) / 2;
+    int sampleSize = samples.Count();
+    double alpha = 1.0 - interval;
+    double mean = samples.Mean();
+    double sd = samples.StandardDeviation();
+
+    var student = new StudentT(0, 1, samples.Count() - 1);
+    double T = student.InverseCumulativeDistribution(theta);
+    return T * (sd / Math.Sqrt(samples.Count()));
+}
+</code></pre>
+
+<p>Now this will return a single interval (and it does it correctly) which I will add/subtract from each point on the series I have applied the calculation to to give me my confidence interval. But this is a constant and the R implementation seems to change over the time-series.</p>
+
+<p>My question is why is <strong>the confidence interval changing for the R implementation? Should I be implementing my confidence levels/intervals differently?</strong></p>
+
+<p>Thanks for your time.</p>
+
+<hr>
+
+<p>For reference the R code that produces this plot is below:</p>
+
+<pre><code>install.packages('KFAS')
+require(KFAS)
+
+# Example of local level model for Nile series
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='BFGS',control=list(REPORT=1,trace=1))$model
+
+# Can use different optimisation: 
+# should be one of â€œNelder-Meadâ€, â€œBFGSâ€, â€œCGâ€, â€œL-BFGS-Bâ€, â€œSANNâ€, â€œBrentâ€
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='L-BFGS-B',control=list(REPORT=1,trace=1))$model
+
+# Filtering and state smoothing
+out&lt;-KFS(modelNile,filtering='state',smoothing='state')
+out$model$H
+out$model$Q
+out
+
+# Confidence and prediction intervals for the expected value and the observations.
+# Note that predict uses original model object, not the output from KFS.
+conf&lt;-predict(modelNile,interval='confidence')
+pred&lt;-predict(modelNile,interval='prediction')
+ts.plot(cbind(Nile,pred,conf[,-1]),col=c(1:2,3,3,4,4),
+ylab='Predicted Annual flow', main='River Nile')
+KFAS 13
+
+# Missing observations, using same parameter estimates
+y&lt;-Nile
+y[c(21:40,61:80)]&lt;-NA
+modelNile&lt;-SSModel(y~SSMtrend(1,Q=list(modelNile$Q)),H=modelNile$H)
+out&lt;-KFS(modelNile,filtering='mean',smoothing='mean')
+
+# Filtered and smoothed states
+plot.ts(cbind(y,fitted(out,filtered=TRUE),fitted(out)), plot.type='single',
+col=1:3, ylab='Predicted Annual flow', main='River Nile')
+
+# Example of multivariate local level model with only one state
+# Two series of average global temperature deviations for years 1880-1987
+# See Shumway and Stoffer (2006), p. 327 for details
+data(GlobalTemp)
+model&lt;-SSModel(GlobalTemp~SSMtrend(1,Q=NA,type='common'),H=matrix(NA,2,2))
+
+# Estimating the variance parameters
+inits&lt;-chol(cov(GlobalTemp))[c(1,4,3)]
+inits[1:2]&lt;-log(inits[1:2])
+fit&lt;-fitSSM(inits=c(0.5*log(.1),inits),model=model,method='BFGS')
+out&lt;-KFS(fit$model)
+    ts.plot(cbind(model$y,coef(out)),col=1:3)
+legend('bottomright',legend=c(colnames(GlobalTemp), 'Smoothed signal'), col=1:3, lty=1)
+
+# Seatbelts data
+## Not run:
+model&lt;-SSModel(log(drivers)~SSMtrend(1,Q=list(NA))+
+SSMseasonal(period=12,sea.type='trigonometric',Q=NA)+
+log(PetrolPrice)+law,data=Seatbelts,H=NA)
+
+# As trigonometric seasonal contains several disturbances which are all
+# identically distributed, default behaviour of fitSSM is not enough,
+# as we have constrained Q. We can either provide our own
+# model updating function with fitSSM, or just use optim directly:
+# option 1:
+ownupdatefn&lt;-function(pars,model,...){
+model$H[]&lt;-exp(pars[1])
+    diag(model$Q[,,1])&lt;-exp(c(pars[2],rep(pars[3],11)))
+model #for option 2, replace this with -logLik(model) and call optim directly
+}
+14 KFAS
+fit&lt;-fitSSM(inits=log(c(var(log(Seatbelts[,'drivers'])),0.001,0.0001)),
+model=model,updatefn=ownupdatefn,method='BFGS')
+out&lt;-KFS(fit$model,smoothing=c('state','mean'))
+    out
+    ts.plot(cbind(out$model$y,fitted(out)),lty=1:2,col=1:2,
+    main='Observations and smoothed signal with and without seasonal component')
+    lines(signal(out,states=c(""regression"",""trend""))$signal,col=4,lty=1)
+legend('bottomleft',
+legend=c('Observations', 'Smoothed signal','Smoothed level'),
+col=c(1,2,4), lty=c(1,2,1))
+
+# Multivariate model with constant seasonal pattern,
+# using the the seat belt law dummy only for the front seat passangers,
+# and restricting the rank of the level component by using custom component
+# note the small inconvinience in regression component,
+# you must remove the intercept from the additional regression parts manually
+model&lt;-SSModel(log(cbind(front,rear))~ -1 + log(PetrolPrice) + log(kms)
++ SSMregression(~-1+law,data=Seatbelts,index=1)
++ SSMcustom(Z=diag(2),T=diag(2),R=matrix(1,2,1),
+Q=matrix(1),P1inf=diag(2))
++ SSMseasonal(period=12,sea.type='trigonometric'),
+data=Seatbelts,H=matrix(NA,2,2))
+likfn&lt;-function(pars,model,estimate=TRUE){
+model$H[,,1]&lt;-exp(0.5*pars[1:2])
+    model$H[1,2,1]&lt;-model$H[2,1,1]&lt;-tanh(pars[3])*prod(sqrt(exp(0.5*pars[1:2])))
+    model$R[28:29]&lt;-exp(pars[4:5])
+if(estimate) return(-logLik(model))
+model
+}
+fit&lt;-optim(f=likfn,p=c(-7,-7,1,-1,-3),method='BFGS',model=model)
+model&lt;-likfn(fit$p,model,estimate=FALSE)
+    model$R[28:29,,1]%*%t(model$R[28:29,,1])
+    model$H
+out&lt;-KFS(model)
+out
+ts.plot(cbind(signal(out,states=c('custom','regression'))$signal,model$y),col=1:4)
+
+# For confidence or prediction intervals, use predict on the original model
+pred &lt;- predict(model,states=c('custom','regression'),interval='prediction')
+ts.plot(pred$front,pred$rear,model$y,col=c(1,2,2,3,4,4,5,6),lty=c(1,2,2,1,2,2,1,1))
+
+## End(Not run)
+## Not run:
+# Poisson model
+model&lt;-SSModel(VanKilled~law+SSMtrend(1,Q=list(matrix(NA)))+
+SSMseasonal(period=12,sea.type='dummy',Q=NA),
+KFAS 15
+data=Seatbelts, distribution='poisson')
+
+# Estimate variance parameters
+fit&lt;-fitSSM(inits=c(-4,-7,2), model=model,method='BFGS')
+model&lt;-fit$model
+
+# use approximating model, gives posterior mode of the signal and the linear predictor
+out_nosim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=0)
+
+# State smoothing via importance sampling
+out_sim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=1000)
+out_nosim
+out_sim
+
+## End(Not run)
+# Example of generalized linear modelling with KFS
+# Same example as in ?glm
+counts &lt;- c(18,17,15,20,10,20,25,13,12)
+outcome &lt;- gl(3,1,9)
+treatment &lt;- gl(3,3)
+print(d.AD &lt;- data.frame(treatment, outcome, counts))
+glm.D93 &lt;- glm(counts ~ outcome + treatment, family = poisson())
+model&lt;-SSModel(counts ~ outcome + treatment, data=d.AD,
+distribution = 'poisson')
+out&lt;-KFS(model)
+coef(out,start=1,end=1)
+coef(glm.D93)
+summary(glm.D93)$cov.s
+    out$V[,,1]
+outnosim&lt;-KFS(model,smoothing=c('state','signal','mean'))
+set.seed(1)
+outsim&lt;-KFS(model,smoothing=c('state','signal','mean'),nsim=1000)
+
+## linear
+# GLM
+glm.D93$linear.predictor
+
+# approximate model, this is the posterior mode of p(theta|y)
+c(outnosim$thetahat)
+
+# importance sampling on theta, gives E(theta|y)
+c(outsim$thetahat)
+
+## predictions on response scale
+16 KFAS
+
+# GLM
+fitted(glm.D93)
+
+# approximate model with backtransform, equals GLM
+c(fitted(outnosim))
+
+# importance sampling on exp(theta)
+fitted(outsim)
+
+# prediction variances on link scale
+# GLM
+as.numeric(predict(glm.D93,type='link',se.fit=TRUE)$se.fit^2)
+
+# approx, equals to GLM results
+c(outnosim$V_theta)
+    # importance sampling on theta
+    c(outsim$V_theta)
+# prediction variances on response scale
+# GLM
+as.numeric(predict(glm.D93,type='response',se.fit=TRUE)$se.fit^2)
+    # approx, equals to GLM results
+    c(outnosim$V_mu)
+# importance sampling on theta
+c(outsim$V_mu)
+    ## Not run:
+    data(sexratio)
+    model&lt;-SSModel(Male~SSMtrend(1,Q=list(NA)),u=sexratio[,'Total'],data=sexratio,
+    distribution='binomial')
+    fit&lt;-fitSSM(model,inits=-15,method='BFGS',control=list(trace=1,REPORT=1))
+    fit$model$Q #1.107652e-06
+
+# Computing confidence intervals in response scale
+# Uses importance sampling on response scale (4000 samples with antithetics)
+pred&lt;-predict(fit$model,type='response',interval='conf',nsim=1000)
+    ts.plot(cbind(model$y/model$u,pred),col=c(1,2,3,3),lty=c(1,1,2,2))
+
+# Now with sex ratio instead of the probabilities:
+imp&lt;-importanceSSM(fit$model,nsim=1000,antithetics=TRUE)
+    sexratio.smooth&lt;-numeric(length(model$y))
+sexratio.ci&lt;-matrix(0,length(model$y),2)
+    w&lt;-imp$w/sum(imp$w)
+    for(i in 1:length(model$y)){
+sexr&lt;-exp(imp$sample[i,1,])
+sexratio.smooth[i]&lt;-sum(sexr*w)
+oo&lt;-order(sexr)
+sexratio.ci[i,]&lt;-c(sexr[oo][which.min(abs(cumsum(w[oo]) - 0.05))],
++ sexr[oo][which.min(abs(cumsum(w[oo]) - 0.95))])
+}
+
+# Same by direct transformation:
+out&lt;-KFS(fit$model,smoothing='signal',nsim=1000)
+    KFS 17
+    sexratio.smooth2 &lt;- exp(out$thetahat)
+sexratio.ci2&lt;-exp(c(out$thetahat)
+    + qnorm(0.025) * sqrt(drop(out$V_theta))%o%c(1, -1))
+ts.plot(cbind(sexratio.smooth,sexratio.ci,sexratio.smooth2,sexratio.ci2),
+col=c(1,1,1,2,2,2),lty=c(1,2,2,1,2,2))
+
+## End(Not run)
+# Example of Cubic spline smoothing
+## Not run:
+require(MASS)
+data(mcycle)
+model&lt;-SSModel(accel~-1+SSMcustom(Z=matrix(c(1,0),1,2),
+T=array(diag(2),c(2,2,nrow(mcycle))),
+Q=array(0,c(2,2,nrow(mcycle))),
+P1inf=diag(2),P1=diag(0,2)),data=mcycle)
+model$T[1,2,]&lt;-c(diff(mcycle$times),1)
+model$Q[1,1,]&lt;-c(diff(mcycle$times),1)^3/3
+model$Q[1,2,]&lt;-model$Q[2,1,]&lt;-c(diff(mcycle$times),1)^2/2
+    model$Q[2,2,]&lt;-c(diff(mcycle$times),1)
+    updatefn&lt;-function(pars,model,...){
+    model$H[]&lt;-exp(pars[1])
+    model$Q[]&lt;-model$Q[]*exp(pars[2])
+    model
+    }
+    fit&lt;-fitSSM(model,inits=c(4,4),updatefn=updatefn,method=""BFGS"")
+    pred&lt;-predict(fit$model,interval=""conf"",level=0.95)
+plot(x=mcycle$times,y=mcycle$accel,pch=19)
+lines(x=mcycle$times,y=pred[,1])
+    lines(x=mcycle$times,y=pred[,2],lty=2)
+lines(x=mcycle$times,y=pred[,3],lty=2)
+## End(Not run)
+</code></pre>
+
+<p>The time-series data is:</p>
+
+<pre><code>Time, 2.4, 2.6, 3.2, 3.6, 4, 6.2, 6.6, 6.8, 7.8, 8.2, 8.8, 8.8, 9.6, 10, 10.2, 10.6, 11, 11.4, 13.2, 13.6, 13.8, 14.6, 14.6, 14.6, 14.6, 14.6, 14.6, 14.8, 15.4, 15.4, 15.4, 15.4, 15.6, 15.6, 15.8, 15.8, 16, 16, 16.2, 16.2, 16.2, 16.4, 16.4, 16.6, 16.8, 16.8, 16.8, 17.6, 17.6, 17.6, 17.6, 17.8, 17.8, 18.6, 18.6, 19.2, 19.4, 19.4, 19.6, 20.2, 20.4, 21.2, 21.4, 21.8, 22, 23.2, 23.4, 24, 24.2, 24.2, 24.6, 25, 25, 25.4, 25.4, 25.6, 26, 26.2, 26.2, 26.4, 27, 27.2, 27.2, 27.2, 27.6, 28.2, 28.4, 28.4, 28.6, 29.4, 30.2, 31, 31.2, 32, 32, 32.8, 33.4, 33.8, 34.4, 34.8, 35.2, 35.2, 35.4, 35.6, 35.6, 36.2, 36.2, 38, 38, 39.2, 39.4, 40, 40.4, 41.6, 41.6, 42.4, 42.8, 42.8, 43, 44, 44.4, 45, 46.6, 47.8, 47.8, 48.8, 50.6, 52, 53.2, 55, 55, 55.4, 57.6                                                                                                
+mcycle, 0, -1.3, -2.7, 0, -2.7, -2.7, -2.7, -1.3, -2.7, -2.7, -1.3, -2.7, -2.7, -2.7, -5.4, -2.7, -5.4, 0, -2.7, -2.7, 0, -13.3, -5.4, -5.4, -9.3, -16, -22.8, -2.7, -22.8, -32.1, -53.5, -54.9, -40.2, -21.5, -21.5, -50.8, -42.9, -26.8, -21.5, -50.8, -61.7, -5.4, -80.4, -59, -71, -91.1, -77.7, -37.5, -85.6, -123.1, -101.9, -99.1, -104.4, -112.5, -50.8, -123.1, -85.6, -72.3, -127.2, -123.1, -117.9, -134, -101.9, -108.4, -123.1, -123.1, -128.5, -112.5, -95.1, -81.8, -53.5, -64.4, -57.6, -72.3, -44.3, -26.8, -5.4, -107.1, -21.5, -65.6, -16, -45.6, -24.2, 9.5, 4, 12, -21.5, 37.5, 46.9, -17.4, 36.2, 75, 8.1, 54.9, 48.2, 46.9, 16, 45.6, 1.3, 75, -16, -54.9, 69.6, 34.8, 32.1, -37.5, 22.8, 46.9, 10.7, 5.4, -1.3, -21.5, -13.3, 30.8, -10.7, 29.4, 0, -10.7, 14.7, -1.3, 0, 10.7, 10.7, -26.8, -14.7, -13.3, 0, 10.7, -14.7, -2.7, 10.7, -2.7, 10.7
+</code></pre>
+"
+"0.191511479307604","0.154450515803804","147619","<p>I'm trying to build a model that can predict streamflow for an alpine (snowmelt-fed) watershed using snow albedo (roughly, the energy reflectance of the snow) data. Albedo controls the melt of the snowpack, and higher albedo means slower melt, and vice versa. I have daily time-series data for both the snow albedo and streamflow, for 12 years from 2002-2013. The albedo time-series was obtained by spatially-averaging albedo data (raster files) from NASA's MODIS satellite.</p>
+
+<p>I have tried various methods (simple regression, GLMs, GAMs, decision trees and random forests) to build the flow prediction model, but all of them fail because of the autocorrelated relationship between albedo and flow. Since the albedo is a snowpack property, there is a lag between it and the flow (related to snowmelt).</p>
+
+<p>The Cross correlation function (CCF) between albedo and flow is shown below:</p>
+
+<p><a href=""http://imgur.com/PpW1Kpy"" rel=""nofollow""><img src=""http://i.imgur.com/PpW1Kpy.png"" title=""source: imgur.com"" /></a></p>
+
+<p>I have tried to include albedo lags of various days into the models, but I'm not able to mimic the distributed lag relationship between albedo and flow. I have tried to add precipitation, temperature and other climatic data to the predictors, but they don't seem to help. There are similar lagged and cross-correlation problems between these other predictors and flow.</p>
+
+<p>The albedo, flow, precipitation and air temperature time-series are shown below:</p>
+
+<p><a href=""http://imgur.com/Kb8Ta6q"" rel=""nofollow""><img src=""http://i.imgur.com/Kb8Ta6q.png"" title=""source: imgur.com"" /></a></p>
+
+<p>Is there a statistical or machine learning technique in R that I can explore to build the albedo-streamflow model?</p>
+
+<p>Thank you.</p>
+"
+"0.371112585205896","0.309705812037741","147816","<p>This is a revision/rephrasing of <a href=""http://stackoverflow.com/questions/29705265/how-to-present-multiple-time-series-data-to-an-svm-ksvm-in-r-or-how-to-prese"">my question originally posted on stackoverflow</a>.</p>
+
+<p>How should I create the training/input dataset for a <a href=""http://www.inside-r.org/node/63499"" rel=""nofollow"">ksvm</a> model with multi-dimensional input data?</p>
+
+<p>The process for which I need a binary yes/no prediction model has six non-periodic time series inputs, all with the same sampling frequency. An event triggers the start of data collection, and after a pre-determined time I need a yes/no prediction (preferably including a probability-of-correctness output).</p>
+
+<p>I'm pretty new to both R and SVM's, but I think I want to use an SVM model (<a href=""http://www.inside-r.org/node/63499"" rel=""nofollow"">kernlab's ksvm</a>). I'm having trouble figuring out how to present the input data to it. There are two basic strategies I've tried with dismal results (well, the resulting models were better than blind guessing, but not much).</p>
+
+<p>First of all, not being familiar with R, I used the Rattle GUI front-end to R. I have a feeling that by doing so I may be limiting my options. But anyway, here's what I've done.....</p>
+
+<p>Example known result files (shown with only 4 sensors instead of 6, and only 7 time samples instead of 100):</p>
+
+<p>training168_yes.csv</p>
+
+<pre><code>Seconds Since 1/1/2000,sensor1,sensor2,sensor3,sensor4
+454768042.4,           0,      0,      0,      0
+454768042.6,           51,     60,     0,      172
+454768043.3,           0,      0,      0,      0
+454768043.7,           300,    0,      0,      37
+454768044.0,           0,      0,      1518,   0
+454768044.3,           0,      0,      0,      0
+454768044.7,           335,    0,      0,      4273
+</code></pre>
+
+<p>training169_no.csv</p>
+
+<pre><code>Seconds Since 1/1/2000,sensor1,sensor2,sensor3,sensor4
+454767904.5,           0,      0,      0,      0
+454767904.8,           51,     0,      498,    0
+454767905.0,           633,    0,      204,    55
+454767905.3,           0,      0,      0,      512
+454767905.6,           202,    655,    739,    656
+454767905.8,           0,      0,      0,      0
+454767906.0,           0,      934,    0,      7814
+</code></pre>
+
+<p>The only way I know to get the data for all training samples into Rattle is to massage &amp; combine all result files into a single .csv file, with one sample result per line. I can think of only two ways to do that, so I tried them both (and I knew when I was doing it that by doing this I'm hiding potentially important information, which is the point of this question):</p>
+
+<p><strong><em>TRIAL #1:</em></strong> For each result file, add each sensor's samples into a single number, blasting away all temporal information:</p>
+
+<pre><code>result,sensor1,sensor2,sensor3,sensor4
+no,    886,    1589,   1441,   9037
+yes,   686,    60,     1518,   4482
+no,    632,    1289,   1173,   9152
+yes,   411,    67,     988,    5030
+no,    772,    1703,   1351,   9008
+yes,   490,    70,     1348,   4909
+</code></pre>
+
+<p>When I get done using Rattle to generate the SVM, Rattle's log tab gives me the following script which can be used to generate &amp; train an SVM in RGui:</p>
+
+<pre><code>library(rattle)
+building &lt;- TRUE
+scoring  &lt;- ! building
+library(colorspace)
+crv$seed &lt;- 42
+    crs$dataset &lt;- read.csv(""file:///C:/Users/mminich/Desktop/stackoverflow/trainingSummary1.csv"",na.strings=c(""."", ""NA"", """", ""?""), strip.white=TRUE, encoding=""UTF-8"")
+set.seed(crv$seed) 
+    crs$nobs &lt;- nrow(crs$dataset) # 6 observations 
+    crs$sample &lt;- crs$train &lt;- sample(nrow(crs$dataset), 0.67*crs$nobs) # 4 observations
+    crs$validate &lt;- NULL
+crs$test &lt;- setdiff(setdiff(seq_len(nrow(crs$dataset)), crs$train), crs$validate) # 2 observations
+# The following variable selections have been noted.
+crs$input &lt;- c(""sensor1"", ""sensor2"", ""sensor3"", ""sensor4"")
+    crs$numeric &lt;- c(""sensor1"", ""sensor2"", ""sensor3"", ""sensor4"")
+crs$categoric &lt;- NULL
+    crs$target  &lt;- ""result""
+crs$risk    &lt;- NULL
+    crs$ident   &lt;- NULL
+crs$ignore  &lt;- NULL
+    crs$weights &lt;- NULL
+require(kernlab, quietly=TRUE)
+set.seed(crv$seed)
+    crs$ksvm &lt;- ksvm(as.factor(result) ~ .,
+      data=crs$dataset[,c(crs$input, crs$target)],
+      kernel=""polydot"",
+      kpar=list(""degree""=1),
+      prob.model=TRUE)
+</code></pre>
+
+<p><strong><em>TRIAL #2:</em></strong> For each result file, add the samples for all sensors for each time into a single number, blasting away any information about individual sensors:</p>
+
+<pre><code>result,time1, time2, time3, time4, time5, time6, time7
+no,    0,     549,   892,   512,   2252,  0,     8748
+yes,   0,     283,   0,     337,   1518,  0,     4608
+no,    0,     555,   753,   518,   2501,  0,     8984
+yes,   0,     278,   12,    349,   1438,  3,     4441
+no,    0,     602,   901,   499,   2391,  0,     7989
+yes,   0,     271,   3,     364,   1474,  1,     4599
+</code></pre>
+
+<p>And again I use Rattle to generate the SVM, and Rattle's log tab gives me the following script:</p>
+
+<pre><code>library(rattle)
+building &lt;- TRUE
+scoring  &lt;- ! building
+library(colorspace)
+crv$seed &lt;- 42 
+    crs$dataset &lt;- read.csv(""file:///C:/Users/mminich/Desktop/stackoverflow/trainingSummary2.csv"",na.strings=c(""."", ""NA"", """", ""?""), strip.white=TRUE, encoding=""UTF-8"")
+set.seed(crv$seed) 
+    crs$nobs &lt;- nrow(crs$dataset) # 6 observations 
+    crs$sample &lt;- crs$train &lt;- sample(nrow(crs$dataset), 0.67*crs$nobs) # 4 observations
+    crs$validate &lt;- NULL
+crs$test &lt;- setdiff(setdiff(seq_len(nrow(crs$dataset)), crs$train), crs$validate) # 2 observations
+# The following variable selections have been noted.
+crs$input &lt;- c(""time1"", ""time2"", ""time3"", ""time4"", ""time5"", ""time6"", ""time7"")
+    crs$numeric &lt;- c(""time1"", ""time2"", ""time3"", ""time4"", ""time5"", ""time6"", ""time7"")
+crs$categoric &lt;- NULL
+    crs$target  &lt;- ""result""
+crs$risk    &lt;- NULL
+    crs$ident   &lt;- NULL
+crs$ignore  &lt;- NULL
+    crs$weights &lt;- NULL
+require(kernlab, quietly=TRUE)
+set.seed(crv$seed)
+    crs$ksvm &lt;- ksvm(as.factor(result) ~ .,
+      data=crs$dataset[,c(crs$input, crs$target)],
+      kernel=""polydot"",
+      kpar=list(""degree""=1),
+      prob.model=TRUE)
+</code></pre>
+
+<p>Unfortunately even with nearly 1000 training datasets, both of the resulting models give me only slightly better results than I would get by just random chance. I'm pretty sure it would do better if there's a way to avoid blasting away either the temporal data or the distinction between different sensors. But it would seem that somehow I'd need to present a 2-dimensional array (matrix? I'm not a math guy so I don't know if I should be using the term ""matrix"" here) for each observation instead of a single-dimensional array (i.e. it seems like instead of each observation being one line of a .csv file, each observation would need to be an entire 2-dimensional .csv file itself, and I'd need to present an array/list of the .csv files, meaning the input training set would be a 3-dimensional structure of some sort. How can I create such a structure for input to <code>ksvm()</code>?</p>
+"
+"0.173032135051496","0.156292933032913","148920","<p>I'm trying to build an artificial neural network (ANN) using the R ""neuralnet"" package, to predict streamflow from snow albedo (reflectance of the snow; controls the amount of heat absorbed by the snow, and therefore controls its melt), precipitation, air temperature, and a temporal variable, 'day of the year'. All the above variables are time-series with 4383 values each between the years 2002 and 2013, with daily temporal frequency. Simpler statistical models have not worked because of the complex autocorrelated and lagged relationship between the predictor and predictors.</p>
+
+<p>I have the following questions about building the ANN:</p>
+
+<ol>
+<li>What number of hidden layers should I use when building the model? How does this choice affect the model?</li>
+<li>Should I change the 'threshold' parameter from the default (0.01)? My flow values fluctuate between 0.5 and 134.82 cubic-foot per second (cfs), with a mean of 8.5 cfs. Ideally, my flow prediction errors should not be greater than 1-2 cfs.</li>
+<li>Will the choice of algorithm affect the prediction accuracy?</li>
+<li>Should I change any of the other parameters in neuralnet?</li>
+<li>Should I include any other variables (lags, temporal variables etc) in my model?</li>
+</ol>
+
+<p>Also, would any other machine learning or statistical method be more suitable for this task? My data is highly non-linear, with some seasonality every year, and PACF and CCF plots indicate lags at all lag periods between -30 and +30 days.</p>
+
+<p>I would be happy to answer any questions about the data, or about what I've already tried (GAMs, GLMs, Decision Trees and Random Forests).
+Thank you. </p>
+"
+"0.309529293013655","0.283953818414837","149799","<p>I want to code for Detrended Cross Correlation in R for time-series data but I'm still stuck. I don't know why the coefficient is not in range -1 : 1. I try to write following these equation below</p>
+
+<p><a href=""http://arxiv.org/pdf/1310.3984.pdf"" rel=""nofollow"">Measuring correlations between non-stationary series with DCCA coefficient</a></p>
+
+<p>Detrened cross-correlation coefficient is calculated as detrended covariance of two dataset over detrened variance of two integrated series </p>
+
+<p><img src=""http://i.stack.imgur.com/7EjJX.png"" alt=""enter image description here"">  (Equation 1)</p>
+
+<p>For time-series {xt}, use integrated series profile</p>
+
+<p><img src=""http://i.stack.imgur.com/JNdJv.png"" alt=""enter image description here"">   (Equation 2)</p>
+
+<p>where the data must be detrended by local trend in box of size s</p>
+
+<p><img src=""http://i.stack.imgur.com/eMg8Z.png"" alt=""enter image description here"">  (Equation 3)</p>
+
+<p><img src=""http://i.stack.imgur.com/SfhD3.png"" alt=""enter image description here"">(Equation 4)</p>
+
+<p>The X_hat is linear fit value evaluated by least square method</p>
+
+<p>Detrended covariance of two profiles</p>
+
+<p><img src=""http://i.stack.imgur.com/aiHyX.png"" alt=""enter image description here""> (Equation 5)</p>
+
+<p>Average the covariance over all boxes</p>
+
+<p><img src=""http://i.stack.imgur.com/ixtwd.png"" alt=""enter image description here"">  (Equation 6)</p>
+
+<pre><code>## data_1
+    x= c(-1.042061,-0.669056,-0.685977,-0.067925,0.808380,1.385235,1.455245,0.540762 ,0.139570,-1.038133,0.080121,-0.102159,-0.068675,0.515445,0.600459,0.655325,0.610604,0.482337,0.079108,-0.118951,-0.050178,0.007500,-0.200622)
+    ## data_2
+    y= c(-2.368030,-2.607095,-1.277660,0.301499,1.346982,1.885968,1.765950,1.242890,-0.464786,0.186658,-0.036450,-0.396513,-0.157115,-0.012962,0.378752,-0.151658,0.774253,0.646541,0.311877,-0.694177,-0.412918,-0.338630,0.276635)
+    ## window size = 6
+    k=6
+    DCCA_CC=function(x,y,k){
+      ## calculate cumulative sum profile of all t
+    xx&lt;- cumsum(x - mean(x))  ## Equation 2
+    yy&lt;- cumsum(y - mean(y))  ## Equation 2
+
+      ## Divide in to overlapping boxes of size k
+
+  slide_win_xx = mat_sliding_window(xx,k)
+  slide_win_yy = mat_sliding_window(yy,k)
+  ## calculate linear fit value in each box 
+  x_hat = t(apply(slide_win_xx,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+  y_hat = t(apply(slide_win_yy,1,function(n) (lm(n~seq(1:length(n)))$fitted.values)))
+
+##  Get detrend variance in each box with linear fit value (detrend by local trend).
+  F2_dfa_x = c()
+  F2_dfa_y = c()
+  for(i in 1:nrow(x_hat)){
+ ## Equation 4
+    F2_dfa_x = c(F2_dfa_x,mean((xx[i:(i+k-1)]-x_hat[i,])^2))
+  }
+  for(i in 1:nrow(y_hat)){
+## Equation 4
+    F2_dfa_y = c(F2_dfa_y,mean((yy[i:(i+k-1)]-y_hat[i,])^2))
+  }
+  ## Average detrend variance over all boxes to obtain fluctuation
+  F2_dfa_x = mean(F2_dfa_x) ## Equation 3
+  F2_dfa_y = mean(F2_dfa_y) ## Equation 3
+
+  ## Get detrended covariance of two profile
+  F2_dcca = c()
+  for(i in 1:nrow(x_hat)){
+  ## Equation 5
+    F2_dcca = c(F2_dcca,mean((xx[i:(i+k-1)]-x_hat[i,]) * (yy[i:(i+k-1)]-y_hat[i,]) ))
+  }
+
+## Equation 6
+  F2_dcca = mean(F2_dcca)
+
+## Calculate correlation coefficient 
+  rho = F2_dcca / (F2_dfa_x * F2_dfa_y) ## Equation 1
+  return(rho)
+}
+
+mat_sliding_window = function(xx,k){
+## Function to generate boxes given dataset(xx) and box size (k)
+  slide_mat=c()
+  for (i in 1:(length(xx)-k+1)){
+    slide_mat = rbind(slide_mat,xx[i:(i+k-1)] )
+  }
+  return(slide_mat)
+}
+
+print(DCCA_CC(x,y,k)) ##This give me 3.392302
+</code></pre>
+
+<p>I'm not sure if something wrong in integrated profile.</p>
+"
+"0.154764646506827","0.0873704056661038","151840","<p>I have several years of sensor data (temperature and relative humidity) that records every 1/2 hour.  When the sensor dies, it often starts throwing bad data mixed in with good data before it dies completely.  When it dies completely, it reports an error code ( like -100). </p>
+
+<p>I've been trying to come up with an automated method to flag (and fill) bad data. I found @RobHyndman's <a href=""http://stats.stackexchange.com/questions/1142/simple-algorithm-for-online-outlier-detection-of-a-generic-time-series"">Simple algorithm for online outlier detection of a generic time series</a> R code and got it working but it assumes a simple seasonal pattern. If I were more conversant with STL, I might be able to figure out how to use it to replace outliers with expected values.</p>
+
+<p>I've also found some of his <a href=""http://robjhyndman.com/papers/ComplexSeasonality.pdf"" rel=""nofollow""> (and his student's)</a> other work on complex seasonality and wish I had the time now to absorb it all.  In the meantime, my guess is that someone like him could probably add a line or two or a loop to that tsoutliers function and it would do just what I need.</p>
+
+<p>I have posted the data to a <a href=""https://drive.google.com/folderview?id=0B2lpcjjxYGVufk91c1dwc256dVZ6alRRTHhTVnJMTHFCbE1LRk1ocTRyV0c5YkVQLU9RQ2c&amp;usp=sharing"" rel=""nofollow"">google drive folder</a>.</p>
+
+<p>There are three files.  LOESS2.csv has time and temperature (all that is needed for the posted question).  The sensor starts going bad on 1/3/2013.  I've added a snippet below of the first obviously bad values. If you want the good the bad and the ugly - which might suggest a couple alternative approaches - check out the other files.</p>
+
+<pre><code>1/2/2013 23:00  18.08
+1/2/2013 23:30  18.02
+1/3/2013 0:00   17.92
+1/3/2013 0:30   -9.66
+1/3/2013 1:00   -17.56
+1/3/2013 1:30   17.61
+1/3/2013 2:00   17.43
+1/3/2013 2:30   17.26
+</code></pre>
+
+<p>A characteristic of the data that might help is each value is actually an average of more frequent measurements by a data logger.  Perhaps as a result, they are fairly smooth in that they rarely ""reverse direction"" twice in a short period.</p>
+
+<p>After a night of thinking about this, I am wondering if I should try to get at this using TBATS (or even VARS) instead of STL.</p>
+"
+"0.0773823232534137","0.0873704056661038","153519","<p>I have trouble understanding the output of the Ljung-Box test due to conflicting information:</p>
+
+<p>The R documentation doesn't actually say how to interpret the output.</p>
+
+<p><a href=""http://www.statosphere.com.au/check-time-series-stationary-r/"" rel=""nofollow"">This site</a> states that small p-values means that the data is likely to be stationary.</p>
+
+<p>This <a href=""https://www.otexts.org/fpp/2/6"" rel=""nofollow"">otexts textbook</a> states that large p-values means that the data is likely to be like white noise.</p>
+
+<p>Clearly, one of them must be wrong. Which one is it?</p>
+
+<p>Thanks!</p>
+"
+"0.289538141406864","0.280208677496583","154641","<p>This question is similar to the following <a href=""http://stats.stackexchange.com/questions/32634/difference-time-series-before-arima-or-within-arima"">question</a> in the sense I am currently doing the differencing and mean removal of the time series outside the <code>Arima</code> function in R. And I do not know how to do these steps within <code>Arima</code> function in R. The reason is that I am trying to perform the following procedure (data <code>dowj_ts</code> can be found at the bottom): </p>
+
+<pre><code>dowj_ts_d1 &lt;- diff(dowj_ts) # differencing at lag 1 (1-B)
+drift &lt;- mean(diff(dowj_ts))
+dowj_ts_d1_demeaned &lt;- dowj_ts_d1 - mean(dowj_ts_d1) # mean removal
+# Maximum Likelihood AR(1) for the mean-corrected differences X_t
+fit &lt;- Arima(dowj_ts_d1_demeaned, order=c(1,0,0),include.mean=F, transform.pars = T)
+</code></pre>
+
+<p>Note that the <code>drift</code> is actually <code>0.1336364</code>. And <code>summary(fit)</code> gives the table below:</p>
+
+<pre><code>Series: dowj_ts_d1_demeaned 
+ARIMA(1,0,0) with zero mean     
+
+Coefficients:
+         ar1
+      0.4471
+s.e.  0.1051
+
+sigma^2 estimated as 0.1455:  log likelihood=-35.16
+AIC=74.32   AICc=74.48   BIC=79.01
+
+Training set error measures:
+                       ME     RMSE       MAE       MPE     MAPE      MASE
+Training set -0.004721362 0.381457 0.2982851 -9.337089 209.6878 0.8477813
+                    ACF1
+Training set -0.04852626
+</code></pre>
+
+<p>Ultimately, I want to predict 2-step ahead forecast of <strong>the original series</strong>, and this starts to become ugly: </p>
+
+<pre><code> tail(c(dowj_ts[1], dowj_ts[1] + cumsum(c(dowj_ts_d1_demeaned,forecast.Arima(fit,h=2)$mean) + drift)),2)
+</code></pre>
+
+<p>And currently these are all done outside the <code>Arima</code> function from the <code>forecast</code> package. I know I can do differencing within Arima like this: </p>
+
+<pre><code> Arima(dowj_ts, order=c(1,1,0),include.drift=T,transform.pars = F)
+</code></pre>
+
+<p>This gives:</p>
+
+<pre><code>Series: dowj_ts 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+         ar1   drift
+      0.4478  0.1204
+s.e.  0.1059  0.0786
+
+sigma^2 estimated as 0.1474:  log likelihood=-34.69
+AIC=75.38   AICc=75.71   BIC=82.41
+</code></pre>
+
+<p>But the drift term computed by R is different from the <code>drift = 0.1336364</code> that I computed manually.</p>
+
+<p>So <strong>my question is: how can I differenced the series and then remove the mean of the differenced series within the Arima function ?</strong></p>
+
+<p><strong>Second question:</strong> Why is the drift term estimated by <code>Arima</code> different from the drift term I computed ? In fact, what does the <strong>mathematical model</strong> look like when <code>include.drift = T</code> ? This really confuses me. </p>
+
+<p>Data can be found below: </p>
+
+<pre><code>structure(c(110.94, 110.69, 110.43, 110.56, 110.75, 110.84, 110.46, 
+110.56, 110.46, 110.05, 109.6, 109.31, 109.31, 109.25, 109.02, 
+108.54, 108.77, 109.02, 109.44, 109.38, 109.53, 109.89, 110.56, 
+110.56, 110.72, 111.23, 111.48, 111.58, 111.9, 112.19, 112.06, 
+111.96, 111.68, 111.36, 111.42, 112, 112.22, 112.7, 113.15, 114.36, 
+114.65, 115.06, 115.86, 116.4, 116.44, 116.88, 118.07, 118.51, 
+119.28, 119.79, 119.7, 119.28, 119.66, 120.14, 120.97, 121.13, 
+121.55, 121.96, 122.26, 123.79, 124.11, 124.14, 123.37, 123.02, 
+122.86, 123.02, 123.11, 123.05, 123.05, 122.83, 123.18, 122.67, 
+122.73, 122.86, 122.67, 122.09, 122, 121.23), .Tsp = c(1, 78, 
+1), class = ""ts"")
+</code></pre>
+"
+"0.189547207081969","0.142675275001284","157157","<p>I'm trying to evaluate a model for a time series, given many time series (plural). 
+For example, i'm using the <code>forecast</code> package and in particular the <code>ets</code> function to forecast based on a time series.</p>
+
+<p>My data was not continuously gathered, so I have around 50 sessions of 1-2 hours each, where each session was recorded on a different day.</p>
+
+<p>How do I evaluate the parameters of a time-series model using multiple experiment sessions data? concatenating the time series is obviously not a good idea because the last samples of session <code>k-1</code> have no affect on the first samples at session <code>k</code>.</p>
+
+<p>This is a special case of an irregular time series, but I don't think it should be treated as one.</p>
+
+<p>here is an example code:</p>
+
+<pre><code># original time series, one per recording session:
+ts1 &lt;- ts(rnorm(n = 10, mean = 1, sd = 1),start = as.POSIXct(1433679895,origin=""1970-01-01""),frequency = 1)
+ts2 &lt;- ts(rnorm(n = 10, mean = 1.7, sd = 1.8),start = as.POSIXct(1433766295,origin=""1970-01-01""),frequency = 1)
+ts3 &lt;- ts(rnorm(n = 10, mean = 1.5, sd = 1.3),start = as.POSIXct(1433852695,origin=""1970-01-01""),frequency = 1)
+
+# concatenate all time series to an its (irregular time series) object,     just as a way to represent the combined ts
+library(its)
+dates &lt;- as.POSIXct(c(time(ts1),time(ts2),time(ts3)),origin=""1970-01-01"")
+ts.all &lt;- its(x = c(ts1,ts2,ts3), dates)
+
+library(forecast)
+ets.model &lt;- ets(ts.all,model='ZNN',alpha = 0.3)
+</code></pre>
+
+<p>So the model assumes that this is a regular time series, even though it is not.
+Is there a way to iteratively evaluate the parameters of the model given multiple sessions of data?</p>
+
+<p>This is actually a general question regarding time series analysis in chunks. This problem can happen with any analysis and any package.</p>
+
+<p>Thanks!</p>
+"
+"0.154764646506827","0.131055608499156","166968","<p>I am very new to time-series analysis and have got some time-series data regarding product prices.
+The data set is monthly data collect since 1993 to 2014.</p>
+
+<p>I have tried plotting the ACF and PACF but I do not really understand the meaning behind these plots. 
+Furthermore, I am not sure if I need to convert the data series by differencing of order 1, then proceed to plot ACF and PACF.</p>
+
+<p><a href=""http://i.stack.imgur.com/mdJF5.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/mdJF5.jpg"" alt=""My ACF and PACF plot""></a></p>
+
+<p>I plot a lag.max of 250, since there are alot of data point, and from the ACF, there appears too many lag that are above the confidence interval. However, for PACF, there are only 2 lag that are above the condidence interval.</p>
+
+<p>What is the meaning behind this? Or do I need to do differencing before the acf plot?
+In addition, how do I further evaluate my data in time-series plot?</p>
+
+<p><a href=""http://i.stack.imgur.com/PZZ9A.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/PZZ9A.jpg"" alt=""My Data Set plot""></a></p>
+
+<p>Thanks</p>
+"
+"0.154764646506827","0.0873704056661038","167044","<p>I am interested in analyzing the correlation between nationwide home prices and nationwide unemployment rates, both of which are leading economic indicators. I have data on nationwide home prices by using the Case-Shiller nationwide home price index (found here: <a href=""http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index"" rel=""nofollow"">http://us.spindices.com/indices/real-estate/sp-case-shiller-us-national-home-price-index</a>), and I have data on nationwide unemployment rates from the Bureau of Labor Statistics. </p>
+
+<p>Preliminary hypothesis/background info: Home prices are high when economy is doing well, and unemployment rates are low when the economy is doing well. So common sense tells me that as the unemployment rate rises, then the Case Shiller home price index decreases, which means there should be a negative correlation. But I don't know how to prove this. Here is a summary of the data I have:</p>
+
+<p>I have the data for the Case-Shiller nationwide Home Price index for every month over the last ten years (1/1/2005-12/31/2014) which means 120 data points. I also have all the data for the nationwide Unemployment Rate over the same time period (1/1/2005-12/31/2014), which also means 120 data points. Both data are collected for the end of the month over the same time period, which means there is zero lag in the data sets.</p>
+
+<p>What kind of correlation analysis do I need to do to determine if there is any correlation between these two data sets? Cross-correlation? Time-series analysis?</p>
+
+<p>Thank you so much for any advice on how to start this research! Any help on what direction I should go would be incredibly appreciate. </p>
+
+<p>Thank you!</p>
+"
+"0.0773823232534137","0.0873704056661038","168717","<p>this is my first post.  I have an irregular time series that exhibits large shifts in both mean and in the direction of the trend.  It looks something like this (though this is far cleaner than reality):</p>
+
+<pre><code>set.seed(1)
+x = sort(rep(seq(as.POSIXct('2015/01/01'),as.POSIXct('2015/01/10'),by='day'),100) + runif(1000,0,80000))
+y = c(seq(300),seq(90,70,-.2),seq(20,50,.1),seq(238.5,90,-.5)) + runif(1000,50,80)
+plot(x,y)
+</code></pre>
+
+<p>The task is to:
+ 1. accurately partition/segment the data
+ 2. extract the change point indices
+ 3. fit regression separately for each segment</p>
+
+<p>I have tried several routes, including:
+a) hierarchical clustering based on dissimilarity matrix
+b) function cpt.mean/var/meanvar from package changepoint (does not seem to work well)
+c) function 'breakpoints' from package strucchange (slow and often inaccurate)
+d) various types of kmeans (inappropriate, I know)</p>
+
+<p>I have also explored some other packages, such as TSclust, urca, and DTW, but these seem better suited to clustering <em>sets</em> of time-series, not individual values within a time series.</p>
+
+<p>Can someone point me in the correct direction? Perhaps I am not considering the appropriate data model?</p>
+
+<p><strong>UPDATE</strong>
+Thank you all for your very considered responses.  I went back to the strucchange package, and after some fiddling, have gotten it to work quite well.  I had not initially appreciated the h 'minimal segment size' argument.
+Finished product:
+<a href=""http://i.stack.imgur.com/qBgeY.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/qBgeY.jpg"" alt=""enter image description here""></a></p>
+"
+"0.309529293013655","0.327639021247889","172226","<p>Let's assume an analytical model predicts an epidemic trend over time, i.e. number of infections over time. We also have a computer simulation results over time to verify the performance of the model. The goal is to prove the simulation results and predicted values of the analytical model (which are both a time series) are statistically close or similar. By similarity I mean the model predicts the values close to what simulation is providing.</p>
+
+<p><strong>Background</strong>:
+Researching around this topic, I came across the following posts:</p>
+
+<ol>
+<li><p><a href=""http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis"">http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis</a></p></li>
+<li><p><a href=""http://stats.stackexchange.com/questions/19103/how-to-statistically-compare-two-time-series"">How to statistically compare two time series?</a></p></li>
+</ol>
+
+<p>Both discussions suggest three approaches, where I am interested in two of them basically:</p>
+
+<p>(1). Use of ARIMA; 
+ (2). Use of Granger test</p>
+
+<p>For the first suggested solution, this is what has been written there in regards to ARIMA, in (1):</p>
+
+<blockquote>
+  <p>Run ARIMA on both data sets. (The basic idea here is to see if the same set of parameters (which make up the ARIMA model) can describe both your temp time series. If you run auto.arima() in forecast (R), then it will select the parameters p,d,q for your data, a great convenience.</p>
+</blockquote>
+
+<p>I ran auto.arima on the simulation values and then ran forecast, here are the results:</p>
+
+<pre><code>ARIMA(2,0,0) with zero mean     
+
+Coefficients:
+         ar1      ar2
+      1.4848  -0.5619
+s.e.  0.1876   0.1873
+
+sigma^2 estimated as 121434:  log likelihood=-110.64
+AIC=227.27   AICc=229.46   BIC=229.4
+</code></pre>
+
+<p>I ran auto.arima on predicted model values and then forecast. This is the result of the predicted model:</p>
+
+<pre><code>ARIMA(2,0,0) with non-zero mean 
+
+Coefficients:
+         ar1      ar2  intercept
+      1.5170  -0.7996  1478.8843
+s.e.  0.1329   0.1412   290.4144
+
+sigma^2 estimated as 85627:  log likelihood=-108.11
+AIC=224.21   AICc=228.21   BIC=227.05
+</code></pre>
+
+<p><strong>Question 1</strong> What are the values that need to be compared to prove that the two series are similar especially the trend over time?</p>
+
+<p>Regarding the second suggested option, I have read about it and found that Granger test is usually used to see if the values of series <em>A</em> at time <em>t</em> can predict the values of Series <em>B</em> at time <em>t+1</em>. </p>
+
+<p><strong>Question 2</strong> Basically, in my case I want to compare the values of time series A and B at the same time, how this one is relevant to my case then?</p>
+
+<p><strong>Question 3</strong> Is there any available method can be used to prove that the trend of two time-series over time is similar?</p>
+
+<p>FYI. I saw another method which is using Pearson Correlation Coefficient and I could follow the reasoning there. Moreover, verifying analytical models with simulations has been widely used in the literature. see:</p>
+
+<ol>
+<li><a href=""http://users.ece.gatech.edu/~jic/tnn05.pdf"" rel=""nofollow"">Spatial-Temporal Modeling of Malware Propagation in Networks Modeling</a></li>
+<li><a href=""http://cs.ucf.edu/~czou/research/emailWorm-TDSC.pdf"" rel=""nofollow"">Modeling and Simulation Study of the Propagation and Defense of Internet Email Worm</a></li>
+</ol>
+"
+"0.109435131032917","0.123560412643043","173629","<p>When applying the ""urca"" package function <code>ur.df</code>, like </p>
+
+<pre><code>summary(ur.df(data$col1, type = c(""none""), lags = 12, selectlags = c(""AIC"")))
+</code></pre>
+
+<p>I get following result:</p>
+
+<pre><code>############################################### 
+# Augmented Dickey-Fuller Test Unit Root Test # 
+############################################### 
+
+Test regression trend 
+
+
+Call:
+lm(formula = z.diff ~ z.lag.1 + 1 + tt + z.diff.lag)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-12928366  -2888728   1284718   4218373   7179531 
+
+Coefficients:
+                 Estimate    Std. Error  t value  Pr(&gt;|t|)   
+(Intercept)  5.391984e+07  1.638362e+07  3.29108 0.0043123 **
+z.lag.1     -2.438154e+00  7.557134e-01 -3.22629 0.0049588 **
+tt           6.579260e+05  2.730453e+05  2.40959 0.0275861 * 
+z.diff.lag1  1.712004e+00  6.595980e-01  2.59553 0.0188537 * 
+z.diff.lag2  1.402824e+00  6.379412e-01  2.19899 0.0420083 * 
+z.diff.lag3  1.321555e+00  5.294537e-01  2.49607 0.0231329 * 
+z.diff.lag4  1.099430e+00  4.720412e-01  2.32910 0.0324428 * 
+z.diff.lag5  8.132753e-01  4.181477e-01  1.94495 0.0685140 . 
+z.diff.lag6  1.797331e-01  3.654326e-01  0.49184 0.6291254   
+z.diff.lag7  5.890640e-01  2.939590e-01  2.00390 0.0612825 . 
+z.diff.lag8  3.919041e-01  2.794371e-01  1.40248 0.1787705   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 6708593 on 17 degrees of freedom
+Multiple R-squared:  0.7237276, Adjusted R-squared:  0.5613144 
+F-statistic: 4.253547 on 10 and 17 DF,  p-value: 0.003348755
+
+
+Value of test-statistic is: -3.2263 3.9622 5.2635 
+
+Critical values for test statistics: 
+      1pct  5pct 10pct
+tau3 -4.15 -3.50 -3.18
+phi2  7.02  5.13  4.31
+phi3  9.31  6.73  5.61
+</code></pre>
+
+<p>Now the question:</p>
+
+<ol>
+<li>I do understand that ""-3.2263"" is the critical value (t-value)</li>
+<li><strong>There is a unit root</strong> with trend since -3.2263 > -3.18 (tau3@10pct)
+This means the time-series is <strong>non-stationary</strong> at a 10% significance level.</li>
+<li>But, what is the meaning of ""p-value: 0.003348755""? Should I list this value in a table summarizing my unit root test results or rather mark the 0.1 significance level (*10%)?</li>
+</ol>
+
+<p>The <a href=""http://www.inside-r.org/packages/cran/urca/docs/ur.df"" rel=""nofollow"">documentation</a> says that critical values are based on Hamilton (1994) and Dickey and Fuller (1981)"". </p>
+"
+"0.244704392116198","0.221031585598215","175813","<p>I want estimate distribution of fitted parameters using or maximum likelihood or Bayesian statistics.</p>
+
+<p>I make a simple example in R to show my ""problem"".</p>
+
+<p>In ML, I get a standard error for mean and sd estimation (based on fitdistr [package MASS] or optim); in Bayesian statistics (MCMC and package coda for analysis), I get a ""standard deviation"" for both mean and sd which are similar to the standard error estimated using ML. I get also time-series SE (or batch SE) which are much more small than the corresponding ""standard deviation"".</p>
+
+<p>I am a little bit lost.
+1/ Can the SE obtained in ML be used to build a confidence interval (+/- 2 SE) for both estimated parameters (mean and sd) of the Gaussian distribution? (based on my knowledge, estimates obtained my ML are asymptotically normal distributed).
+2/ Based on the similarity of SE in ML and SD in Bayesian stats, I suspect that I should use the SD from Bayesian stats to build a confidence interval... but what represent the SE ?</p>
+
+<p>Thanks a lot. Here is the R code. You will need libraries MASS and HelpersMG.</p>
+
+<pre><code># Generate 100 values from Gaussian distribution
+val=rnorm(100, mean=20, sd=5)
+
+###################################
+# Use library MASS to estimate parameters from this observed distribution
+library(MASS)
+(r&lt;-fitdistr(val, ""normal""))
+
+# Use optim to do the same
+# Return -ln L of values in val in Gaussian distribution with mean and sd
+fitnorm&lt;-function(par, val) {
+  -sum(dnorm(val, par[""mean""], par[""sd""], log = TRUE))
+}
+
+# Initial values for search
+p&lt;-c(mean=20, sd=5)
+# fit the model
+result&lt;-optim(par=p, fn=fitnorm, val=val, method=""BFGS"", hessian=TRUE)
+# Inverse the hessian matrix to get SE for each parameters
+mathessian=result$hessian
+inversemathessian=solve(mathessian)
+res=sqrt(diag(inversemathessian))
+
+# results; similar to what was obtained with fitdistr
+data.frame(Mean=result$par, SE=res)
+
+###################################
+# Now using Bayesian
+library(""HelpersMG"")
+# generate priors
+parameters_mcmc &lt;- data.frame(Density=c('dunif', 'dunif'),
+                              Prior1=c(-100, 0), Prior2=c(100, 10), SDProp=c(0.2, 0.2),
+                              Min=c(-100, 0), Max=c(100, 10), Init=c(20, 5), stringsAsFactors = FALSE,
+                              row.names=c('mean', 'sd'))
+mcmc_run &lt;- MHalgoGen(n.iter=50000, parameters=parameters_mcmc, val=val,
+                      likelihood=fitnorm, n.chains=1, n.adapt=100, thin=1, trace=1)
+
+mcmcforcoda &lt;- as.mcmc(mcmc_run)
+# raftery.diag(mcmcforcoda)
+# heidel.diag(mcmcforcoda)
+
+###################################
+# comparisons of estimates between bayesian and ML
+summary(mcmcforcoda)$statistics
+    data.frame(Mean=result$par, SE=res)
+</code></pre>
+"
+"NaN","NaN","176577","<p>The way I understand it, the CausalImpact package estimates a Bayesian model meant to analyse time-series data.
+What if, instead, I want to use panel data (i.e. repeated observations of the same individuals over time)? Is the estimator still valid, or should I look for something else?</p>
+"
+"0.268060230965262","0.277438299767925","182232","<p>I have time-series data containing 1440 observations and the plot of the data is
+<a href=""http://i.stack.imgur.com/LWkw7.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LWkw7.png"" alt=""enter image description here""></a></p>
+
+<p>I want to fit the Gaussian Mixture Models (GMM) to the above plot, and for the same I am using Mclust function of <a href=""https://cran.fhcrc.org/web/packages/mclust/index.html"" rel=""nofollow"">mclust</a> package. Finally, I want a fit somewhat like this:
+<a href=""http://i.stack.imgur.com/zTtjJ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/zTtjJ.png"" alt=""enter image description here""></a></p>
+
+<p>On using Mclust function, I do get following statistics</p>
+
+<pre><code>   mclus_data &lt;- Mclust(givendataseries)
+   &gt; summary(mclus_data)
+----------------------------------------------------
+Gaussian finite mixture model fitted by EM algorithm 
+----------------------------------------------------
+
+Mclust E (univariate, equal variance) model with 8 components:
+
+ log.likelihood    n df      BIC      ICL
+       9525.438 1440 16 18934.52 18183.67
+
+Clustering table:
+   1    2    3    4    5    6    7    8 
+1262    0    0    0    0   13  114   51 
+</code></pre>
+
+<p>In the above statistic, I can not understand following:</p>
+
+<ol>
+<li>Significance of <code>log.likelihood</code>, <code>BIC</code> and <code>ICL</code>. I can understand what each of them is, but what their magnitude/value refers to?</li>
+<li>It shows there are 8 clusters, but why cluster no. <code>2,3,4,5</code> has <code>0</code> values? What does this mean?</li>
+<li>From the plot it is clear that there must be two Guassians, but why <code>Mclust</code> function shows there are 8 Guassians?</li>
+</ol>
+
+<p><strong>Update:</strong>
+Actually, I want to do model based clustering of time series data. But currently  I want to fit the distribution to my raw data, as shown in Figure 1 on page no. 3 of <a href=""https://www.dropbox.com/s/q50e9q168lt27si/VerstileClusteringMethod.pdf?dl=0"" rel=""nofollow"">this</a> paper. For your quick reference, mentioned figure in said paper is
+<a href=""http://i.stack.imgur.com/8Jq1B.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/8Jq1B.png"" alt=""enter image description here""></a></p>
+"
+"0.189547207081969","0.214012912501926","182764","<p>This question was first asked on <a href=""http://stackoverflow.com/questions/33522442/stationarity-tests-in-r-checking-mean-variance-and-covariance"">Stackoverflow</a>, but as no one was able to answer, I wanted to ask it here.</p>
+
+<p>The question is: is there a test for stationarity that is both able to identify stationary/non-stationary time-series in cases of increasing/decreasing/jumping mean and volatility measures?</p>
+
+<p>In the question on Stackoverflow, I simulated six time-series, that look like this.</p>
+
+<p><a href=""http://i.stack.imgur.com/5K7we.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/5K7we.jpg"" alt=""Plots""></a></p>
+
+<p>The first time-series is rightly classified as being stationary by all tests being used (Augmented-Dickey-Fuller Test (ADF), Box-Pierce/Ljung-Box Test (Box), Kwiatkowski-Phillips-Schmidt-Shin (KPSS), and the Phillips-Perron Test (PP)), however, especially the last 3 time-series are not rightly classified in many cases. </p>
+
+<p>The results (p-values from the tests using <code>r</code> (copied from the other question, where you also find the <code>r</code>-code to recreate the same time-series)) look like this:</p>
+
+<pre><code># p-values for different tests (note that the tests have different H_0's) 
+#      adf.test    Box.test kpss.test   PP.test  # stat:non_stat
+# ts1 0.0100000 0.386053779      0.10 0.0100000  # 4:0 clearly stat
+# ts2 0.4195604 0.000000000      0.01 0.3260713  # 0:4 clearly non-stat
+# ts3 0.5467517 0.000000000      0.01 0.0100000  # 1:3 most-likely non-stat
+# ts4 0.0100000 0.004360365      0.10 0.0100000  # 2:2 ?!
+# ts5 0.0100000 0.033007310      0.10 0.0100000  # 2:2 ?!
+# ts6 0.0100000 0.307453035      0.10 0.0100000  # 4:0 stationary ?!
+</code></pre>
+
+<p>Are you aware of any tests that are able to distinguish between stationary/non-stationary time-series under the different circumstances?</p>
+
+<p>Any help/solution/idea is greatly appreciated!</p>
+"
+"0.379094414163938","0.356688187503211","188595","<p>I have already read</p>
+
+<p><a href=""http://stats.stackexchange.com/questions/126525/time-series-forecast-convert-differenced-forecast-back-to-before-difference-lev"">Time Series Forecast: Convert differenced forecast back to before difference level</a></p>
+
+<p>and</p>
+
+<p><a href=""http://stats.stackexchange.com/questions/130448/how-to-undifference-a-time-series-variable"">How to &quot;undifference&quot; a time series variable</a></p>
+
+<p>None of these unfortunately gives any clear answer how to convert forecast done in ARIMA using differenced method(diff()) to reach at stationary series.</p>
+
+<p>code sample.</p>
+
+<pre><code>## read data and start from 1 jan 2014
+dat&lt;-read.csv(""rev forecast 2014-23 dec 2015.csv"")
+val.ts &lt;- ts(dat$Actual,start=c(2014,1,1),freq=365)
+##Check how we can get stationary series
+plot((diff(val.ts)))
+plot(diff(diff(val.ts)))
+plot(log(val.ts))
+plot(log(diff(val.ts)))
+plot(sqrt(val.ts))
+plot(sqrt(diff(val.ts)))
+##I found that double differencing. i.e.diff(diff(val.ts)) gives stationary series.
+
+#I ran below code to get value of 3 parameters for ARIMA from auto.arima
+ARIMAfit &lt;- auto.arima(diff(diff(val.ts)), approximation=FALSE,trace=FALSE, xreg=diff(diff(xreg)))
+#Finally ran ARIMA
+fit &lt;- Arima(diff(diff(val.ts)),order=c(5,0,2),xreg = diff(diff(xreg)))
+
+#plot original to see fit
+plot(diff(diff(val.ts)),col=""orange"")
+#plot fitted
+lines(fitted(fit),col=""blue"")
+</code></pre>
+
+<p>This gives me a perfect fit time series. However, how do i reconvert fitted values into their original metric from the current form it is now in? i mean from double differencing into actual number? For log i know we can do 10^fitted(fit) for square root there is similar solution, however what to do for differencing, that too double differencing?</p>
+
+<p>Any help on this please in R? After days of rigorous exercise, i am stuck at this point.</p>
+
+<p>Edit: Let me paste images from 3 iterations i ran to test if differencing has any impact on model fit of auto.arima function and found that it does. so auto.arima can't handle non stationary series and it requires some effort on part of analyst to convert the series to stationary.</p>
+
+<p>Firstly, auto.arima without any differencing. Orange color is actual value, blue is fitted.</p>
+
+<pre><code>ARIMAfit &lt;- auto.arima(val.ts, approximation=FALSE,trace=FALSE, xreg=xreg)
+plot(val.ts,col=""orange"")
+lines(fitted(ARIMAfit),col=""blue"")
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/VWVHK.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/VWVHK.png"" alt=""enter image description here""></a></p>
+
+<p>secondly, i tried differencing</p>
+
+<pre><code>ARIMAfit &lt;- auto.arima(diff(val.ts), approximation=FALSE,trace=FALSE, xreg=diff(xreg))
+plot(diff(val.ts),col=""orange"")
+lines(fitted(ARIMAfit),col=""blue"")
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/sTnxQ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/sTnxQ.png"" alt=""enter image description here""></a> </p>
+
+<p>thirdly, i did differencing 2 times.</p>
+
+<pre><code>ARIMAfit &lt;- auto.arima(diff(diff(val.ts)), approximation=FALSE,trace=FALSE, 
+xreg=diff(diff(xreg)))
+plot(diff(diff(val.ts)),col=""orange"")
+lines(fitted(ARIMAfit),col=""blue"")
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/1x8ex.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/1x8ex.png"" alt=""enter image description here""></a></p>
+
+<p>A visual inspection can suggest that 3rd graph is more accurate out of all. This i am aware of. The challenge is how to reconvert this fitted value which is in the form of double differenced form into the actual metric!</p>
+
+<p>Edit2: Why it is not so simple. Let me explain by below example.</p>
+
+<p>Actual data with single difference and double difference.
+<a href=""http://i.stack.imgur.com/hJSOF.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/hJSOF.png"" alt=""enter image description here""></a></p>
+
+<p>Lets go back to actual data by using differences and first value of prior series.</p>
+
+<p><a href=""http://i.stack.imgur.com/IW6js.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/IW6js.png"" alt=""enter image description here""></a></p>
+
+<p>If i use diff(diff(val.ts)) in auto.arima as input data, i get below fitted values. However i do not have first value of first order difference of fitted value and neither i have first data point in fitted value in original metric format! This is where i am struck!</p>
+
+<p><a href=""http://i.stack.imgur.com/llFtr.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/llFtr.png"" alt=""enter image description here""></a></p>
+
+<p>What if i use Richard Hardy's advice and use data from actual series as reference. This gives me negative numbers. Can you imagine negative sales? And to clarify my original numbers do not have ANY negative number and it does not have any returns or cancellation data!</p>
+
+<p><a href=""http://i.stack.imgur.com/IEKrJ.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/IEKrJ.png"" alt=""enter image description here""></a></p>
+"
+"0.204734383200943","0.198137456005148","198301","<p>I have a time-series of a feature(metric) for 4 different servers each of length 2000. I want to use dbscan algorithm to figure out if all 4 machines fall in the same cluster or not using dbcscan on these 4 time-series. </p>
+
+<p>I am using the dbscan package in R and my input is a 4 x 2000 matrix(inputMatrix) to the dbscan function. To determine the parameters I am determining the value of k/minpts as follows.</p>
+
+<p>Calculation of k:
+1.) There are 2000 points and 4 rows. Considering one column at a time, I am calculating the distance of each point from the remaining three points and then taking the mean. So this gives me 4 avg distances corresponding to 4 servers/rows at a particular time. 
+So I again have a 4 x 2000 matrix of distances(distMatrix).</p>
+
+<pre><code>distmat&lt;-function(x){
+#each column of distance is the distances of each server with other servers.
+distance&lt;-as.matrix(dist(x = x,method = ""euclidean"",diag=T,upper=T))
+return(apply(X = distance,MARGIN = 1,FUN = mean))
+}
+
+distMatrix&lt;-apply(X = inputMatrix,MARGIN = 2,FUN = distmat)
+</code></pre>
+
+<p>2.) With each point as a center in the inputMatrix and corresponding avg dist in distMatrix as radius I calculated the maximum number of points that lie in the neighbourhood. </p>
+
+<pre><code>numberofpoints&lt;-matrix(data = rep(x = 0,8000),nrow = 4,ncol = 2000)
+for(i in 1:ncol(inputMatrix)){
+    for(j in 1:nrow(inputMatrix)){
+        numberofpoints[j,i]=length(which(inputMatrix[,i]&lt;=inputMatrix[j,i]+distMatrix[j,i] &amp; inputMatrix[,i]&gt;=inputMatrix[j,i]-distMatrix[j,i]))
+    }
+}
+</code></pre>
+
+<p>Again taking a mean over the column first and then over the row yields the value of k/minpts.</p>
+
+<pre><code>meannumberofpoints&lt;-apply(X = numberofpoints,MARGIN = 2,FUN = mean)
+k=mean(meannumberofpoints)
+</code></pre>
+
+<p>k for my data is 2.167125</p>
+
+<p>To find EPS: There is an inbuilt kNNdistplot function in dbscan package in R which plots the knee-like graph. </p>
+
+<p><a href=""http://i.stack.imgur.com/b7ulH.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/b7ulH.jpg"" alt=""kNNdistplot""></a></p>
+
+<p>The horizontal line across the image corresponds to the eps value. 
+However, I am not sure what variables it is plotting on the two axes. I want to automate this sorted k-graph calculation and plot it but I am not sure where to start. </p>
+
+<p>Can anyone please explain what are the variables/values plotted on the x and y axis and how to calculate these.
+Thanks.</p>
+"
+"0.268060230965262","0.277438299767925","198315","<p>I am currently getting slightly confused with how a rolling forecast should be setup in R, as in how the data should be organised in order to <em>train</em> and <em>test</em> my model. I feel there is a large gap in my understanding somewhere.</p>
+
+<p>I have seen many examples of forecasting methods, but not many on time-series (using lagged variables) that go into detail, i.e. perform everything manually using <code>predict()</code>. Instead it normally just points to a built in R package. <strong>My question has to do with the training of the model - the alignment of the data for the training.</strong></p>
+
+<p>I know that the regression equation (assuming I am performing a linear regression) looks like this:</p>
+
+<p>$$ y_t = \beta_1 y_{t-1} + \beta_2 y_{t-2} + \beta_3 x_{t-1} + \beta_4 x_{t-2} + \varepsilon_t $$ </p>
+
+<p>So I have my outcome variable, $y$, being explained by two of its own lagged values, plus two lagged values of a second variable, $x$. Each variable has its own coefficient, all of which my model is estimating.</p>
+
+<p>Let's say I have a <em>data.table</em> (or data.frame), where each row consists of the data aligned according to the equation above. Each row is one day, and represents the given equation. I have five columns, and for this example say 200 rows/days.</p>
+
+<blockquote>
+  <p>Day  |  $y_t$  |  $y_{t-1}$  |  $y_{t-2}$  |  $x_{t-1}$  |  $x_{t-2}$</p>
+  
+  <p>001  | <em>Values</em> --></p>
+  
+  <p>002  | <em>Values</em> --></p>
+  
+  <p>003  | <em>Values</em> --></p>
+</blockquote>
+
+<p>I use the above equation as the formula to fit my model to obtain estimates for the four coefficients (neglecting $\varepsilon$) using a fixed 40-day time frame.</p>
+
+<pre><code>model &lt;- lm(y ~ y_1 + y_2 + x_1, x_2,            ## my regression formula
+            data = input_data[1:40])             ## my data.table 
+</code></pre>
+
+<p>Now I want to make a prediction using the fitted <code>model</code>.
+I do this by using <code>predict()</code> in <strong>R</strong> as follows:
+I take the next (41st) row of data, minus the outcome variable</p>
+
+<pre><code>my_pred &lt;- predict(model, newdata = input_data[41][, outcome := NULL])
+</code></pre>
+
+<p>And then calculate my error:</p>
+
+<pre><code>my_error &lt;- input_data[41, outcome] - my_pred
+</code></pre>
+
+<p>I then shift everything forward one row, so still a 40-day frame <code>input_data[2:41]</code> updating the coefficients for all variables and predicting the following outcome variable, <code>input_data[42]</code>. This is yielding terrible results for my model, with overall accuracies not much better than a naÃ¯ve forecast, i.e. random guessing.</p>
+
+<p>Should I realign the data for the training segment, so that each row rather represents the data I had on that day? This would mean adding one more column, $x_t$.</p>
+
+<p>Any other suggestions or comments?</p>
+
+<p>Thanks.</p>
+"
+"0.0773823232534137","0.0873704056661038","201529","<p>I'm a newbie in R so please help me to resolve this problem.</p>
+
+<p>Here is my data: <a href=""https://www.dropbox.com/s/ghdvfgtpwjj1fip/Sample_index.csv?dl=0"" rel=""nofollow"">link</a></p>
+
+<p>Here is my code:</p>
+
+<pre><code>data = read.csv("".../Sample_index.csv"",header=T) #load data
+ret=diff(log(Sample_index$Close))
+#I modelled this return series with ARMA(3,3)-GARCH(1,1) by fGarch package
+fit=garchFit(~arma(3,3)+garch(1,1),data=ret,include.mean=F,cond.dist=""sstd"")
+library(strucchange)
+data.test=fit@data #it seems to be returns series
+data.test=cbind(data.test, residuals(fit))
+data.test.mts=ts(data.test) #to convert to time-series class
+cusum.test=efp(formula(fit),type=""Rec-CUSUM"",data=data.test.mts)
+</code></pre>
+
+<p>However, R produces:</p>
+
+<p><code>Error in if (N &lt;= 0) NULL else seq(N) : 
+missing value where TRUE/FALSE needed</code></p>
+
+<p>I tried to mimic the code like this paper <a href=""http://epub.wu.ac.at/1124/1/document.pdf"" rel=""nofollow"">paper</a>, including create the same data class. But it improved nothing.</p>
+
+<p>Please help me resolve this problem. I much appreciate your help.</p>
+
+<p>Thanks.</p>
+"
+"0.218870262065833","0.247120825286086","202302","<p>I have time-series data (<code>xts</code> form) of power consumption at a 10 minutes rate and I do have temperature and humidity values as well. So my data looks like this:</p>
+
+<pre><code>                      power temperature humidity 
+2015-08-01 00:00:00      NA    28.00000 79.00000   
+2015-08-01 00:10:00 122.941    27.66667 80.66667   
+2015-08-01 00:20:00  67.596    27.33333 82.33333   
+2015-08-01 00:30:00 184.180    27.00000 84.00000   
+2015-08-01 00:40:00 186.879    27.00000 84.00000   
+         :               :         :        :
+</code></pre>
+
+<p>Using this historical data, I want to predict/forecast the power consumption in real time. From this data, I am planning to use following features for my forecasting model:</p>
+
+<ol>
+<li>Power usage of last three days at the same time instant for which we want to predict. For example, If I want to predict for 15 March, 1300 hours then I will use the power consumption at 1300 hours on 12, 13, and 14 March.</li>
+<li>Power usage for the last three hours. Continuing with above example, here I would like to use the power consumption at 1000, 1100, and 1200 hours</li>
+<li>Temperatue and humidity values at the forecasting time. I assume I can get these values from the weather forecasting services.</li>
+</ol>
+
+<p>For the forecasting model, I need to model the data in a proper format suitable for model evaluation. I mean how should I arrange this <code>xts</code> object in a format (data.frame) so that I can build my generalized forecasting model for any time instant of the day. The question is toally about arranging the historical <code>xts</code> data in format suitable for usage.</p>
+
+<p>Any pointer/reference for arranging this data suitable for processing will be great help for me!</p>
+"
+"0.173032135051496","0.195366166291141","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"
+"0.319055492329514","0.29666610327069","209790","<h2>Background</h2>
+
+<p>I'm working on a project which aims to use the history data about a water flux to detect whether there is a leakage happened. The data is hourly collected and among about 4 months.  </p>
+
+<p>I've already read the book which Professor Hyndman write about the forecast and some posts about outliers/anomaly detection on the site, but still I get confused how to realize this in R. In the meantime, I think I've got things mixed up and want to know the basic procedure to accomplish it.</p>
+
+<h2>What I've tried</h2>
+
+<p>At first, I think the basic idea is to fit a model on my train data and forecast it with the test part. Then use the model to check the residual in the whole data whether they are all normal distributed or at least has zero mean.  </p>
+
+<p>So according to <a href=""http://stats.stackexchange.com/questions/140163/timeseries-analysis-procedure-and-methods-using-r?lq=1"">Timeseries analysis procedure and methods using R</a>, I've tried ARIMA, Exponential Soomthing and TBATS, but the result isn't ideal. And I'm also afraid that this could lead to a flaw since I didn't consider the outliers and anomaly.<br>
+Here is my code</p>
+
+<pre><code>model &lt;- list(
+   mod_arima &lt;- auto.arima(train_h, ic = ""aic""),
+   mod_exp &lt;- ets(train_h, ic = ""aic""),
+   mod_tbats &lt;- tbats(train_h,ic = ""aic"")
+)
+forecasts &lt;- lapply(model, forecast, h = 24)
+par(mfrow = c(2,2));
+for (i in forecasts) {plot(i); lines(test_h,col = ""red"")}
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/a80fL.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/a80fL.jpg"" alt=""enter image description here""></a> </p>
+
+<p>Then according to <a href=""http://stats.stackexchange.com/questions/1142/simple-algorithm-for-online-outlier-detection-of-a-generic-time-series"">Simple algorithm for online outlier detection of a generic time series</a>, I find I could detect those single point that in my data through the answer by professor Hyndman, but I fail to change to detect the small level shift. (I've tried to create a 0.05*mean shift level, removing the outliers, then using the tso to detech the level shift, however it fail totally...)</p>
+
+<h2>My Problems</h2>
+
+<p>My problems mainly falls in the following two parts:  </p>
+
+<ol>
+<li><p>Even though it seems that there is a relativity between the flux and the flux an hour ago(Looking from the plot), could I use the hourly data directly to fit a model or should I first select the data at the same time each day to fit a model each?  </p>
+
+<p><a href=""http://i.stack.imgur.com/dhPFL.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dhPFL.jpg"" alt=""The plot of the relation between the data &amp;the data an hour ago""></a>  </p></li>
+<li><p>Now I think my problem could be partly solved by directly detecting the level shift in the data, but I think that the leakage in the flux data should be relatively small if any(maybe just 5%,10% of the mean). While I've mannually create a shift in a try, when I use the tsoutliers::tso in R directly, the result isn't ideal. Is this idea right or should I fit a model still? And how could I detect such a small change in the level shift in a time series, particularly in R?   </p></li>
+</ol>
+
+<p>ps:Since I'm new to Cross Validated, I fail to find a way to upload the data may be easy for you solve my problem, is there any advice?</p>
+"
+"0.109435131032917","0","210284","<p>Why my posterior result always shows that the sigma and sigma.c estimates to be around 50? It should not be that large as I know from another approach of analysis and also summary of the data. Is it because I have only one observation for each year-country combination?</p>
+
+<pre><code>write(""
+model {
+  for(i in 1:n) {
+    life[i] ~ dnorm(a[Country[i]]+ b[Year[i]]+b7*fertrate[i], sigma^(-2))
+  }
+b[1]~dnorm(0,0.0001)
+b[2]~dnorm(0,0.0001)
+b7~dnorm(0,0.0001)
+  sigma ~ dunif(0, 100)
+
+  for(j in 1:J) {
+    a[j] ~ dnorm(0 , sigma.c^(-2))
+  }
+  sigma.c ~ dunif(0, 100)
+
+}
+"", ""life3.jags"")
+mm3.jags = jags.model(""life3.jags"", data=list(J=194, n=376, Country=suit1213d$Country, Year=suit1213d$Year,fertrate=suit1213d$fertrate),n.adapt=100,n.chains=3)
+mm3.vars = c(""b"",""b7"", ""sigma"", ""sigma.c"")
+mm3.sim = coda.samples(mm3.jags, mm3.vars, n.iter = 50000,thin=100)
+summary(mm3.sim)
+
+
+Iterations = 5100:55000
+Thinning interval = 100 
+Number of chains = 3 
+Sample size per chain = 500 
+
+1. Empirical mean and standard deviation for each variable,
+   plus standard error of the mean:
+
+          Mean     SD Naive SE Time-series SE
+b[1]    -1.020  96.35   2.4877         2.5759
+b[2]    -1.447 102.76   2.6533         2.3972
+b7       2.383  98.23   2.5362         2.5360
+sigma   50.231  28.45   0.7346         0.7204
+sigma.c 50.836  28.82   0.7440         0.7432
+</code></pre>
+"
+"0.386911616267068","0.401903866064077","210866","<h1>EDIT Secondary Question:</h1>
+
+<p>Does using one-step ahead predictions even make sense, logically, for anomaly detection? I tried introducing anomalies manually and it seems the one-step-ahead timeseries track the changes accurately after a few datapoints. So instead of having anomalies for the outliers themselves, I have anomalies only when the outliers begin and end before the predictions can catch up</p>
+
+<h1>Premise:</h1>
+
+<p>I am using the stlm() and ets() exponential smoothing methods in the R forecast package to create forecasts of a time-series.  I am creating a model with my training data then want to predict and validate an extra period worth of forecasts that I have true values of in a test set. I either predict the entire period right away, or use one-step-ahead predictions using each true value from the test data to predict the next one.</p>
+
+<p>stlm() and its forecast method first do an STL decompose on the time series splitting the training time series into trend, season, remainder coefficients, then creates an ETS model on the trend+remainder. The trend+remainder model then forecasts future values and adds to them the last season's seasonal coefficient.</p>
+
+<h1>What I'm doing:</h1>
+
+<p>I want to do one-step ahead forecasts using new values. I tried to do this 2 ways:</p>
+
+<ol>
+<li><p>I just call ets() again for each new value, passing it the new value and the initial ets model, creating N one-step ahead forecasts. </p></li>
+<li><p>I call ets() again, but I first subtract the seasonal coefficient of the same index value of the last season from it. I get the one-step ahead forecast and add to it the seasonal coefficient of its index value from the last season.</p></li>
+</ol>
+
+<p>Theoretically, you would expect method 2 to be better, right? It's how stlm() itself works after all.  However, I'm getting better (too good) results from the 1st method, and I'm not sure if I'm making some big error.</p>
+
+<p>(I had inline images but I couldn't have more than 2 so I had to make an imgur album and use links instead, I apologize)</p>
+
+<p>The timeseries in question. The red line separates the training set from the test set. The timeseries is doubly periodic with periods at 288 and 2016 entries. The training set is 4 periods, the test set is 1. 
+<a href=""http://i.stack.imgur.com/8u1vp.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/8u1vp.png"" alt=""timeseries""></a></p>
+
+<p>here's the STL decomposition for reference:</p>
+
+<p><a href=""http://imgur.com/a/ZAHJx"" rel=""nofollow"">http://imgur.com/a/ZAHJx</a> 2nd image from the top</p>
+
+<p>Now the forecasts:</p>
+
+<h2>2016-steps-ahead forecast (1 period):</h2>
+
+<p>3rd image from the top.</p>
+
+<p>Uses only the training data and the stlm() method to decompose and make an ETS model from the remainder+trend then recompose. Black is true data, red is the forecast.</p>
+
+<h2>1-step-ahead forecast, no seasonal adjustment:</h2>
+
+<p>4th image from the top</p>
+
+<p>Next is the one-step-ahead forecast, passing the test data as-is to the ETS model created by the seasonaly-adjusted trainining data. Neither the new inputs or the results are seasonally de/re-adjusted however.</p>
+
+<p>This fit felt too good to be true. It still has errors, but made me suspicious I was somehow getting back my test values. That's why I ran sequential forecasts for every 1 value instead of passing the entire test set and using its fitted values.</p>
+
+<h2>1-step-ahead forecast, seasonal adjustment:</h2>
+
+<p>5th image from the top</p>
+
+<p>Finally, the one-step-ahead forecast where I pass seasonally adjusted test data to the ETS model created by the seasonaly-adjusted trainining data, and seasonally readjust the results.  Blue is seasonally unadjusted results, Red is seasonally adjusted.</p>
+
+<p>Here's the accuracy measures for the 3 fits</p>
+
+<pre><code>Accuracy of 2016-steps-ahead stlm:
+                ME      RMSE       MAE       MPE     MAPE
+Test set -41533789 161903031 137053220 -21.91457 36.54051
+
+Accuracy of 1-step ahead non-seasonally-adjusted:
+                ME     RMSE      MAE        MPE     MAPE       ACF1 Theil's U
+Test set -178645.5 50340915 36254698 -0.7490053 7.798654 0.01986982 0.9670598
+
+Accuracy of 1-step ahead seasonally-adjusted
+                ME     RMSE      MAE        MPE     MAPE         ACF1 Theil's U
+Test set -139382.7 58936209 45038544 -0.7115955 9.865472 -0.003793779  1.207747
+</code></pre>
+
+<p><strong>The 3rd fit is good as well, but not as good as the 2nd. And the 2nd fit still seems too good to be true. Do these results make sense?</strong></p>
+
+<h1>CODE</h1>
+
+<p>You probably won't be able to use the code without the dataset but here it is, fwiw:</p>
+
+<pre><code>library(forecast)
+library(feather)
+
+data &lt;- read_feather('backbone5weeks')
+train &lt;- msts(data[1:8064,3], seasonal.periods = c(288,2016))
+test &lt;-  msts(data[8065:10080,3], seasonal.periods = c(288,2016))
+
+fit &lt;- stlm(train)
+pred&lt;- forecast(fit,h=2016)
+
+accuracySTLM &lt;- accuracy(pred$mean,test[1:2016])
+print(accuracySTLM)
+
+h = 2016
+m = 2016
+n = 8064
+
+lastseas &lt;- rep(fit$stl$time.series[n - (m:1) + 1, ""seasonal""], 
+                trunc(1 + (h - 1)/m))[1:h]
+
+print('A:')
+ptm &lt;- proc.time()
+############ refit a ############
+predA &lt;- vector('numeric', 2016)
+predA[1] = pred$mean[1]
+
+for(i in 1:2015)
+{
+    fitA &lt;- ets(c(train[8060:8064],test[1:i]),model = fit$model)
+    predsA &lt;- forecast(fitA, h = 1)
+    predA[i+1] &lt;- predsA$mean[1]
+}
+timeA &lt;- proc.time() - ptm
+print(timeA)
+accuracyA &lt;- accuracy(predA,test)
+print(accuracyA)
+
+
+print('B:')
+ptm &lt;- proc.time()
+########### refit b #############
+predB &lt;- vector('numeric', 2015)
+predB[1] = pred$mean[1]
+
+for(i in 1:2015)
+{
+    fitB &lt;- ets(c(train[8060:8064],test[1:i]-lastseas[1:i]),model = fit$model)
+    predsB &lt;- forecast(fitB, h = 1)
+    predB[i+1] &lt;- predsB$mean[1] + lastseas[i+1]
+}
+timeB &lt;- proc.time() - ptm
+print(timeB)
+accuracyB &lt;- accuracy(predB,test)
+print(accuracyB)
+</code></pre>
+"
+"0.173032135051496","0.195366166291141","212592","<p>I am trying to find out whether it is true that variation in expenditure is greater, for more narrow subsets. e.g. is it more likely that an individual buys an orange instead of an apple, than it is for him to buy a potato instead of an apple.</p>
+
+<p>So far i have used var() and f-tests(while i believe f-tests aren't really applicable to my problem either). I would however like to use more applicable models if that is possible. Every test or class of models i can find however, are meant to compare two samples' variances. While I want to test for each observation, whether they are more likely to go for alternatives, the more constrained the subset is.</p>
+
+<p>I have a dataframe, with variables on multiple levels (drinks, soda, types of coke), and two time points of observation. As far as I am aware, two time points are not enough for a time-series analysis, and a repeated measures anova is not really applicable either.</p>
+
+<p>Could anyone point me to a resource or name of a test / type of model that could help me solve the problem? or, are var() and var.test() the only tools that are applicable?</p>
+"
+"0.29970044925131","0.248148359137218","215441","<p>I am new to R and analytics.
+I am trying to create weekly forecasting model. Additionally , I have been asked to see if following components impacts product movement : </p>
+
+<ol>
+<li>Weather data ( Mean temperature,rain,snowfall,humidity and precipitation) </li>
+<li>Holidays</li>
+<li>Promotions</li>
+</ol>
+
+<p>Data can be downloaded from below link :
+<a href=""https://www.dropbox.com/s/nudm3vs7eo837ml/Store%20Sales%20Data.xlsx?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/nudm3vs7eo837ml/Store%20Sales%20Data.xlsx?dl=0</a></p>
+
+<p>The objective is to create and validate weekly forecast for each store and each individual product category.</p>
+
+<p>Can anyone please validate my approach ? Also, do we have alternate efficient approach ?</p>
+
+<p><strong><em>Code :</em></strong></p>
+
+<p>for(pProduct in unique(df_sales$product_desc)) { </p>
+
+<pre><code>## Fetch data for of the identified location
+print (paste(paste("" Proceesing for"", pProductType),pProduct,sep = "" : "" ))
+
+## Data cleansing for subclass long description
+vProductDescription &lt;- gsub(""[^[:alnum:][:space:]-]"", """", pProduct)
+
+## Create directory for Product if it does not exists
+if (!file_test(""-d"", file.path(pRootDirectory, vProductDescription))){
+   dir.create(file.path(pRootDirectory, vProductDescription), showWarnings = FALSE  ,recursive = FALSE, mode = ""0777"")
+}else {
+   print(paste(""Directory Already exists :"", paste(pRootDirectory, vProductDescription ,""\\"",sep = """")  ))
+}
+
+pDirectoryL1 = paste(pRootDirectory, vProductDescription , sep="""")
+
+## Create product subset for processing
+df_subset    &lt;- subset(df_sales,product_desc == pProduct
+                      ,select=c(store,process_date,units,rain,snowfall,meantemp,promo_ind,humidity,precipitation,holiday_week,fiscal_year,fiscal_week_nbr))
+
+## Calculate Product History
+pMinDate       &lt;- as.Date(min(df_subset$process_date[df_subset$units &gt; 0]))
+pMaxDate       &lt;- as.Date(max(df_subset$process_date) )
+pHistoryLength &lt;- as.numeric(difftime(strptime(pMaxDate, format = ""%Y-%m-%d""),strptime(pMinDate, format = ""%Y-%m-%d""),units=""weeks""))
+
+## Check if product needs to be evaluated
+if (pHistoryLength &gt; 104 ) {
+
+    ## Data Cleansing for the data for processing
+    df_subset$process_date &lt;- as.Date(df_subset$process_date )
+    df_subset &lt;- df_subset[(df_subset$process_date &gt;= pMinDate),]
+
+    ## Processing individual location for forecasting
+    for(pLocation in unique(df_subset$store))
+    {
+
+        print (paste(paste("" Proceesing for "", pLocationType),pLocation,sep = "" : "" ))
+
+        ## Data Preparation for Location
+        pLocationData           &lt;- subset(df_subset,store == pLocation )
+        pLocationData           &lt;- pLocationData[order(pLocationData$process_date),]
+        rownames(pLocationData) &lt;- rep(1:nrow(pLocationData))
+
+        ## Create Directory Name
+        pLocationDirectoryName &lt;- paste(pLocationType,  pLocation ,  sep=""_"")
+
+        ## Create directory for Product if it does not exists
+        if (!file_test(""-d"", file.path(pDirectoryL1, pLocationDirectoryName))){
+           dir.create(file.path(pDirectoryL1, pLocationDirectoryName), showWarnings = FALSE  ,recursive = FALSE, mode = ""0777"")
+        } else {
+           print(paste(""Directory Already exists :"", paste(pDirectoryL1, pLocationDirectoryName ,""\\"",sep = """")  ))
+        }
+
+        pDirectoryL2 &lt;- paste(pDirectoryL1, pLocationDirectoryName, sep=""\\"")
+
+        ## set the current working directory to Location Folder
+        setwd(pDirectoryL2)
+
+        if (mean(pLocationData$units) &gt; 20) ## Do not forecast product with very low sales
+        {
+            ## 
+            pBreakPointDate     &lt;- as.Date(timeFirstDayInMonth(pMaxDate-89))
+
+            if (pForecastType == ""W"") {pforecastPeriod  &lt;- ceiling(as.numeric((pMaxDate - pBreakPointDate)/7))}
+
+            ## find the correlation of individual components with #Units sold
+            cor_week     &lt;- cor(pLocationData$units, pLocationData$fiscal_week_nbr, use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_holiday  &lt;- cor(pLocationData$units, pLocationData$holiday_week   , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_promo    &lt;- cor(pLocationData$units, pLocationData$promo_ind      , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_temp     &lt;- cor(pLocationData$units, pLocationData$meantemp       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_humid    &lt;- cor(pLocationData$units, pLocationData$humidity       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_precip   &lt;- cor(pLocationData$units, pLocationData$precipitation  , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_rain     &lt;- cor(pLocationData$units, pLocationData$rain           , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+            cor_snowfall &lt;- cor(pLocationData$units, pLocationData$snowfall       , use=""na.or.complete"" ,method = c(""pearson"", ""kendall"", ""spearman""))
+
+            covariates  &lt;- c(if ((!is.na(cor_week))     &amp; abs(cor_week)     &gt; 0.4) {""fiscal_week_nbr""}
+                            ,if ((!is.na(cor_holiday))  &amp; abs(cor_holiday)  &gt; 0.4) {""holiday_ind""}
+                            ,if ((!is.na(cor_promo))    &amp; abs(cor_promo)    &gt; 0.4) {""promo_ind""}
+                            ,if ((!is.na(cor_temp))     &amp; abs(cor_temp)     &gt; 0.4) {""meantemp""}
+                            ,if ((!is.na(cor_humid))    &amp; abs(cor_humid)    &gt; 0.4) {""humidity""}
+                            ,if ((!is.na(cor_precip))   &amp; abs(cor_precip)   &gt; 0.4) {""precipitation""}
+                            ,if ((!is.na(cor_rain))     &amp; abs(cor_rain)     &gt; 0.4) {""rain""}
+                            ,if ((!is.na(cor_snowfall)) &amp; abs(cor_snowfall) &gt; 0.4) {""snowfall""} )
+
+            covariates_str &lt;- """"
+
+            for (i in covariates) {covariates_str &lt;- paste(covariates_str,i[1], sep="" "")}
+
+            ## Create time-series object required for forecasting
+            xts_training &lt;- window(ts(pLocationData, start = 1 ), end   = (nrow(pLocationData) - pforecastPeriod  ))
+            xts_test     &lt;- window(ts(pLocationData, start = 1 ), start = (nrow(pLocationData) - pforecastPeriod+1))
+
+            ts_training  &lt;- ts(xts_training[,""units""] , start=c(year(pMinDate),month(pMinDate),day(pMinDate))                      , freq=  365.25/7)
+            ts_test      &lt;- ts(xts_test[,""units""]     , start=c(year(pBreakPointDate),month(pBreakPointDate),day(pBreakPointDate)) , freq=  365.25/7)
+
+            #================ AUTO ARIMA Model with regressors  ================#
+            try(
+            {
+               print(paste('Starting AUTO ARIMA with regressor for - ',vProductDescription))
+
+               ## forcasting using AUTO ARIMA  model
+               forecastARIMAReg &lt;- forecast(auto.arima(xts_training[,""units""], xreg = xts_training[,covariates])
+                                            , xreg = xts_test[, covariates], h = pforecastPeriod)
+
+               ## Save the forecasted data using AUTO ARIMA model
+               ForecastFileName = paste(pDirectoryL2,""forecast_data_"", ""ARIMA_Regressor"","".txt"" ,sep="""")
+               write.csv(forecastARIMAReg,file=ForecastFileName,row.names = TRUE)
+
+               ## PLOT ARIMA GRAPH
+               graph_data &lt;- xts(zoo(cbind(training= xts_training[,""units""], actual= xts_test[,""units""], forecast = forecastARIMAReg$mean , temperature=pLocationData$meantemp))
+                                 ,order.by = seq(min(pLocationData$process_date), max(pLocationData$process_date), by='weeks')  )
+
+               ## Graph title              
+               graph_title &lt;-  paste(vProductDescription , "" - Analysis using "", forecastARIMAReg$method , "" with regressor"" ,covariates_str)
+
+               ## PLOT AUTO ARIMA w/ Regressor GRAPH
+               graph_arima_reg &lt;- dygraph( graph_data, main= graph_title) %&gt;%
+                                  dySeries(""training"" , label = ""History""   , strokeWidth = 1.5  ) %&gt;%
+                                  dySeries(""actual""   , label = ""Actual""    , strokeWidth = 1.5  )  %&gt;%
+                                  dySeries(""forecast"" , label = ""Predicted"" , strokeWidth = 1.75 )  %&gt;%
+                                  dySeries(""temperature"", axis = ""y2"" , label=""Temperature"" , strokePattern=""dotted"")  %&gt;%
+                                  dyRangeSelector(height = 35)  %&gt;%
+                                  dyShading(from = as.yearmon(pBreakPointDate) , to = as.yearmon(pMaxDate), color = ""#E9FCE4"") %&gt;%
+                                  dyOptions(axisLineWidth = 1.5,includeZero = TRUE, axisLineColor = ""black"", gridLineColor = ""lightblue"" )
+
+
+               ## SAVE TO HTML File
+               saveWidget(widget= graph_arima_reg, file=""graph_arima_reg.html"")
+
+               ## Accruacy of Model against TEST data
+               accuracyARIMA_reg   &lt;- accuracy(forecastARIMAReg  , xts_test[,""units""])
+
+               print(paste('Finished AUTO ARIMA w/ regressor for - ',vProductDescription))
+            }, silent=T)
+
+ } else {
+   vErrorMessage &lt;- paste(""Insignificant data for forecasting "", pLocationType ,pLocation, sep="" - "")
+   print (vErrorMessage)
+   write.csv(vErrorMessage,file=""ErrorFile.txt"",row.names = TRUE)
+ }
+
+    } ##  End - Store loop
+
+
+} else {
+        vErrorMessage &lt;- paste(""Insufficient history for"",vProductDescription,""hence no forecast"")
+        print (vErrorMessage)
+        write.csv(vErrorMessage,file=""ErrorFile.txt"",row.names = TRUE)
+
+} ## IF condition for history validation
+</code></pre>
+
+<p>} ## End of Product Loop</p>
+"
+"0.218870262065833","0.185340618964565","217507","<p>I am trying to build an R tool for forecasting a (hopefully) wide range of time-series. I have settled on using several models, taking the forecasts from each, and deriving a weighed average of them using some weights.</p>
+
+<p>My approach for arriving at appropriate weights for the averaging is to evaluate each model several times on parts of the historical data. For example, for monthly series I do the following:</p>
+
+<blockquote>
+  <p>I evaluate a one-step forecast for each model (five of them) for each of the last 12 months in the historical data $\{a_{i,j}\mid i\in\{1,\ldots,5\},j\in\{1,\ldots,12\}\}$ with $a'_{j}$ the actual observations. I evaluate six non-overlapping (ex. Oct+Nov+Dec, then Jul+Aug+Sep, etc.) three-step forecasts for each model, taking the mean of the forecasts for each of the five models at a time $\{b_{i,j}\mid i\in \{1,\ldots,5\},j\in\{1,\ldots,6\}\}$ with $b'_{j}$ as the mean of the relevant actuals at each time. Finally, I evaluate four six-month-overlapping (ex. Jan through Dec, Jul through Jun, etc.) 12-step forecasts for each model, taking again the mean for each model, getting the final set $\{c_{i,j}\mid i\in\{1,\ldots,5\},j\in\{1,\ldots,4\}\}$ with $c'_{j}$ the means of the relevant actuals.</p>
+  
+  <p>I put </p>
+  
+  <p>$$A=\left(\begin{array}{c}a_{i,j}\\b_{i,j}\\c_{i,j}\end{array}\right), x=\left(\begin{array}{c}w_1\\\ldots\\w_5\end{array}\right), b=\left(\begin{array}{c}a'_j\\b'_j\\c'_j\end{array}\right)$$
+  ! and use <code>optim</code> from the <code>stats</code> package to optimise $x$ to give the least MAE between the two vectors $Ax$ and $b$.</p>
+</blockquote>
+
+<p>So my question is</p>
+
+<blockquote>
+  <p><em>Is this approach conceptually valid, considering that this evaluates something like the whether the <strong>model procedure</strong> is approriate for the time series, and not whether a <strong>particular model-with-parameters</strong> is?</em></p>
+</blockquote>
+
+<p>EDIT: Question paraphrased significantly to focus on aspects not answered <a href=""http://stats.stackexchange.com/questions/163074/assigning-weights-to-an-averaged-forecast"">here</a>.</p>
+"
+"0.279005934304712","0.290786287003594","229948","<p>There are likely more than one serious misunderstandings in this question, but it is not meant to get the computations right, but rather to motivate the learning of time series with some focus in mind.</p>
+
+<p>In trying to understand the application of time series, it seems as though de-trending the data makes predicting future values implausible. For instance, the <code>gtemp</code> time series from the <code>astsa</code> package looks like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/Ev6gt.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Ev6gt.png"" alt=""enter image description here""></a></p>
+
+<p>The trend upward in the past decades needs to be factored in when plotting predicted future values.</p>
+
+<p>However, to evaluate the time series fluctuations the data need to be converted into a stationary time series. If I model it as an ARIMA process with differencing (I guess this is carried out because of the middle <code>1</code> in <code>order = c(-, 1, -)</code>) as in:</p>
+
+<pre><code>require(tseries); require(astsa)
+fit = arima(gtemp, order = c(4, 1, 1))
+</code></pre>
+
+<p>and then try to predict future values ($50$ years), I miss the upward trend component:</p>
+
+<pre><code>pred = predict(fit, n.ahead = 50)
+ts.plot(gtemp, pred$pred, lty = c(1,3), col=c(5,2))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Qrx9F.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Qrx9F.png"" alt=""enter image description here""></a></p>
+
+<p>Without necessarily touching on the actual optimization of the particular ARIMA parameters,  <strong>how can I recover the upward trend in the predicted part of the plot?</strong></p>
+
+<p>I suspect there is an OLS ""hidden"" somewhere, which would account for this non-stationarity?</p>
+
+<p>I have come across the concept of <code>drift</code>, which can be incorporated into the <code>Arima()</code> function of the <code>forecast</code> package, rendering a plausible plot:</p>
+
+<pre><code>par(mfrow = c(1,2))
+fit1 = Arima(gtemp, order = c(4,1,1), 
+             include.drift = T)
+future = forecast(fit1, h = 50)
+plot(future)
+fit2 = Arima(gtemp, order = c(4,1,1), 
+             include.drift = F)
+future2 = forecast(fit2, h = 50)
+plot(future2)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/nHRwj.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/nHRwj.png"" alt=""enter image description here""></a></p>
+
+<p>which is more opaque as to its computational process. I am aiming at some sort of understanding of how the trend is incorporated into the plot calculations. Is one of the problems that there no <code>drift</code> in <code>arima()</code> (lower case)?</p>
+
+<hr>
+
+<p>In comparison, using the dataset <code>AirPassengers</code>, the predicted number of passengers beyond the endpoint of the dataset is plotted accounting for this upward trend:</p>
+
+<p><a href=""http://i.stack.imgur.com/Pzf3c.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Pzf3c.png"" alt=""enter image description here""></a></p>
+
+<p>The <a href=""http://www.analyticsvidhya.com/blog/2015/12/complete-tutorial-time-series-modeling/"" rel=""nofollow"">code</a> is:</p>
+
+<pre><code>fit = arima(log(AirPassengers), c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12))
+pred &lt;- predict(fit, n.ahead = 10*12)
+ts.plot(AirPassengers,exp(pred$pred), log = ""y"", lty = c(1,3))
+</code></pre>
+
+<p>rendering a plot that makes sense.</p>
+"
+"0.109435131032917","0.123560412643043","230269","<p>I am sitting with a couple of time-series that I am analysing using ARIMA models. I have a question regarding prediction intervals. When predicting using a model that takes a first difference (a SARIMA(1,1,0)x(1,0,0) model), I get an increasing size of the prediction interval. Without I get a very constant and narrow band (see below):</p>
+
+<p><a href=""http://i.stack.imgur.com/UaHX6.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/UaHX6.png"" alt=""Graphs""></a></p>
+
+<p>The corresponding results are as follows:</p>
+
+<p><a href=""http://i.stack.imgur.com/Fu2nU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Fu2nU.png"" alt=""Results""></a></p>
+
+<p>Can anyone explain why the band is so constant? First I thought it was because of a large significant MA coefficient. This, however, I removed and the ""problem"" persisted. Then I though it was because the ARIMA without differencing automatically included an intercept. However, again, when I specified <code>include.mean = FALSE</code>, nothing changed.</p>
+
+<p>Any help would be appreciated.</p>
+"

@@ -1,0 +1,857 @@
+"V1","V2","V3","V4"
+"0.308606699924184","0.308606699924184"," 10037","<p>let v to be forecasted value for periods 1 through T and $v_{t}$ be its forecasted value at time $t$. We express $v_{t}$  as the sum of two terms, its mean at time $t$,  and its deviation from the mean at time $t$, $\epsilon_{t}$. In other words, $$ v_{t}= \overline{v_{t}} + \epsilon_{t} $$ 
+The $\overline{v_{t}}$ are chosen based on the arguments. The $\epsilon_{t}$  term is assumed to be a normally distributed random variable with mean zero and standard deviation $\sigma (Îµ_{t})=0.234$.</p>
+
+<p>The moving average formation of order q is choosen, MA(q) where q is the number of lagged terms in the moving average. We use the following moving average specification:
+$$\epsilon_{t} = \sum^{q}_{i=0}{\alpha_{i} \mu_{t-i}} $$</p>
+
+<p>where $\mu_{t-i}$ are independently distributed standard normal random variables. To ensure that the standard deviation of $Îµt$ is equal to its pre-specified value, we set the
+$$\alpha_{i}= \frac{\sigma(\epsilon_{t})}{\sqrt{q+1}}$$
+Note that $\epsilon t$ depends on $q+1$ random terms.</p>
+
+<p>the R-code that i have used for above model</p>
+
+<pre><code>q=31
+iter=10000
+for(i in 1:31){alpha_i[i] &lt;- 0.234/(sqrt(31+1))}
+err_pk &lt;- array(0,c(iter,11))
+for(i in 1:iter){err_pk[i,] &lt;- arima.sim(list(order=c(0,0,31), ma=alpha_i), n=11, innov=rnorm(iter,0,1))}
+ffe &lt;- array(0,11)
+for(i in 1:11){ffe[i] &lt;- median(err_pk[,i])}`
+plot.ts(ffe)
+</code></pre>
+
+<p>I am wondering that, $\alpha$ is changing through time?</p>
+
+<p>and also i never get the same output as in the figure 2 <a href=""http://www.nature.com/nature/journal/v412/n6846/extref/412543a0_S1.htm"" rel=""nofollow"">The end of world Population growth Nature, v412, 543</a></p>
+
+<p>the parameter for figure in the paper are:</p>
+
+<p>Note: MA(30), (31 terms), $\sigma(\epsilon_{t})=0.234$, 31 initial values of $\mu=0$, 10,000 simulation</p>
+
+<p>Am I missing any thing?</p>
+"
+"0.377964473009227","0.377964473009227"," 78681","<p>I have a SARIMA forecast from statewide Real Estate Sales data.. but I'm not happy with it. The SARIMA parameters are confusing to say the least.</p>
+
+<p>I am finding that the current model is not forecasting high enough, although the month by month fluctuations look reasonable. Currently the projected year ahead is 4.9% above this year. but the year over year gain for the current year is about 10%+, so in short the model is not weighted heavily enough to the recent year over year change. Between the ARIMA and Seasonal components I can't see how to fix/specify this? The Parameter descriptions remain a mystery no matter how many versions I read. Looking at the chart it is clear that the growth rate over the last three years is higher than the current forecast, Surely there is a simple way to deal with this sort of specification in SARIMA, Bonus if it is understandable by mere mortals!?</p>
+
+<p>R code follows (source data is public) I'm a real newb at R as well.</p>
+
+<pre><code>require(RCurl)
+myCsv &lt;- getURL(""https://docs.google.com/spreadsheet/pub?key=0Ak_wF7ZGeMmHdFZtQjI1a1hhUWR2UExCa2E4MFhiWWc&amp;single=true&amp;gid=1&amp;output=csv"")
+fullmatrix &lt;- read.csv(textConnection(myCsv), stringsAsFactors = FALSE)
+fullmatrix$date &lt;- as.Date(fullmatrix$date, format = ""%m/%d/%y"")
+fullmatrix$Unit.Sales &lt;- as.numeric(gsub("","", """", fullmatrix$Unit.Sales))
+fullmatrix$Average.Selling.Price &lt;- as.numeric(gsub("","", """",  fullmatrix$Average.Selling.Price))
+fullmatrix$Median.Selling.Price  &lt;- as.numeric(gsub("","", """", fullmatrix$Median.Selling.Price))
+fullmatrix$Total.For.Sale &lt;- as.numeric(gsub("","", """", fullmatrix$Total.For.Sale))
+order.date &lt;- order(fullmatrix$date )
+    fullmatrix &lt;-fullmatrix[order.date, ]
+    library(xts)
+    require(forecast)
+    require(astsa)
+    sarima(fullmatrix$Unit.Sales,12, 0, 1, 1, 0,1,0) # (slightly higher fore)
+fore &lt;- sarima.for(fullmatrix$Unit.Sales,12, 12, 0, 1, 1,0,1,12)#specifies same model 
+    fullmatrix.xts &lt;- as.xts(x=fullmatrix[,-1],order.by=fullmatrix$date)
+unitsales.xts &lt;- as.xts(as.numeric(fullmatrix.xts$Unit.Sales),order.by=index(fullmatrix.xts))
+    forecast.xts &lt;- as.xts(as.numeric(fore$pred), order.by=as.Date(c(""2013-11-01"",""2013-12-01"",""2014-01-01"",""2014-02-01"",""2014-03-01"",""2014-04-01"",""2014-05-01"",""2014-06-01"",""2014-07-01"",""2014-08-01"",""2014-09-01"",""2014-10-01"")))
+orig_fore &lt;-rbind(unitsales.xts,forecast.xts)
+colnames(orig_fore) &lt;- ""Unit.Sales""
+plot(orig_fore)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/v26XT.png"" alt=""Actual with Forecast""></p>
+"
+"0.251976315339485","0.377964473009227","108409","<p>I created an Arima (3,1,1) model using the steps below. I was able to create a nonparametric model, but now I would like bootstrap for the created model (model 3). Also I'd like to plot the paths of the various simulations. Any help would be greatly appreciated. I'm new to R and this is my first question, so apologies in advance for lack of clarity, simplicity of question, etc. Any help would be greatly appreciated!</p>
+
+<pre><code>#Creating Arima (3,1,1) model
+
+data$Log.Spread1 &lt;- as.zoo(data$Log.Spread) #changing variable log.spread into zoo ts
+model3 &lt;- auto.arima(data$Log.Spread1) #creating model from spread data
+plot(forecast(model3, h=78, bootstrap = TRUE)) #forecasting ahead using arima model
+
+#Nonparametric bootstrap
+
+x &lt;- data$Log.Spread1
+n &lt;- length(x)
+B &lt;- 100
+resamples &lt;- matrix(sample(x, n*B, replace = TRUE), B, n)
+medians &lt;- apply(resamples, 1, median)
+sd(medians)
+quantile(medians, c(.025, .975))
+
+#Bootstrap using model?
+
+#Graphing simulated paths?
+</code></pre>
+"
+"0.904761904761905","0.904761904761905","144745","<p>I have 17 years (1995 to 2011) of death certificate data related to suicide deaths for a state in the U.S. There is a lot of mythology out there about suicides and the months/seasons, much of it contradictory, and of the literature I've reviewed, I do not get a clear sense of methods used or confidence in results.</p>
+
+<p>So I've set out to see if I can determine whether suicides are more or less likely to occur in any given month within my data set. All of my analyses are done in R.</p>
+
+<p>The total number of suicides in the data is 13,909.</p>
+
+<p>If you look at the year with the fewest suicides, they occur on 309/365 days (85%). If you look at the year with the most suicides, they occur on 339/365 days (93%).</p>
+
+<p>So there are a fair number of days each year without suicides. However, when aggregated across all 17 years, there are suicides on every day of the year, including February 29 (although only 5 when the average is 38).</p>
+
+<p><img src=""http://i.stack.imgur.com/VMQYa.jpg"" alt=""enter image description here""></p>
+
+<p>Simply adding up the number of suicides on each day of the year doesn't indicate a clear seasonality (to my eye).</p>
+
+<p>Aggregated at the monthly level, average suicides per month range from:</p>
+
+<p>(m=65, sd=7.4, to m=72, sd=11.1)</p>
+
+<p>My first approach was to aggregate the data set by month for all years and do a chi-square test after computing the expected probabilities for the null hypothesis, that there was no systematic variance in suicide counts by month. I computed the probabilities for each month taking into account the number of days (and adjusting February for leap years).</p>
+
+<p>The chi-square results indicated no significant variation by month:</p>
+
+<pre><code># So does the sample match  expected values?
+chisq.test(monthDat$suicideCounts, p=monthlyProb)
+# Yes, X-squared = 12.7048, df = 11, p-value = 0.3131
+</code></pre>
+
+<p>The image below indicates total counts per month. The horizontal red lines are positioned at the expected values for February, 30 day months, and 31 day months respectively. Consistent with the chi-square test, no month is outside the 95% confidence interval for expected counts.
+<img src=""http://i.stack.imgur.com/XRCzM.jpg"" alt=""enter image description here""></p>
+
+<p>I thought I was done until I started to investigate time series data. As I imagine many people do, I started with the non-parametric seasonal decomposition method using the <code>stl</code> function in the stats package. </p>
+
+<p>To create the time series data, I started with the aggregated monthly data:</p>
+
+<pre><code>suicideByMonthTs &lt;- ts(suicideByMonth$monthlySuicideCount, start=c(1995, 1), end=c(2011, 12), frequency=12) 
+
+# Plot the monthly suicide count, note the trend, but seasonality?
+plot(suicideByMonthTs, xlab=""Year"",
+  ylab=""Annual  monthly  suicides"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/xSWJm.jpg"" alt=""enter image description here""></p>
+
+<pre><code>     Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec
+1995  62  47  55  74  71  70  67  69  61  76  68  68
+1996  64  69  68  53  72  73  62  63  64  72  55  61
+1997  71  61  64  63  60  64  67  50  48  49  59  72
+1998  67  54  72  69  78  45  59  53  48  65  64  44
+1999  69  64  65  58  73  83  70  73  58  75  71  58
+2000  60  54  67  59  54  69  62  60  58  61  68  56
+2001  67  60  54  57  51  61  67  63  55  70  54  55
+2002  65  68  65  72  79  72  64  70  59  66  63  66
+2003  69  50  59  67  73  77  64  66  71  68  59  69
+2004  68  61  66  62  69  84  73  62  71  64  59  70
+2005  67  53  76  65  77  68  65  60  68  71  60  79
+2006  65  54  65  68  69  68  81  64  69  71  67  67
+2007  77  63  61  78  73  69  92  68  72  61  65  77
+2008  67  73  81  73  66  63  96  71  75  74  81  63
+2009  80  68  76  65  82  69  74  88  80  86  78  76
+2010  80  77  82  80  77  70  81  89  91  82  71  73
+2011  93  64  87  75 101  89  87  78 106  84  64  71
+</code></pre>
+
+<p>And then performed the <code>stl()</code> decomposition</p>
+
+<pre><code># Seasonal decomposition
+suicideByMonthFit &lt;- stl(suicideByMonthTs, s.window=""periodic"")
+plot(suicideByMonthFit)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/cS5pE.jpg"" alt=""enter image description here""></p>
+
+<p>At this point I became concerned because it appears to me that there is both a seasonal component and a trend. After much internet research I decided to follow the instructions of Rob Hyndman and George AthanaÂ­sopouÂ­los as laid out in their on-line text ""Forecasting: principles and practice"", specifically to apply a seasonal ARIMA model.</p>
+
+<p>I used <code>adf.test()</code> and <code>kpss.test()</code> to assess for <em>stationarity</em> and got conflicting results. They both rejected the null hypothesis (noting that they test the opposite hypothesis).</p>
+
+<pre><code>adfResults &lt;- adf.test(suicideByMonthTs, alternative = ""stationary"") # The p &lt; .05 value 
+adfResults
+
+    Augmented Dickey-Fuller Test
+
+data:  suicideByMonthTs
+Dickey-Fuller = -4.5033, Lag order = 5, p-value = 0.01
+alternative hypothesis: stationary
+
+kpssResults &lt;- kpss.test(suicideByMonthTs)
+kpssResults
+
+    KPSS Test for Level Stationarity
+
+data:  suicideByMonthTs
+KPSS Level = 2.9954, Truncation lag parameter = 3, p-value = 0.01
+</code></pre>
+
+<p>I then used the algorithm in the book to see if I could determine the amount of differencing that needed to be done for both the trend and season. I ended  with 
+nd = 1, ns = 0.</p>
+
+<p>I then ran <code>auto.arima</code>, which chose a model that had both a trend and a seasonal component along with a ""drift"" type constant.</p>
+
+<pre><code># Extract the best model, it takes time as I've turned off the shortcuts (results differ with it on)
+bestFit &lt;- auto.arima(suicideByMonthTs, stepwise=FALSE, approximation=FALSE)
+plot(theForecast &lt;- forecast(bestFit, h=12))
+theForecast
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/qTUi9.jpg"" alt=""enter image description here""></p>
+
+<pre><code>&gt; summary(bestFit)
+Series: suicideByMonthFromMonthTs 
+ARIMA(0,1,1)(1,0,1)[12] with drift         
+
+Coefficients:
+          ma1    sar1     sma1   drift
+      -0.9299  0.8930  -0.7728  0.0921
+s.e.   0.0278  0.1123   0.1621  0.0700
+
+sigma^2 estimated as 64.95:  log likelihood=-709.55
+AIC=1429.1   AICc=1429.4   BIC=1445.67
+
+Training set error measures:
+                    ME    RMSE     MAE       MPE     MAPE     MASE       ACF1
+Training set 0.2753657 8.01942 6.32144 -1.045278 9.512259 0.707026 0.03813434
+</code></pre>
+
+<p>Finally, I looked at the residuals from the fit and if I understand this correctly, since all values are within the threshold limits, they are behaving like white noise and thus the model is fairly reasonable. I ran a <em>portmanteau test</em> as described in the text, which had a p value well above 0.05, but I'm not sure that I have the parameters correct.</p>
+
+<pre><code>Acf(residuals(bestFit))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/gso3q.jpg"" alt=""enter image description here""></p>
+
+<pre><code>Box.test(residuals(bestFit), lag=12, fitdf=4, type=""Ljung"")
+
+    Box-Ljung test
+
+data:  residuals(bestFit)
+X-squared = 7.5201, df = 8, p-value = 0.4817
+</code></pre>
+
+<p>Having gone back and read the chapter on arima modeling again, I realize now that <code>auto.arima</code> did choose to model trend and season. And I'm also realizing that forecasting is not specifically the analysis I should probably be doing. I want to know if a specific month (or more generally time of year) should be flagged as a high risk month. It seems that the tools in the forecasting literature are highly pertinent, but perhaps not the best for my question. Any and all input is much appreciated.</p>
+
+<p>I'm posting a link to a csv file that contains the daily counts. The file looks like this:</p>
+
+<pre><code>head(suicideByDay)
+
+        date year month day_of_month t count
+1 1995-01-01 1995    01           01 1     2
+2 1995-01-03 1995    01           03 2     1
+3 1995-01-04 1995    01           04 3     3
+4 1995-01-05 1995    01           05 4     2
+5 1995-01-06 1995    01           06 5     3
+6 1995-01-07 1995    01           07 6     2
+</code></pre>
+
+<p><a href=""https://dl.dropboxusercontent.com/u/1252082/daily_suicide_counts.csv"" rel=""nofollow"">daily_suicide_data.csv</a></p>
+
+<p>Count is the number of suicides that happened on that day. ""t"" is a numeric sequence from 1 to the total number of days in the table (5533).</p>
+
+<p>I've taken note of comments below and thought about two things related to modeling suicide and seasons. First, with respect to my question, months are simply proxies for marking change of season, I am not interested in wether or not a particular month is different from others (that of course is an interesting question, but it's not what I set out to investigate). Hence, I think it makes sense to <strong>equalize</strong> the months by simply using the first 28 days of all months. When you do this, you get a slightly worse fit, which I am interpreting as more evidence towards a lack of seasonality. In the output below, the first fit is a reproduction from an answer below using months with their true number of days, followed by a data set <strong>suicideByShortMonth</strong> in which suicide counts were computed from the first 28 days of all months. I'm interested in what people think about wether or not this adjustment is a good idea, not necessary, or harmful?</p>
+
+<pre><code>&gt; summary(seasonFit)
+
+Call:
+glm(formula = count ~ t + days_in_month + cos(2 * pi * t/12) + 
+    sin(2 * pi * t/12), family = ""poisson"", data = suicideByMonth)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-2.4782  -0.7095  -0.0544   0.6471   3.2236  
+
+Coefficients:
+                     Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)         2.8662459  0.3382020   8.475  &lt; 2e-16 ***
+t                   0.0013711  0.0001444   9.493  &lt; 2e-16 ***
+days_in_month       0.0397990  0.0110877   3.589 0.000331 ***
+cos(2 * pi * t/12) -0.0299170  0.0120295  -2.487 0.012884 *  
+sin(2 * pi * t/12)  0.0026999  0.0123930   0.218 0.827541    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 302.67  on 203  degrees of freedom
+Residual deviance: 190.37  on 199  degrees of freedom
+AIC: 1434.9
+
+Number of Fisher Scoring iterations: 4
+
+&gt; summary(shortSeasonFit)
+
+Call:
+glm(formula = shortMonthCount ~ t + cos(2 * pi * t/12) + sin(2 * 
+    pi * t/12), family = ""poisson"", data = suicideByShortMonth)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-3.2414  -0.7588  -0.0710   0.7170   3.3074  
+
+Coefficients:
+                     Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)         4.0022084  0.0182211 219.647   &lt;2e-16 ***
+t                   0.0013738  0.0001501   9.153   &lt;2e-16 ***
+cos(2 * pi * t/12) -0.0281767  0.0124693  -2.260   0.0238 *  
+sin(2 * pi * t/12)  0.0143912  0.0124712   1.154   0.2485    
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 295.41  on 203  degrees of freedom
+Residual deviance: 205.30  on 200  degrees of freedom
+AIC: 1432
+
+Number of Fisher Scoring iterations: 4
+</code></pre>
+
+<p>The second thing I've looked into more is the issue of using month as a proxy for season. Perhaps a better indicator of season is the number of daylight hours an area receives. This data comes from a northern state that has substantial variation in daylight. Below is a graph of the daylight from the year 2002. </p>
+
+<p><img src=""http://i.stack.imgur.com/yvVXl.jpg"" alt=""enter image description here""></p>
+
+<p>When I use this data rather than month of the year, the effect is still significant, but the effect is very, very small. The residual deviance is much larger than the models above. If daylight hours is a better model for seasons, and the fit is not as good, is this more evidence of very small seasonal effect? </p>
+
+<pre><code>&gt; summary(daylightFit)
+
+Call:
+glm(formula = aggregatedDailyCount ~ t + daylightMinutes, family = ""poisson"", 
+    data = aggregatedDailyNoLeap)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-3.0003  -0.6684  -0.0407   0.5930   3.8269  
+
+Coefficients:
+                  Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)      3.545e+00  4.759e-02  74.493   &lt;2e-16 ***
+t               -5.230e-05  8.216e-05  -0.637   0.5244    
+daylightMinutes  1.418e-04  5.720e-05   2.479   0.0132 *  
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for poisson family taken to be 1)
+
+    Null deviance: 380.22  on 364  degrees of freedom
+Residual deviance: 373.01  on 362  degrees of freedom
+AIC: 2375
+
+Number of Fisher Scoring iterations: 4
+</code></pre>
+
+<p>I'm posting the daylight hours in case anyone wants to play around with this. Note, this is not a leap year, so if you want to put in the minutes for the leap years, either extrapolate or retrieve the data.</p>
+
+<p><a href=""https://dl.dropboxusercontent.com/u/1252082/state.daylight.2002.csv"" rel=""nofollow"">state.daylight.2002.csv</a></p>
+
+<p>[<strong>Edit</strong> to add plot from deleted answer (hopefully rnso doesn't mind me moving the plot in the deleted answer up here to the question. svannoy, if you don't want this added after all, you can revert it)]</p>
+
+<p><img src=""http://i.stack.imgur.com/WiuvE.png"" alt=""enter image description here""></p>
+"
+"0.494871659305394","0.577350269189626","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"0.218217890235992","0.218217890235992","174476","<p>how to best predict data like this which contains multiple levels of nearly constant data?</p>
+
+<p>Simple linear models even with weights (exponential) did not cut it.</p>
+
+<p>I experimented with some clustering and then robust linear regression but my problem is that the relationship between these levels of constant data is lost.</p>
+
+<p>Here is the data from the picture:</p>
+
+<pre><code>structure(list(date = structure(c(32L, 10L, 11L, 14L, 5L, 6L, 
+1L, 2L, 12L, 9L, 19L, 13L, 4L, 17L, 15L, 3L, 18L, 7L, 8L, 21L, 
+16L, 22L, 28L, 29L, 30L, 26L, 27L, 31L, 20L, 23L, 24L, 25L), .Label = c(""18.02.13"", 
+""18.03.13"", ""18.11.13"", ""19.08.13"", ""19.11.12"", ""20.01.13"", ""20.01.14"", 
+""20.02.14"", ""20.05.13"", ""20.08.12"", ""20.09.12"", ""21.04.13"", ""21.07.13"", 
+""21.10.12"", ""21.10.13"", ""22.04.14"", ""22.09.13"", ""22.12.13"", ""23.06.13"", 
+""25.01.15"", ""25.03.14"", ""25.05.14"", ""26.02.15"", ""26.03.15"", ""26.04.15"", 
+""26.10.14"", ""26.11.14"", ""27.07.14"", ""27.08.14"", ""28.09.14"", ""28.12.14"", 
+""29.03.10""), class = ""factor""), amount = c(-4, -12.4, -9.9, -9.9, 
+-9.94, -14.29, -9.97, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, 
+-9.9, -9.9, -9.9, -4, -4, -11.9, -11.9, -11.9, -11.9, -11.98, 
+-11.98, -11.9, -13.8, -11.64, -11.96, -11.9, -11.9, -11.9)), .Names = c(""date"", 
+""amount""), class = ""data.frame"", row.names = c(NA, -32L))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DWypm.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DWypm.jpg"" alt=""regression for multiple levels""></a></p>
+
+<h1>revisiting rollmedian</h1>
+
+<p>@Gaurav - you asked: Have you tried building a model with moving averages? as ARIMA didn't work - I did not try it. But I have now.</p>
+
+<pre><code>zoo::rollmedian(rollTS, 5)
+</code></pre>
+
+<p>Seems to get the pattern of the data. However I wonder now how to reasonably forecast it. Is this possible?</p>
+
+<p><a href=""http://i.stack.imgur.com/dPhK8.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dPhK8.png"" alt=""rollmedian""></a></p>
+"
+"0.577350269189626","0.577350269189626","186725","<p>Short version: How would one be able to quantify an intervention effect in time-series analysis when the intervention decreases seasonal amplitude variation but doesn't directly effect the median?</p>
+
+<p><a href=""https://www.dropbox.com/s/hb3g7j17igeqnoc/dat.csv?dl=0"" rel=""nofollow"">Here</a> is a link to my raw data.</p>
+
+<p>I have a complex time-series of daily incidence numbers for a population over 7 years, totaling 2557 observations. There is a strong weekly and yearly seasonality (high incidence in winter months and low incidence in summer months). There is a baseline negative trend which is orders of magnitude smaller than the seasonality. An intervention was introduced at time = 1700. This intervention should theoretically not cause a level shift. My aim is to detect whether the intervention increases the baseline negative trend.</p>
+
+<p>I have attempted to fit a dynamic linear regression with ARIMA errors in R using <code>auto.arima()</code> in the <code>forecast</code> package. I modeled the weekly season using a dummy variable for each weekday and the weekend. I modeled the monthly seasonality with harmonics using <code>fourier()</code> function in the <code>forecast</code> package. An the intervention effect was coded in by specifying the time index and post-intervention times as independent variables using the methods described in <a href=""http://isites.harvard.edu/fs/docs/icb.topic79832.files/L06_Program_Evaluation_2/Segmented_Regression.Wagner.2002.pdf"" rel=""nofollow"">Segmented regression analysis of interrupted time series studies in medication use research</a>. With these variables specified <code>auto.arima()</code> suggests an ARMA(7,7) process. The coefficients for baseline trend and post-intervention trend are however non-significant.  </p>
+
+<p>I am concerned that by using fourier terms to model away the seasonality I am artificially removing any intervention effect, as visual analysis of the time series indicates that the intervention is specifically decreasing incidence during the winter months and therefore reducing the yearly seasonal variability. </p>
+"
+"0.436435780471985","0.436435780471985","205970","<p>I'm trying to create an Arima model and forecast it ahead the next 20 hours using the code and data below.  </p>
+
+<p>When I look at the median of df$tri for each hour and broken down by day of the week, each weekday seems to have a distinct 24 hour pattern.</p>
+
+<p>So I thought I would try adding dummy variables for the day of the week to my model as xreg predictors.</p>
+
+<p>When I plot Acast$mean, I'm just getting a flat line.  So I was wondering if there was something incorrect about the way I'm creating and using the dummy variables for day of the week.</p>
+
+<p>Code:</p>
+
+<pre><code>##BoxCox
+
+Tlambda &lt;- BoxCox.lambda(df$Tri)
+
+##Partitioning Time Series
+
+EndTrain&lt;-336
+ValStart&lt;-EndTrain+1
+ValEnd&lt;-ValStart+20
+
+tsTrain &lt;-df$Tri[1:EndTrain]
+    tsValidation&lt;-df$Tri[ValStart:ValEnd]
+
+
+##Weekday variables
+Copydf&lt;-df
+Copydf$Weekday&lt;-as.factor(weekdays(as.Date(Copydf$DateTime, ""%Y-%m-%d"")))
+Weekdays &lt;- Copydf$Weekday[1:nrow(Copydf)]
+xreg1 &lt;- model.matrix(~as.factor(Weekdays)+0)[, 1:7]
+colnames(xreg1) &lt;- c(""Friday"", ""Monday"", ""Saturday"", ""Sunday"",""Thursday"",""Tuesday"",""Wednesday"")
+
+xreg1Train&lt;-xreg1[1:EndTrain,]
+xreg1Val&lt;-xreg1[ValStart:ValEnd,]
+
+##Checking effect of Weekday
+Arima.fit &lt;- auto.arima(tsTrain, lambda = Tlambda, xreg=xreg1Train, stepwise=FALSE, approximation = FALSE )
+
+##Forecast
+
+Acast&lt;-forecast(Arima.fit,xreg=xreg1Val, h=20)
+
+Acast$mean
+</code></pre>
+
+<p>Data:</p>
+
+<pre><code>dput(df$Tri[1:336])
+</code></pre>
+
+<p>c(11, 14, 17, 5, 5, 5.5, 8, NA, 5.5, 6.5, 8.5, 4, 5, 9, 10, 11, 
+7, 6, 7, 7, 5, 6, 9, 9, 6.5, 9, 3.5, 2, 15, 2.5, 17, 5, 5.5, 
+7, 6, 3.5, 6, 9.5, 5, 7, 4, 5, 4, 9.5, 3.5, 5, 4, 4, 9, 4.5, 
+6, 10, NA, 9.5, 15, 9, 5.5, 7.5, 12, 17.5, 19, 7, 14, 17, 3.5, 
+6, 15, 11, 10.5, 11, 13, 9.5, 9, 7, 4, 6, 15, 5, 18, 5, 6, 19, 
+19, 6, 7, 7.5, 7.5, 7, 6.5, 9, 10, 5.5, 5, 7.5, 5, 4, 10, 7, 
+5, 12, 6, NA, 4, 2, 5, 7.5, 11, 13, 7, 8, 7.5, 5.5, 7.5, 15, 
+7, 4.5, 9, 3, 4, 6, 17.5, 11, 7, 6, 7, 4.5, 4, 4, 5, 10, 14, 
+7, 7, 4, 7.5, 11, 6, 11, 7.5, 15, 23.5, 8, 12, 5, 9, 10, 4, 9, 
+6, 8.5, 7.5, 6, 5, 8, 6, 5.5, 8, 11, 10.5, 4, 6, 7, 10, 11.5, 
+11.5, 3, 4, 16, 3, 2, 2, 8, 4.5, 7, 4, 8, 11, 6.5, 7.5, 17, 6, 
+6.5, 9, 12, 17, 10, 5, 5, 9, 3, 8.5, 11, 4.5, 7, 16, 11, 14, 
+6.5, 15, 8.5, 7, 6.5, 11, 2, 2, 13.5, 4, 2, 16, 11.5, 3.5, 9, 
+16.5, 2.5, 4.5, 8.5, 5, 6, 7.5, 9.5, NA, 9.5, 8, 2.5, 4, 12, 
+13, 10, 4, 6, 16, 16, 13, 8, 12, 19, 19, 5.5, 8, 6.5, NA, NA, 
+NA, 15, 12, NA, 6, 11, 8, 4, 2, 3, 4, 10, 7, 5, 4.5, 4, 5, 11.5, 
+12, 10.5, 4.5, 3, 4, 7, 15.5, 9.5, NA, 9.5, 12, 13.5, 10, 10, 
+13, 6, 8.5, 15, 16.5, 9.5, 14, 9, 9.5, 11, 15, 14, 5.5, 6, 14, 
+16, 9.5, 23, NA, 19, 12, 5, 11, 16, 8, 11, 9, 13, 6, 7, 3, 5.5, 
+7.5, 19, 6.5, 5.5, 4.5, 7, 8, 7, 10, 11, 13, NA, 12, 1.5, 7, 
+7, 12, 8, 6, 9, 15, 9, 3, 5, 11, 11, 8, 6, 3, 7.5)</p>
+
+<pre><code>dput(df$DateTime[1:336])
+</code></pre>
+
+<p>c(""2015-01-01 00:00"", ""2015-01-01 01:00"", ""2015-01-01 02:00"", 
+""2015-01-01 03:00"", ""2015-01-01 04:00"", ""2015-01-01 05:00"", ""2015-01-01 06:00"", 
+""2015-01-01 07:00"", ""2015-01-01 08:00"", ""2015-01-01 09:00"", ""2015-01-01 10:00"", 
+""2015-01-01 11:00"", ""2015-01-01 12:00"", ""2015-01-01 13:00"", ""2015-01-01 14:00"", 
+""2015-01-01 15:00"", ""2015-01-01 16:00"", ""2015-01-01 17:00"", ""2015-01-01 18:00"", 
+""2015-01-01 19:00"", ""2015-01-01 20:00"", ""2015-01-01 21:00"", ""2015-01-01 22:00"", 
+""2015-01-01 23:00"", ""2015-01-02 00:00"", ""2015-01-02 01:00"", ""2015-01-02 02:00"", 
+""2015-01-02 03:00"", ""2015-01-02 04:00"", ""2015-01-02 05:00"", ""2015-01-02 06:00"", 
+""2015-01-02 07:00"", ""2015-01-02 08:00"", ""2015-01-02 09:00"", ""2015-01-02 10:00"", 
+""2015-01-02 11:00"", ""2015-01-02 12:00"", ""2015-01-02 13:00"", ""2015-01-02 14:00"", 
+""2015-01-02 15:00"", ""2015-01-02 16:00"", ""2015-01-02 17:00"", ""2015-01-02 18:00"", 
+""2015-01-02 19:00"", ""2015-01-02 20:00"", ""2015-01-02 21:00"", ""2015-01-02 22:00"", 
+""2015-01-02 23:00"", ""2015-01-03 00:00"", ""2015-01-03 01:00"", ""2015-01-03 02:00"", 
+""2015-01-03 03:00"", ""2015-01-03 04:00"", ""2015-01-03 05:00"", ""2015-01-03 06:00"", 
+""2015-01-03 07:00"", ""2015-01-03 08:00"", ""2015-01-03 09:00"", ""2015-01-03 10:00"", 
+""2015-01-03 11:00"", ""2015-01-03 12:00"", ""2015-01-03 13:00"", ""2015-01-03 14:00"", 
+""2015-01-03 15:00"", ""2015-01-03 16:00"", ""2015-01-03 17:00"", ""2015-01-03 18:00"", 
+""2015-01-03 19:00"", ""2015-01-03 20:00"", ""2015-01-03 21:00"", ""2015-01-03 22:00"", 
+""2015-01-03 23:00"", ""2015-01-04 00:00"", ""2015-01-04 01:00"", ""2015-01-04 02:00"", 
+""2015-01-04 03:00"", ""2015-01-04 04:00"", ""2015-01-04 05:00"", ""2015-01-04 06:00"", 
+""2015-01-04 07:00"", ""2015-01-04 08:00"", ""2015-01-04 09:00"", ""2015-01-04 10:00"", 
+""2015-01-04 11:00"", ""2015-01-04 12:00"", ""2015-01-04 13:00"", ""2015-01-04 14:00"", 
+""2015-01-04 15:00"", ""2015-01-04 16:00"", ""2015-01-04 17:00"", ""2015-01-04 18:00"", 
+""2015-01-04 19:00"", ""2015-01-04 20:00"", ""2015-01-04 21:00"", ""2015-01-04 22:00"", 
+""2015-01-04 23:00"", ""2015-01-05 00:00"", ""2015-01-05 01:00"", ""2015-01-05 02:00"", 
+""2015-01-05 03:00"", ""2015-01-05 04:00"", ""2015-01-05 05:00"", ""2015-01-05 06:00"", 
+""2015-01-05 07:00"", ""2015-01-05 08:00"", ""2015-01-05 09:00"", ""2015-01-05 10:00"", 
+""2015-01-05 11:00"", ""2015-01-05 12:00"", ""2015-01-05 13:00"", ""2015-01-05 14:00"", 
+""2015-01-05 15:00"", ""2015-01-05 16:00"", ""2015-01-05 17:00"", ""2015-01-05 18:00"", 
+""2015-01-05 19:00"", ""2015-01-05 20:00"", ""2015-01-05 21:00"", ""2015-01-05 22:00"", 
+""2015-01-05 23:00"", ""2015-01-06 00:00"", ""2015-01-06 01:00"", ""2015-01-06 02:00"", 
+""2015-01-06 03:00"", ""2015-01-06 04:00"", ""2015-01-06 05:00"", ""2015-01-06 06:00"", 
+""2015-01-06 07:00"", ""2015-01-06 08:00"", ""2015-01-06 09:00"", ""2015-01-06 10:00"", 
+""2015-01-06 11:00"", ""2015-01-06 12:00"", ""2015-01-06 13:00"", ""2015-01-06 14:00"", 
+""2015-01-06 15:00"", ""2015-01-06 16:00"", ""2015-01-06 17:00"", ""2015-01-06 18:00"", 
+""2015-01-06 19:00"", ""2015-01-06 20:00"", ""2015-01-06 21:00"", ""2015-01-06 22:00"", 
+""2015-01-06 23:00"", ""2015-01-07 00:00"", ""2015-01-07 01:00"", ""2015-01-07 02:00"", 
+""2015-01-07 03:00"", ""2015-01-07 04:00"", ""2015-01-07 05:00"", ""2015-01-07 06:00"", 
+""2015-01-07 07:00"", ""2015-01-07 08:00"", ""2015-01-07 09:00"", ""2015-01-07 10:00"", 
+""2015-01-07 11:00"", ""2015-01-07 12:00"", ""2015-01-07 13:00"", ""2015-01-07 14:00"", 
+""2015-01-07 15:00"", ""2015-01-07 16:00"", ""2015-01-07 17:00"", ""2015-01-07 18:00"", 
+""2015-01-07 19:00"", ""2015-01-07 20:00"", ""2015-01-07 21:00"", ""2015-01-07 22:00"", 
+""2015-01-07 23:00"", ""2015-01-08 00:00"", ""2015-01-08 01:00"", ""2015-01-08 02:00"", 
+""2015-01-08 03:00"", ""2015-01-08 04:00"", ""2015-01-08 05:00"", ""2015-01-08 06:00"", 
+""2015-01-08 07:00"", ""2015-01-08 08:00"", ""2015-01-08 09:00"", ""2015-01-08 10:00"", 
+""2015-01-08 11:00"", ""2015-01-08 12:00"", ""2015-01-08 13:00"", ""2015-01-08 14:00"", 
+""2015-01-08 15:00"", ""2015-01-08 16:00"", ""2015-01-08 17:00"", ""2015-01-08 18:00"", 
+""2015-01-08 19:00"", ""2015-01-08 20:00"", ""2015-01-08 21:00"", ""2015-01-08 22:00"", 
+""2015-01-08 23:00"", ""2015-01-09 00:00"", ""2015-01-09 01:00"", ""2015-01-09 02:00"", 
+""2015-01-09 03:00"", ""2015-01-09 04:00"", ""2015-01-09 05:00"", ""2015-01-09 06:00"", 
+""2015-01-09 07:00"", ""2015-01-09 08:00"", ""2015-01-09 09:00"", ""2015-01-09 10:00"", 
+""2015-01-09 11:00"", ""2015-01-09 12:00"", ""2015-01-09 13:00"", ""2015-01-09 14:00"", 
+""2015-01-09 15:00"", ""2015-01-09 16:00"", ""2015-01-09 17:00"", ""2015-01-09 18:00"", 
+""2015-01-09 19:00"", ""2015-01-09 20:00"", ""2015-01-09 21:00"", ""2015-01-09 22:00"", 
+""2015-01-09 23:00"", ""2015-01-10 00:00"", ""2015-01-10 01:00"", ""2015-01-10 02:00"", 
+""2015-01-10 03:00"", ""2015-01-10 04:00"", ""2015-01-10 05:00"", ""2015-01-10 06:00"", 
+""2015-01-10 07:00"", ""2015-01-10 08:00"", ""2015-01-10 09:00"", ""2015-01-10 10:00"", 
+""2015-01-10 11:00"", ""2015-01-10 12:00"", ""2015-01-10 13:00"", ""2015-01-10 14:00"", 
+""2015-01-10 15:00"", ""2015-01-10 16:00"", ""2015-01-10 17:00"", ""2015-01-10 18:00"", 
+""2015-01-10 19:00"", ""2015-01-10 20:00"", ""2015-01-10 21:00"", ""2015-01-10 22:00"", 
+""2015-01-10 23:00"", ""2015-01-11 00:00"", ""2015-01-11 01:00"", ""2015-01-11 02:00"", 
+""2015-01-11 03:00"", ""2015-01-11 04:00"", ""2015-01-11 05:00"", ""2015-01-11 06:00"", 
+""2015-01-11 07:00"", ""2015-01-11 08:00"", ""2015-01-11 09:00"", ""2015-01-11 10:00"", 
+""2015-01-11 11:00"", ""2015-01-11 12:00"", ""2015-01-11 13:00"", ""2015-01-11 14:00"", 
+""2015-01-11 15:00"", ""2015-01-11 16:00"", ""2015-01-11 17:00"", ""2015-01-11 18:00"", 
+""2015-01-11 19:00"", ""2015-01-11 20:00"", ""2015-01-11 21:00"", ""2015-01-11 22:00"", 
+""2015-01-11 23:00"", ""2015-01-12 00:00"", ""2015-01-12 01:00"", ""2015-01-12 02:00"", 
+""2015-01-12 03:00"", ""2015-01-12 04:00"", ""2015-01-12 05:00"", ""2015-01-12 06:00"", 
+""2015-01-12 07:00"", ""2015-01-12 08:00"", ""2015-01-12 09:00"", ""2015-01-12 10:00"", 
+""2015-01-12 11:00"", ""2015-01-12 12:00"", ""2015-01-12 13:00"", ""2015-01-12 14:00"", 
+""2015-01-12 15:00"", ""2015-01-12 16:00"", ""2015-01-12 17:00"", ""2015-01-12 18:00"", 
+""2015-01-12 19:00"", ""2015-01-12 20:00"", ""2015-01-12 21:00"", ""2015-01-12 22:00"", 
+""2015-01-12 23:00"", ""2015-01-13 00:00"", ""2015-01-13 01:00"", ""2015-01-13 02:00"", 
+""2015-01-13 03:00"", ""2015-01-13 04:00"", ""2015-01-13 05:00"", ""2015-01-13 06:00"", 
+""2015-01-13 07:00"", ""2015-01-13 08:00"", ""2015-01-13 09:00"", ""2015-01-13 10:00"", 
+""2015-01-13 11:00"", ""2015-01-13 12:00"", ""2015-01-13 13:00"", ""2015-01-13 14:00"", 
+""2015-01-13 15:00"", ""2015-01-13 16:00"", ""2015-01-13 17:00"", ""2015-01-13 18:00"", 
+""2015-01-13 19:00"", ""2015-01-13 20:00"", ""2015-01-13 21:00"", ""2015-01-13 22:00"", 
+""2015-01-13 23:00"", ""2015-01-14 00:00"", ""2015-01-14 01:00"", ""2015-01-14 02:00"", 
+""2015-01-14 03:00"", ""2015-01-14 04:00"", ""2015-01-14 05:00"", ""2015-01-14 06:00"", 
+""2015-01-14 07:00"", ""2015-01-14 08:00"", ""2015-01-14 09:00"", ""2015-01-14 10:00"", 
+""2015-01-14 11:00"", ""2015-01-14 12:00"", ""2015-01-14 13:00"", ""2015-01-14 14:00"", 
+""2015-01-14 15:00"", ""2015-01-14 16:00"", ""2015-01-14 17:00"", ""2015-01-14 18:00"", 
+""2015-01-14 19:00"", ""2015-01-14 20:00"", ""2015-01-14 21:00"", ""2015-01-14 22:00"", 
+""2015-01-14 23:00"")</p>
+"
+"0.308606699924184","0.308606699924184","208321","<p>I am trying to forecast the median wait time each hour for a customer to get served in a call center.  I know the median wait times each hour and the number of customers who called in each hour (CustCount) in the past, but I don't know how many operators were staffed each hour to answer calls.  I imagine the call center increases staff during the busy times of day, but I don't know.  My data is also very noisy and it's hard to see any clear patterns.</p>
+
+<p>If anyone can suggest strategy or point to a similar example I would be grateful.  I've been experimenting with Arima models with predictors.  </p>
+
+<p>I'm really wondering how much the staffing levels matter and how they could be identified or addressed.  I was thinking maybe looking for level shifts might be an approach.</p>
+
+<p>I have some sample data below.</p>
+
+<p>Data:</p>
+
+<pre><code>dput(dfE86[1:525,c(""DateTime"",""WaitTime"",""CustCount"")])
+</code></pre>
+
+<p>structure(list(DateTime = c(""2015-01-01 00:00"", ""2015-01-01 01:00"", 
+""2015-01-01 02:00"", ""2015-01-01 03:00"", ""2015-01-01 04:00"", ""2015-01-01 05:00"", 
+""2015-01-01 06:00"", ""2015-01-01 07:00"", ""2015-01-01 08:00"", ""2015-01-01 09:00"", 
+""2015-01-01 10:00"", ""2015-01-01 11:00"", ""2015-01-01 12:00"", ""2015-01-01 13:00"", 
+""2015-01-01 14:00"", ""2015-01-01 15:00"", ""2015-01-01 16:00"", ""2015-01-01 17:00"", 
+""2015-01-01 18:00"", ""2015-01-01 19:00"", ""2015-01-01 20:00"", ""2015-01-01 21:00"", 
+""2015-01-01 22:00"", ""2015-01-01 23:00"", ""2015-01-02 00:00"", ""2015-01-02 01:00"", 
+""2015-01-02 02:00"", ""2015-01-02 03:00"", ""2015-01-02 04:00"", ""2015-01-02 05:00"", 
+""2015-01-02 06:00"", ""2015-01-02 07:00"", ""2015-01-02 08:00"", ""2015-01-02 09:00"", 
+""2015-01-02 10:00"", ""2015-01-02 11:00"", ""2015-01-02 12:00"", ""2015-01-02 13:00"", 
+""2015-01-02 14:00"", ""2015-01-02 15:00"", ""2015-01-02 16:00"", ""2015-01-02 17:00"", 
+""2015-01-02 18:00"", ""2015-01-02 19:00"", ""2015-01-02 20:00"", ""2015-01-02 21:00"", 
+""2015-01-02 22:00"", ""2015-01-02 23:00"", ""2015-01-03 00:00"", ""2015-01-03 01:00"", 
+""2015-01-03 02:00"", ""2015-01-03 03:00"", ""2015-01-03 04:00"", ""2015-01-03 05:00"", 
+""2015-01-03 06:00"", ""2015-01-03 07:00"", ""2015-01-03 08:00"", ""2015-01-03 09:00"", 
+""2015-01-03 10:00"", ""2015-01-03 11:00"", ""2015-01-03 12:00"", ""2015-01-03 13:00"", 
+""2015-01-03 14:00"", ""2015-01-03 15:00"", ""2015-01-03 16:00"", ""2015-01-03 17:00"", 
+""2015-01-03 18:00"", ""2015-01-03 19:00"", ""2015-01-03 20:00"", ""2015-01-03 21:00"", 
+""2015-01-03 22:00"", ""2015-01-03 23:00"", ""2015-01-04 00:00"", ""2015-01-04 01:00"", 
+""2015-01-04 02:00"", ""2015-01-04 03:00"", ""2015-01-04 04:00"", ""2015-01-04 05:00"", 
+""2015-01-04 06:00"", ""2015-01-04 07:00"", ""2015-01-04 08:00"", ""2015-01-04 09:00"", 
+""2015-01-04 10:00"", ""2015-01-04 11:00"", ""2015-01-04 12:00"", ""2015-01-04 13:00"", 
+""2015-01-04 14:00"", ""2015-01-04 15:00"", ""2015-01-04 16:00"", ""2015-01-04 17:00"", 
+""2015-01-04 18:00"", ""2015-01-04 19:00"", ""2015-01-04 20:00"", ""2015-01-04 21:00"", 
+""2015-01-04 22:00"", ""2015-01-04 23:00"", ""2015-01-05 00:00"", ""2015-01-05 01:00"", 
+""2015-01-05 02:00"", ""2015-01-05 03:00"", ""2015-01-05 04:00"", ""2015-01-05 05:00"", 
+""2015-01-05 06:00"", ""2015-01-05 07:00"", ""2015-01-05 08:00"", ""2015-01-05 09:00"", 
+""2015-01-05 10:00"", ""2015-01-05 11:00"", ""2015-01-05 12:00"", ""2015-01-05 13:00"", 
+""2015-01-05 14:00"", ""2015-01-05 15:00"", ""2015-01-05 16:00"", ""2015-01-05 17:00"", 
+""2015-01-05 18:00"", ""2015-01-05 19:00"", ""2015-01-05 20:00"", ""2015-01-05 21:00"", 
+""2015-01-05 22:00"", ""2015-01-05 23:00"", ""2015-01-06 00:00"", ""2015-01-06 01:00"", 
+""2015-01-06 02:00"", ""2015-01-06 03:00"", ""2015-01-06 04:00"", ""2015-01-06 05:00"", 
+""2015-01-06 06:00"", ""2015-01-06 07:00"", ""2015-01-06 08:00"", ""2015-01-06 09:00"", 
+""2015-01-06 10:00"", ""2015-01-06 11:00"", ""2015-01-06 12:00"", ""2015-01-06 13:00"", 
+""2015-01-06 14:00"", ""2015-01-06 15:00"", ""2015-01-06 16:00"", ""2015-01-06 17:00"", 
+""2015-01-06 18:00"", ""2015-01-06 19:00"", ""2015-01-06 20:00"", ""2015-01-06 21:00"", 
+""2015-01-06 22:00"", ""2015-01-06 23:00"", ""2015-01-07 00:00"", ""2015-01-07 01:00"", 
+""2015-01-07 02:00"", ""2015-01-07 03:00"", ""2015-01-07 04:00"", ""2015-01-07 05:00"", 
+""2015-01-07 06:00"", ""2015-01-07 07:00"", ""2015-01-07 08:00"", ""2015-01-07 09:00"", 
+""2015-01-07 10:00"", ""2015-01-07 11:00"", ""2015-01-07 12:00"", ""2015-01-07 13:00"", 
+""2015-01-07 14:00"", ""2015-01-07 15:00"", ""2015-01-07 16:00"", ""2015-01-07 17:00"", 
+""2015-01-07 18:00"", ""2015-01-07 19:00"", ""2015-01-07 20:00"", ""2015-01-07 21:00"", 
+""2015-01-07 22:00"", ""2015-01-07 23:00"", ""2015-01-08 00:00"", ""2015-01-08 01:00"", 
+""2015-01-08 02:00"", ""2015-01-08 03:00"", ""2015-01-08 04:00"", ""2015-01-08 05:00"", 
+""2015-01-08 06:00"", ""2015-01-08 07:00"", ""2015-01-08 08:00"", ""2015-01-08 09:00"", 
+""2015-01-08 10:00"", ""2015-01-08 11:00"", ""2015-01-08 12:00"", ""2015-01-08 13:00"", 
+""2015-01-08 14:00"", ""2015-01-08 15:00"", ""2015-01-08 16:00"", ""2015-01-08 17:00"", 
+""2015-01-08 18:00"", ""2015-01-08 19:00"", ""2015-01-08 20:00"", ""2015-01-08 21:00"", 
+""2015-01-08 22:00"", ""2015-01-08 23:00"", ""2015-01-09 00:00"", ""2015-01-09 01:00"", 
+""2015-01-09 02:00"", ""2015-01-09 03:00"", ""2015-01-09 04:00"", ""2015-01-09 05:00"", 
+""2015-01-09 06:00"", ""2015-01-09 07:00"", ""2015-01-09 08:00"", ""2015-01-09 09:00"", 
+""2015-01-09 10:00"", ""2015-01-09 11:00"", ""2015-01-09 12:00"", ""2015-01-09 13:00"", 
+""2015-01-09 14:00"", ""2015-01-09 15:00"", ""2015-01-09 16:00"", ""2015-01-09 17:00"", 
+""2015-01-09 18:00"", ""2015-01-09 19:00"", ""2015-01-09 20:00"", ""2015-01-09 21:00"", 
+""2015-01-09 22:00"", ""2015-01-09 23:00"", ""2015-01-10 00:00"", ""2015-01-10 01:00"", 
+""2015-01-10 02:00"", ""2015-01-10 03:00"", ""2015-01-10 04:00"", ""2015-01-10 05:00"", 
+""2015-01-10 06:00"", ""2015-01-10 07:00"", ""2015-01-10 08:00"", ""2015-01-10 09:00"", 
+""2015-01-10 10:00"", ""2015-01-10 11:00"", ""2015-01-10 12:00"", ""2015-01-10 13:00"", 
+""2015-01-10 14:00"", ""2015-01-10 15:00"", ""2015-01-10 16:00"", ""2015-01-10 17:00"", 
+""2015-01-10 18:00"", ""2015-01-10 19:00"", ""2015-01-10 20:00"", ""2015-01-10 21:00"", 
+""2015-01-10 22:00"", ""2015-01-10 23:00"", ""2015-01-11 00:00"", ""2015-01-11 01:00"", 
+""2015-01-11 02:00"", ""2015-01-11 03:00"", ""2015-01-11 04:00"", ""2015-01-11 05:00"", 
+""2015-01-11 06:00"", ""2015-01-11 07:00"", ""2015-01-11 08:00"", ""2015-01-11 09:00"", 
+""2015-01-11 10:00"", ""2015-01-11 11:00"", ""2015-01-11 12:00"", ""2015-01-11 13:00"", 
+""2015-01-11 14:00"", ""2015-01-11 15:00"", ""2015-01-11 16:00"", ""2015-01-11 17:00"", 
+""2015-01-11 18:00"", ""2015-01-11 19:00"", ""2015-01-11 20:00"", ""2015-01-11 21:00"", 
+""2015-01-11 22:00"", ""2015-01-11 23:00"", ""2015-01-12 00:00"", ""2015-01-12 01:00"", 
+""2015-01-12 02:00"", ""2015-01-12 03:00"", ""2015-01-12 04:00"", ""2015-01-12 05:00"", 
+""2015-01-12 06:00"", ""2015-01-12 07:00"", ""2015-01-12 08:00"", ""2015-01-12 09:00"", 
+""2015-01-12 10:00"", ""2015-01-12 11:00"", ""2015-01-12 12:00"", ""2015-01-12 13:00"", 
+""2015-01-12 14:00"", ""2015-01-12 15:00"", ""2015-01-12 16:00"", ""2015-01-12 17:00"", 
+""2015-01-12 18:00"", ""2015-01-12 19:00"", ""2015-01-12 20:00"", ""2015-01-12 21:00"", 
+""2015-01-12 22:00"", ""2015-01-12 23:00"", ""2015-01-13 00:00"", ""2015-01-13 01:00"", 
+""2015-01-13 02:00"", ""2015-01-13 03:00"", ""2015-01-13 04:00"", ""2015-01-13 05:00"", 
+""2015-01-13 06:00"", ""2015-01-13 07:00"", ""2015-01-13 08:00"", ""2015-01-13 09:00"", 
+""2015-01-13 10:00"", ""2015-01-13 11:00"", ""2015-01-13 12:00"", ""2015-01-13 13:00"", 
+""2015-01-13 14:00"", ""2015-01-13 15:00"", ""2015-01-13 16:00"", ""2015-01-13 17:00"", 
+""2015-01-13 18:00"", ""2015-01-13 19:00"", ""2015-01-13 20:00"", ""2015-01-13 21:00"", 
+""2015-01-13 22:00"", ""2015-01-13 23:00"", ""2015-01-14 00:00"", ""2015-01-14 01:00"", 
+""2015-01-14 02:00"", ""2015-01-14 03:00"", ""2015-01-14 04:00"", ""2015-01-14 05:00"", 
+""2015-01-14 06:00"", ""2015-01-14 07:00"", ""2015-01-14 08:00"", ""2015-01-14 09:00"", 
+""2015-01-14 10:00"", ""2015-01-14 11:00"", ""2015-01-14 12:00"", ""2015-01-14 13:00"", 
+""2015-01-14 14:00"", ""2015-01-14 15:00"", ""2015-01-14 16:00"", ""2015-01-14 17:00"", 
+""2015-01-14 18:00"", ""2015-01-14 19:00"", ""2015-01-14 20:00"", ""2015-01-14 21:00"", 
+""2015-01-14 22:00"", ""2015-01-14 23:00"", ""2015-01-15 00:00"", ""2015-01-15 01:00"", 
+""2015-01-15 02:00"", ""2015-01-15 03:00"", ""2015-01-15 04:00"", ""2015-01-15 05:00"", 
+""2015-01-15 06:00"", ""2015-01-15 07:00"", ""2015-01-15 08:00"", ""2015-01-15 09:00"", 
+""2015-01-15 10:00"", ""2015-01-15 11:00"", ""2015-01-15 12:00"", ""2015-01-15 13:00"", 
+""2015-01-15 14:00"", ""2015-01-15 15:00"", ""2015-01-15 16:00"", ""2015-01-15 17:00"", 
+""2015-01-15 18:00"", ""2015-01-15 19:00"", ""2015-01-15 20:00"", ""2015-01-15 21:00"", 
+""2015-01-15 22:00"", ""2015-01-15 23:00"", ""2015-01-16 00:00"", ""2015-01-16 01:00"", 
+""2015-01-16 02:00"", ""2015-01-16 03:00"", ""2015-01-16 04:00"", ""2015-01-16 05:00"", 
+""2015-01-16 06:00"", ""2015-01-16 07:00"", ""2015-01-16 08:00"", ""2015-01-16 09:00"", 
+""2015-01-16 10:00"", ""2015-01-16 11:00"", ""2015-01-16 12:00"", ""2015-01-16 13:00"", 
+""2015-01-16 14:00"", ""2015-01-16 15:00"", ""2015-01-16 16:00"", ""2015-01-16 17:00"", 
+""2015-01-16 18:00"", ""2015-01-16 19:00"", ""2015-01-16 20:00"", ""2015-01-16 21:00"", 
+""2015-01-16 22:00"", ""2015-01-16 23:00"", ""2015-01-17 00:00"", ""2015-01-17 01:00"", 
+""2015-01-17 02:00"", ""2015-01-17 03:00"", ""2015-01-17 04:00"", ""2015-01-17 05:00"", 
+""2015-01-17 06:00"", ""2015-01-17 07:00"", ""2015-01-17 08:00"", ""2015-01-17 09:00"", 
+""2015-01-17 10:00"", ""2015-01-17 11:00"", ""2015-01-17 12:00"", ""2015-01-17 13:00"", 
+""2015-01-17 14:00"", ""2015-01-17 15:00"", ""2015-01-17 16:00"", ""2015-01-17 17:00"", 
+""2015-01-17 18:00"", ""2015-01-17 19:00"", ""2015-01-17 20:00"", ""2015-01-17 21:00"", 
+""2015-01-17 22:00"", ""2015-01-17 23:00"", ""2015-01-18 00:00"", ""2015-01-18 01:00"", 
+""2015-01-18 02:00"", ""2015-01-18 03:00"", ""2015-01-18 04:00"", ""2015-01-18 05:00"", 
+""2015-01-18 06:00"", ""2015-01-18 07:00"", ""2015-01-18 08:00"", ""2015-01-18 09:00"", 
+""2015-01-18 10:00"", ""2015-01-18 11:00"", ""2015-01-18 12:00"", ""2015-01-18 13:00"", 
+""2015-01-18 14:00"", ""2015-01-18 15:00"", ""2015-01-18 16:00"", ""2015-01-18 17:00"", 
+""2015-01-18 18:00"", ""2015-01-18 19:00"", ""2015-01-18 20:00"", ""2015-01-18 21:00"", 
+""2015-01-18 22:00"", ""2015-01-18 23:00"", ""2015-01-19 00:00"", ""2015-01-19 01:00"", 
+""2015-01-19 02:00"", ""2015-01-19 03:00"", ""2015-01-19 04:00"", ""2015-01-19 05:00"", 
+""2015-01-19 06:00"", ""2015-01-19 07:00"", ""2015-01-19 08:00"", ""2015-01-19 09:00"", 
+""2015-01-19 10:00"", ""2015-01-19 11:00"", ""2015-01-19 12:00"", ""2015-01-19 13:00"", 
+""2015-01-19 14:00"", ""2015-01-19 15:00"", ""2015-01-19 16:00"", ""2015-01-19 17:00"", 
+""2015-01-19 18:00"", ""2015-01-19 19:00"", ""2015-01-19 20:00"", ""2015-01-19 21:00"", 
+""2015-01-19 22:00"", ""2015-01-19 23:00"", ""2015-01-20 00:00"", ""2015-01-20 01:00"", 
+""2015-01-20 02:00"", ""2015-01-20 03:00"", ""2015-01-20 04:00"", ""2015-01-20 05:00"", 
+""2015-01-20 06:00"", ""2015-01-20 07:00"", ""2015-01-20 08:00"", ""2015-01-20 09:00"", 
+""2015-01-20 10:00"", ""2015-01-20 11:00"", ""2015-01-20 12:00"", ""2015-01-20 13:00"", 
+""2015-01-20 14:00"", ""2015-01-20 15:00"", ""2015-01-20 16:00"", ""2015-01-20 17:00"", 
+""2015-01-20 18:00"", ""2015-01-20 19:00"", ""2015-01-20 20:00"", ""2015-01-20 21:00"", 
+""2015-01-20 22:00"", ""2015-01-20 23:00"", ""2015-01-21 00:00"", ""2015-01-21 01:00"", 
+""2015-01-21 02:00"", ""2015-01-21 03:00"", ""2015-01-21 04:00"", ""2015-01-21 05:00"", 
+""2015-01-21 06:00"", ""2015-01-21 07:00"", ""2015-01-21 08:00"", ""2015-01-21 09:00"", 
+""2015-01-21 10:00"", ""2015-01-21 11:00"", ""2015-01-21 12:00"", ""2015-01-21 13:00"", 
+""2015-01-21 14:00"", ""2015-01-21 15:00"", ""2015-01-21 16:00"", ""2015-01-21 17:00"", 
+""2015-01-21 18:00"", ""2015-01-21 19:00"", ""2015-01-21 20:00"", ""2015-01-21 21:00"", 
+""2015-01-21 22:00"", ""2015-01-21 23:00"", ""2015-01-22 00:00"", ""2015-01-22 01:00"", 
+""2015-01-22 02:00"", ""2015-01-22 03:00"", ""2015-01-22 04:00"", ""2015-01-22 05:00"", 
+""2015-01-22 06:00"", ""2015-01-22 07:00"", ""2015-01-22 08:00"", ""2015-01-22 09:00"", 
+""2015-01-22 10:00"", ""2015-01-22 11:00"", ""2015-01-22 12:00"", ""2015-01-22 13:00"", 
+""2015-01-22 14:00"", ""2015-01-22 15:00"", ""2015-01-22 16:00"", ""2015-01-22 17:00"", 
+""2015-01-22 18:00"", ""2015-01-22 19:00"", ""2015-01-22 20:00""), 
+    WaitTime = c(11, 14, 17, 5, 5, 5.5, 8, NA, 5.5, 6.5, 
+    8.5, 4, 5, 9, 10, 11, 7, 6, 7, 7, 5, 6, 9, 9, 6.5, 9, 3.5, 
+    2, 15, 2.5, 17, 5, 5.5, 7, 6, 3.5, 6, 9.5, 5, 7, 4, 5, 4, 
+    9.5, 3.5, 5, 4, 4, 9, 4.5, 6, 10, NA, 9.5, 15, 9, 5.5, 7.5, 
+    12, 17.5, 19, 7, 14, 17, 3.5, 6, 15, 11, 10.5, 11, 13, 9.5, 
+    9, 7, 4, 6, 15, 5, 18, 5, 6, 19, 19, 6, 7, 7.5, 7.5, 7, 6.5, 
+    9, 10, 5.5, 5, 7.5, 5, 4, 10, 7, 5, 12, 6, NA, 4, 2, 5, 7.5, 
+    11, 13, 7, 8, 7.5, 5.5, 7.5, 15, 7, 4.5, 9, 3, 4, 6, 17.5, 
+    11, 7, 6, 7, 4.5, 4, 4, 5, 10, 14, 7, 7, 4, 7.5, 11, 6, 11, 
+    7.5, 15, 23.5, 8, 12, 5, 9, 10, 4, 9, 6, 8.5, 7.5, 6, 5, 
+    8, 6, 5.5, 8, 11, 10.5, 4, 6, 7, 10, 11.5, 11.5, 3, 4, 16, 
+    3, 2, 2, 8, 4.5, 7, 4, 8, 11, 6.5, 7.5, 17, 6, 6.5, 9, 12, 
+    17, 10, 5, 5, 9, 3, 8.5, 11, 4.5, 7, 16, 11, 14, 6.5, 15, 
+    8.5, 7, 6.5, 11, 2, 2, 13.5, 4, 2, 16, 11.5, 3.5, 9, 16.5, 
+    2.5, 4.5, 8.5, 5, 6, 7.5, 9.5, NA, 9.5, 8, 2.5, 4, 12, 13, 
+    10, 4, 6, 16, 16, 13, 8, 12, 19, 19, 5.5, 8, 6.5, NA, NA, 
+    NA, 15, 12, NA, 6, 11, 8, 4, 2, 3, 4, 10, 7, 5, 4.5, 4, 5, 
+    11.5, 12, 10.5, 4.5, 3, 4, 7, 15.5, 9.5, NA, 9.5, 12, 13.5, 
+    10, 10, 13, 6, 8.5, 15, 16.5, 9.5, 14, 9, 9.5, 11, 15, 14, 
+    5.5, 6, 14, 16, 9.5, 23, NA, 19, 12, 5, 11, 16, 8, 11, 9, 
+    13, 6, 7, 3, 5.5, 7.5, 19, 6.5, 5.5, 4.5, 7, 8, 7, 10, 11, 
+    13, NA, 12, 1.5, 7, 7, 12, 8, 6, 9, 15, 9, 3, 5, 11, 11, 
+    8, 6, 3, 7.5, 4, 7, 7.5, NA, NA, NA, NA, 6.5, 2, 16.5, 7.5, 
+    8, 8, 5, 2, 7, 4, 6.5, 4.5, 10, 6, 4.5, 6.5, 9, 2, 6, 3.5, 
+    NA, 5, 7, 3.5, 4, 4.5, 13, 19, 8.5, 10, 8, 13, 10, 10, 6, 
+    13.5, 12, 11, 5.5, 6, 3.5, 9, 8, NA, 6, 5, 8.5, 3, 12, 10, 
+    9.5, 7, 24, 7, 9, 11.5, 5, 7, 11, 6, 5.5, 3, 4.5, 4, 5, 5, 
+    3, 4.5, 6, 10, 5, 4, 4, 9.5, 5, 7, 6, 3, 13, 5.5, 5, 7.5, 
+    3, 5, 6.5, 5, 5.5, 6, 4, 3, 5, NA, 5, 5, 6, 7, 8, 5, 5.5, 
+    9, 6, 8.5, 9.5, 8, 9, 6, 12, 5, 7, 5, 3.5, 4, 7.5, 7, 5, 
+    4, 4, NA, 7, 5.5, 6, 8.5, 6.5, 9, 3, 2, 8, 15, 6, 4, 10, 
+    7, 13, 14, 9.5, 9, 18, 6, 5, 4, 6, 4, 11.5, 17.5, 7, 8, 10, 
+    4, 7, 5, 9, 6, 5, 4, 8, 4, 2, 1.5, 3.5, 6, 5.5, 5, 4, 8, 
+    10.5, 4, 11, 9.5, 5, 6, 11, 21, 9.5, 11, 13.5, 7.5, 13, 10, 
+    7, 9.5, 6, 10), CustCount = c(2, 6, 3, 5, 3, 2, 2, NA, 2, 6, 
+    12, 11, 9, 10, 13, 9, 11, 7, 12, 8, 6, 4, 10, 6, 2, 7, 2, 
+    1, 3, 2, 1, 3, 8, 7, 7, 8, 13, 13, 13, 11, 12, 4, 12, 18, 
+    12, 7, 5, 4, 6, 4, 3, 3, NA, 4, 2, 8, 8, 8, 7, 3, 5, 3, 7, 
+    8, 7, 7, 11, 8, 10, 3, 10, 6, 5, 5, 3, 1, 2, 1, 1, 3, 4, 
+    8, 8, 5, 9, 12, 12, 11, 8, 5, 9, 10, 7, 8, 4, 6, 4, 1, 3, 
+    1, 3, NA, 2, 1, 4, 10, 7, 13, 6, 9, 6, 16, 12, 11, 10, 12, 
+    9, 7, 7, 7, 6, 2, 3, 1, 1, 2, 2, 3, 11, 10, 9, 8, 9, 13, 
+    6, 6, 10, 9, 11, 10, 8, 7, 6, 4, 2, 3, 5, 3, 2, 4, 4, 4, 
+    8, 5, 12, 8, 7, 12, 9, 12, 12, 12, 13, 12, 9, 8, 9, 10, 4, 
+    7, 4, 2, 2, 4, 1, 7, 6, 6, 8, 11, 11, 5, 7, 6, 9, 12, 15, 
+    9, 11, 5, 10, 5, 4, 4, 2, 3, 3, 2, 5, 4, 7, 8, 6, 6, 5, 12, 
+    10, 8, 10, 10, 4, 13, 12, 6, 8, 6, 3, 1, 4, 2, NA, 4, 3, 
+    2, 6, 5, 8, 10, 4, 13, 2, 13, 8, 11, 13, 8, 9, 10, 9, 5, 
+    1, NA, 1, 1, 2, NA, 1, 7, 6, 10, 7, 8, 12, 12, 9, 5, 6, 8, 
+    13, 13, 13, 8, 8, 1, 5, 7, 6, 2, NA, 2, 1, 2, 7, 9, 12, 12, 
+    10, 10, 10, 6, 8, 2, 8, 3, 4, 5, 6, 2, 2, 1, 4, 1, NA, 3, 
+    1, 3, 8, 8, 11, 11, 12, 5, 7, 14, 9, 10, 14, 11, 8, 6, 8, 
+    7, 5, 4, 3, 4, 9, NA, 2, 4, 5, 8, 2, 12, 8, 15, 12, 8, 9, 
+    12, 9, 9, 12, 7, 7, 8, 7, 5, 4, NA, 1, NA, NA, 4, 9, 8, 8, 
+    8, 12, 13, 7, 11, 8, 14, 12, 13, 15, 8, 6, 4, 4, 5, 2, NA, 
+    2, 5, 4, 5, 6, 15, 11, 10, 16, 10, 5, 5, 10, 13, 10, 9, 8, 
+    7, 5, 4, 5, 6, NA, 2, 5, 4, 1, 6, 5, 8, 4, 3, 10, 11, 8, 
+    12, 10, 10, 10, 12, 10, 10, 7, 5, 7, 3, 4, 3, 3, 3, 3, 8, 
+    4, 8, 10, 5, 10, 10, 10, 11, 10, 11, 7, 10, 7, 6, 7, 7, 3, 
+    3, NA, 3, 6, 5, 3, 3, 5, 6, 6, 13, 14, 14, 7, 13, 9, 10, 
+    4, 9, 10, 8, 3, 6, 10, 5, 2, 1, NA, 3, 4, 4, 12, 12, 11, 
+    12, 11, 13, 10, 9, 11, 11, 14, 10, 13, 10, 7, 11, 1, 3, 1, 
+    4, 1, 2, 2, 3, 9, 6, 9, 9, 8, 9, 7, 12, 17, 13, 9, 10, 8, 
+    8, 10, 2, 3, 3, 6, 2, 2, 1, 6, 8, 7, 9, 5, 11, 8, 8, 12, 
+    13, 14, 10, 7, 5, 11)), .Names = c(""DateTime"", ""WaitTime"", 
+""CustCount""), row.names = c(NA, 525L), class = ""data.frame"")</p>
+"

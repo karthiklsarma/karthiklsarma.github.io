@@ -1,0 +1,777 @@
+"V1","V2","V3","V4"
+"0.444554224474387","0.430730492253948","  5087","<p>There are numerous procedures for functional data clustering based on orthonormal basis functions. I have a series of models built with the GAMM models, using the <code>gamm()</code> from the mgcv package in R. For fitting a long-term trend, I use a thin plate regression spline. Next to that, I introduce a CAR1 model in the random component to correct for autocorrelation. For more info, see eg the paper of Simon Wood on <a href=""http://r.789695.n4.nabble.com/attachment/2063352/0/tprs.pdf"">thin plate regression splines</a> or his <a href=""http://rads.stackoverflow.com/amzn/click/1584884746"">book on GAM models</a>.</p>
+
+<p>Now I'm a bit puzzled in how I get the correct coefficients out of the models. And I'm even less confident that the coefficients I can extract, are the ones I should use to cluster different models. </p>
+
+<p>A simple example, using:</p>
+
+<pre><code>#runnable code
+require(mgcv)
+require(nlme)
+library(RLRsim)
+library(RColorBrewer)
+
+x1 &lt;- 1:1000
+x2 &lt;- runif(1000,10,500)
+
+fx1 &lt;- -4*sin(x1/50)
+fx2 &lt;- -10*(x2)^(1/4)
+y &lt;- 60+ fx1 + fx2 + rnorm(1000,0,5)
+
+test &lt;- gamm(y~s(x1)+s(x2))
+# end runnable code
+</code></pre>
+
+<p>Then I can construct the original basis using smoothCon :</p>
+
+<pre><code>#runnable code
+um &lt;- smoothCon(s(x1),data=data.frame(x1=x1),
+         knots=NULL,absorb.cons=FALSE)
+#end runnable code
+</code></pre>
+
+<p>Now,when I look at the basis functions I can extract using </p>
+
+<pre><code># runnable code
+X &lt;- extract.lmeDesign(test$lme)$X
+Z &lt;- extract.lmeDesign(test$lme)$Z
+
+op &lt;- par(mfrow=c(2,5),mar=c(4,4,1,1))
+plot(x1,X[,1],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,X[,2],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,8],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,7],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,6],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,5],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,4],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,3],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,2],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,1],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+par(op)
+# end runnable code
+</code></pre>
+
+<p>they look already quite different. I can get the final coefficients used to build the smoother by</p>
+
+<pre><code>#runnable code
+Fcoef &lt;- test$lme$coef$fixed
+Rcoef &lt;- unlist(test$lme$coef$random)
+#end runnable code
+</code></pre>
+
+<p>but I'm far from sure these are the coefficients I look for. I fear I can't just use those coefficients as data in a clustering procedure. I would really like to know which coefficients are used to transform the basis functions from the ones I get with <code>smoothCon()</code> to the ones I extract from the lme-part of the gamm-object. And if possible, where I can find them. I've read the related articles, but somehow I fail to figure it out myself. All help is appreciated.</p>
+"
+"0.294883912309794","0.285714285714286"," 27132","<p>I have social network data in which an ""ego"" names a friend ""alter"". I am running a regression in R in which attributes of alter are predictors of outcomes for ego. So each observation is dyadic with variable measures for both ego and alter. </p>
+
+<p>There are multiple observations for each ego which are accounted for by using a gee model, clustering on ego. The problem is that i have been asked to also account for multiple observations of alter, or least to demonstrate that interdependence among the multiple alters is not impacting the final results. There are multiples of the same alter in the dataset as well as multiples of the same ego. </p>
+
+<p>The two options seem to be some kind of cross clustering and I am not sure if that is possible in R. Another option which was suggested was to run a within-group correlation of some sort on the pearson's residuals, with the groups being the alters for each observation.  I had considered some sort of ICC but the number of times any individual alter shows up in the dataset ranges from 1-7. As far as I can tell, ICCs expect that the number of measures for each group in the dataset be the same. </p>
+
+<p>Does anyone know how to do a within group correlation which can handle groups within which there are differing numbers of measures? I have looked online and have not come across anything that seems to address this. </p>
+
+<p>Thanks in advance for any suggestions!</p>
+"
+"0.390094748802747","0.377964473009227"," 28492","<p>For fun, I tried to replicate the results of <a href=""http://rpproxy.iii.com:9797/MuseSessionID=248c435aa056d82d70d390e949c628fb/MuseHost=rfs.oxfordjournals.org/MusePath/content/22/1/435.abstract"" rel=""nofollow"">Petersen (2009)</a> who deals with the correct estimation of standard errors in finance panel data sets. </p>
+
+<p>In a nutshell, he estimates the following standard regression for a panel data set:</p>
+
+<p>$$
+Y_{it} = X_{it} \beta + \epsilon_{it}
+$$ </p>
+
+<p>where $\epsilon_{it} = \gamma_i + \eta_{it}$ and $x_{it} = \mu_{i} + \nu_{it}$. Hence, both the residual and the independent variable have a firm-specific component. Petersen goes on to show that this results in biased standard errors when applying the standard OLS. For example, he shows in table 1 of his paper that if both the residual volatility and the variable volatility are driven by 50% by a firm-specific component, the true standard errors are nearly twice as large as the ones given by OLS.</p>
+
+<p>He shows that in a MCS and I reproduced those results in R, as you can see from the code below. Naturally, I asked myself how I would compute the correct standard errors in R and the package of choice seemed to be <code>plm</code>. However, I just don't get the correct results out of it and I don't know what I miss.</p>
+
+<p>Here is my code:</p>
+
+<pre><code>library(plm)
+runMCS &lt;- function(runs, nrN, nrT, fracFirmX, fracFirmEps, sd_X, sd_eps, beta) {
+
+  betas    &lt;- numeric(runs)
+  se_betas &lt;- numeric(runs)
+  panel_betas    &lt;- numeric(runs)
+  se_panel_betas &lt;- numeric(runs)
+
+  for (i in 1:runs) {
+
+    #Model epsilon, X, and Y
+    eps &lt;- rep(rnorm(nrN, 
+                     mean=0, 
+                     sd = sd_eps * sqrt(fracFirmEps)), 
+               each=nrT) + 
+                 rnorm(nrN * nrT, mean=0, sd = sd_eps * sqrt(1-fracFirmEps))
+    X   &lt;- rep(rnorm(nrN, 
+                     mean=0, 
+                     sd = sd_X   * sqrt(fracFirmX)),   
+               each=nrT) + 
+                 rnorm(nrN * nrT, mean=0, sd = sd_X   * sqrt(1-fracFirmX))
+    Y   &lt;- beta * X + eps
+
+    #Compute regression (OLS)
+    reg &lt;- summary(lm(Y ~ X))
+
+    #Save results
+    betas[i]    &lt;- reg$coef[2, 1]
+    se_betas[i] &lt;- reg$coef[2, 2]
+
+    #Try plm
+    df &lt;- data.frame(Firm = rep(1:nrN, each=nrT),
+                     Time = rep(1:nrT, times=nrN),
+                     Y = Y,
+                     X = X)
+    preg &lt;- summary(plm(Y ~ X, data=df, index=c(""Firm"", ""Time""), effect=""individual"", model=""within"")) #within is fixed effects
+    panel_betas[i]    &lt;- preg$coef[1, 1]
+    se_panel_betas[i] &lt;- preg$coef[1, 2]
+  }
+
+  return(c(avg_beta = mean(betas), 
+           true_se = sd(betas), 
+           avg_se = mean(se_betas), 
+           avg_clustered = mean(panel_betas),
+           se_clustered = mean(se_panel_betas)))
+
+}
+MCS_50_50 &lt;- runMCS(50, 500, 10, 0.5, 0.5, 1, 2, 1)
+MCS_50_50
+     avg_beta       true_se        avg_se avg_clustered  se_clustered 
+   1.00503955    0.06020203    0.02825567    1.00433092    0.02985546
+</code></pre>
+
+<p>Note that I only run the simulation 50 times here because the plm function slows it down considerably. So basically, it makes virtually no difference if I call <code>lm</code> or <code>plm</code>. I'm pretty confident that I set the <code>index</code> and <code>model</code> option correct after reading the vignette of the package. However, I must miss something here! Interestingly, the package also has the <code>fixef</code> function and if I call that on one run, I get something like  this:</p>
+
+<pre><code>summary(fixef(plm(Y ~ X, data=df, index=c(""Firm"", ""Time""), effect=""individual"", model=""within"")))
+1      13.60377     0.44112    30.8391 &lt; 2.2e-16 ***
+2    -830.74707     0.44136 -1882.2236 &lt; 2.2e-16 ***
+3    -326.96042     0.44137  -740.7840 &lt; 2.2e-16 ***
+4     169.16463     0.44246   382.3287 &lt; 2.2e-16 ***
+...
+</code></pre>
+
+<p>I'm not quite sure how to interpret those results, but here, I get considerably larger standard errors for each firm separately. If I would average those, I would end up with something above 0.44 which is considerably closer to the true standard errors, but still not right.</p>
+
+<p>So, again a very long question from me, sorry for that ;-) Note that I did check answers before and I found this interesting <a href=""http://stats.stackexchange.com/questions/10017/standard-error-clustering-in-r-either-manually-or-in-plm"">link</a>. The white paper that is referred to in the answer is interestingly the same person that implemented the solution on Petersen's <a href=""http://www.kellogg.northwestern.edu/faculty/petersen/htm/papers/se/se_programming.htm"" rel=""nofollow"">webpage</a>. So I'm pretty sure that I could get the correct standard errors by implementing Mahmood Arai's solution. But I'm looking for an already implemented and therefore safe option and I just wonder why that plm function does not work.</p>
+"
+"NaN","NaN"," 32239","<p>As described in Merlo et al (<a href=""http://www.ncbi.nlm.nih.gov/pubmed/16537344"" rel=""nofollow"">J Epidem Comm Health 2006</a>), the 95% credible interval for MOR is calculated using MCMC. MOR is defined as $\exp(\sqrt{2\sigma^2}\times 0.675)$, where $\sigma$ is the level-2 variance of the random intercept $u$ from a null model of a hierarchical logistic regression.  </p>
+
+<p>Does anyone have an idea of how to write a program for an Markov chain Monte Carlo to calculate the standard error of the  median odds ratio (MOR) using <a href=""http://cran.r-project.org/web/packages/rjags/index.html"" rel=""nofollow"">rjags</a>?<br>
+My dependent variable is outcome(alive/dead) and the clustering (level2)variable is Hospital. There are 140 hospitals and would like to see variations in outcome between hospitals. Other risk factors will be included later as independent level1 variables.</p>
+"
+"0.41702882811415","0.404061017820884"," 46821","<p>I am producing a script for creating bootstrap samples from the <code>cats</code> dataset (from the <code>-MASS-</code> package). </p>
+
+<p>Following the Davidson and Hinkley textbook [1] I ran a simple linear regression and adopted a fundamental non-parametric procedure for bootstrapping from iid observations, namely <strong>pairs resampling</strong>.</p>
+
+<p>The original sample is in the form:</p>
+
+<pre><code>Bwt   Hwt
+
+2.0   7.0
+2.1   7.2
+
+...
+
+1.9    6.8
+</code></pre>
+
+<p>Through an univariate linear model we want to explain cats hearth weight through their brain weight. </p>
+
+<p>The code is:</p>
+
+<pre><code>library(MASS)
+library(boot)
+
+
+##################
+#   CATS MODEL   #
+##################
+
+cats.lm &lt;- glm(Hwt ~ Bwt, data=cats)
+cats.diag &lt;- glm.diag.plots(cats.lm, ret=T)
+
+
+#######################
+#   CASE resampling   #
+#######################
+
+cats.fit &lt;- function(data) coef(glm(data$Hwt ~ data$Bwt)) 
+statistic.coef &lt;- function(data, i) cats.fit(data[i,]) 
+
+bootl &lt;- boot(data=cats, statistic=statistic.coef, R=999)
+</code></pre>
+
+<p>Suppose now that there exists a clustering variable <code>cluster = 1, 2,..., 24</code> (for instance, each cat belongs to a given litter). For simplicity, suppose that data are balanced: we have 6 observations for each cluster. Hence, each of the 24 litters is made up of 6 cats (i.e. <code>n_cluster = 6</code> and <code>n = 144</code>).</p>
+
+<p>It is possible to create a fake <code>cluster</code> variable through:</p>
+
+<pre><code>q &lt;- rep(1:24, times=6)
+cluster &lt;- sample(q)
+c.data &lt;- cbind(cats, cluster)
+</code></pre>
+
+<p>I have two related questions:</p>
+
+<p>How to simulate samples in accordance with the (clustered) dataset strucure? That is, <strong>how to resample at the cluster level?</strong> I would like to sample the clusters with replacement and to set the observations within each selected cluster as in the original dataset (i.e. sampling with replacenment the clusters and without replacement the observations within each cluster). </p>
+
+<p>This is the strategy proposed by Davidson (p. 100). 
+Suppose we draw <code>B = 100</code> samples. Each of them should be composed by 24 possibly recurrent clusters (e.g. <code>cluster = 3, 3, 1, 4, 12, 11, 12, 5, 6, 8, 17, 19, 10, 9, 7, 7, 16, 18, 24, 23, 11, 15, 20, 1</code>), and each cluster should contain the same 6 observations of the original dataset. How to do that in <code>R</code>? (either with or without the <code>-boot-</code> package.) Do you have alternative suggestions for proceeding?</p>
+
+<p>The second question concerns the initial regression model. Suppose I adopt a <strong>fixed-effects model</strong>, with cluster-level intercepts. <strong>Does it change the resampling procedure</strong> adopted? </p>
+
+<p>[1] Davidson, A. C., Hinkley, D. V. (1997). <em>Bootstrap methods and their applications</em>. Cambridge University press.</p>
+"
+"0.390094748802747","0.377964473009227"," 46978","<p>I am fitting a <em>Fixed-Effects</em> model, with intercepts at <code>cluster</code> level.</p>
+
+<p>One of the most direct ways is probably to use the <code>-plm-</code> package. Another well-known possibility is to apply OLS (i.e. to adopt <code>-lm-</code>) to the <em>demeaned data</em>, where the means are taken at the clustering level.</p>
+
+<p>This second approach is usually referred to as the <strong>within transformation</strong>. It is quite convenient from a computational standpoint, because we are still controlling unobserved heterogeneity at clustering level, but we do not need to estimate all the time-fixed intercepts.</p>
+
+<p>I have tried both of these approaches, and I came to a strange result. In practice, the coefficient of the regressor of interest, <code>x</code>, is the same in both cases. However, its standard error (and actually all the other relevant quantities of the regression: R squared, F test, etc.) is different.</p>
+
+<p>Please, notice that I have carefully read both the <em>R documentation</em> about <code>-plm-</code> and the <a href=""http://www.google.it/url?sa=t&amp;rct=j&amp;q=&amp;esrc=s&amp;source=web&amp;cd=2&amp;cad=rja&amp;ved=0CD4QFjAB&amp;url=http://www.jstatsoft.org/v27/i02/paper&amp;ei=7f3mUP_0DYrXtAaD7oDADw&amp;usg=AFQjCNFu_xrsnFYsC8j8DDh9mRQnoyQ6jg&amp;bvm=bv.1355534169,d.bGE"" rel=""nofollow"">related paper of the authors</a>, where it is stated that the package apply the <em>within transformation</em> and then apply OLS, as I did...</p>
+
+<p>The R script is:</p>
+
+<pre><code># set seed, load packages, create fake sample
+
+set.seed(999)
+library(plyr)
+library(plm)
+
+dat &lt;- expand.grid(id=factor(1:3), cluster=factor(1:6))
+dat &lt;- cbind(dat, x=runif(18), y=runif(18, 2, 5))
+
+
+############################
+#   FE model using -plm-   #
+############################
+
+# model fit  
+fe.1 &lt;- plm(y ~ x, data=dat, index=""cluster"", model=""within"")
+
+# estimated coefficient and standard error of x
+b.1 &lt;- summary(fe.1)$coefficients[,1]
+    se.1 &lt;- summary(fe.1)$coefficients[,2]
+
+
+######################################
+#   OLS on within-transformed data   #
+######################################
+
+# augmenting data frame with cluster-mean centered variables 
+dat.2 &lt;- ddply(dat, .(cluster), transform, dem_x=x-mean(x), dem_y=y-mean(y))
+
+# model fit
+fe.2 &lt;- lm(dem_y ~ dem_x - 1, data=dat.2)
+
+# estimated coefficient and standard error of x
+b.2 &lt;- summary(fe.2)$coefficients[1,1]
+    se.2 &lt;- summary(fe.2)$coefficients[1,2]
+
+
+#########################
+#   models comparison   #
+#########################
+
+b.1; b.2
+se.1; se.2
+
+summary(fe.1)
+summary(fe.2)
+</code></pre>
+
+<p>Notice that in the second model it is necessary to manually eliminate the intercept from the model. </p>
+"
+"NaN","NaN"," 48745","<p>If I am looking at sports data of dozens of soccer leagues over a year:</p>
+
+<pre><code>Dependent Variable = Goals Scored
+
+Independent Variables:
+X1 = Traditional Home Uniforms
+X2 = Retro Home Uniforms
+X3 = Secondary Home Uniforms 
+
+Controls:
+A whole bunch
+Most importantly--Every team has a rank (1-50) from the previous year 
+</code></pre>
+
+<p>When I run my regressions clustering my errors on rank the results are fine, but when I add a dummy for each rank my output becomes skewed:</p>
+
+<pre><code>Number of obs =    972
+F( 18,   241) =       .
+Prob &gt; F      =       .
+R-squared     =  0.2478
+</code></pre>
+
+<p>Any ideas why my F becomes a '.'?</p>
+"
+"0.255376959227625","0.247435829652697"," 49549","<p>I am attempting some variable reduction before I perform a logistic regression.  I am quite interested in using <code>Hmisc::varclus</code> in R.  However, I am having some difficulty interpreting the output.  As far as I can tell, the (tree) plot produced using <code>varclus</code> is the only built-in way to get information on the groups created by the procedure.  </p>
+
+<p>My main question involves knowing at what level of the hierarchy to select the clusters to be used for variable reduction?  I read that of a rule-of-thumb to keep a cluster is if its rho (for Spearman's) is at least 0.30.  Would this be evaluated visually from the plot?  At what value of rho would the cut-off be made to separate the tree into <em>final</em> clusters? Again, is this to be done visually?   </p>
+
+<p>Perhaps my internet searching skills are lacking, but I am having difficulty finding information on this procedure in general and more specifically in R. Is there a good <em>beginner's</em> article on variable clustering that I am missing that spells out the fundamentals?  Are there additional commands for <code>varclus</code> in R to help with final cluster decisions besides examining the tree visually?</p>
+
+<pre><code># varclust example in R using mtcars data
+mtcn &lt;- data.matrix(mtcars)
+clust &lt;- varclus(mtcn)
+clust
+plot(clust)
+</code></pre>
+"
+"0.255376959227625","0.247435829652697"," 82981","<p>I am exploring hierarchical logistic regression, using glmer from the lme4 package. To my understanding, one of the first steps in multilevel modeling is to estimate the degree of clustering of level-1 units within level-2 units, given by the intraclass correlation (to ""justify"" the additional cost of estimating parameters to account for the clustering). When I run a fully unconditional model with glmer</p>
+
+<pre><code>fitMLnull &lt;- glmer(outcome ~ 1 + (1|level2.ID), family=binomial)
+</code></pre>
+
+<p>the glmer fit gives me the variance in the intercept for outcome at level-2, but the residual level-1 variance in outcome is nowhere to be found. I read somewhere (can't track it down now) that the residual level-1 variance is <em>not</em> estimated in HGLM (or at least in glmer). Is this true? If so, is there an alternative way to approximate the degree of clustering in the data? If not, how can I access this value to calculate the ICC?</p>
+"
+"0.255376959227625","0.247435829652697"," 83446","<p>Suppose you want to find clusters based on a set of variables $Y$, and that you want to estimate the effects of some variables $X$ on membership in those clusters. Here is how I am doing it now.</p>
+
+<p>Step 1: Perform model-based clustering on the variables $Y$ (using the <code>mclust</code> package for this).</p>
+
+<p>Step 2: Optimize a multinomial regression model with cluster membership as the outcome variable.</p>
+
+<p>It seems like there must be a better way in which the models are estimated simultaneously. Anyone know a good tool in R for this and, even better, a good set of references for (a) the statistical model that the package implements, and (b) how to use the package?</p>
+
+<p>Thanks</p>
+"
+"0.17025130615175","0.247435829652697"," 88151","<p>Is it possible to use a Gaussian Process to relate multiple independent input variables (X1, X2, X3) to an output variable (Y)? </p>
+
+<p>More specifically, I would like to produce a regression graph like the example shown below where confidence interval reduces around clusters of data (i.e. variance is high at x = 1 where there is no data, but x = 0.3 the regression is tight due to the clustering of input variables) and Instead of having one input variable on the x-axis, where would be multiple inputs.</p>
+
+<p><img src=""http://i.stack.imgur.com/4YEAb.png"" alt=""enter image description here""></p>
+
+<p>For example, is it possible to develop a regression relationship that relates the price of houses (HPrice = [125000, 63000, 500000]) to Floor Area (FArea = [856,497,1300]) and the Number of Bedrooms (BedR = [2,2,4])?</p>
+
+<p>Ideally I would like to do this in R, and wonder if there are any recommendations/example available?</p>
+
+<p>Thanks!</p>
+"
+"0.572158831881721","0.589015089373952"," 89204","<p>I'm looking for advice on how to analyze complex survey data with multilevel models in R. I've used the <code>survey</code> package to weight for unequal probabilities of selection in one-level models, but this package does not have functions for multilevel modeling. The <code>lme4</code> package is great for multilevel modeling, but there is not a way that I know to include weights at different levels of clustering. <a href=""http://www.statmodel.com/download/asparouhovgmms.pdf"">Asparouhov (2006)</a> sets up the problem:</p>
+
+<blockquote>
+  <p>Multilevel models are frequently used to analyze data from cluster sampling designs. Such sampling designs however often use unequal probability of selection at the cluster level and at the individual level. Sampling weights are assigned at one or both levels to reflect these probabilities. If the sampling weights are ignored at either level the parameter estimates can be substantially biased.</p>
+</blockquote>
+
+<p>One approach for two-level models is the multilevel pseudo maximum likelihood (MPML) estimator that is implemented in MPLUS (<a href=""http://www.statmodel.com/download/SurveyJSM1.pdf"">Asparouhov et al, ?</a>). <a href=""http://www.biomedcentral.com/1471-2288/9/49"">Carle (2009)</a> reviews major software packages and makes a few recommendations about how to proceed: </p>
+
+<blockquote>
+  <p>To properly conduct MLM with complex survey data and design weights, analysts need software that can include weights scaled outside of the program and include the ""new"" scaled weights without automatic program modification. Currently, three of the major MLM software programs allow this: Mplus (5.2), MLwiN (2.02), and GLLAMM. Unfortunately, neither HLM nor SAS can do this.</p>
+</blockquote>
+
+<p><a href=""http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3630376/"">West and Galecki (2013)</a> give a more updated review, and I'll quote the relevant passage at length:</p>
+
+<blockquote>
+  <p>Occasionally, analysts wish to fit LMMs to survey data sets collected from samples with complex designs (see Heeringa et al, 2010, Chapter 12). Complex sample designs are generally characterized by division of the population into strata, multi-stage selection of clusters of individuals from within the strata, and unequal probabilities of selection for both clusters and the ultimate individuals sampled. These unequal probabilities of selection generally lead to the construction of sampling weights for individuals, which ensure unbiased estimation of descriptive parameters when incorporated into an analysis. These weights might be further adjusted for survey nonresponse and calibrated to known population totals. Traditionally, analysts might consider a design-based approach to incorporating these complex sampling features when estimating regression models (Heeringa et al., 2010). More recently, statisticians have started to explore model-based approaches to analyzing these data, using LMMs to incorporate fixed effects of sampling strata and random effects of sampled clusters.</p>
+  
+  <p>The primary difficulty with the development of model-based approaches to analyzing these data has been choosing appropriate methods for incorporating the sampling weights (see Gelman, 2007 for a summary of the issues). Pfeffermann et al. (1998), Asparouhov and Muthen (2006), and Rabe-Hesketh and Skrondal (2006) have developed theory for estimating multilevel models in a way that incorporates the survey weights, and Rabe-Hesketh and Skrondal (2006), Carle (2009) and Heeringa et al. (2010, Chapter 12) have presented applications using current software procedures, but this continues to be an active area of statistical research. Software procedures capable of fitting LMMs are at various stages of implementing the approaches that have been proposed in the literature thus far for incorporating complex design features, and analysts need to consider this when fitting LMMs to complex sample survey data. Analysts interested in fitting LMMs to data collected from complex sample surveys will be attracted to procedures that are capable of correctly incorporating the survey weights into the estimation procedures (HLM, MLwiN, Mplus, xtmixed, and gllamm), consistent with the present literature in this area.</p>
+</blockquote>
+
+<p>This brings me to my question: does anyone have best practice recommendations for fitting LMMs to complex survey data in R?</p>
+"
+"0.208514414057075","0.202030508910442"," 93815","<p>I have some experiences with time series modelling, in the form of simple ARIMA models and so on. Now I have some data that exhibits volatility clustering, and I would like to try to start with fitting a GARCH (1,1) model on the data. </p>
+
+<p>I have a data series and a number of variables I think influence it. So in basic regression terms, it looks like: </p>
+
+<p>$$
+y_t = \alpha + \beta_1 x_{t1} + \beta_2 x_{t2} + \epsilon_t .
+$$</p>
+
+<p>But I am at a complete loss at how to implement this into a GARCH (1,1) - model? I've looked at the <code>rugarch</code>-package and the <code>fGarch</code>-package in <code>R</code>, but I haven't been able to do anything meaningful besides the examples one can find on the internet. </p>
+"
+"0.510753918455249","0.494871659305394","101077","<p>I have very big data and low number of observations. So I decided to use PCA to reduce dimension of the data. The following is R example (just an dummy example - for workout):</p>
+
+<pre><code>xmat &lt;- matrix(sample(-1:1, 100000, replace = TRUE), ncol = 1000)
+colnames(xmat) &lt;- paste (""V"", 1:1000, sep ="""")
+rownames(xmat) &lt;- paste(""S"", 1:100, sep = """")
+</code></pre>
+
+<p>In this example dataset I have <code>1000</code> variables and <code>100</code> observations / subjects. </p>
+
+<p>I am doing PCA. Lets say.</p>
+
+<pre><code>out &lt;- princomp(xmat)
+Error in princomp.default(xmat) : 
+  'princomp' can only be used with more units than variables
+</code></pre>
+
+<p>Q1: is there a way to reduce dimensionality with <code>p &gt; n</code> ? I would like to use all variables information as opposed to representative ones. Without having proper solution I went anyway to use cluster analysis of variables to categorize the variables and pick the randomly from the clusters. </p>
+
+<p>To create a list of representative variables I tried to cluster the variables.</p>
+
+<pre><code># cluster variables 
+d &lt;- dist(t(xmat), method = ""euclidean"") # distance matrix
+fit &lt;- hclust(d, method=""ward"")
+plot(fit)
+groups = cutree(fit,40)
+groupd &lt;- data.frame(var = names(groups), group = groups)
+</code></pre>
+
+<p>What I am thinking is randomly pick one variable from each group above and use this in PCA. Assume that I have the following y variable.</p>
+
+<pre><code>set.seed(1234)
+yvar.d &lt;- data.frame (subject = c(paste(""S"", 1:100, sep = """")), yvar = rnorm (100, 50,10))
+</code></pre>
+
+<p><strong>Here is my question</strong>: </p>
+
+<ol>
+<li>What could be statistical challenge of using cluster analysis ?</li>
+<li><p>Can we use PCA scores in predictions of y. How ? Just multiple
+regression or we can introduce something such as variance explained
+by each components in the model ?</p>
+
+<p><strong>Edits:</strong></p>
+
+<p>Based on the discussions (see the comments below), I am using different function to do PC analysis.</p></li>
+</ol>
+
+<p>""The calculation is done by a singular value decomposition of the (centered and possibly scaled) data matrix, not by using eigen on the covariance matrix. This is generally the preferred method for numerical accuracy. The print method for these objects prints the results in a nice format and the plot method produces a scree plot."" - from function help. </p>
+
+<pre><code>     out1 &lt;- prcomp(xmat)
+      out1$x[1:3,1:3]
+                      PC1        PC2       PC3
+S1  2.940862 -2.7379835  6.527103
+S2 -1.081124 -0.5294796 -0.276591
+S3  2.375710  0.4505205 -4.236289
+
+   out1$sdev
+ screeplot(out1,npcs=30, type=""lines"",col=3) # 30 PCA plotted
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/gMJys.jpg"" alt=""enter image description here""></p>
+
+<pre><code> out1$rotation
+</code></pre>
+
+<p>I also come to see an example in SO <a href=""http://stackoverflow.com/questions/10876040/principal-component-analysis-in-r"">how to use PCA in prediction</a>. Here is my workout: </p>
+
+<pre><code>## take our training and test sets
+YY &lt;-  yvar.d$yvar 
+prop &lt;- 0.5
+train = sample(1:length(YY), round(length(YY)*prop,0))
+
+
+# data for testing model purpose 
+testid = setdiff (1:length(YY), train)
+YY1 &lt;- YY
+newXPCA &lt;- data.frame(out1$x)
+test.data &lt;- data.frame (y = YY1[testid],newXPCA[testid,]) 
+test.data[1:10,1:10]
+
+train.data &lt;- data.frame(y= YY1[train],newXPCA [train,])
+train.data[1:10,1:10]
+
+## fit the PCA
+pc &lt;- prcomp(train.data[, -1])
+trainwPC &lt;- data.frame (y = train.data$y, pc$x)
+
+model1 &lt;- lm(y ~ ., data = trainwPC)
+
+#predict() method for class ""prcomp""
+test.p &lt;- predict(pc, newdata = test.data)
+pred &lt;- predict(model1, newdata = data.frame(test.p), type = ""response"")
+pred 
+Warning message:
+In predict.lm(model1, newdata = data.frame(test.p), type = ""response"") :
+  prediction from a rank-deficient fit may be misleading
+</code></pre>
+
+<p>I just adopted this script from the SO link, I am not sure about accuracy of the script. </p>
+
+<p>I still have technical questions remaining such as clarification to <strong>remaining question 2</strong> above: </p>
+
+<p>(1) If I want to split data into training and test set by sampling <code>50% of data</code> (as show in the script). Should I do just multiple regression with y and the <code>out1$x</code> ? how many components to use ? is variance of each component play role in good model selection such as avoid over-fitting ? How ? </p>
+
+<p>(2) Clustering (using x clusters) vs PCA analysis (with subset of x components vs all ) what would be statistically favorite for predictions in the situations where have <code>p &gt; n</code> ? As I said to my mind the PCA analysis can use all information but I do not know if there is downside of such information such as <code>over-fitting</code> and ""error consumption"". </p>
+
+<p>Worked example appreciated.   </p>
+"
+"0.208514414057075","0.202030508910442","103280","<p>I'm attempting a project where I need to statistically rank available cars based on several variables such as cost, mpg, seating, milage, etc.. I wish to rank these cars in order decide which car would be the best choice (highest ""worth"") to buy (or best several cars if I was informing multiple people of the best cars to get). As the list of available cars changes from day to day, I will also need to re-run the code every day to allow the rankings to give me the best decision for this new day. </p>
+
+<p>What statistical methods should I use to go about this ranking system? I plan on determining which factors I find most important so the variables used will be subjective in choice. I thought about trying MDS or clustering but I didn't know if that would be relevant since I'm already subjectively determining what variables are to be used. I don't see how regression can be used since I can't get a handle on the ""worth"" of previous cars as that is what I'm trying to rank by. Also, I will be attempting this in R so any helpful packages/functions would be great to know as well.</p>
+
+<p>Any help with how to go about this ranking scheme would be helpful as I'm at a loss.</p>
+
+<p>Thanks so much</p>
+"
+"0.255376959227625","0.247435829652697","108256","<p>I wish to test my time series data for volatility clustering, i.e. conditional heteroskedasticity.</p>
+
+<p>So far, I have used the ACF test on the squared and absolute returns of my data, as well as the Ljung-Box test on the squared data (i.e. McLeod.Li.test).</p>
+
+<p>In a recent paper (<a href=""http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1771862"" rel=""nofollow"">http://papers.ssrn.com/sol3/papers.cfm?abstract_id=1771862</a>, the test is reported on page 8) co-authored by a well-known researcher, they have employed the White test (<a href=""http://ideas.repec.org/a/ecm/emetrp/v48y1980i4p817-38.html"" rel=""nofollow"">http://ideas.repec.org/a/ecm/emetrp/v48y1980i4p817-38.html</a>) to directly test for heteroskedasticity.</p>
+
+<p>I have tried the same approach, however was unable to do so.
+From my understanding, the White test needs residual variance (usually from a linear regression model) as an input.</p>
+
+<p>Now my question is: How did the researchers perform the White test? I do not understand which inputs they used for their White test.</p>
+
+<p>While searching for solutions, I have found the sandwich package which uses the vcovHC and vcovHAC functions to estimate a heteroskedasticity-consistent covariance matrix, however the input is also a fitted linear regression model..</p>
+"
+"0.294883912309794","0.285714285714286","114184","<p>Specifically, are there any binomial regression models that use a kernel with heavier tails and higher kurtosis than the standard kernels (logistic/probit/cloglog)?</p>
+
+<p>As a function of the linear predictor $\textbf{x}'\mathbf{\hat{\beta}}$, the logistic distribution</p>
+
+<ul>
+<li>Underestimates the probability of my data being in the tails of the distribution</li>
+<li>Underestimates the kurtosis, or clustering of data, in the middle of the distribution:</li>
+</ul>
+
+<p>This can be seen from a diagnostic plot of my fit:</p>
+
+<p><img src=""http://i.stack.imgur.com/ar6OW.png"" alt=""enter image description here""></p>
+
+<ul>
+<li>The red line is the logistic CDF, representing a perfect fit</li>
+<li>The black line represents the fitted probabilities from my dataset (calculated by binning observations into 0.1 intervals of $\textbf{x}'\mathbf{\hat{\beta}}$, where $\mathbf{\hat{\beta}}$ is obtained from my fit)</li>
+<li>The grey bars in the background represent number of observations on which the true probabilities are based upon</li>
+<li>The grey areas are where the tail 10% of the data lie (5% each side).</li>
+</ul>
+
+<p>Ideally, any solution would use R.</p>
+
+<h2>Edit</h2>
+
+<p>Why am I talking about CDFs? Our GLM equation is:</p>
+
+<p>$$\mathbb{P}(Y = 1) = \mathbb{E}[Y] = g^{-1}(\textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Where $g$ is the link function.</p>
+
+<p>Further, if $g^{-1}$ is a valid probability distribution (i.e. monotonically increasing from 0 to 1, indeed the case with probit, logit, cloglog), then consider a latent (not directly observed) continuous random variable $Y^{*}$ whose distribution (CDF) is given by $g^{-1}$. Then by definition</p>
+
+<p>$$\mathbb{P}(Y^{*} \leq \textbf{x}'\mathbf{\beta}) = g^{-1}(\textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Equating the two equations above, we see the probability of $Y=1$ is exactly equal to the CDF of $Y^{*}$</p>
+
+<p>$$\mathbb{P}(Y = 1) = \mathbb{P}(Y^{*} \leq \textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Hence I talk interchangeably about the expected response $\mathbb{E}[Y]$ and CDF of $Y^{*}$ over linear-predictor ($\textbf{x}'\mathbf{\hat{\beta}}$) space.</p>
+"
+"0.240771706171538","0.349927106111883","117783","<p>Despite having only a single binary outcome for each ID, there are multiple correlated measurements for the same test for each ID at different timepoints. The individual IDÂ´s are obviously independent, but the measurements of the same test at different time-points are not independent. The aim is to see whether the test can discern if the patients is cured or not. </p>
+
+<p>-I cannot decide whether IÂ´d need to fit a mixed-level logistic regression model or if a regular logistic regression model would suffice. Is it possible somehow to fit a logistic regression model with time varying covariates like in cox models?</p>
+
+<p>-Is it possible to use a clustering or CART based model (allowing for the longitudinal independent variable) instead that would be easier to comprehend in a clinical setting?</p>
+
+<p>-I could turn the question around and do repeated measure Anova with <code>summary(aov(val~Long_term*time+Error(id),data=stat))</code>- however, 1)only time and the interaction term are significant, leaving me uncertain how to treat the other main effect of Long_term in face of only a significant interaction and 2)it feels contraintuitive to set an independent variable as a dependent variable when using anova.</p>
+
+<pre><code>&gt; dput(stat)
+structure(list(Long_term = structure(c(2L, 2L, 2L, 2L, 2L, 1L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L,  2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L,  2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L,  2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L,  1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L,  2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L,  2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L,  2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L,  2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L,  1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L,  2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L,  2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L,  1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L,  2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L,  2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L,  1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L,  2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L,  2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L), .Label = c(""No"",  ""Yes""), class = ""factor""), id = c(1L, 2L, 3L, 4L, 5L, 6L, 7L,  8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L,  2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L,  16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L,  11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L,  5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L,  19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L,  14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L,  9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L,  3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L,  17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L,  12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L,  7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L,  1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L,  15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L,  10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L,  4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L,  18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L,  13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L,  8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L,  2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L,  16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L,  11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L,  5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L,  19L), time = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,  12, 12, 12, 12, 12, 12, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,  18, 18, 18, 18, 18, 18, 18, 18, 18, 24, 24, 24, 24, 24, 24, 24,  24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 30, 30, 30, 30,  30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 36,  36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,  36, 36, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,  42, 42, 42, 42, 42, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,  48, 48, 48, 48, 48, 48, 48, 48, 54, 54, 54, 54, 54, 54, 54, 54,  54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 60, 60, 60, 60, 60,  60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 66, 66,  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,  66, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72,  72, 72, 72, 72, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78,  78, 78, 78, 78, 78, 78, 78, 84, 84, 84, 84, 84, 84, 84, 84, 84,  84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 90, 90, 90, 90, 90, 90,  90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 96, 96, 96,  96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96,  102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102,  102, 102, 102, 102, 102, 102), val = c(273, 194, 618, 755, 802,  395, 2438, 482, 502, 692, 607, 618, 579, 864, 579, 453, 673,  572, 707, 57, 373, 1197, 1026, NA, 697, 712, NA, NA, 616, NA,  NA, NA, NA, NA, NA, NA, 76, 1128, 560, 76, 819, 982, 303, 1294,  267, 1117, 346, 996, 652, 95, 951, 3250, 1584, 948, 981, 465,  411, 57, 197, 535, 498, 87, 1382, 210, 1649, 96, 450, 252, 42,  1086, 2137, 1395, 464, 1388, 532, 67, 25, 230, 566, 545, 38,  691, 216, 1412, 33, 151, 113, 29, 663, 806, 528, 240, 1508, 421,  50, 39, NA, 182, 412, 32, 414, 232, 868, 791, 201, 86, 33, 250,  345, 224, 381, 1069, 536, NA, NA, NA, 500, 312, NA, 287, 97,  227, 653, 69, 69, NA, NA, 225, 308, 256, 963, 420, NA, NA, NA,  368, 605, NA, 399, 69, 77, 20, 39, 70, NA, 122, 306, 103, 175,  807, 530, NA, NA, NA, 246, 443, NA, 363, 87, 39, NA, 25, 63,  NA, 163, 289, 172, 128, 1019, 582, NA, NA, NA, 231, 820, NA,  284, NA, 40, NA, NA, NA, NA, 238, 288, 217, NA, 903, 471, NA,  NA, NA, 236, 577, NA, 461, NA, 691, NA, NA, NA, NA, 158, 170,  168, NA, 681, 434, NA, NA, NA, 399, 634, NA, 85, NA, 83, NA,  NA, NA, NA, 72, 419, NA, NA, 912, NA, NA, NA, NA, NA, 635, NA,  295, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  NA, NA, 138, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, 251, NA, NA, NA, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 37, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 132,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)), row.names = c(NA,  -323L), .Names = c(""Long_term"", ""id"", ""time"", ""val""), class = ""data.frame"") 
+</code></pre>
+"
+"0.390094748802747","0.377964473009227","127536","<p>Sampling weights, the inverse probability of a unit's selection into the sample, and other more complex and adjusted weights are very often used in the social sciences. There is statistical software that allows weighting of observations/cases, like the <code>hclust</code> function from the <code>R</code>-package <code>cluster</code>. </p>
+
+<p>In regression analysis, there is an ongoing debate when the usage of observation weights is appropriate (see e.g. Winship/Radbill 1994). I could not find anything concerning observation weights in textbooks about cluster analysis, if weighting is discussed, it is mostly about variable weighting. One exemption is the manual of the <code>R</code>-package <code>WeightedCluster</code>, which discusses observation weighting in more detail. The documentation of the <code>cluster</code> package is not very helpful, as it only shows a trivial example using the weighting option <code>hclust(..., members=""..."")</code> where the number or weight of cases is untouched.</p>
+
+<ol>
+<li>Therefore, I am looking for references and recommendations with observation/case weighting in cluster analysis, especially hierarchical cluster analysis. </li>
+<li>As I could not find the actual formula for the <code>hclust(..., members=""..."")</code> function : Which parameters changes in the hierarchical cluster algorithm if one uses observation weights? How does that affect the algorithm?</li>
+</ol>
+
+<p>In order to get an idea of the difference between clustering with and without case weights, here is an example using weights from survey data and the R-code:
+<img src=""http://i.stack.imgur.com/BYiLY.png"" alt=""Reweighting of clustering by using membership""></p>
+
+<pre><code>require(survey)
+data(api)
+whc &lt;- hclust(dist(apiclus2[, c(""pct.resp"", ""meals"")]), method=""ward.D2"", 
+              members=apiclus2$pw)
+uwhc &lt;- hclust(dist(apiclus2[, c(""pct.resp"", ""meals"")]), method=""ward.D2"")
+opar &lt;- par(mfrow = c(1, 2))
+plot(whc,  labels = FALSE, hang = -1, main = ""Weighted survey data"")
+plot(uwhc, labels = FALSE, hang = -1, main = ""Unweighted survey data"")
+</code></pre>
+
+<h3>References</h3>
+
+<ul>
+<li>Studer, M., 2013: WeightedCluster Library Manual. A practical guide to creating typologies of trajectories in the social sciences with R. LIVES Working Papers 24. Lausanne.</li>
+<li>Winship, C. &amp; L. Radbill, 1994: Sampling Weights and Regression Analysis. Sociological Methods &amp; Research 23: 230â€“257.</li>
+</ul>
+"
+"0.361157559257308","0.349927106111883","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.208514414057075","0.202030508910442","164333","<p>I have been looking at some tutorials and articles and couldn't get a scenario where two variables are in different scales and used in modeling.</p>
+
+<p>So, firstly lets assume I have one metric of numeric type, other in percentages, and other in decimals. </p>
+
+<ol>
+<li>If I want to use those variables in a regression model for
+prediction then do I need to do some standardization before fitting a<br>
+model to the variables? If so how do we it in R or Python?</li>
+<li>Moreover, if I want to use these features in k-means
+clustering, do I need to follow the same steps as mentioned above?</li>
+</ol>
+"
+"0.147441956154897","0.142857142857143","168717","<p>this is my first post.  I have an irregular time series that exhibits large shifts in both mean and in the direction of the trend.  It looks something like this (though this is far cleaner than reality):</p>
+
+<pre><code>set.seed(1)
+x = sort(rep(seq(as.POSIXct('2015/01/01'),as.POSIXct('2015/01/10'),by='day'),100) + runif(1000,0,80000))
+y = c(seq(300),seq(90,70,-.2),seq(20,50,.1),seq(238.5,90,-.5)) + runif(1000,50,80)
+plot(x,y)
+</code></pre>
+
+<p>The task is to:
+ 1. accurately partition/segment the data
+ 2. extract the change point indices
+ 3. fit regression separately for each segment</p>
+
+<p>I have tried several routes, including:
+a) hierarchical clustering based on dissimilarity matrix
+b) function cpt.mean/var/meanvar from package changepoint (does not seem to work well)
+c) function 'breakpoints' from package strucchange (slow and often inaccurate)
+d) various types of kmeans (inappropriate, I know)</p>
+
+<p>I have also explored some other packages, such as TSclust, urca, and DTW, but these seem better suited to clustering <em>sets</em> of time-series, not individual values within a time series.</p>
+
+<p>Can someone point me in the correct direction? Perhaps I am not considering the appropriate data model?</p>
+
+<p><strong>UPDATE</strong>
+Thank you all for your very considered responses.  I went back to the strucchange package, and after some fiddling, have gotten it to work quite well.  I had not initially appreciated the h 'minimal segment size' argument.
+Finished product:
+<a href=""http://i.stack.imgur.com/qBgeY.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/qBgeY.jpg"" alt=""enter image description here""></a></p>
+"
+"0.147441956154897","0.142857142857143","174476","<p>how to best predict data like this which contains multiple levels of nearly constant data?</p>
+
+<p>Simple linear models even with weights (exponential) did not cut it.</p>
+
+<p>I experimented with some clustering and then robust linear regression but my problem is that the relationship between these levels of constant data is lost.</p>
+
+<p>Here is the data from the picture:</p>
+
+<pre><code>structure(list(date = structure(c(32L, 10L, 11L, 14L, 5L, 6L, 
+1L, 2L, 12L, 9L, 19L, 13L, 4L, 17L, 15L, 3L, 18L, 7L, 8L, 21L, 
+16L, 22L, 28L, 29L, 30L, 26L, 27L, 31L, 20L, 23L, 24L, 25L), .Label = c(""18.02.13"", 
+""18.03.13"", ""18.11.13"", ""19.08.13"", ""19.11.12"", ""20.01.13"", ""20.01.14"", 
+""20.02.14"", ""20.05.13"", ""20.08.12"", ""20.09.12"", ""21.04.13"", ""21.07.13"", 
+""21.10.12"", ""21.10.13"", ""22.04.14"", ""22.09.13"", ""22.12.13"", ""23.06.13"", 
+""25.01.15"", ""25.03.14"", ""25.05.14"", ""26.02.15"", ""26.03.15"", ""26.04.15"", 
+""26.10.14"", ""26.11.14"", ""27.07.14"", ""27.08.14"", ""28.09.14"", ""28.12.14"", 
+""29.03.10""), class = ""factor""), amount = c(-4, -12.4, -9.9, -9.9, 
+-9.94, -14.29, -9.97, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, -9.9, 
+-9.9, -9.9, -9.9, -4, -4, -11.9, -11.9, -11.9, -11.9, -11.98, 
+-11.98, -11.9, -13.8, -11.64, -11.96, -11.9, -11.9, -11.9)), .Names = c(""date"", 
+""amount""), class = ""data.frame"", row.names = c(NA, -32L))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/DWypm.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/DWypm.jpg"" alt=""regression for multiple levels""></a></p>
+
+<h1>revisiting rollmedian</h1>
+
+<p>@Gaurav - you asked: Have you tried building a model with moving averages? as ARIMA didn't work - I did not try it. But I have now.</p>
+
+<pre><code>zoo::rollmedian(rollTS, 5)
+</code></pre>
+
+<p>Seems to get the pattern of the data. However I wonder now how to reasonably forecast it. Is this possible?</p>
+
+<p><a href=""http://i.stack.imgur.com/dPhK8.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dPhK8.png"" alt=""rollmedian""></a></p>
+"
+"0.390094748802747","0.377964473009227","188661","<p>I have cross-sectional data with ~800 individuals nested within 6 countries, across 3 time points. Each individual is sampled only once, so time is cross-sectional here too. The number of individuals within each country ranges between ~75 to ~200. </p>
+
+<p>I would like to use fixed effects logistic regression to model the data (the outcome variable consists of the number of successes out of the total number of trials). I know I can use a conditional likelihood estimator to avoid incidental parameter bias, but this does not allow me to report the results as unconditional predicted probabilities (the best format for my audience). </p>
+
+<p>I'm therefore considering including dummy variables for countries in the model. With the small number of countries and large number of observations within each, is this a reasonable approach? </p>
+
+<p>The model (in <code>R</code> syntax) would look like this:</p>
+
+<pre><code>glm(cbind(success, total - success) ~ var1 * factor(time) + factor(country),
+    family = bimonial(link = ""logit""),
+    data = dat)
+</code></pre>
+
+<p>where <code>factor(country)</code> produces 5 dummy variables for the 6 countries and <code>factor(time)</code> produces 2 dummy variables for the 3 time periods. I'm interested in how the slope of <code>var1</code> changes across the 3 time periods, while controling for the clustering by country.</p>
+
+<p>(Note: I get very similar results to that obtained from the conditional likelihood approach, but I can report unconditional predicted probabilities.)</p>
+"
+"0.208514414057075","0.202030508910442","205604","<p>I'm running a regression in R's <code>plm</code> package similar to this post <a href=""http://stackoverflow.com/questions/33155638/clustered-standard-errors-in-r-using-plm-with-fixed-effects"">Clustered standard errors in R using plm (with fixed effects)</a>. I.e. panel data with fixed effects and the within-model from <code>plm</code>.</p>
+
+<p>My Question is the following: I'm trying to figure out how to cluster my standard errors according to a different variable than the variable called state from the dataset <code>Cigar</code>, which is seemingly automatically used by the <code>cluster = 'group'</code> option in <code>vcovHC</code>. Specifically, if I e.g. have a variable called <code>id</code>, how can I tell <code>vcovHC</code> to use it as my cluster?</p>
+
+<p>A very related question is the process of how <code>vcocHC</code> is selecting the variable for clustering, is it always just the first column in the dataset?</p>
+"
+"0.147441956154897","0.142857142857143","226226","<p>I'm new to predictive analytics. I have data variables which are highly skewed, I want to normalize those for better predictions. I've used normalization,standardization. but they gave same data distributions as before. how can I bring my data to Normality,and what techniques should I use.
+Is normalizing data variables necessary in every case (clustering, regression, classification) ? 
+please help with an example if possible.
+Thank you.</p>
+"

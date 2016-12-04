@@ -1,0 +1,100 @@
+"V1","V2","V3","V4"
+"1","1","228956","<p>I've been trying to generate the deviance residuals for a model I've made using R. It's a Gompertz regression with a number of covariates in the regression and the data is left-truncated, right-censored with an event being a death (i.e. there is an entry age, exit age and an indicator of censoring).</p>
+
+<p>I've used R's phreg() function to handle the truncation/censoring and was hoping to assess the validity of the model using deviance residuals but I'm not entirely sure how to calcuate them straight from the phreg() output.</p>
+
+<p>A manual attempt I tried is as follows:</p>
+
+<p>A paper I've been following ""APPLYING SURVIVAL MODELS TO PENSIONER MORTALITY
+DATA"" Richards (2008) states that the the number of deaths in any age range can be assumed Poisson distributed with parameter equal to the sum of the integrated hazard function over that age range over all individuals at risk.</p>
+
+<p>The actual number of deaths is just the calculated from the data.</p>
+
+<p>So, from what I gather, the deviance residuals are then:</p>
+
+<p>$r_{i}=Sign(D_{i}-\hat{D_{i}})\,sqrt(2\times(D_{i}\times log(D_{i}/\hat{D_{i}})-(D_{i}-\hat{D_{i}}))$</p>
+
+<p>where,
+$D$ is the actual number of deaths in age $i$ across all individuals and $\hat{D}$ is the estimated number of deaths according to the model.</p>
+
+<p>Have I interpreted this correctly? Apologies if I've left any obvious required information out.</p>
+"
+"1","1"," 71292","<p>I need to compare the goodness of fit of several averaged logistic regression models by calculating the deviance explained. I'm using the <code>MuMIn</code> package in R to average many logistic regression models into a single averaged model. I ultimately want to compare the explanatory power of several averaged models, in part by using the deviance explained.</p>
+
+<p>My questions are:</p>
+
+<ol>
+<li><p>Does deviance explained apply to averaged models as a strong measure of the goodness of fit?</p></li>
+<li><p>How does one calculate the deviance explained (calculated as the null deviance less the residual deviance as a proportion of the null deviance) from the averaged model output from the <code>model.avg()</code> command in <code>MuMIn</code>? </p>
+
+<p>Examining the structure of the averaged model object indicates that the null and residual deviances are calculated on each individual model that contributes to the averaged model, but I'm not sure how to extract them and then calculate the overall deviance explained by the averaged model.</p></li>
+</ol>
+"
+"NaN","NaN","136055","<p>The deviance of a model is defined as:
+$D =  -2(loglikelihood(model) - loglikelihood(saturated.model)) $</p>
+
+<p>So I tried to compare the result of this formula with the output of the deviance() function with different models:</p>
+
+<p>Linear regression model:</p>
+
+<pre><code>&gt; ?cats
+&gt; m1=lm(Hwt~Bwt+Sex,data=cats)
+&gt; m1.saturated=lm(Hwt~factor(1:nrow(cats)),data=cats)
+&gt; deviance(m1)
+[1] 299
+&gt; sum(residuals(m1)^2)
+[1] 299
+&gt; deviance(m1.saturated)
+[1] 0
+&gt; as.numeric(-2*(logLik(m1)-logLik(m1.saturated)))
+[1] Inf
+</code></pre>
+
+<p>299 $\neq $ Inf<br>
+Something is wrong</p>
+
+<p>GLM: Poisson regression</p>
+
+<pre><code>&gt; x = rnorm(10)
+&gt; y = rpois(10,lam=exp(1 + 2*x))
+&gt; m2 = glm(formula = y ~ x, family = poisson)
+&gt; m2.saturated &lt;- glm(y ~ factor(1:10),family=poisson)
+&gt; deviance(m2) 
+[1] 14
+&gt; deviance(m2.saturated) 
+[1] 4.5e-10
+&gt; as.numeric(-2*(logLik(m2)-logLik(m2.saturated))) 
+[1] 14
+</code></pre>
+
+<p>14 = 14<br>
+Ok, it works!</p>
+
+<p>GLM: Gamma regression</p>
+
+<pre><code> &gt; cement &lt;- read.table(""cement.dat"", col.names = c(""time"",""resistance""), dec = "","") 
+ &gt; attach(cement)
+ &gt; m3 &lt;- glm(resistance ~ I(1/time), family = Gamma)
+ &gt; m3.saturated &lt;- glm(resistance ~ factor(1:nrow(cement)), family = Gamma)
+ &gt; deviance(m3)
+ [1] 0.16
+ &gt; deviance(m3.saturated)
+ [1] 9.3e-17
+ &gt; as.numeric(-2*(logLik(m3)-logLik(m3.saturated)))
+ [1] 758
+</code></pre>
+
+<p>0.16 $\neq $ 758<br>
+There must be a mistake somewhere</p>
+
+<p>Shouldn't the results be the same?
+Thank you.</p>
+"
+"NaN","NaN","143640","<p>I'm using <code>R</code>'s <code>nls</code> to fit different datasets to the same model. I've read that using R-squared is usually not correct for non-linear regressions, however, I'd like to be able to tell which fit is apparently better.</p>
+
+<p>I don't plan to use the deviance (residual sum-of-squares) to choose or say which data is better, but a numeric parameter will come handy in order to help me optmize the algorithm which manipulates the data.</p>
+
+<p>The datasets have the same order of magnitude, and visual inspection of the original vs fitted curves doesn't show much difference. However, I have values of e.g. ${dev_1 = 0.0240}$ vs ${dev_2 = 0.0072}$, which I think are considerably different.</p>
+
+<p>So, can I suppose ${fit_2}$ was better than ${fit_1}$? If not, is there any other (relatively simple) way to compare this values?</p>
+"

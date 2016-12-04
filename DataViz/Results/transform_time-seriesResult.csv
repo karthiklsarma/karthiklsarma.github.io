@@ -1,0 +1,698 @@
+"V1","V2","V3","V4"
+"0.462910049886276","0.480384461415261"," 43675","<p>I am working on a housing problem in which I use dichotomous and ratio data to predict
+housing production (units constructed in a year-ratio) in a 17 year time period. At this time, I am using OLS and as I get better at stats, I shall attempt this problem using time-series analysis.  That said, I have used R to standardize all of my ratio predicting data and left the dichotomous data raw.  And I have also transformed the response variable to a Natural log to normalize the distribution (i.e. many, many zeros>>yes, I know Poisson or Zero-populated counts in the future).</p>
+
+<p>I have read the post on ""interpret coefficients from a quantile regression on standardized data"" and also the ""convert my unstandardized independent variables to standardized."" Based on those, I think that can do the following interpretation based on the following output. The variable <code>region_id</code> is dichotomous, <code>supply</code> is standardized.</p>
+
+<pre><code>Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)          2.687e+00  2.171e-01  12.379  &lt; 2e-16 ***
+
+region_id            1.805e+00  1.383e-01  13.049  &lt; 2e-16 ***
+
+supply              -2.205e+01  2.204e+00 -10.005  &lt; 2e-16 ***
+</code></pre>
+
+<p>Region Interpretation:<br>
+For every on city that is located in the Houston region, you can expect that annual housing production will increase by 1.8%.  </p>
+
+<p>Supply Interpretation:<br>
+For every one-unit increase in the standard deviation of housing supply, you can expect that annual housing production will decrease by -22.05%.</p>
+
+<p>Nota bene.<br>
+I am not a stats or math person at all,
+but I have been using R for the past three years
+and I am quite familiar with OLS, but if you throw
+up an equation it will look ""appropriately"" Greek to me. :)</p>
+"
+"0.462910049886276","0.320256307610174"," 59517","<p>I have a question regarding a repeated measures experiment. I have 5 whales (randomly selected) that I recorded body temperature on. Data was collected via satellite, programmed to transmit records at 2-minute intervals, but data for each whale are not a complete time-series data set (i.e. unbalanced records/missing data points). </p>
+
+<p>A state-space model was creating using the whale's GPS location to determine what state each whale was in while tracked at sea. The states are the following: resident foraging, resident transiting, and post-resident transiting.</p>
+
+<p>I've partitioned the body temperature data into the 3 states. I have also divided up the body temperature data into 2 diel periods: daytime and nighttime.</p>
+
+<p>So I have two subplot factors: Diel (2 levels: day and night) and State (3 levels: res. forage, res. transiting, post-res. transiting).</p>
+
+<p>I have more than 500 body temperature values for each state/condition for all 5 whales, and I have more than 1000  body temperature values for daytime and nighttime periods for all whales. But again, I don't have the same number of data points for all whales, due to lack of satellite transmissions and the fact that there were differences among individual whales (e.g. some foraged for longer periods). </p>
+
+<p>Can anyone offer non-parametric statistical advice (data transformations were all unsuccessful) for setting up a model analyze the effect of daytime/nighttime and state (and the interaction between these factors) on whale body temperature in R, SAS, or SPSS? </p>
+
+<p>Would be happy to explain more about the data or experimental design.</p>
+
+<p>Thanks,
+Jim</p>
+"
+"0.267261241912424","0.277350098112615","114979","<p>I want to generate random monthly <em>(m)</em> temperature (<em>T</em>) and Precipitation (<em>P</em>) data considering that both variables are intercorrelated (<em>rTP[m]</em>)
+The tricky thing is that my random variables that have specific quantitative properties: temperatures are normally distributed, while precipitations follow a log-normal distribution and should be log-transformed</p>
+
+<p><strong>mvrnorm</strong> of the package MASS could be used.</p>
+
+<pre><code>mT=c(1,2,4,7,10,15,17,18,17,10,5,1)
+mP=c(3.9,3.7,3.9,4.1,4.5,4.7,4.8,4.8,4.4,4.1,4.2,3.9) #log-transformed
+sdT=c(1,1,1,1,1,1,1,1,1,1,1,1)
+sdP=c(0.7,0.8,0.7,0.6,0.4,0.4,0.4,0.5,0.6,1,0.8,0.6)  #log-transformed
+rTP=c(0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4)
+covTP=rTP*(sdT*sdP)
+
+simP=NULL
+for (m in 1:12)
+{
+out=mvrnorm(500, mu = c(mT[m],mP[m]), Sigma = matrix(c(sdT[m]*sdT[m],covTP[m],covTP[m],sdP[m]*sdP[m]), ncol = 2), empirical = TRUE)
+simP[m]=mean(exp(out[,2])-1)
+}
+</code></pre>
+
+<p>In this case I generate two random time-series that are inter-correlated which is great.</p>
+
+<p>However, simulated precipitations (<em>simP</em>) are on average higher than the observed one (<em>mP</em>)</p>
+
+<pre><code>plot(exp(mP)-1, type=""l"", lwd=2, ylim=c(0,250)); points(simP, type=""l"", lwd=2, lty=2)
+</code></pre>
+
+<p>I could use <strong>rlnorm</strong> or <strong>rlnorm.rplus</strong> to consider than precipitations are log-transformed, but then I have troubles with temperatures that are normally distributed. </p>
+
+<p>My question is: How can I create random sampling for variables that have specific quantitative properties (log-normal and normal distributions)?</p>
+
+<p>Thanks !</p>
+"
+"0.377964473009227","0.392232270276368","122482","<p>I want to create a code which tests absolutely everything for time-series forecasting accuracy.</p>
+
+<p>The current tests that I do are:</p>
+
+<p><code>bptest()</code> - tests against heteroskedasticity (to test if series should be transformed)</p>
+
+<p><code>gqtest()</code> - tests against heteroskedasticity (to test if series should be transformed)</p>
+
+<p><code>RMSE</code> - of in-sample <code>sqrt(mean((data-fitted values)^2))</code></p>
+
+<p><code>MAPE</code> - of in-sample <code>mean(abs(100*(data-fitted values)/data))</code></p>
+
+<p><code>MAPE</code> - of out-sample (removing the last 4 data points and running model) <code>mean(abs(100*(last 4 data points-the 4 forecasted points)/last 4 data points))</code></p>
+
+<p><code>MAPE</code>- of forced out-sample (removing the last 4 data points and running model keeping the same parameters as the model of the full data)</p>
+
+<p><code>ACF and PACF</code> - of residuals <code>data-fitted values</code></p>
+
+<p>Here is a link that will show you my code so you can see what i have done so far and where/what i can add. I dont want to miss anything so as many suggestions as possible please! If you could explain them a little too that would be fab. </p>
+
+<p><a href=""http://bit.ly/10iUY5Z"" rel=""nofollow"">http://bit.ly/10iUY5Z</a></p>
+"
+"0.462910049886276","0.480384461415261","123723","<p>Can anyone tell me the formula behind the <code>forecast</code> function in R? Preferably in the form easily understood by mathematicians (e.g  x_t, Î¸ etc)</p>
+
+<p>Here is my code in case it helps</p>
+
+<pre><code>suppressMessages(library(lmtest))
+suppressMessages(library(car))
+suppressMessages(library(tseries))
+suppressMessages(library(forecast))
+suppressMessages(library(TTR))
+suppressMessages(library(geoR))
+suppressMessages(library(MASS))
+suppressMessages(library(gtools))
+#-------------------------------------------------------------------------------
+Model &lt;- ""choosing ARIMA""
+Series.title &lt;- ""EMEA GAM&lt;250K""
+#-------------------------------------------------------------------------------
+Input.data &lt;- matrix(c(""08Q1"",""08Q2"",""08Q3"",""08Q4"",""09Q1"",""09Q2"",""09Q3"",""09Q4"",""10Q1"",""10Q2"",""10Q3"",""10Q4"",""11Q1"",""11Q2"",""11Q3"",""11Q4"",""12Q1"",""12Q2"",""12Q3"",""12Q4"",""13Q1"",""13Q2"",""13Q3"",""13Q4"",""14Q1"",""14Q2"",""14Q3"",5403.675741,6773.504993,7231.117289,7835.55156,5236.709983,5526.619467,6555.781711,11464.72728,7210.068674,7501.610403,8670.903486,10872.93518,8209.022658,8153.393088,10196.44775,13244.50201,8356.732878,10188.44157,10601.32205,12617.82102,11786.52641,10044.98676,11006.0051,15101.9456,10992.27282,11421.18922,10731.31198),ncol=2,byrow=FALSE)
+
+#-------------------------------------------------------------------------------
+# The frequency of the data. 1/4 for QUARTERLY, 1/12 for MONTHLY
+
+Frequency &lt;- 1/4
+
+#-------------------------------------------------------------------------------
+# How many quarters/months to forecast
+
+Forecast.horizon &lt;- 4
+
+#-------------------------------------------------------------------------------
+# The first date in the series. Use c(8, 1) to denote 2008 q1
+
+Start.date &lt;- c(8, 1)
+
+#-------------------------------------------------------------------------------
+# The dates of the forecasts
+
+Forecast.dates &lt;- c(""14Q4"", ""15Q1"", ""15Q2"", ""15Q3"")
+
+#-------------------------------------------------------------------------------
+# Selects the data column from Input.data
+
+Data.col &lt;- as.numeric(Input.data[, 2])
+
+#-------------------------------------------------------------------------------
+# Turns the Data.col into a time-series
+
+Data.col.ts &lt;- ts(Data.col, deltat=Frequency, start = Start.date)
+
+#-------------------------------------------------------------------------------
+# A character vector of the dates from Input.data
+
+Dates.col &lt;- as.character(Input.data[,1])
+
+#------- Transform ------------------------------------------------------------------------
+# Starts the testing to see if the data should be logged
+
+transform.method &lt;- round(BoxCox.lambda(Data.col.ts, method = ""loglik""), 5)
+
+log.values &lt;- seq(0, 0.24999, by = 0.00001)
+sqrt.values &lt;- seq(0.25, 0.74999, by = 0.00001)
+
+which.transform.log &lt;- transform.method %in% log.values
+which.transform.sqrt &lt;- transform.method %in% sqrt.values
+
+if (which.transform.log == ""TRUE""){
+  as.log &lt;- ""log""
+  Data.new &lt;- log(Data.col.ts)
+} else {
+  if (which.transform.sqrt == ""TRUE""){
+    as.log &lt;- ""sqrt""
+    Data.new &lt;- sqrt(Data.col.ts)
+  } else {
+    as.log &lt;- ""no""
+    Data.new &lt;- Data.col.ts
+  }
+}
+
+#----- Find best ARIMA model ---------------------------------------------------
+
+a &lt;- permutations(n = 3, r = 6, v = c(0:2), repeats.allowed = TRUE)
+a &lt;- a[ifelse((a[, 1] + a[, 4] &gt; 2 | a[, 2] + a[, 5] &gt; 2 | a[, 3] + a[, 6] &gt; 2),
+              FALSE, TRUE), ]
+
+Arimafit &lt;- matrix(0,
+                   ncol  = length(Data.new),
+                   nrow  = length(a[, 1]),
+                   byrow = TRUE)
+
+totb &lt;- matrix(0, ncol = 1, nrow = length(a[, 1]))
+arimaerror &lt;- matrix(0, ncol = length(Data.new), nrow = 1)
+
+for (i in 1:length(a[, 1])){
+  ArimaData.new &lt;- try(Arima(Data.new,
+                             order    = a[i, c(1:3)],
+                             seasonal = list(order = a[i, c(4:6)]),
+                             method   = ""ML""),
+                       silent = TRUE)
+
+  if (is(ArimaData.new, ""try-error"")){
+    ArimaData.new &lt;- arimaerror
+  } else {
+    ArimaData.new &lt;- ArimaData.new
+  }
+
+  arimafitted &lt;- try(fitted(ArimaData.new), silent = TRUE)
+
+  if (is(arimafitted, ""try-error"")){
+    fitarima &lt;- arimaerror
+  } else {
+    fitarima &lt;- arimafitted
+  }
+
+  if (as.log == ""log""){
+    Arimafit[i, ] &lt;- c(exp(fitarima))
+    Datanew &lt;- c(exp(Data.new))
+  } else {
+    if (as.log == ""sqrt""){
+      Arimafit[i, ] &lt;- c((fitarima)^2)
+      Datanew &lt;- c((Data.new)^2)
+    } else {
+      Arimafit[i, ] &lt;- c(fitarima)
+      Datanew &lt;- c(Data.new)
+    }
+  }
+
+  data &lt;- c(Datanew)
+
+  arima.fits &lt;- c(Arimafit[i, ])
+
+  fullres &lt;- data - arima.fits
+
+  v &lt;- acf(fullres, plot = FALSE)
+
+  w &lt;- pacf(fullres, plot = FALSE)
+
+  if (v$acf[2]&gt;0.4|v$acf[2]&lt;(-0.4)|v$acf[3]&gt;0.4|v$acf[3]&lt;(-0.4)|v$acf[4]&gt;0.4|v$acf[4]&lt;(-0.4)|v$acf[5]&gt;0.4|v$acf[5]&lt;(-0.4)|v$acf[6]&gt;0.4|v$acf[6]&lt;(-0.4)|v$acf[7]&gt;0.4|v$acf[7]&lt;(-0.4)|w$acf[1]&gt;0.4|w$acf[1]&lt;(-0.4)|w$acf[2]&gt;0.4|w$acf[2]&lt;(-0.4)|w$acf[3]&gt;0.4|w$acf[3]&lt;(-0.4)|w$acf[4]&gt;0.4|w$acf[4]&lt;(-0.4)|w$acf[5]&gt;0.4|w$acf[5]&lt;(-0.4)|w$acf[6]&gt;0.4|w$acf[6]&lt;(-0.4)){
+    totb[i] &lt;- ""n""
+  } else {
+    totb[i] &lt;- sum(abs(w$acf[1:4]))
+  }
+
+  j &lt;- match(min(totb), totb)
+
+  order.arima &lt;- a[j, c(1:3)]
+
+  order.seasonal.arima &lt;- a[j, c(4:6)]
+}
+
+#----- ARIMA -------------------------------------------------------------------
+# Fits an ARIMA model with the orders set
+Arima.Data.new &lt;- Arima(Data.new,
+                        order    = order.arima,
+                        seasonal = list(order=order.seasonal.arima),
+                        method   = ""ML"")
+
+#-------------------------------------------------------------------------------
+# Forecasts from the ARIMA model
+
+suppressWarnings(forecast.Data.new &lt;- forecast(Arima.Data.new,
+                                               h        = ifelse(frequency(Arima.Data.new) &gt; 1, 2 * frequency(Arima.Data.new), 10),
+                                               simulate = TRUE,
+                                               fan      = TRUE))
+</code></pre>
+"
+"0.845154254728517","0.789352217376326","131312","<p>I have some R code (which I did not write) and which performs some state space analysis on some time-series. The data itself is shown as dots (scatter plot) and the Kalman filtered and smoothed state is the solid line.</p>
+
+<p><img src=""http://i.stack.imgur.com/41jaI.png"" alt=""Plot""></p>
+
+<p>My question is regarding the confidence intervals shown in this plot. I calculate <em>my own</em> confidence intervals using the standard method (my C# code is below)</p>
+
+<pre><code>public static double ConfidenceInterval(
+    IEnumerable&lt;double&gt; samples, double interval)
+{
+    Contract.Requires(interval &gt; 0 &amp;&amp; interval &lt; 1.0);
+
+    double theta = (interval + 1.0) / 2;
+    int sampleSize = samples.Count();
+    double alpha = 1.0 - interval;
+    double mean = samples.Mean();
+    double sd = samples.StandardDeviation();
+
+    var student = new StudentT(0, 1, samples.Count() - 1);
+    double T = student.InverseCumulativeDistribution(theta);
+    return T * (sd / Math.Sqrt(samples.Count()));
+}
+</code></pre>
+
+<p>Now this will return a single interval (and it does it correctly) which I will add/subtract from each point on the series I have applied the calculation to to give me my confidence interval. But this is a constant and the R implementation seems to change over the time-series.</p>
+
+<p>My question is why is <strong>the confidence interval changing for the R implementation? Should I be implementing my confidence levels/intervals differently?</strong></p>
+
+<p>Thanks for your time.</p>
+
+<hr>
+
+<p>For reference the R code that produces this plot is below:</p>
+
+<pre><code>install.packages('KFAS')
+require(KFAS)
+
+# Example of local level model for Nile series
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='BFGS',control=list(REPORT=1,trace=1))$model
+
+# Can use different optimisation: 
+# should be one of â€œNelder-Meadâ€, â€œBFGSâ€, â€œCGâ€, â€œL-BFGS-Bâ€, â€œSANNâ€, â€œBrentâ€
+modelNile&lt;-SSModel(Nile~SSMtrend(1,Q=list(matrix(NA))),H=matrix(NA))
+modelNile
+modelNile&lt;-fitSSM(inits=c(log(var(Nile)),log(var(Nile))),model=modelNile,
+method='L-BFGS-B',control=list(REPORT=1,trace=1))$model
+
+# Filtering and state smoothing
+out&lt;-KFS(modelNile,filtering='state',smoothing='state')
+out$model$H
+out$model$Q
+out
+
+# Confidence and prediction intervals for the expected value and the observations.
+# Note that predict uses original model object, not the output from KFS.
+conf&lt;-predict(modelNile,interval='confidence')
+pred&lt;-predict(modelNile,interval='prediction')
+ts.plot(cbind(Nile,pred,conf[,-1]),col=c(1:2,3,3,4,4),
+ylab='Predicted Annual flow', main='River Nile')
+KFAS 13
+
+# Missing observations, using same parameter estimates
+y&lt;-Nile
+y[c(21:40,61:80)]&lt;-NA
+modelNile&lt;-SSModel(y~SSMtrend(1,Q=list(modelNile$Q)),H=modelNile$H)
+out&lt;-KFS(modelNile,filtering='mean',smoothing='mean')
+
+# Filtered and smoothed states
+plot.ts(cbind(y,fitted(out,filtered=TRUE),fitted(out)), plot.type='single',
+col=1:3, ylab='Predicted Annual flow', main='River Nile')
+
+# Example of multivariate local level model with only one state
+# Two series of average global temperature deviations for years 1880-1987
+# See Shumway and Stoffer (2006), p. 327 for details
+data(GlobalTemp)
+model&lt;-SSModel(GlobalTemp~SSMtrend(1,Q=NA,type='common'),H=matrix(NA,2,2))
+
+# Estimating the variance parameters
+inits&lt;-chol(cov(GlobalTemp))[c(1,4,3)]
+inits[1:2]&lt;-log(inits[1:2])
+fit&lt;-fitSSM(inits=c(0.5*log(.1),inits),model=model,method='BFGS')
+out&lt;-KFS(fit$model)
+    ts.plot(cbind(model$y,coef(out)),col=1:3)
+legend('bottomright',legend=c(colnames(GlobalTemp), 'Smoothed signal'), col=1:3, lty=1)
+
+# Seatbelts data
+## Not run:
+model&lt;-SSModel(log(drivers)~SSMtrend(1,Q=list(NA))+
+SSMseasonal(period=12,sea.type='trigonometric',Q=NA)+
+log(PetrolPrice)+law,data=Seatbelts,H=NA)
+
+# As trigonometric seasonal contains several disturbances which are all
+# identically distributed, default behaviour of fitSSM is not enough,
+# as we have constrained Q. We can either provide our own
+# model updating function with fitSSM, or just use optim directly:
+# option 1:
+ownupdatefn&lt;-function(pars,model,...){
+model$H[]&lt;-exp(pars[1])
+    diag(model$Q[,,1])&lt;-exp(c(pars[2],rep(pars[3],11)))
+model #for option 2, replace this with -logLik(model) and call optim directly
+}
+14 KFAS
+fit&lt;-fitSSM(inits=log(c(var(log(Seatbelts[,'drivers'])),0.001,0.0001)),
+model=model,updatefn=ownupdatefn,method='BFGS')
+out&lt;-KFS(fit$model,smoothing=c('state','mean'))
+    out
+    ts.plot(cbind(out$model$y,fitted(out)),lty=1:2,col=1:2,
+    main='Observations and smoothed signal with and without seasonal component')
+    lines(signal(out,states=c(""regression"",""trend""))$signal,col=4,lty=1)
+legend('bottomleft',
+legend=c('Observations', 'Smoothed signal','Smoothed level'),
+col=c(1,2,4), lty=c(1,2,1))
+
+# Multivariate model with constant seasonal pattern,
+# using the the seat belt law dummy only for the front seat passangers,
+# and restricting the rank of the level component by using custom component
+# note the small inconvinience in regression component,
+# you must remove the intercept from the additional regression parts manually
+model&lt;-SSModel(log(cbind(front,rear))~ -1 + log(PetrolPrice) + log(kms)
++ SSMregression(~-1+law,data=Seatbelts,index=1)
++ SSMcustom(Z=diag(2),T=diag(2),R=matrix(1,2,1),
+Q=matrix(1),P1inf=diag(2))
++ SSMseasonal(period=12,sea.type='trigonometric'),
+data=Seatbelts,H=matrix(NA,2,2))
+likfn&lt;-function(pars,model,estimate=TRUE){
+model$H[,,1]&lt;-exp(0.5*pars[1:2])
+    model$H[1,2,1]&lt;-model$H[2,1,1]&lt;-tanh(pars[3])*prod(sqrt(exp(0.5*pars[1:2])))
+    model$R[28:29]&lt;-exp(pars[4:5])
+if(estimate) return(-logLik(model))
+model
+}
+fit&lt;-optim(f=likfn,p=c(-7,-7,1,-1,-3),method='BFGS',model=model)
+model&lt;-likfn(fit$p,model,estimate=FALSE)
+    model$R[28:29,,1]%*%t(model$R[28:29,,1])
+    model$H
+out&lt;-KFS(model)
+out
+ts.plot(cbind(signal(out,states=c('custom','regression'))$signal,model$y),col=1:4)
+
+# For confidence or prediction intervals, use predict on the original model
+pred &lt;- predict(model,states=c('custom','regression'),interval='prediction')
+ts.plot(pred$front,pred$rear,model$y,col=c(1,2,2,3,4,4,5,6),lty=c(1,2,2,1,2,2,1,1))
+
+## End(Not run)
+## Not run:
+# Poisson model
+model&lt;-SSModel(VanKilled~law+SSMtrend(1,Q=list(matrix(NA)))+
+SSMseasonal(period=12,sea.type='dummy',Q=NA),
+KFAS 15
+data=Seatbelts, distribution='poisson')
+
+# Estimate variance parameters
+fit&lt;-fitSSM(inits=c(-4,-7,2), model=model,method='BFGS')
+model&lt;-fit$model
+
+# use approximating model, gives posterior mode of the signal and the linear predictor
+out_nosim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=0)
+
+# State smoothing via importance sampling
+out_sim&lt;-KFS(model,smoothing=c('signal','mean'),nsim=1000)
+out_nosim
+out_sim
+
+## End(Not run)
+# Example of generalized linear modelling with KFS
+# Same example as in ?glm
+counts &lt;- c(18,17,15,20,10,20,25,13,12)
+outcome &lt;- gl(3,1,9)
+treatment &lt;- gl(3,3)
+print(d.AD &lt;- data.frame(treatment, outcome, counts))
+glm.D93 &lt;- glm(counts ~ outcome + treatment, family = poisson())
+model&lt;-SSModel(counts ~ outcome + treatment, data=d.AD,
+distribution = 'poisson')
+out&lt;-KFS(model)
+coef(out,start=1,end=1)
+coef(glm.D93)
+summary(glm.D93)$cov.s
+    out$V[,,1]
+outnosim&lt;-KFS(model,smoothing=c('state','signal','mean'))
+set.seed(1)
+outsim&lt;-KFS(model,smoothing=c('state','signal','mean'),nsim=1000)
+
+## linear
+# GLM
+glm.D93$linear.predictor
+
+# approximate model, this is the posterior mode of p(theta|y)
+c(outnosim$thetahat)
+
+# importance sampling on theta, gives E(theta|y)
+c(outsim$thetahat)
+
+## predictions on response scale
+16 KFAS
+
+# GLM
+fitted(glm.D93)
+
+# approximate model with backtransform, equals GLM
+c(fitted(outnosim))
+
+# importance sampling on exp(theta)
+fitted(outsim)
+
+# prediction variances on link scale
+# GLM
+as.numeric(predict(glm.D93,type='link',se.fit=TRUE)$se.fit^2)
+
+# approx, equals to GLM results
+c(outnosim$V_theta)
+    # importance sampling on theta
+    c(outsim$V_theta)
+# prediction variances on response scale
+# GLM
+as.numeric(predict(glm.D93,type='response',se.fit=TRUE)$se.fit^2)
+    # approx, equals to GLM results
+    c(outnosim$V_mu)
+# importance sampling on theta
+c(outsim$V_mu)
+    ## Not run:
+    data(sexratio)
+    model&lt;-SSModel(Male~SSMtrend(1,Q=list(NA)),u=sexratio[,'Total'],data=sexratio,
+    distribution='binomial')
+    fit&lt;-fitSSM(model,inits=-15,method='BFGS',control=list(trace=1,REPORT=1))
+    fit$model$Q #1.107652e-06
+
+# Computing confidence intervals in response scale
+# Uses importance sampling on response scale (4000 samples with antithetics)
+pred&lt;-predict(fit$model,type='response',interval='conf',nsim=1000)
+    ts.plot(cbind(model$y/model$u,pred),col=c(1,2,3,3),lty=c(1,1,2,2))
+
+# Now with sex ratio instead of the probabilities:
+imp&lt;-importanceSSM(fit$model,nsim=1000,antithetics=TRUE)
+    sexratio.smooth&lt;-numeric(length(model$y))
+sexratio.ci&lt;-matrix(0,length(model$y),2)
+    w&lt;-imp$w/sum(imp$w)
+    for(i in 1:length(model$y)){
+sexr&lt;-exp(imp$sample[i,1,])
+sexratio.smooth[i]&lt;-sum(sexr*w)
+oo&lt;-order(sexr)
+sexratio.ci[i,]&lt;-c(sexr[oo][which.min(abs(cumsum(w[oo]) - 0.05))],
++ sexr[oo][which.min(abs(cumsum(w[oo]) - 0.95))])
+}
+
+# Same by direct transformation:
+out&lt;-KFS(fit$model,smoothing='signal',nsim=1000)
+    KFS 17
+    sexratio.smooth2 &lt;- exp(out$thetahat)
+sexratio.ci2&lt;-exp(c(out$thetahat)
+    + qnorm(0.025) * sqrt(drop(out$V_theta))%o%c(1, -1))
+ts.plot(cbind(sexratio.smooth,sexratio.ci,sexratio.smooth2,sexratio.ci2),
+col=c(1,1,1,2,2,2),lty=c(1,2,2,1,2,2))
+
+## End(Not run)
+# Example of Cubic spline smoothing
+## Not run:
+require(MASS)
+data(mcycle)
+model&lt;-SSModel(accel~-1+SSMcustom(Z=matrix(c(1,0),1,2),
+T=array(diag(2),c(2,2,nrow(mcycle))),
+Q=array(0,c(2,2,nrow(mcycle))),
+P1inf=diag(2),P1=diag(0,2)),data=mcycle)
+model$T[1,2,]&lt;-c(diff(mcycle$times),1)
+model$Q[1,1,]&lt;-c(diff(mcycle$times),1)^3/3
+model$Q[1,2,]&lt;-model$Q[2,1,]&lt;-c(diff(mcycle$times),1)^2/2
+    model$Q[2,2,]&lt;-c(diff(mcycle$times),1)
+    updatefn&lt;-function(pars,model,...){
+    model$H[]&lt;-exp(pars[1])
+    model$Q[]&lt;-model$Q[]*exp(pars[2])
+    model
+    }
+    fit&lt;-fitSSM(model,inits=c(4,4),updatefn=updatefn,method=""BFGS"")
+    pred&lt;-predict(fit$model,interval=""conf"",level=0.95)
+plot(x=mcycle$times,y=mcycle$accel,pch=19)
+lines(x=mcycle$times,y=pred[,1])
+    lines(x=mcycle$times,y=pred[,2],lty=2)
+lines(x=mcycle$times,y=pred[,3],lty=2)
+## End(Not run)
+</code></pre>
+
+<p>The time-series data is:</p>
+
+<pre><code>Time, 2.4, 2.6, 3.2, 3.6, 4, 6.2, 6.6, 6.8, 7.8, 8.2, 8.8, 8.8, 9.6, 10, 10.2, 10.6, 11, 11.4, 13.2, 13.6, 13.8, 14.6, 14.6, 14.6, 14.6, 14.6, 14.6, 14.8, 15.4, 15.4, 15.4, 15.4, 15.6, 15.6, 15.8, 15.8, 16, 16, 16.2, 16.2, 16.2, 16.4, 16.4, 16.6, 16.8, 16.8, 16.8, 17.6, 17.6, 17.6, 17.6, 17.8, 17.8, 18.6, 18.6, 19.2, 19.4, 19.4, 19.6, 20.2, 20.4, 21.2, 21.4, 21.8, 22, 23.2, 23.4, 24, 24.2, 24.2, 24.6, 25, 25, 25.4, 25.4, 25.6, 26, 26.2, 26.2, 26.4, 27, 27.2, 27.2, 27.2, 27.6, 28.2, 28.4, 28.4, 28.6, 29.4, 30.2, 31, 31.2, 32, 32, 32.8, 33.4, 33.8, 34.4, 34.8, 35.2, 35.2, 35.4, 35.6, 35.6, 36.2, 36.2, 38, 38, 39.2, 39.4, 40, 40.4, 41.6, 41.6, 42.4, 42.8, 42.8, 43, 44, 44.4, 45, 46.6, 47.8, 47.8, 48.8, 50.6, 52, 53.2, 55, 55, 55.4, 57.6                                                                                                
+mcycle, 0, -1.3, -2.7, 0, -2.7, -2.7, -2.7, -1.3, -2.7, -2.7, -1.3, -2.7, -2.7, -2.7, -5.4, -2.7, -5.4, 0, -2.7, -2.7, 0, -13.3, -5.4, -5.4, -9.3, -16, -22.8, -2.7, -22.8, -32.1, -53.5, -54.9, -40.2, -21.5, -21.5, -50.8, -42.9, -26.8, -21.5, -50.8, -61.7, -5.4, -80.4, -59, -71, -91.1, -77.7, -37.5, -85.6, -123.1, -101.9, -99.1, -104.4, -112.5, -50.8, -123.1, -85.6, -72.3, -127.2, -123.1, -117.9, -134, -101.9, -108.4, -123.1, -123.1, -128.5, -112.5, -95.1, -81.8, -53.5, -64.4, -57.6, -72.3, -44.3, -26.8, -5.4, -107.1, -21.5, -65.6, -16, -45.6, -24.2, 9.5, 4, 12, -21.5, 37.5, 46.9, -17.4, 36.2, 75, 8.1, 54.9, 48.2, 46.9, 16, 45.6, 1.3, 75, -16, -54.9, 69.6, 34.8, 32.1, -37.5, 22.8, 46.9, 10.7, 5.4, -1.3, -21.5, -13.3, 30.8, -10.7, 29.4, 0, -10.7, 14.7, -1.3, 0, 10.7, 10.7, -26.8, -14.7, -13.3, 0, 10.7, -14.7, -2.7, 10.7, -2.7, 10.7
+</code></pre>
+"
+"0.462910049886276","0.480384461415261","154641","<p>This question is similar to the following <a href=""http://stats.stackexchange.com/questions/32634/difference-time-series-before-arima-or-within-arima"">question</a> in the sense I am currently doing the differencing and mean removal of the time series outside the <code>Arima</code> function in R. And I do not know how to do these steps within <code>Arima</code> function in R. The reason is that I am trying to perform the following procedure (data <code>dowj_ts</code> can be found at the bottom): </p>
+
+<pre><code>dowj_ts_d1 &lt;- diff(dowj_ts) # differencing at lag 1 (1-B)
+drift &lt;- mean(diff(dowj_ts))
+dowj_ts_d1_demeaned &lt;- dowj_ts_d1 - mean(dowj_ts_d1) # mean removal
+# Maximum Likelihood AR(1) for the mean-corrected differences X_t
+fit &lt;- Arima(dowj_ts_d1_demeaned, order=c(1,0,0),include.mean=F, transform.pars = T)
+</code></pre>
+
+<p>Note that the <code>drift</code> is actually <code>0.1336364</code>. And <code>summary(fit)</code> gives the table below:</p>
+
+<pre><code>Series: dowj_ts_d1_demeaned 
+ARIMA(1,0,0) with zero mean     
+
+Coefficients:
+         ar1
+      0.4471
+s.e.  0.1051
+
+sigma^2 estimated as 0.1455:  log likelihood=-35.16
+AIC=74.32   AICc=74.48   BIC=79.01
+
+Training set error measures:
+                       ME     RMSE       MAE       MPE     MAPE      MASE
+Training set -0.004721362 0.381457 0.2982851 -9.337089 209.6878 0.8477813
+                    ACF1
+Training set -0.04852626
+</code></pre>
+
+<p>Ultimately, I want to predict 2-step ahead forecast of <strong>the original series</strong>, and this starts to become ugly: </p>
+
+<pre><code> tail(c(dowj_ts[1], dowj_ts[1] + cumsum(c(dowj_ts_d1_demeaned,forecast.Arima(fit,h=2)$mean) + drift)),2)
+</code></pre>
+
+<p>And currently these are all done outside the <code>Arima</code> function from the <code>forecast</code> package. I know I can do differencing within Arima like this: </p>
+
+<pre><code> Arima(dowj_ts, order=c(1,1,0),include.drift=T,transform.pars = F)
+</code></pre>
+
+<p>This gives:</p>
+
+<pre><code>Series: dowj_ts 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+         ar1   drift
+      0.4478  0.1204
+s.e.  0.1059  0.0786
+
+sigma^2 estimated as 0.1474:  log likelihood=-34.69
+AIC=75.38   AICc=75.71   BIC=82.41
+</code></pre>
+
+<p>But the drift term computed by R is different from the <code>drift = 0.1336364</code> that I computed manually.</p>
+
+<p>So <strong>my question is: how can I differenced the series and then remove the mean of the differenced series within the Arima function ?</strong></p>
+
+<p><strong>Second question:</strong> Why is the drift term estimated by <code>Arima</code> different from the drift term I computed ? In fact, what does the <strong>mathematical model</strong> look like when <code>include.drift = T</code> ? This really confuses me. </p>
+
+<p>Data can be found below: </p>
+
+<pre><code>structure(c(110.94, 110.69, 110.43, 110.56, 110.75, 110.84, 110.46, 
+110.56, 110.46, 110.05, 109.6, 109.31, 109.31, 109.25, 109.02, 
+108.54, 108.77, 109.02, 109.44, 109.38, 109.53, 109.89, 110.56, 
+110.56, 110.72, 111.23, 111.48, 111.58, 111.9, 112.19, 112.06, 
+111.96, 111.68, 111.36, 111.42, 112, 112.22, 112.7, 113.15, 114.36, 
+114.65, 115.06, 115.86, 116.4, 116.44, 116.88, 118.07, 118.51, 
+119.28, 119.79, 119.7, 119.28, 119.66, 120.14, 120.97, 121.13, 
+121.55, 121.96, 122.26, 123.79, 124.11, 124.14, 123.37, 123.02, 
+122.86, 123.02, 123.11, 123.05, 123.05, 122.83, 123.18, 122.67, 
+122.73, 122.86, 122.67, 122.09, 122, 121.23), .Tsp = c(1, 78, 
+1), class = ""ts"")
+</code></pre>
+"
+"0.534522483824849","0.554700196225229","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"
+"0.462910049886276","0.480384461415261","207879","<p>I'm new to the field, and I'm a bit confused about the data preprocessing procedures. </p>
+
+<p>The univariate time series data (more than two years daily data) is from retail sector, which contains trend, seasonality and some missing values as well. So, what I did in data preparation part is:</p>
+
+<ol>
+<li>Fill-in missing value:  If it's a holiday, it will be filled with 0; otherwise, the value will be predicted using last few weeks data </li>
+<li>Data transformation: Box-Cox method is used to reduce the skewness in distribution</li>
+<li>Residual outlier test as suggested in <a href=""http://stats.stackexchange.com/questions/1142/simple-algorithm-for-online-outlier-detection-of-a-generic-time-seriesies"">Simple algorithm for online outlier detection of a generic time series</a></li>
+<li>Change the data value range to [0, 1]</li>
+</ol>
+
+<p>Regarding the above preprocessing, am I following the right procedure, and any other steps I missed out? I didn't apply Exponential Smoothing to the data, as later I used tbats/ets (with frequency set to (365.25,7) or 7 ) to do the forecast and I'm worried Exponential Smoothing may smooth out the weekly pattern. </p>
+
+<p>As for the low-level, high-frequency noise, is the wavelet based smoother good way to go while keeping the regular weekly drops or peaks pattern ?</p>
+
+<p>Thanks in advance !</p>
+"

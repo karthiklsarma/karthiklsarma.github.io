@@ -1,0 +1,16 @@
+id,value
+regression,7
+logistic,5
+time-series,3
+random-forest,2
+binomial,2
+pca,2
+factor-analysis,2
+clustering,2
+anova,1
+glmer,1
+sparse,1
+prediction,1
+data-visualization,1
+spatial,1
+glmnet,1

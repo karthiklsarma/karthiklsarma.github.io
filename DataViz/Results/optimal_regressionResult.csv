@@ -1,0 +1,1947 @@
+"V1","V2","V3","V4"
+"0.183339699405642","0.174740811332208"," 23110","<p>I have a data set that's 200k rows X 50 columns.  I'm trying to use a <code>knn</code> model on it but there is huge variance in performance depending on which variables are used (i.e., <code>rsqd</code> ranges from .01 (using all variables) to .98 (using only 5 variables)).</p>
+
+<p>This kind of compounds my problem as now I need to determine <code>k</code> <em>and</em> which variables to use.</p>
+
+<p>Is there a package in R that helps with selecting variables for a <code>knn</code> model, while tuning <code>k</code>?  I've looked at <code>rfe()</code> in <code>caret</code> but it seems to only be built for linear regression, <code>randomforest</code>, naive bayes, etc but no <code>knn</code>.  </p>
+
+<p>As an aside, I've tried manually building a loop to use the caret train function like this:</p>
+
+<pre><code>for(i in 2:50){
+knnFit &lt;- train(x[,i],y,...) ## trains model using single variable
+}
+</code></pre>
+
+<p>My problem is that <code>knnFit$results</code> prints all of the results and <code>knnFit$bestTune</code> only prints the final parameter of <code>k</code>.  </p>
+
+<pre><code>&gt; data1 &lt;- data.frame(col1=runif(20), col2=runif(20), col3=runif(20), col4=runif(20), col5=runif(20))
+&gt; bootControl &lt;- trainControl(number = 1)
+&gt; knnGrid &lt;- expand.grid(.k=c(2:5))
+&gt; set.seed(2)
+&gt; knnFit1 &lt;- train(data1[,-c(1)], data1[,1]
++ , method = ""knn"", trControl = bootControl, verbose = FALSE,
++ tuneGrid = knnGrid )
+&gt; knnFit1 
+20 samples
+ 4 predictors
+
+No pre-processing
+Resampling: Bootstrap (1 reps) 
+
+Summary of sample sizes: 20 
+
+Resampling results across tuning parameters:
+
+  k  RMSE   Rsquared
+  2  0.485  0.124   
+  3  0.54   0.369   
+  4  0.52   0.241   
+  5  0.528  0.232   
+
+RMSE was used to select the optimal model using  the smallest value.
+The final value used for the model was k = 2. 
+
+&gt; knnFit1$results
+      k      RMSE  Rsquared RMSESD RsquaredSD
+    1 2 0.4845428 0.1241031     NA         NA
+    2 3 0.5401009 0.3690569     NA         NA
+    3 4 0.5197262 0.2410814     NA         NA
+    4 5 0.5277939 0.2317607     NA         NA
+
+&gt; knnFit1$bestTune
+      .k
+    1  2
+</code></pre>
+
+<p>I need some way to print the RMSE/rsqd/other metric for the best single performing model (i.e., just ""R-Squared: .91"").</p>
+
+<p>Any suggestions?</p>
+"
+"0.0916698497028211","0.0873704056661038"," 23346","<p>I am looking for a good and modern Kernel Regression package in R, which has the following features:</p>
+
+<ol>
+<li>It has cross-validation </li>
+<li>It can automatically choose the ""optimal"" bandwidth</li>
+<li>It doesn't have random effect - i.e. if I run the function at different times on the same data-set, the results should be exactly the same...</li>
+</ol>
+
+<p>I am trying ""np"", but I am seeing:</p>
+
+<pre><code>Multistart 1 of 1 |
+Multistart 1 of 1 |
+...
+</code></pre>
+
+<p>It looks like in order to do the optimization, it's doing multiple-random-start optimization ... Am I right?</p>
+
+<p>Could you please give me some pointers?</p>
+
+<p>I did some google search but there are so many packages that do this... I just wanted to find the best/modern one to use...</p>
+"
+"0.204980015422697","0.195366166291141"," 25702","<p>I have spent much time looking for a special package that could run the Pesaran(2007) unit root test (which assumes cross-sectional dependence unlike most others) and I have found none. So, I decided to do it manually; however, I don't know where I'm going wrong, because my results are very different from Microsoft Excel's results (in which it is done very easily).</p>
+
+<p>My data frame is made up of 22 countries with 506 observations of daily price indices. Following is the model to run using the Pesaran(2007) unit root test:</p>
+
+<p>(i) With an intercept only</p>
+
+<p>$$\Delta Y_{i,t} = a_i + b_iY_{i,t-1} + c_i\overline{Y}_{t-1} + d_i\Delta\overline{Y}_{t-1}+ e_i\Delta\overline{Y}_{t-2}+ f_i\Delta\overline{Y}_{i,t-1}+ g_i\Delta\overline{Y}_{i,t-2} + \varepsilon_{i,t}$$</p>
+
+<p>where $\overline{Y}$ is the cross-section average of the observations across countries at each time $t$ and $b$ is the coefficient of interest to us because it will allow us to compute the ADF test statistic and then determine whether the process is stationary or not.</p>
+
+<p>I constructed each of these variables in the following way:</p>
+
+<p>$\Delta Y_t$</p>
+
+<pre><code>dif.yt = diff(yt) 
+## yt is the object containing all the observations for a specific country 
+## (e.g. Australia)
+</code></pre>
+
+<p>$Y_{t-1}$</p>
+
+<pre><code>yt.lag.1 = lag(yt, -1)
+</code></pre>
+
+<p>$\overline{Y}_{t-1}$</p>
+
+<pre><code>ybar.lag.1 = lag(c(rowMeans(x)), -1) 
+## x is the object containing my entire data frame
+</code></pre>
+
+<p>$\Delta \overline{Y}_{t-1}$</p>
+
+<pre><code>dif.ybar.lag.1 = diff(ybar.lag.1)
+</code></pre>
+
+<p>$\Delta \overline{Y}_{t-2}$</p>
+
+<pre><code>dif.ybar.lag.2 = diff(lag(c(rowMeans(x)), -2))
+</code></pre>
+
+<p>$\Delta Y_{t-1}$</p>
+
+<pre><code>dif.yt.lag.1 = diff(yt.lag.1)
+</code></pre>
+
+<p>$\Delta Y_{t-2}$</p>
+
+<pre><code>dif.yt.lag.2 = diff(lag(yt, -2)
+</code></pre>
+
+<p>After constructing each variable individually, I then run the linear regression</p>
+
+<pre><code>reg = lm(dif.yt ~ yt.lag.1[-1] + ybar.lag.1[-1] + dif.ybar.lag.1 + 
+                  dif.ybar.lag.2 + dif.yt.lag.1 + dif.yt.lag.2)
+summary(reg)
+</code></pre>
+
+<p>It is obvious that the explanatory variables in my regression equation differ in length, so I'd like to know whether there is a way in R to make all the variables of equal length (perhaps with a function).</p>
+
+<p>Also, I'd like to know whether the procedure I used was correct and if there are more optimal ways.</p>
+"
+"0.129640744710433","0.123560412643043"," 26234","<p>(this question addresses an expanded case of <a href=""http://stats.stackexchange.com/questions/21257/how-can-factor-levels-be-automatically-chosen-in-r-to-maximize-the-number-of-pos"">How can factor-levels be automatically chosen in R to maximize the number of positive coefficients in a regression model?</a>)</p>
+
+<p>I am performing linear regression (using R) on data having both categorical (factor) and numeric variables, and fitting to a model having the form <code>y ~ (.)^2</code> (i.e. including all first order and second-order interaction terms).</p>
+
+<p>The question is:  is there is a <strong>programmatic</strong> way of determining a coefficient vector among the set of optimal vectors $\Theta_{opt}$, where the length of the vector is minimized under the constraint that all elements of the vector are positive.</p>
+
+<p>There may be cases where it is impossible to find an all-positive coefficient vector in $\Theta_{opt}$, but let's assume that the particular data which is being analyzed allows for such vectors to exist.</p>
+
+<p>Perhaps one could start out with an initial (least-squares) optimal coefficient vector, and then manipulate this vector based on certain rules that depend on the nature of the terms which the coefficients are associated with.  I can deduce some general rules for doing these manipulations, but don't know how to algorithmically perform the manipulations in a manner such that I arrive at a minimal-length parameter vector (parameters==0 don't count towards the vector's length).  This may be heading the wrong direction though...?</p>
+"
+"0.158776837207489","0.151329981691595"," 46434","<p>The <code>summary.rq</code> function from the <a href=""http://cran.r-project.org/web/packages/quantreg/quantreg.pdf"">quantreg vignette</a> provides a multitude of choices for standard error estimates of quantile regression coefficients. What are the special scenarios where each of these becomes optimal/desirable?</p>
+
+<ul>
+<li><p>""rank"" which produces confidence intervals for the estimated parameters by inverting a rank test as described in Koenker (1994). The default option assumes that the errors are iid, while the option iid = FALSE implements the proposal of Koenker Machado (1999). See the documentation for rq.fit.br for additional arguments.</p></li>
+<li><p>""iid"" which presumes that the errors are iid and computes an estimate of the asymptotic covariance matrix as in KB(1978).</p></li>
+<li><p>""nid"" which presumes local (in tau) linearity (in x) of the the conditional quantile functions and computes a Huber sandwich estimate using a local estimate of the sparsity.</p></li>
+<li><p>""ker"" which uses a kernel estimate of the sandwich as proposed by Powell(1990).</p></li>
+<li><p>""boot"" which implements one of several possible bootstrapping alternatives for estimating standard errors.</p></li>
+</ul>
+
+<p>I have read at least 20 empirical papers where this is applied either in the time-series or the cross-sectional dimension and haven't seen a mention of standard error choice. </p>
+"
+"0.275009549108463","0.262111216998311"," 49497","<p>I have a dataset I'm working on that has some co-variate shift between the training set and the test set.  I'm trying to build a predictive model to predict an outcome, using the training set.  So far my best model is a random forest.</p>
+
+<p>How can I deal with the shifted distributions in the training vs. test set?  I've come across 2 possible solutions that I've been able to implement myself:</p>
+
+<ol>
+<li>Remove the shifted variables.  This is sub-optimal, but helps prevent my model from over fitting the training set.</li>
+<li>Use a logistic regression to predict whether a given observation is from the test set (after balancing the classes), predict ""test set probabilities"" for the training set, and then boostrap sample the training set, using the probabilities for sampling.  Then fit the final model on the new training set.</li>
+</ol>
+
+<p>Both 1 and 2 are pretty easy to implement, but neither one satisfies me, as #1 omits variables that might be relevant, and #2 uses a logistic regression, when my final model is tree-based.  Furthermore, #2 takes a few paragraphs of custom code, and I worry that my implementation may not be correct.</p>
+
+<p>What are the standard methods for dealing with covariate shift?  Are there any packages in R (or another language) that implement these methods?</p>
+
+<p>/edit: It seems like ""kernel mean matching"" is another approach I could take.  I've found lots of academic papers on the subject, but no one seems to have published any code.  I'm going to try to implement this on my own, and will post the code as an answer to this question when I do.</p>
+"
+"0.137504774554232","0.174740811332208"," 49506","<p>I'm running a series of permutation tests inside 2 for loops (2 for loops will calculate some new data and then  this data will be shuffled and then i apply a linear regression based on the shuffled data). Here is my code:</p>
+
+<pre><code>for(i in seq(1,12000,200))
+{
+    for j in seq(1, 12000, 200))
+       {
+            for(ind in 1:nrow(df))
+            {
+            ###calculate something (called X) depending on i,j, ind and df
+            }
+      for (i in 1:100) # 100 sample
+        {
+                sample(df$X,nrow(df), replace=FALSE) 
+                 fit=lm(X ~ Y, df)   #linear regression calculation
+                 regerror=sum(residuals(fit)^2)
+             res &lt;- rbind(res, data.frame(shufflederr = regerror))
+                 }
+        }
+}
+</code></pre>
+
+<p>The p-value is calculated based on the sum squared error of the linear regression in R which is:</p>
+
+<pre><code>&gt; sum(res$shufflederr &lt; observed$regerror)    #observed df contain the same error value but without shuffling
+</code></pre>
+
+<p>I have 3 questions:</p>
+
+<ol>
+<li>Can a p-value of a pair <code>(i,j</code>) be equal to 0 ??is this statistically possible ?</li>
+<li>Is there any optimal way to create a good cutoff of the <code>p-value</code> ?</li>
+<li>Is there any better idea to do the permutation(or any other significance) test in my case ?</li>
+</ol>
+"
+"0.318497372407516","0.326910123746013"," 58962","<p>I am building a multiple regression model - wrapped in a function - with one dependent variable and a dozen independent variables. The reason why I am building a function is that I need to do this analysis with approximately 75 different datasets. </p>
+
+<p>The challenge is that the independent variables correlate better with the dependent variable when they are lagged in time. Unfortunately, not all time lags are the same for each variable and I would like to determine the optimal mix of time lags for each variable while getting the most optimum Adjusted R^2 value for the multiple regression model. Moreover, after building an initial model I will try to reduce the model using the <code>step(modelbase, direction=""both"")</code> function on the model. </p>
+
+<p>In the approach I currently have I time lag all the independent variables with the same number of weeks. This results in the best possible model where all independent variables have the same time lag, but I believe (with a valid hypothesis supporting this) that there is a better model out there when we differ the time lag for each independent variable. My question is what is the best strategy to determine the best fit model without making the number of options huge. If I want to determine between 0 and 20 weeks time lag in weekly steps for 12 independent variables I am quickly up to trying to find a match between 4.096e+15 variables (=20^12). </p>
+
+<p>I can imagine reducing the problem with the following strategy: Start by finding the best fit model with one independent variable at different time lags. The second step will be to add a second independent variable with its different time lags and find the best model with the two independent variables where the second is tried at different time lags while the first is kept constant. Then add a third variable for which we take a similar approach as the second by keeping the first two variables constant and change try the third with different time lags. Something tells me that this strategy might be decent approach, but something that there also might be a better overall model that contains the not optimal variables for each individual independent variable. </p>
+
+<p>Is there anybody who shine some light on how to tackle this challenge? </p>
+"
+"0.238165255811233","0.302659963383191"," 60952","<p>I would like to compare models selected with ridge, lasso and elastic net. Fig. below shows coefficients paths using all 3 methods: ridge (Fig A, alpha=0), lasso (Fig B; alpha=1) and elastic net (Fig C; alpha=0.5). The optimal solution depends on the selected value of lambda, which is chosen based on cross validation.</p>
+
+<p><img src=""http://i.stack.imgur.com/e8dUs.jpg"" alt=""Profiles of coefficients for ridge (A, alpha=0), lasso (B, alpha=1) and elastic net (C, alpha=0.5) regression. Numbers at the top of the plot represent the size of the models.The optimal solution depends on the selected value of lambda. Selection of lambda is based on cross validation. ""></p>
+
+<p>When looking at these plots, I would expect the elastic net (Fig C) to exhibit a grouping effect. However it is not clear in the presented case. The coefficients path for lasso and elastic net are very similar. What could be the reason for this ? Is it just a coding mistake ? I used the following code in R: </p>
+
+<pre><code>library(glmnet)
+X&lt;- as.matrix(mydata[,2:22])
+Y&lt;- mydata[,23]
+par(mfrow=c(1,3))
+ans1&lt;-cv.glmnet(X, Y, alpha=0) # ridge
+plot(ans1$glmnet.fit, ""lambda"", label=FALSE)
+    text (6, 0.4, ""A"", cex=1.8, font=1)
+    ans2&lt;-cv.glmnet(X, Y, alpha=1) # lasso
+    plot(ans2$glmnet.fit, ""lambda"", label=FALSE)
+text (-0.8, 0.48, ""B"", cex=1.8, font=1)
+ans3&lt;-cv.glmnet(X, Y, alpha=0.5) # elastic net 
+plot(ans3$glmnet.fit, ""lambda"", label=FALSE)
+text (0, 0.62, ""C"", cex=1.8, font=1)
+</code></pre>
+
+<p>The code used to plot elastic net coefficients paths is exactly the same as for ridge and lasso. The only difference is in the value of alpha. 
+Alpha parameter for elastic net regression was selected based on the lowest MSE (mean squared error) for corresponding lambda values. </p>
+
+<p>Thank you for your help !</p>
+"
+"0.0916698497028211","0.0873704056661038"," 65285","<p>I have a time series data set to which I am trying to fit a Hidden Markov Model (HMM) in order to estimate the number of latent states in the data.  My pseudo code for doing this is the following:</p>
+
+<pre><code>for( i in 2 : max_number_of_states ){ 
+    ...
+    calculate HMM with i states
+    ...
+    optimal_number_of_states = ""model with smallest BIC""
+    ...
+}
+</code></pre>
+
+<p>Now, in the usual regression models the BIC tends to favor the most parsimonious models but in the case of the HMM I am not sure that is what it is doing.  Does anyone actually know what kind of HMM's the BIC criterion tends toward?  I also am able to obtain the AIC and likelihood value as well.  Since I am trying to infer the true total number of states, is one of these criteria ""better"" than the other for this purpose?</p>
+"
+"0.183339699405642","0.174740811332208"," 68249","<p>I used <code>glmnet</code> to build a predictive model with  ~200 predictors and 100 samples for a binomial regression/classification problem. This was my training data. I selected the best model (16 predictors) that gave me the maximum AUC. I have an independent test data set with only those variables (16 predictors) which made it into the final model from the training data. I was wondering if there is any way to use the <code>predict.glmnet</code> based on the optimal model from the training data with the new test data set, which has data for only those variables that made it into the final model from the training data.</p>
+
+<p>Any suggestions would be appreciated.</p>
+"
+"0.18712029714128","0.214012912501926"," 77154","<p>To build two linear regression model, (dependant var : B, independant vars : A1, A2, A3) I have to set the cut point of A1. (high A1 and low A2) I want to pick up the model*s*(a model for high A1, and the other for low A2) with with the lowest residual sums of square*s*</p>
+
+<p>In summary, How I can get the optimal cut-off point to get best linear regression models for each groups?</p>
+
+<p>The article I am trying to replicate is below, that description is all. A is dep Var, and B is ind var. ""Considered two linear regression models, one for subjects below a certain level of A and the other for subjects above that level. To determine the specific cutoffs, we fitted the two linear regression models described above and calculated the sums of squares of residuals (=observed B - estimated B) from the two models for each level of A. The models with the lowest residual sums of squares were our best models, and the corresponding level of A were defined as the optimal cutoff values.""</p>
+
+<p>Url for the article is : <a href=""http://link.springer.com/article/10.1007/s00223-012-9669-3"" rel=""nofollow"">http://link.springer.com/article/10.1007/s00223-012-9669-3</a></p>
+"
+"0.213896315973249","0.262111216998311"," 77851","<p>I am trying to get an optimal cut-off value dividing group with minimum sums of squares of residuals (=observed y - estimated y) the model is like below.</p>
+
+<blockquote>
+  <p>In group 1 : model y= a1x + b1z + C1v ...</p>
+  
+  <p>In group 2 : model y= a2x + b1z + C1v ...</p>
+</blockquote>
+
+<p>I have the data of y, x, z, v... The problem is the group 1 and 2 are not divided yet and the purpose of the analysis is finding optimal cut-off point of x using regression models.</p>
+
+<p>I searched again and again, but couldn't find the way to make models varying 'a' and share b1 and c1... and fitting it to data.</p>
+
+<p>I asked similar quesion in stackexchange, and somebody advised me the problems of this kind of approach, however, I need this approach, because it's some clinical research want to 'find' optimal (not perfect) cut-off point of x.</p>
+
+<p>The article I read described below
+The authors of the article mentioned that they used R, but I cannot find any reference or examples about this kind of analysis.</p>
+
+<blockquote>
+  <p>To determine the relationship between serum 25(OH)D and iPTH concen-
+  trations while adjusting for confounders that could affect serum
+  25(OH)D concentrations (i.e., age, gender, body weight, calcium
+  intake, physical activity, and season of year), we considered two
+  linear regression models, one for subjects below a certain
+  concentration of serum 25(OH)D and the other for subjects above that
+  concentration. To determine the specific cutoffs, we fitted the two
+  linear regression models described above and calculated the sums of
+  squares of residuals (=observed PTH - estimated PTH) from the two
+  models for each concentration of serum 25(OH)D. The models with the
+  lowest residual sums of squares were our best models, and the
+  corresponding concentrations of serum 25(OH)D were defined as the
+  optimal cutoff values.</p>
+</blockquote>
+
+<p>Somebody said that this question is already answered in ""regression model fitting for define cut-off"" but, I don't think so... It's not regression discontinued design, because there is no a-priori cut-off. Finding cutoff is the purpose of analysis.
+Thanks.</p>
+"
+"0.289885517826224","0.276289481997769"," 89760","<p>I am trying to use R to find the optimal solution for my problem with positive coefficients. Here are my data:  </p>
+
+<pre><code>      th inp      tcyc        tinst     tmem      tcom
+  1   2   2  26219765385  1975872868  52449810   782964
+  2   2   4  38080459431  3155342008  76744867  1878903
+  3   2   8  64572439641  6230494010 137754355  4351706
+  4   2  16 140168021516 13757989992 285524252 10605705
+  5   2  32 308925389816 31497131498 628391048 26040711
+  6   4   2  13206650786   988226883  25631315   844126
+  7   4   4  19078145632  1577873809  37085281  2125333
+  8   4   8  33742095874  3114415906  65962626  5222236
+  9   4  16  70956149286  6881357755 134957687 12180392
+  10  4  32 153411672670 15754506070 296548768 31057252
+  11  8   2   6572843040   494094967  12380740   808816
+  12  8   4   9452222628   788984621  17538152  2034061
+  13  8   8  16765943294  1557329849  30549900  5016827
+  14  8  16  34677550217  3440679505  61614420 12493699
+  15  8  32  74852648112  7876116794 133525620 29824686
+  16 16   2   3252373719   247026385   5958559   672396
+  17 16   4   4669800482   394452497   8097991  1676579
+  18 16   8   8269859136   778889584  13651458  4196829
+  19 16  16  16353025378  1720301596  26775255 10393194
+  20 16  32  37113657641  3938965759  55505822 25011009
+  21 32   2   1630888153   123512114   2683400   461526
+  22 32   4   2293598746   197173135   3682504  1213596
+  23 32   8   4045995970   389408822   5858031  3055324
+  24 32  16   8217603991   860041282  10973460  7502244
+  25 32  32  17978101850  1969647650  22909347 17953100
+  26 48   2   1064344042    82295143   1822133   381178
+  27 48   4   1523091067   131488491   2331228   949354
+  28 48   8   2677097592   259536252   3552229  2381626
+  29 48  16   5400541381   573140686   6489032  5875310
+  30 48  32  11837404077  1313066425  13318331 13968230
+</code></pre>
+
+<p>I use linear regression in R, <code>s &lt;- lm(tcyc ~ 0+tinst+tmem+tcom, data=fit)</code>, to get the optimal value with intercept 0. But I get negative coefficients which does not make any sense.</p>
+
+<pre><code>coef(s)
+
+ tinst      tmem      tcom 
+20.8745 -281.2288 -320.7204 
+</code></pre>
+
+<p>I am not sure whether is it the best way to model and find the optimal parameter for <code>tinst</code>, <code>tmem</code> and <code>tcom</code>. How do you find positive coefficients for the model?</p>
+
+<p>Further explaining this problem in Detail:::</p>
+
+<p>Background:
+Trying to predict the execution time of an application in the future many-core systems empirically by learning the application behavior. As it is a multithreaded program, it will have communication contnention bottleneck if the application demands high inter-core communication. The general system equation looks like</p>
+
+<p>Total executiong time cycles (T_cyc) = Total cycles spent in Instruction (T_inst) + Total cycle spent in Memory instructions (T_mem) + Total cycle spent in Communication (T_com)</p>
+
+<p>i,e T_cyc=T_inst+T_mem+T_com.</p>
+
+<p>If I use a simulator I can get the T_inst,T_mem and T_com directly and find out the independent contribution of each component to the T_cyc. But using a hardware, I can only get the counts or number of events. Ie, N_inst, N_mem and N_com. 
+So what I have is </p>
+
+<p>T_cyc= a* N_inst + b* N_mem + c* N_com</p>
+
+<p>Where a,b,c has to be determined.</p>
+
+<p>I tried solving the problem using lsqnonneg (non-negative least square method)  in MATLAB to find the a,b,c. At times from the data I get b and c value ZERO which is totally meaningless.</p>
+
+<p>Things to notice:
+N_inst is a very high value. N_mem and N_com are bit lower in magnitude and hence I face this problem of b and c results as ZERO. </p>
+
+<p>Questions:
+1.  Is this a proper tool to solve such a linear equation system? If not, what else should I try?
+2.  Is it a problem due to the sample size fed to the solver?
+3.  I see that for most applications trend of N_cyc, N_inst,N_mem are monotonic but N_com is non-monotonic and can it affect the solved values? If so, how to isolate this component and find its contribution individually?</p>
+"
+"0.183339699405642","0.174740811332208"," 91700","<p>I am trying to understand the steps behind the linear regression process. I already have a linear model like:</p>
+
+<p><code>lmodel1 &lt;- lm(y~x1+x2+x3, data=dataset)</code></p>
+
+<p>for which R calculates several different things (<code>Coefficients, Intercept, Residuals, F-statistic</code> and <code>p-value</code>) among  others.</p>
+
+<p>At this point, i am mostly interested in <code>F-statistic</code> and <code>p-value</code>.
+So far, i have concluded to the following:</p>
+
+<p>The process is iterative and begins taking under consideration every variable. In order to achieve an optimal <code>y</code> some <code>x</code> variables have to be ""taken out"". This comes as a result of calculating F-statistic, which quantifies the importance of each <code>xi</code> and the dependent variable <code>y</code>.
+When <code>F value</code> is smaller than <code>p-value</code>(?) that variable is removed.
+Next step of the process is to compare that <code>F-statistic</code> of a <code>xi</code> independent variable, with an <code>F-to-enter</code> and <code>F-to-remove</code> in order see if the removed variable will be re-inserted to the equation.(?)</p>
+
+<p>Now, please do correct me if i am wrong regarding the steps desribed above.
+Is that what happens under <code>lm()</code>'s hood. Are those the right variables.?</p>
+
+<p>R-wise speaking how does these values can be shown, inserted or calculated in a multiple linear regression model.? How is <code>ANOVA</code> related to the above?</p>
+
+<p>I am afraid R's <code>summary</code> and <code>help</code>  take too much for granted.</p>
+
+<p>Thanks in advance for any suggestions.</p>
+"
+"0.224544356569536","0.214012912501926","109232","<p>I am using randomForest in R for regression, I have many categorical predictors (all of them have the same 3 categories (0,1,2)) and I want to see which of them can predict the response (continuous). I am trying this with many different response variables (one at the time) and all the models have a very low explained variance (basically 0, almost always negative).</p>
+
+<p>I checked chi-square between pairs of variables and removed the ones that could be associated (p-value &lt; 0.05), but the result is the same.</p>
+
+<p>My questions are:</p>
+
+<p>1 - Is this possible? Am I doing something very wrong without noticing? If no:</p>
+
+<p>2 - In random forest, do I have to throw everything away or can I still use the variable importance for classifying the predictors? (I don't think so, but since I couldn't find anything about this, I still hope I can get something out of it - BTW why does the plot predicted vs observed look good??). If no:</p>
+
+<p>3 - Any suggestion? Also for alternative methods?</p>
+
+<p>In the example below I don't divide the data in training and test for simplicity, but I did it in my code - same problem. Also, my original data set is much bigger (>500 observations and almost 100 predictors)</p>
+
+<pre><code>## predictors
+&gt; pred
+   X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 X11 X12 X13 X14 X15 X16 X17 X18 X19 X20
+1   0  0  0  0  0  0  0  0  0   0   0   0   0   0   0   0   0   0   0   0
+2   0  1  2  2  2  0  1  2  0   0   1   0   0   1   1   2   2   1   1   2
+3   0  1  0  2  2  1  1  2  1   1   2   1   0   0   1   2   2   2   0   0
+4   0  0  1  1  1  1  1  1  1   1   1   1   0   0   2   0   2   2   0   1
+5   0  1  1  2  2  0  1  2  2   1   2   0   0   0   1   1   0   2   0   1
+6   1  1  0  2  2  1  1  1  2   1   0   1   0   1   1   2   2   2   1   2
+7   0  1  1  1  1  1  2  1  2   1   2   1   0   1   1   2   1   2   1   1
+8   0  1  2  1  0  1  0  2  1   1   1   2   0   0   1   2   1   2   1   2
+........
+
+## response
+&gt; resp
+
+[1]  19.416  46.058  39.496  79.752 301.012 746.377 277.721  13.922  15.598  82.195  86.263
+[12]  82.522  30.829 101.369  31.496  39.366 133.510
+
+## find optimal value of mtry for randomForest
+&gt; bestmtry &lt;- tuneRF(pred, resp, ntreeTry=100,
++                    stepFactor=1.5,improve=0.01, trace=F, plot=F, dobest=FALSE)
+
+## extract optimal value of mtry for randomForest
+&gt; ind &lt;- as.numeric(names(which.min(bestmtry[,2])))
+
+## Random Forest
+&gt; RF &lt;-randomForest(pred, , y = resp, mtry=ind, ntree=500,
++ keep.forest=TRUE, importance=TRUE)
+
+&gt; RF
+
+Call:
+     randomForest(x = pred, y = resp, ntree = 500, mtry = ind, importance = TRUE,          keep.forest = TRUE) 
+               Type of random forest: regression
+                     Number of trees: 500
+No. of variables tried at each split: 9
+
+          Mean of squared residuals: 32713.86
+                    % Var explained: -6.5
+
+## Low explained variance (pseudo - r sqaured)
+
+&gt; RF.pr = predict(RF,pred)
+
+## the plot isn't that bad though... it is if I use the test data set though
+&gt; plot(RF.pr, resp)
+&gt; abline(c(0,1),col=2)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/78z9Z.png"" alt=""enter image description here""></p>
+
+<pre><code>&gt; varImpPlot(RF)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/1MHBJ.png"" alt=""enter image description here""></p>
+
+<p>I have been stuck with this for a while now... any help is extremely appreciated</p>
+"
+"0.279671059899507","0.315018477587227","115647","<p>I have the following problem: I have a set of English words which I want to translate to Dutch. Of each words I mined a set of possible translations. For example, for the word ""Eighteen"" I obtained only one possible Dutch translation: ""Achttien"", which is correct. However, for other words I obtained multiple translations. For the word ""Good""  I have the translations ""Goed"", ""Braaf"" and ""Eerlijk"", which are technically correct translations but by far the best and most commonly used translation is only the word ""Goed"".</p>
+
+<p>For a training set of English words I manually defined the optimal (correct) translation. Using this set I want to train some model to optimally pick for each English word the optimal Dutch word using some predictors. For example, I assume words that are more frequently used are probably better translations than others, and I assume that words that are noted first in a list of translations are probably better translations than others (e.g., in a dictionary, the first translation is usually the best).</p>
+
+<p>So, my data looks something like this:</p>
+
+<pre><code>English     Dutch       Frequency   Order   Correct
+---------------------------------------------------
+Eighteen    Achttien    800         1       TRUE
+Good        Goed        900         1       TRUE
+Good        Braaf       500         2       FALSE
+Good        Eerlijk     600         3       FALSE
+old         bejaard     300         1       FALSE
+old         oud         900         2       TRUE
+</code></pre>
+
+<p>I want to predict the classification in the column <code>Correct</code>. At first I thought a logistic regression could do this, but that does not take into account that each row is not independent. e.g., for each unique value of the column <code>English</code> only one is correct and all others are false. Thus, some other classification method is required.</p>
+
+<p>I was hoping you could point me in the right direction as to what method (or even better, an <code>R</code> package) would be suitable to tackle this problem. I guess this problem occurs more often in Machine Learning but I have no experience in that field.</p>
+"
+"0.297927011534169","0.349481622664415","116007","<p>I have a fairly simple dataset looking at the relationship between the first nesting date of a bird in a given year (Date) and the birds overall fledgling production from that year (Fledge; count data from 0-3 fledglings). I want to determine the optimal laying date for this species (i.e. the date where fledgling production is highest); however, I have been struggling to work out which statistical analysis is most appropriate for my data.</p>
+
+<p>Most birds produce no fledglings in a year, so there are many zero values in the data. With this in mind, I thought that a zero inflated poisson regression might be most appropriate. To test this in R, I fitted a regular glm with poisson distribution (model1 below) and a zero inflated poisson model using zeroinfl() from the pscl library (model2 below). I then compared the two using vuong test statistic (output below).</p>
+
+<pre><code>model1&lt;-glm(Fledge~Date,data=OPT,family=""poisson"")
+model2&lt;-zeroinfl(Fledge~Date,data=OPT,dist=""poisson"")
+vuong(model1,model2)
+
+Vuong Non-Nested Hypothesis Test-Statistic: 4.25169 
+(test-statistic is asymptotically distributed N(0,1) under the
+null that the models are indistinguishible)
+in this case:
+model1 &gt; model2, with p-value 1.0608e-05
+</code></pre>
+
+<p>According to the vuong output, a regular non-zero inflated poisson regression is most appropriate. This wasn't that surprising as, from my understanding, the zeros in my data are 'true zeroes' i.e. they are legitimate data points and not due to sampling technique or design. Next I tested for overdispersion by fitting a glm with a quasipoisson distribution to check the dispersion parameter (model3).</p>
+
+<pre><code>model3&lt;-glm(Fledge~Date,data=OPT,family=""quasipoisson"")
+summary(model3)
+
+Call:
+glm(formula = Fledge ~ Date, family = ""quasipoisson"", data = OPT)
+
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-0.7877  -0.6258  -0.5578  -0.4504   3.3648  
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept) -0.15109    0.54874  -0.275  0.78315   
+Date        -0.03288    0.01133  -2.901  0.00385 **
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+(Dispersion parameter for quasipoisson family taken to be 1.296628)
+
+Null deviance: 455.36  on 642  degrees of freedom
+Residual deviance: 443.40  on 641  degrees of freedom
+AIC: NA
+
+Number of Fisher Scoring iterations: 6
+</code></pre>
+
+<p>As you can see, the output showed a dispersion parameter close to one (1.297), and a null deviance (455.36) very close to the residual deviance (443.40). So I concluded that overdispersion was not a big problem, and a poisson, rather than negative binomial, distribution was required.</p>
+
+<p>After doing all this, I was fairly confident that my regular poisson regression (model1) was best for my data. HOWEVER, when I plotted the model outputs of the zero inflated and non-zero inflated data, the non-zero inflated model output didn't appear to fit my data at all while the zero inflated model fitted much better.</p>
+
+<pre><code>ggplot(OPT,aes(x=Date,y=Fledge))+
+geom_point()+
+theme_bw()+
+geom_line(data=cbind(OPT,optpred=predict(model1)),aes(y=optpred),size=1,colour=""red"")+
+geom_line(data=cbind(OPT,optpred2=predict(model2)),aes(y=optpred2),size=1,colour=""blue)
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/GFp5F.jpg"" alt=""enter image description here""></p>
+
+<p>As you can see, the non-zero inflated model (red line) doesn't seem to fit the data at all, as it is predicting fledgling production less than 0 on all dates (obviously not biologically possible)! Conversely, the zero inflated model (blue line) seems to fit the data very well. So I have two questions to ask;</p>
+
+<ol>
+<li><p>Were the methods I used to test zero inflation (and overdispersion) appropriate and interpreted correctly?</p></li>
+<li><p>If so, is my application of a poisson regression appropriate? Or are there other more appropriate options for my data outside of the two I've tried here?</p></li>
+</ol>
+
+<p>I've included a dput() of my data below to allow for replication.</p>
+
+<p>Thanks for the help!</p>
+
+<pre><code>structure(list(Date = c(45L, 40L, 42L, 41L, 39L, 34L, 40L, 44L, 
+36L, 32L, 33L, 89L, 58L, 50L, 46L, 56L, 48L, 69L, 64L, 56L, 61L, 
+58L, 66L, 63L, 57L, 58L, 60L, 65L, 31L, 48L, 42L, 41L, 46L, 38L, 
+59L, 41L, 65L, 41L, 34L, 41L, 36L, 60L, 42L, 39L, 43L, 46L, 47L, 
+38L, 38L, 71L, 65L, 51L, 42L, 37L, 51L, 41L, 65L, 59L, 44L, 50L, 
+51L, 47L, 40L, 53L, 56L, 62L, 50L, 46L, 51L, 55L, 50L, 46L, 45L, 
+39L, 36L, 52L, 50L, 73L, 42L, 38L, 51L, 49L, 43L, 45L, 44L, 76L, 
+68L, 65L, 70L, 56L, 40L, 45L, 49L, 52L, 66L, 80L, 45L, 42L, 44L, 
+37L, 48L, 43L, 53L, 31L, 47L, 49L, 44L, 46L, 54L, 55L, 48L, 53L, 
+55L, 72L, 54L, 45L, 83L, 59L, 48L, 47L, 52L, 72L, 51L, 70L, 48L, 
+44L, 42L, 38L, 48L, 43L, 45L, 39L, 45L, 42L, 64L, 46L, 56L, 34L, 
+50L, 48L, 47L, 47L, 60L, 50L, 61L, 40L, 72L, 63L, 55L, 66L, 69L, 
+66L, 61L, 60L, 60L, 40L, 70L, 45L, 40L, 41L, 42L, 71L, 54L, 45L, 
+52L, 48L, 40L, 39L, 49L, 42L, 43L, 53L, 38L, 53L, 52L, 68L, 61L, 
+62L, 87L, 41L, 45L, 37L, 44L, 45L, 43L, 72L, 39L, 56L, 34L, 74L, 
+62L, 46L, 43L, 47L, 35L, 54L, 61L, 44L, 49L, 54L, 61L, 37L, 51L, 
+48L, 52L, 48L, 48L, 44L, 45L, 44L, 45L, 68L, 61L, 87L, 51L, 52L, 
+50L, 50L, 56L, 55L, 56L, 57L, 65L, 41L, 63L, 76L, 52L, 62L, 50L, 
+50L, 54L, 63L, 48L, 54L, 46L, 57L, 54L, 52L, 45L, 41L, 54L, 74L, 
+69L, 68L, 51L, 60L, 54L, 44L, 67L, 52L, 49L, 43L, 41L, 44L, 49L, 
+46L, 43L, 46L, 49L, 46L, 47L, 54L, 55L, 67L, 52L, 55L, 52L, 49L, 
+50L, 51L, 57L, 48L, 34L, 54L, 49L, 47L, 71L, 62L, 43L, 45L, 45L, 
+49L, 58L, 57L, 55L, 54L, 52L, 51L, 41L, 54L, 70L, 52L, 53L, 53L, 
+50L, 71L, 56L, 48L, 33L, 43L, 41L, 68L, 42L, 38L, 39L, 46L, 55L, 
+64L, 62L, 56L, 69L, 44L, 49L, 54L, 86L, 46L, 46L, 50L, 44L, 45L, 
+55L, 55L, 52L, 49L, 49L, 56L, 41L, 34L, 50L, 62L, 39L, 41L, 56L, 
+42L, 40L, 43L, 44L, 45L, 43L, 48L, 41L, 45L, 62L, 49L, 47L, 49L, 
+63L, 69L, 46L, 53L, 49L, 59L, 54L, 33L, 46L, 44L, 49L, 36L, 41L, 
+33L, 66L, 56L, 67L, 43L, 66L, 31L, 51L, 59L, 57L, 51L, 39L, 44L, 
+31L, 40L, 39L, 42L, 27L, 43L, 42L, 78L, 60L, 70L, 64L, 67L, 66L, 
+67L, 66L, 62L, 58L, 51L, 50L, 60L, 38L, 45L, 34L, 69L, 38L, 45L, 
+39L, 44L, 39L, 44L, 43L, 46L, 37L, 59L, 74L, 59L, 39L, 43L, 40L, 
+38L, 45L, 45L, 42L, 36L, 33L, 51L, 64L, 52L, 40L, 89L, 49L, 37L, 
+51L, 70L, 65L, 71L, 62L, 61L, 68L, 59L, 54L, 75L, 57L, 55L, 58L, 
+52L, 58L, 45L, 50L, 41L, 64L, 49L, 50L, 67L, 54L, 43L, 49L, 54L, 
+55L, 53L, 53L, 59L, 47L, 47L, 48L, 45L, 50L, 39L, 48L, 51L, 54L, 
+44L, 43L, 56L, 51L, 38L, 71L, 62L, 56L, 65L, 69L, 68L, 52L, 47L, 
+47L, 47L, 80L, 51L, 48L, 36L, 32L, 39L, 45L, 31L, 43L, 57L, 65L, 
+60L, 62L, 36L, 53L, 64L, 57L, 43L, 71L, 66L, 63L, 49L, 39L, 49L, 
+43L, 32L, 47L, 44L, 35L, 35L, 41L, 54L, 50L, 44L, 44L, 48L, 50L, 
+41L, 40L, 46L, 48L, 38L, 43L, 54L, 52L, 36L, 62L, 72L, 47L, 66L, 
+50L, 51L, 50L, 56L, 47L, 67L, 50L, 35L, 40L, 43L, 42L, 31L, 35L, 
+43L, 46L, 45L, 46L, 39L, 40L, 40L, 39L, 36L, 45L, 43L, 44L, 44L, 
+44L, 38L, 49L, 52L, 49L, 43L, 42L, 47L, 56L, 51L, 51L, 51L, 59L, 
+64L, 46L, 40L, 75L, 65L, 51L, 91L, 56L, 83L, 56L, 57L, 58L, 51L, 
+50L, 56L, 40L, 69L, 54L, 45L, 35L, 41L, 48L, 60L, 54L, 39L, 39L, 
+31L, 92L, 39L, 66L, 56L, 48L, 44L, 40L, 42L, 47L, 51L, 47L, 45L, 
+49L, 69L, 48L, 42L, 58L, 56L, 58L, 61L, 42L, 36L, 47L, 52L, 45L, 
+54L, 55L, 62L, 48L, 44L, 54L, 51L, 46L, 44L, 50L, 37L, 33L, 40L, 
+57L, 54L, 64L, 59L, 69L, 46L, 40L, 51L, 53L, 79L, 60L), Fledge = c(1L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 
+1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 
+1L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 3L, 0L, 1L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 
+0L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 2L, 0L, 0L, 0L, 0L, 
+0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 2L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 1L, 2L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 
+0L, 1L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 3L, 0L, 0L, 1L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 1L, 0L, 1L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+2L, 0L, 0L, 1L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 1L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 2L, 1L, 2L, 0L, 0L, 0L, 1L, 1L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 
+1L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 3L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 1L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 2L, 1L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 2L, 0L, 0L, 
+0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 
+0L, 1L, 0L, 0L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 2L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+2L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 1L, 0L, 0L, 0L, 0L, 0L, 0L, 
+1L, 0L, 2L, 0L, 0L, 0L, 1L, 0L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 1L, 1L, 0L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 
+0L, 0L)), .Names = c(""Date"", ""Fledge""), class = ""data.frame"", row.names = c(NA, 
+    -643L))
+</code></pre>
+"
+"0.242535625036333","0.231160365339339","129298","<p>I would like to get the optimal cutoff of an ROC curve relating to a logistic regression.
+I am using the roc from the R package pROC. I am assuming same cost of false negative and false positive using youden's J statistics max(sensitivity+specificity).
+I have variable status (binary) and primary variable test (continuous).</p>
+
+<p>roc(status, test, print.thres=T, print.auc=T, plot=T)
+Gives me a cutoff of 27.150</p>
+
+<p>I searched on this forum for suggestions and they doesn't seem to give me the right cutoff</p>
+
+<p>I used logistic regression, and I get the parameter value 14.25199 and -0.59877.
+Using the parameter values:</p>
+
+<p>roc(status, 14.25199-0.59877*test, print.thres=T, print.auc=T, plot=T)</p>
+
+<p>Gives me a cutoff of -2.005</p>
+
+<p>And another suggestion, is to use the probability instead.</p>
+
+<p>prob=predict(glm(status~test, family=binomial),type=c(""response""))</p>
+
+<p>roc(status, prob, print.thres=T, print.auc=T, plot=T)</p>
+
+<p>Gives me a cutoff of 0.119</p>
+
+<p>As you can see none of the method work. Both method gives the correct AUC but not the cutoff/threshold. The correct method should give me cutoff of 27.150.
+What is the correct x form to input to get the correct optimal cutoff/threshold from the command roc(status, x,â€¦.)</p>
+"
+"0.0916698497028211","0.0873704056661038","132774","<p>I trying to conduct linear discriminant analysis using the lda package and I keep getting a warning message saying that the variables are collinear.</p>
+
+<p>I want to pinpoint and remove the redundant variables. What is the best method for doing this in R?</p>
+
+<p>I've read about solutions such as stepwise selection which can be used to do this but this doesn't work with discriminant analysis.</p>
+
+<p>I tried lasso regression but this shrank my 66 variables down to just 12 - the optimal set and it's hard to identify the order in which it's done this as I would prefer to keep a larger number. </p>
+"
+"0.163984012338158","0.195366166291141","134694","<p>One criterion for selecting the optimal value of $\lambda$ with an elastic net or similar penalized regression is to examine a plot of the deviance against the range of $\lambda$ and select $\lambda$ when deviance is minimized (or $\lambda$ within one standard error of the minimum).</p>
+
+<p>However, I'm having difficulty understanding what, precisely, <code>glmnet</code> displays with <code>plot.cv.glmnet</code>, because the plot displayed does not at all resemble the results of plotting the deviance against $\lambda$.</p>
+
+<pre><code>set.seed(4567)
+N       &lt;- 500
+P       &lt;- 100
+coefs   &lt;- NULL
+for(p in 1:P){
+    coefs[p]    &lt;- (-1)^p*100*2^(-p)
+}
+inv.logit &lt;- function(x) exp(x)/(1+exp(x))
+X   &lt;- matrix(rnorm(N*P), ncol=P, nrow=N)
+Y   &lt;- rbinom(N, size=1, p=inv.logit(cbind(1, X)%*%c(-4, coefs)))
+plot(test   &lt;- cv.glmnet(x=X, y=Y, family=""binomial"", nfolds=10, alpha=0.8))
+plot(log(test$lambda), deviance(test$glmnet.fit))
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/9I5z7.png"" alt=""enter image description here"">
+<img src=""http://i.stack.imgur.com/ZE2gc.png"" alt=""enter image description here""></p>
+
+<p>It appears that the second plot does not incorporate the elastic net penalty, and is also incorrectly scaled vertically. I base the claim on the basis that the shape of the curve for larger values of $\lambda$ resembles that of the <code>glmnet</code> output. However, when I've attempted to compute the penalty on my own, my attempt likewise appears to be wildly inaccurate.</p>
+
+<pre><code>penalized.dev.fn    &lt;- function(lambda, alpha=0.2, data, cv.model.obj){
+    dev &lt;- deviance(cv.model.obj$glmnet.fit)[seq_along(cv.model.obj$lambda)[cv.model.obj$lambda==lambda]]
+    beta &lt;- coef(cv.model.obj, s=lambda)[rownames(coef(cv.model.obj))!=""(Intercept)""]
+    penalty &lt;- lambda * ( (1-alpha)/2*(beta%*%beta) + alpha*sum(abs(beta)) )
+    penalized.dev &lt;- penalty+dev
+    return(penalized.dev)
+}
+
+out &lt;- sapply(test$lambda, alpha=0.2, cv.model.obj=test, FUN=penalized.dev.fn)
+        plot(log(test$lambda), out)
+</code></pre>
+
+<p>My question is: how does one manually compute the deviance reported in the default <code>plot.cv.glmnet</code> diagram? What is its formula, and what have I done wrong in my attempt to compute it?</p>
+"
+"0.221115997129113","0.289774853375608","136012","<p>I want to do the following:</p>
+
+<p>1) OLS regression (no penalization term) to get beta coefficients $b_{j}^{*}$; $j$ stands for the variables used to regress. I do this by </p>
+
+<pre><code>lm.model = lm(y~ 0 + x)
+betas    = coefficients(lm.model)
+</code></pre>
+
+<p>2) Lasso regression with a penalization term, the selection criteria shall be the Bayesian Information Criteria (BIC), given by</p>
+
+<p>$$\lambda _{j} = \frac{\log (T)}{T|b_{j}^{*}|}$$</p>
+
+<p>where $j$ stands for the variable/regressor number, $T$ for the number of observations, and $b_{j}^{*}$ for the initial betas obtained in step 1). I want to have regression results for this specific $\lambda_j$ value, which is different for each regressor used. Hence if there are three variables, there will be three different values $\lambda_j$. </p>
+
+<p>The OLS-Lasso optimization problem is then given by</p>
+
+<p>$$\underset{b\epsilon \mathbb{R}^{n} }{min} = \left \{ \sum_{t=1}^{T}(y_{t}-b^{\top} X_{t}  )^{2} + T\sum_{j=1}^{m} ( \lambda_{t}|b_{j}| )\right \}$$</p>
+
+<p>How can I do this in R with either the lars or glmnet package? I cannot find a way to specify lambda and I am not 100% sure if I get the correct results if I run </p>
+
+<pre><code>lars.model &lt;- lars(x,y,type = ""lasso"", intercept = FALSE)
+predict.lars(lars.model, type=""coefficients"", mode=""lambda"")
+</code></pre>
+
+<p>I appreciate any help here.</p>
+
+<hr>
+
+<p><strong>Update:</strong></p>
+
+<p>I have used the following code now:</p>
+
+<pre><code>fits.cv = cv.glmnet(x,y,type=""mse"",penalty.factor = pnlty)
+lmin    = as.numeric(fits.cv[9]) #lambda.min
+fits    = glmnet(x,y, alpha=1, intercept=FALSE, penalty.factor = pnlty)
+coef    = coef(fits, s = lmin)
+</code></pre>
+
+<p>In line 1 I use cross validation with my specified penalty factor ($\lambda _{j} = \frac{\log (T)}{T|b_{j}^{*}|}$), which is different for each regressor. 
+Line 2 selects the ""lambda.min"" of fits.cv, which is the lambda that gives minimum mean cross-validation error.
+Line 3 performs a lasso fit (<code>alpha=1</code>) on the data. Again I used the penalty factor $\lambda$.
+Line 4 extracts the coefficients from fits which belong to the ""optimal"" $\lambda$ chosen in line 2.</p>
+
+<p>Now I have the beta coefficients for the regressors which depict the optimal solution of the minimization problem </p>
+
+<p>$$\underset{b\epsilon \mathbb{R}^{n} }{min} = \left \{ \sum_{t=1}^{T}(y_{t}-b^{\top} X_{t}  )^{2} + T\sum_{j=1}^{m} ( \lambda_{t}|b_{j}| )\right \}$$</p>
+
+<p>with a penalty factor $\lambda _{j} = \frac{\log (T)}{T|b_{j}^{*}|}$. The optimal set of coefficients is most likely a subset of the regressors which I initially used, this is a consequence of the Lasso method which shrinks down the number of used regressors.</p>
+
+<p>Is my understanding and the code correct? </p>
+"
+"0.204980015422697","0.195366166291141","143559","<p>I am working on a problem where my objective is to predict y given some features x1,x2,x3,...x8,x9 I solved this problem using some statistical and machine learning techniques like regression, trees, random forests &amp; svm. Now that I have a prediction for y, at a given x1,x2,x3..x6 I would like to achieve an optimal value of y, by changing some values of xn which are in my control. Let us say that y was predicted to be 5, however I need a value of 10. Can I put three features aside say x1,x2,x3 and get like a range or values for the aforementioned aside features such that the value of y is 10?</p>
+
+<p>Basically, it is sort of like an inverse problem, where assuming I know the predictor I need to manipulate the features to increase the value of the predictor.</p>
+
+<p>Reproducible example:</p>
+
+<pre><code>    y&lt;- rnorm(100)
+x1&lt;- sin(rpois(100))
+x2&lt;- cos(rnorm(100))
+x3&lt;- sin(rnorm(100))+ rnorm(100)* 3cos(rnorm(100))
+x4&lt;- rnorm(100)
+y.fit&lt;- lm(y~x1+x2+x3+x4)
+library(caret)
+y.rf&lt;- train(ROP~ .,data=training,method=""rf"",prox=TRUE)
+</code></pre>
+
+<p>So now that I have y.rf and y.fit, lets say i have control over the  values of x1 &amp; x2, hence I would like a given value of y say 0.5, and to achieve this value of y (0.5) at a fixed value of x3,x4 I would like a range for x1 and x2 or possible values for x1 &amp; x2.</p>
+
+<p>How should I proceed?</p>
+"
+"0.183339699405642","0.174740811332208","147923","<p>I have a data set with continuous variable and a binary target variable (0 and 1). </p>
+
+<p>I need to discretize the continuous variables (for logistic regression) with respect to the target variable and with the constrained that the frequency of observation in each interval should be balanced. I tried machine learning algorithms like Chi Merge, decision trees. Chi merge gave me intervals with very unbalanced numbers in each interval (an interval with 3 observations and another one with 1000). The decision trees were hard to interpret.</p>
+
+<p>I came to the conclusion that an optimal discretization should maximise the $\chi^2$ statistic between the discretized variable and the target variable and should have intervals containing roughly the same amount of observations. </p>
+
+<p>Is there an algorithm for solving this?</p>
+
+<p>This how it could look like in R (def is the target variable and x the variable to be discretized). I calculated Tschuprow's $T$ to evaluate the ""correlation"" between the transformed and the target variable because $\chi^2$ statistics tends to increase with the number of intervals. I'm not certain if this is the right way.</p>
+
+<p>Is there another way of evaluating if my discretization is optimal other than Tschuprow's $T$ (increases when number of classes decreases)? </p>
+
+<pre><code>chitest &lt;- function(x){
+  interv &lt;- cut(x, c(0, 1.6,1.9, 2.3, 2.9, max(x)), include.lowest = TRUE)
+  X2 &lt;- chisq.test(df.train$def,as.numeric(interv))$statistic
+  #Tschuprow
+  Tschup &lt;- sqrt((X2)/(nrow(df.train)*sqrt((6-1)*(2-1))))
+  print(list(Chi2=X2,freq=table(interv),def=sum.def,Tschuprow=Tschup))
+}
+</code></pre>
+"
+"0.224544356569536","0.214012912501926","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.129640744710433","0.123560412643043","153560","<p>I'm currently working on power plant time series data and my main objective is finding out the optimal combination of independent variables which would keep ""SO2 concentration (dependent variable) below a threshold of 200mg/m3. For some clarity, some of the independent variables I'm working on include: Power, Number of Pumps, Heat Value, Dust, % Calcium in Coal etc. So, a good insight for example would be the optimal amount of power (in combination with other variables) required to keep ""SO2 conc"" under the above threshold. </p>
+
+<p>I've been working on fitting regression models to the data and examining variable importance to find out how influential the predictors are to ""SO2 conc"". However, this doesn't really address my objective.</p>
+
+<p>I'm using R to work on this but I'm not really sure what statistical problem this is as it seems to require more than just regression modelling. Does anyone have any ideas on how to approach this?</p>
+"
+"0.158776837207489","0.151329981691595","162831","<p>I've been playing around with the package <code>strucchange</code> (and to some extent <code>segmented</code>) in R. I'm trying to determine whether there are changes in slope in a linear regression and more importantly, how many breakpoints. A toy dataset:</p>
+
+<pre><code>x &lt;- c(0, 5, 10, 15, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80)
+y &lt;- c(-84.16, -86.67, -87.74, -86.07, -89.15, -91.90, -93.64, -95.92,
+  -95.96, -99.19, -100.73, -107.29, -106.10, -107.29)
+</code></pre>
+
+<p>First problem: if I use the breakpoints function:</p>
+
+<pre><code>breakpoints(y ~ x, data = data.frame(x, y))
+</code></pre>
+
+<p>I get the following error:</p>
+
+<pre><code>Error in breakpoints.formula(y ~ x, data = data.frame(x, y)) : 
+minimum segment size must be greater than the number of regressors
+</code></pre>
+
+<p>I think this arises because the default h parameter in the breakpoints command is 0.15 and 14 (the number of observations I have) * 0.15 = 2.1 which, rounded down, is not greater than 2 (the ""number of regressors"": incidentally, I would have thought the number of regressors would be 1 given my formula but I've learned from other working examples of <code>y ~ x</code> that nreg = 2 in these cases. I guess the intercept counts as a regressor?). </p>
+
+<p>If I set h to 3 or some fraction such that 14 * h >= 3, the command works.</p>
+
+<pre><code>breakpoints(y ~ x, data = data.frame(x, y), h = 3)
+</code></pre>
+
+<p>Two breakpoints are returned. But the result is sensitive to h. Such that if I use:</p>
+
+<pre><code>breakpoints(y ~ x, data = data.frame(x, y), h = 4)
+</code></pre>
+
+<p>I get a different solution. In the latter case, a single optimal break is found because the minimum number of observations before a break can be called is higher. Is there a way to somehow determine whether one solution has more support than the other? In other words, how best to optimize not the position of breakpoints, but the number of breakpoints (perhaps across values of h)? I think the Fstats command might be the key but I'm having a lot of trouble understanding the help for this command...</p>
+"
+"0.129640744710433","0.123560412643043","163092","<p>Iâ€™m looking to build an ARIMA model in R to help me predict the number of shots a football player is going to take in a game. </p>
+
+<p>I have last season's data to analyse to determine the optimal lags for my AR and MA parameters. I have a data frame in R, with the columns for the player name, date of match and the number of shots. </p>
+
+<p>Unfortunately, I only have a maximum 38 data points for each player which isnâ€™t enough to build a statistically confident model. I suspect I need a way to analyse the data holistically/all-at-once to help me determine the optimal lags.</p>
+
+<p>I donâ€™t, however, know how to do that or even if this is a statistically sound technique. </p>
+
+<p>At the moment I am just analysing my residuals (which have come from a linear regression with independent variables such as Home/Away and Team Possession) with code such as the following:</p>
+
+<pre><code>arima(residuals, order=c(3,0,0))
+</code></pre>
+
+<p>Is there a way to instruct R to perform this ARIMA analysis whilst looking at lots of mini-groups (where the groups are categorised by player name)?</p>
+
+<p>Any help would be much appreciated. </p>
+
+<p>Will </p>
+"
+"0.204980015422697","0.195366166291141","163604","<p>I'm using a plate reader to measure optical density of different bacterial
+strains so I can compare their responses (growth rates and changes in them over
+time) to stress conditions. The growth curves often don't follow any standard
+shape so I'm fitting them empirically with the <code>loess</code> or <code>locfit</code> functions in
+R, breaking the fits into intervals, and taking the derivatives to get growth
+rates. My plots look like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/fiiLH.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/fiiLH.png"" alt=""locfit fitted data points""></a>
+<a href=""http://i.stack.imgur.com/4dui4.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/4dui4.png"" alt=""simplified fitted curves""></a>
+<a href=""http://i.stack.imgur.com/4t7K4.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/4t7K4.png"" alt=""derivatives of simplified curves""></a></p>
+
+<p>As you can see the fitted curves have confidence intervals, but I'm not sure
+how to transform them into a meaningful form (95% confidence or standard
+deviation for example). And assuming that's doable, how do I go on to calculate
+uncertainty in the rates?</p>
+
+<p>I suppose I could just use the worst-case difference in slopes like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/fcEaY.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/fcEaY.png"" alt=""bad idea""></a></p>
+
+<p>But that seems like a bad idea.</p>
+
+<p>I could fit each well separately or split them into groups--there are a few
+replicates for each strain and I could add more if needed--and just use the
+standard deviation of the final calculated rates. Is that the best way? If so,
+how do I decide the optimal group size to balance accurate fits with a good
+number of replicates? I would also be open to using a different type of fit of course.</p>
+
+<p>I've found a couple related questions, but neither one quite answers it:</p>
+
+<ul>
+<li><p><a href=""http://stats.stackexchange.com/questions/70629/calculate-uncertainty-of-linear-regression-slope-based-on-data-uncertainty"">This one</a> seems to rely on the true relationship being linear, which my curves violate</p></li>
+<li><p><a href=""http://stats.stackexchange.com/questions/18391/how-to-calculate-the-difference-of-two-slopes"">This one</a> may well be correct but my stats knowledge is too basic to understand the answer</p></li>
+</ul>
+
+<p>EDIT: I'm using <code>deg=1</code> for both types of fits because I expect growth during log-phase to be linear on a log-transformed scale, but maybe higher-degree polynomials would be more accurate?</p>
+
+<p>EDIT: <a href=""http://stats.stackexchange.com/questions/147106/determining-if-two-growth-curves-are-significantly-different"">This answer</a> looks very promising and I'm off to read the suggested paper.
+EDIT: Nope, also depends on having a known underlying physical model.</p>
+"
+"0.173239732168809","0.231160365339339","166779","<p>Iâ€™ve seen some papers that present the idea of training classifiers such as logistic regression that are really meant to optimize a custom cost model (such as by maximizing profit given expect revenues for predictions depending on whether they are false positives, true negatives, true positives, or true negatives) not by optimizing the typical log-loss function and then looking for the optimal decision cut-off threshold, but by using different loss functions that weight differently the costs of each classification type or of each misclassification type (although I've seen that different authors propose different functions), and these seem to provide better results when evaluating them based on the customly-defined cost function.</p>
+
+<p>I was wondering if there are any implementations of such methods in R. Particularly, I'd like to try fitting a logistic regression treating the cost of misclassifying as false positive to be a multiple of the cost of misclassifying as false negative. I found a package that does just this for decision trees (although in that case it's based on the class proportions on the leaves rather than something like log-loss) and I see that there are some options for observation-specific weights in logistic regression, but not for error type weights.</p>
+"
+"0.331366747831806","0.338384126096206","172904","<p>I am trying to build a regression model for the forecast of stock market returns. The regression takes about <strong>100 variables</strong> as input and my training data consists of <strong>n=234</strong> weekly data points. I am using a lasso regression for the regression + variable selection.</p>
+
+<p>My problem is that before I can input the data into the regression I need to find the ""optimal lag"" time for it. The variables can be <strong>categorised into 4 groups</strong> and I have got data for the variables up to <strong>113 weeks before the first point in time of my training data</strong>. To calculate the ""optimal"" lag time I tried following approach:</p>
+
+<p>Take every variable for one categorie and apply a rolling window to the training data, which moves forward in quarters e.g. datapoints 1:13,14:26,... This gives <strong>18 seperate</strong> quarters for the training data. For the first quarter calculate the correlation (spearman in this case) between the stock course and every variable in the categorie with a lag of 0. Then take the average of the absoulte correlation of all the variables for this quarter and enter it into a matrix at point [1,1]. Repeat this for every possible lack time up to 113 and then move on to the next quarter. </p>
+
+<p>This results in a <strong>[114,18] matrix</strong> which includes the average absolute correlation for every lag in every quarter. Now I just take the average for every row in the matrix and the row with the highest average correlation should give me the most reliable lag for my data of that category.</p>
+
+<p><strong>Q:</strong> Has anyone seen a similar approach like this in literature before? Is there something I am missing? E.g. would it be smarter to just calculate the correlation over the whole trainingset at once and look for the optimal lag that way? As far as I am concerned that is the most common approach in literature, but it seems to me that it gives you a pretty biased result.</p>
+
+<p>For some more insight you can find my code below:</p>
+
+<pre><code>Correlation.Maximiser = function(Stock, Category){
+
+  Result = matrix(nrow = 114,ncol =  18)
+
+  for(tmp in 1:18){
+    Start.Test=1+(tmp-1)*13
+    End.Test=13+(tmp-1)*13
+    Sample = Stock[Start.Test:End.Test]
+
+    for(i in 0:113){
+      int.low=101-i+13*tmp
+      int.high=113-i+13*tmp
+      NA.omitter = cor(Sample,Category[int.low:int.high,-1], method = ""spearman"")
+      NA.omitter[is.na(NA.omitter)] = 0 #some Variables have a lot of 0 values so that it can happen that they are only zero in the quarter we look at which results in an NA
+      Result[i+1,tmp]=mean(abs(NA.omitter))
+    }
+  }  
+  return(Result)
+}
+</code></pre>
+
+<p><strong>EDIT:</strong> I just realised that the comparison in categories makes no real sense, since some variables might have a positive while others might have a negativ correlation to the dependent variable. I tried to compensate that by averaging over the absolute correlation, but I realised that this would not penalise variables that change sign from quarter to quarter and such behavior would be really bad for the regression. In general my question stays the same though. Only now the procedure is applied to every variable on its own.</p>
+"
+"0.18712029714128","0.214012912501926","174557","<p>I'm currently running a ridge regression in R using the <code>glmnet</code> package, however, I recently ran into a new problem and was hoping for some help in interpreting my results. My data can be found here: <a href=""https://www.dropbox.com/sh/hpxu3t0vqkrzfgf/AAB6F-yMYMfuI5E__gfDuW6sa?dl=0"" rel=""nofollow"">https://www.dropbox.com/sh/hpxu3t0vqkrzfgf/AAB6F-yMYMfuI5E__gfDuW6sa?dl=0</a></p>
+
+<p>My data consists of a 26531x428 observation matrix <code>x</code> and a 26531x1 response vector <code>y</code>. I am attempting to determine the optimal value of <code>lambda.min</code>, and when I run the code</p>
+
+<p><code>&gt; lambda=cv.glmnet(x=x,y=y,weights=weights,alpha=0,nfolds=10,standardize=FALSE)</code></p>
+
+<p>I get</p>
+
+<p><code>$lambda.min
+[1] 2.123479
+$lambda.1se
+[1] 619.0054</code></p>
+
+<p>which are results I would expect. However, I would like to add a slight tweak to this regression. I have prior knowledge of each of my 428 coefficients, and instead of shrinking each coefficient towards 0, as is the default with ridge regression, I would like to shrink each coefficient towards a specific value other than 0. After reaching out to Dr. Trevor Hastie, one of the creators of <code>glmnet</code>, he told me that this could be achieved by running the same code after substituting <code>y</code> with <code>y2</code>, where <code>y2 = y - x%*%d</code> and <code>d</code> is a 428x1 vector of coefficient priors. He said to then add <code>d</code> to my new coefficients, which would give me my prior-informed coefficients. After rerunning the code</p>
+
+<p><code>&gt; lambda=cv.glmnet(x=x,y=y2,weights=weights,alpha=0,nfolds=10,standardize=FALSE)</code></p>
+
+<p>I unfortunately get</p>
+
+<p><code>$lambda.min
+[1] 220.3026
+$lambda.1se
+[1] 220.3026</code></p>
+
+<p>The results of <code>plot(lambda)</code> look like this
+<a href=""http://i.stack.imgur.com/ivP0b.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ivP0b.png"" alt=""lambda plot""></a></p>
+
+<p>Does anyone know why <code>glmnet</code> can't find a suitable <code>lambda.min</code>? Could it be because my vector of priors contains estimates that are too far off? Any help would be greatly appreciated!</p>
+"
+"0.317553674414978","0.302659963383191","176111","<p>I need to conduct a meta-analysis for a publication, but this is my first meta-analysis and I still donâ€™t feel confident. I will describe the steps I have followed, and hopefully some of you might find errors on my methods, and suggest alternatives.</p>
+
+<p>For this particular analysis, long-term studies should be more important than short-term because a few experiments showed transient effects, hence short-term studies might fail to capture that the effect is not really significant in the long-term. On my dataset, about half the studies have several non-independent measurements taken at different time-points (i.e. several annual measurements). Other experiments, despite having been carried out for several years, show the data already aggregated, with only one row per study with mean and standard deviation. I considered running a multivariate meta-analysis to solve this issue, but it would unbalance the analysis, giving more importance to the experiments with several rows of data (annual measurements) than to the experiments with aggregated data in only one row (pooled across several years). Am I right? This is an example of the dataset:</p>
+
+<ul>
+<li>Study 1, Year 1, Effect Size 1 </li>
+<li>Study 1, Year 2, Effect Size 2 </li>
+<li>Study 1, Year 3, Effect Size 3    </li>
+<li>Study 2, Year 1, Effect Size 4    </li>
+<li>Study 3, Years 1-4, Effect Size 5</li>
+<li>Study 4, Years 1-3, Effect Size 6</li>
+</ul>
+
+<p>Alternatively, I decided to try and aggregate the data, so that finally there is only one row per study. I followed these steps:</p>
+
+<p>Calculate effect sites for each row, including those studies with several rows (annual data). In this case, I calculated the log response ratio (ROM):</p>
+
+<pre><code>dat &lt;- escalc (measure=""ROMâ€, n1i=elev.rep, n2i=control.rep, m1i=elev.ANPP.mean, m2i=control.ANPP.mean, sd1i=elev.SD, sd2i=control.SD, data=all)
+</code></pre>
+
+<p>Aggregate studies using the function agg {MAd}. I used the Borenstein et al. 2009 method, and correlation=1:</p>
+
+<pre><code>datAgg &lt;- agg(id = id,es = yi,var = vi, cor =1,method = ""BHHR"", data = dat)
+</code></pre>
+
+<p>I have now only one row per study. However, since long-term experiments are more important, I have created user-defined weights that take into account the number of replicates and the number of years of each study:</p>
+
+<pre><code>datAgg$weightsTime &lt;- with(datAgg, ((control.rep * elev.rep)/(control.rep + elev.rep)) + ((nyears^2)/(2*nyears)))
+</code></pre>
+
+<p>Run the mixed-effects meta-regression with two moderators, using Hedges Estimator (HE) and the Knapp and Hartung approach:</p>
+
+<pre><code>m &lt;- rma.uni(yi, vi, mods= ~ factor(A) * factor(B), method=""HE"", data=datAgg, weights=weightsTime, knha=TRUE)
+</code></pre>
+
+<p>Am I doing something wrong? Can this method be improved? So far the results confirm my hypothesis, but of course I might be using a sub-optimal approach. Many thanks</p>
+"
+"0.367315443346227","0.370681237929129","179049","<p>I'm trying to learn some basic Machine Learning and some basic R. I have made a very naive implementation of $L_2$ regularization in R based on the formula:</p>
+
+<p>$\hat w^{ridge} = (X^TX +\lambda I)^{-1} X^T y$ </p>
+
+<p>My code looks like this:</p>
+
+<pre><code>fitRidge &lt;- function(X, y, lambda) {
+     # Add intercept column to X:
+  X &lt;- cbind(1, X)
+     # Calculate penalty matrix:
+  lambda.diag &lt;- lambda * diag(dim(X)[2])
+     # Apply formula for Ridge Regression:
+  return(solve(t(X) %*% X + lambda.diag) %*% t(X) %*% y)
+}
+</code></pre>
+
+<p>Note that I'm not yet trying to find an optimal $\lambda$, I'm simply estimating $\hat w^{ridge}$ for a given $\lambda$. However, something seems off. When I enter $\lambda = 0$ I get the expected OLS result. I checked this by applying lm.ridge(lambda = 0) on the same dataset and it gives me the same coefficients. However, when I input any other penalty, like $\lambda=2$ or $\lambda=5$ my coefficients and the coefficients given by lm.ridge disagree wildly. I tried looking at the implementation of lm.ridge but I couldn't work out what it does (and therefore what it does differently).</p>
+
+<p>Could anyone explain why there is a difference between my results and the results from lm.ridge? Am I doing something wrong in my code? I've tried playing around with <code>scale()</code> but couldn't find an answer there.</p>
+
+<p>EDIT:</p>
+
+<p>To see what happens, run the following:</p>
+
+<pre><code>library(car)
+X.prestige &lt;- as.matrix.data.frame(Prestige[,c(1,2,3,5)])
+y.prestige &lt;- Prestige[,4]
+
+fitRidge(X.prestige, y.prestige, 0)
+coef(lm.ridge(formula = prestige~education+income+women+census, data = Prestige, lambda = 0))
+fitRidge(X.prestige, y.prestige, 2)
+coef(lm.ridge(formula = prestige~education+income+women+census, data = Prestige, lambda = 2))
+</code></pre>
+
+<p>EDIT2:</p>
+
+<p>Okay, so based on responses below, I've gotten a somewhat clearer understanding of the problem. I've also closely re-read the section about RR in TESL by Hastie, Tibshirani and Friedman, where I discovered that the intercept is often estimated simply as the mean of the response. It seems that many sources on RR online are overly vague. I actually suspect many writers have never implemented RR themselves and might not have realized some important things as many of them leave out 3 important facts:</p>
+
+<ol>
+<li>Intercept is not penalized in the normal case, the formula above only applies to the other coefficients.</li>
+<li>RR is not equivariant under scaling, i.e. different scales gives different results even for the same data.</li>
+<li>Following from 1, how one actually estimates intercept.</li>
+</ol>
+
+<p>I tried altering my function accordingly:</p>
+
+<pre><code>fitRidge &lt;- function(X, Y, lambda) {
+  # Standardize X and Y
+  X &lt;- scale(X)
+  Y &lt;- scale(Y)
+  # Generate penalty matrix
+  penalties &lt;- lambda * diag(ncol(X))
+  # Estimate intercept
+  inter &lt;- mean(Y)
+  # Solve ridge system
+  coeff &lt;- solve(t(X) %*% X + penalties, t(X) %*% Y)
+  # Create standardized weight vector
+  wz &lt;- c(inter, coeff )
+  return(wz)
+}
+</code></pre>
+
+<p>I still don't get results equivalent to lm.ridge though, but it might just be a question of translating the formula back into the original scales. However, I can't seem to work out how to do this. I thought it would just entail multiplying by the standard deviation of the response and adding the mean, as usual for standard scores, but either my function is still wrong or rescaling is more complex than I realize.</p>
+
+<p>Any advice?</p>
+"
+"0.224544356569536","0.214012912501926","180521","<p>I have a time series that includes some rare extreme values. We are talking about daily data, in total 1461 observations and 11 extreme values. I adjusted those 11 values with a multiple regression. Now I am using the <code>tbats()</code> on the original time series and the adjusted one. </p>
+
+<pre><code>accuracy(original)
+&gt;                   ME    RMSE      MAE MPE MAPE      MASE          ACF1
+&gt;Training set 10.23539 4202.19 2921.593 NaN  Inf 0.6777689 -0.0003493096
+accuracy(adjusted)
+&gt;                   ME    RMSE      MAE MPE MAPE      MASE          ACF1
+&gt;Training set 43.35625 3803.618 2787.39 NaN  Inf 0.6827622 -0.004749092
+
+#original AIC
+&gt;35101.43
+#adjusted AIC
+&gt;34798.24
+</code></pre>
+
+<p>How can I see if the model improves due to the adjustment or not? Since I reduced those 11 extreme values, I can't just compare MAE, RMSE or AIC. MASE is the only measure that should work?</p>
+
+<p>I could divide MAE, RMSE and AIC by the mean of the respective time series.</p>
+
+<pre><code># original
+0.4962245 # MAE/mean(original)
+0.7137304 # RMSE/mean(original)
+5.96188 # AIC/mean(original)
+
+# adjusted
+0.4862567 # MAE/mean(adjusted)
+0.6635364 # RMSE/mean(adjusted)
+6.07051 # AIC/mean(adjusted)
+</code></pre>
+
+<p>Is that a legitimate way to compare the results?</p>
+
+<p>Here are the <code>pacf</code>-diagrams of both models:</p>
+
+<p><strong>original</strong>:</p>
+
+<p><a href=""http://i.stack.imgur.com/nFARp.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/nFARp.png"" alt=""original""></a></p>
+
+<p><strong>adjusted</strong>:</p>
+
+<p><a href=""http://i.stack.imgur.com/YXIGF.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/YXIGF.png"" alt=""adjusted""></a></p>
+
+<p><strong>Update:</strong></p>
+
+<p>I just realized that when i use the <code>accuracy()</code> function of the <code>forecast</code> package with a <code>tbats()</code> based on a <code>msts()</code> object the resulting MASE is using an in-sample naive forecast for scaling. I guess that is not optimal? It should be better to use an in-sample naive seasonal forecast with the longest season of the <code>msts()</code> object.</p>
+
+<pre><code>MASE(original) # scaled with a in-sample naive seasonal forecast (365)
+&gt; 0.6339
+
+MASE(adjusted) # scaled with a in-sample naive seasonal forecast (365)
+&gt; 0.6287
+</code></pre>
+"
+"0.183339699405642","0.174740811332208","181603","<p>I am enrolled in a <a href=""http://www.youtube.com/playlist?list=PLA89DCFA6ADACE599"" rel=""nofollow"">machine learning course</a> for machine learning where we have a lab to implement linear regression
+I am attempting to do it in R to get a better understanding of the material and of R for myself (i don't intend to submit this as a lab as the course doesn't use R) but am coming up against a wall</p>
+
+<p>My understanding of the process is as follows</p>
+
+<ul>
+<li><p>User Generates a model based on the hypothesis
+$h_\theta(x) = \theta^TX= \theta_0x_0 +\theta_1x_1+\dots$</p></li>
+<li><p>Take error rate of your model by using squared error cost function, then iterate, create a new hypothesis and get the error rate of this. Continue through $n$ iterations based on the formula
+$J(\theta_0,\theta_1)=\frac{1}{2m}\displaystyle\sum_1^m(h_\theta(x^{(i)})âˆ’y^{(i)})^2$. </p></li>
+<li><p>Take all the error rates you have recorded based on the cost history and use <code>gradient descent</code> to find automatically the optimal values of your hypothesis.</p></li>
+</ul>
+
+<p>Using the code on <a href=""http://www.r-bloggers.com/linear-regression-by-gradient-descent/"" rel=""nofollow"">R-Bloggers</a> where the gradient descent is implement below based on vectors <code>x</code> and <code>y</code></p>
+
+<pre><code># add a column of 1's for the intercept coefficient
+X &lt;- cbind(1, matrix(x))
+
+# gradient descent
+for (i in 1:num_iters) {
+ error &lt;- (X %*% theta - y)
+ delta &lt;- (t(X) %*% error) / length(y)
+ theta &lt;- theta - alpha * delta
+ cost_history[i] &lt;- cost(X, y, theta)
+ theta_history[[i]] &lt;- theta
+}
+</code></pre>
+
+<p>I was wondering if people could help me tease out the logic</p>
+
+<ol>
+<li><p>Why is the number 1 applied to the matrix <code>X</code>. Is this so that X has 2 columns so that it can be multiplied by theta - y?</p></li>
+<li><p>What is the formula delta actually calculating and why is the Transpose of X being used</p></li>
+</ol>
+
+<p>Conceptually I think i understand the overall process but i just need to relate this back to the R code as i want to grasp the concept before proceeding to Multiple linear regression</p>
+"
+"0.317553674414978","0.302659963383191","186728","<p>I am using the great <code>{caret}</code> package to run a lot of models, however I would like to analyse the model as one usually does having run that model in its own right, i.e. not within caret.</p>
+
+<p>I am using the mboost package, starting with the <code>glmboost</code> function. If you run this model there are then functions within the mboost package that can be applied directly to the output of that function. however, these same functions do not work on the output of <code>train</code> from caret.
+<code>train</code> is essentially the wrapper function which allows you to optimise the parameters for the chosen model, glmboost in my case.</p>
+
+<p>Here is some dummy code if anybody wants to play with it. Its a boosted tree regression model, first using the <code>glmboost</code> function directly from the mboost package, then the same thing through the caret package (with some extra parameters to optimise over):</p>
+
+<pre><code>## ============================================================== ##
+##  Create a simple model using glmboost that runs through caret  ##
+## ============================================================== ##
+
+## install as necessary!
+library(mboost)
+library(caret)
+## Use multicore if you can!
+library(doMC)
+registerDoMC(4)
+
+## ============= ##
+##  Create data  ##
+## ============= ##
+
+## Let's say we are predicting a numeric value, based on the predictors
+## 70 observations of 10 variables, assuming they are chronologically order (a time-series)
+
+set.seed(666)                                                # the devil's seed
+myData &lt;- as.data.frame(matrix(rnorm(70*15, 2, .4), 70, 10)) #10 columns of random numbers
+names(myData) &lt;- c(""to.predict"", paste0(""var_"", seq(1, 9)))
+# Have a ganders
+str(myData)                             
+
+## Create model output using the mboost package directly
+glm_mboost &lt;- glmboost(to.predict ~ .,  # predict against all variables
+                       myData,          # supply our data
+                       control = boost_control(mstop = 200)
+                       )
+
+## This is what I'd like to do with the output from the caret package!
+plot(glm_mboost)
+cvr &lt;- cvrisk(glm_mboost)
+plot(cvr)
+
+## ========================================== ##
+##  Set parameters for train() - using caret  ##
+## ========================================== ##
+
+## glmboost takes 'mstop' and 'prune' as inputs
+myGrid &lt;- expand.grid(mstop = seq(20, 250, 50),
+                      prune = ""AIC""    #this isn't actually required by the mboost package!
+                      )
+myControl &lt;- trainControl(method = ""timeslice"", # take consequetive portions of the time-series
+                          fixedWindow = TRUE, # If this is TRUE, we get the error
+                          horizon = 1,
+                          initialWindow = 20) # ~1 months of trading days
+## fixedWindow = TRUE  --&gt; 
+
+## =============== ##
+##  Run the model  ##
+## =============== ##
+
+glm_caret &lt;- train(to.predict ~ ., data = myData,
+                method = ""glmboost"",
+                #metric = ""MyGauss"",
+                trControl = myControl,
+                tuneGrid = myGrid
+                ##verbose = FALSE)
+                )
+
+## Maybe this will give you some idea about how to extract it
+str(glm_caret)
+
+## This is the best I can do, but the first plot doesn't come out right
+x &lt;- glm_caret$finalModel
+plot(x)
+cvr1 &lt;- cvrisk(x)
+plot(cvr1)
+</code></pre>
+
+<p>An idea I have is to simply use the optimal output given by caret to run the <code>glmboost</code> function once, with the provided parameters, but as I am going through many models, I'd rather save the computing time!</p>
+"
+"0.289885517826224","0.276289481997769","186845","<p>I created some data using the following code:</p>
+
+<pre><code>set.seed(1221)
+x &lt;- runif(500)
+y &lt;- runif(500,0,2)
+z &lt;- rep(0,500)
+z[-0.8*x + y - 0.75 &gt; 0] &lt;- 1
+plot(x,y,col=as.factor(z))
+</code></pre>
+
+<p>This produces the following plot</p>
+
+<p><a href=""http://i.stack.imgur.com/ycWdr.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ycWdr.png"" alt=""enter image description here""></a></p>
+
+<p>The data is linearly separable. Then, I applied the glm function to create a logistic regression model.</p>
+
+<pre><code>df &lt;- data.frame(class = z, x = x, y = y)
+model &lt;- glm(z ~ x + y, family = binomial, data = df)
+</code></pre>
+
+<p>This produces the following output:</p>
+
+<pre><code>summary(model)
+Call:
+glm(formula = z ~ x + y, family = binomial, data = df)
+
+Deviance Residuals: 
+       Min          1Q      Median          3Q         Max  
+-8.127e-04  -2.000e-08  -2.000e-08   2.000e-08   7.699e-04  
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)
+(Intercept)    -1062      52666   -0.02    0.984
+x              -1163      57197   -0.02    0.984
+y               1433      70408    0.02    0.984
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 6.8274e+02  on 499  degrees of freedom
+Residual deviance: 1.3345e-06  on 497  degrees of freedom
+AIC: 6
+
+Number of Fisher Scoring iterations: 25
+</code></pre>
+
+<p>The result surprised me, first because the parameter estimates are huge, and second because I was expecting such estimates to be close to the original decision boundary function, i.e. <code>-0.8x + y - 0.75 = 0</code>.</p>
+
+<p>I then used the <a href=""http://web.stanford.edu/~hastie/glmnet/glmnet_alpha.html"" rel=""nofollow"">glmnet</a> package to see if I could solve this issue. This package creates a penalised logistic regression model in order to deal with the large values in the parameter estimates. The code I used is the following:</p>
+
+<pre><code>library(glmnet)
+cvfit &lt;- cv.glmnet(as.matrix(df[,-1]), as.factor(df$class), family =   ""binomial"", type.measure = ""class"")
+plot(cvfit)
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/vH4AV.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vH4AV.png"" alt=""enter image description here""></a></p>
+
+<p>And the coefficients for the optimal penalty strength are:</p>
+
+<pre><code>coef(cvfit, s = ""lambda.min"")
+3 x 1 sparse Matrix of class ""dgCMatrix""
+                    1
+(Intercept) -84.01446
+x           -91.40983
+y           113.18736
+</code></pre>
+
+<p>Such coefficients are smaller than the ones obtained with the <code>glm</code> function. Still they are not the same as the decision boundary function. </p>
+
+<p>Does anybody know why this is happening? Any help is greatly appreciated.</p>
+"
+"0.366679398811285","0.349481622664415","187100","<p>I have a certain knowledge in stochastic processes (specially analysis of nonstationary signals), but in addition to be a beginner in R, I have never worked with regression models before.
+Well, I have some doubts on understanding the outcome of the function summary() in R, when using with the results of a glm model fitted to my data. Well, suppose I used the following command to fit a generalized linear model to my data:**</p>
+
+<pre><code>glm_model &lt;- glm(Output ~ (Input1*Input2) + Input3 + Input4, data = mydata)
+</code></pre>
+
+<p>Then I use summary(glm_model) to obtain the following:</p>
+
+<pre><code>Call: 
+glm(formula = Output ~ (Input1*Input2) + Input3 + Input4, data = mydata)
+Deviance Residuals: 
+    Min       1Q   Median       3Q      Max  
+-7.4583  -0.8985   0.1628   1.0670   6.0673  
+Coefficients:
+
+Estimate Std. Error t value Pr(&gt;|t|)    
+
+(Intercept)        8.522e+00  6.553e-02 130.041  &lt; 2e-16 ***
+
+Input1            -3.819e-04  3.021e-05 -12.642  &lt; 2e-16 ***
+
+Input2            -2.557e-04  2.518e-05 -10.156  &lt; 2e-16 ***
+
+Input3            -3.202e-02  1.102e-02  -2.906  0.00367 ** 
+
+Input4            -1.268e-01  7.608e-02  -1.666  0.09570 .  
+
+Input1:Input2      1.525e-08  2.521e-09   6.051 1.53e-09 ***
+
+
+Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for gaussian family taken to be 2.487504)
+    Null deviance: 18544  on 5959  degrees of freedom
+Residual deviance: 14811  on 5954  degrees of freedom
+  (1708 observations deleted due to missingness)
+AIC: 22353
+Number of Fisher Scoring iterations: 2
+</code></pre>
+
+<p>From a estimation theory perspective, I understand that ""estimate"" and ""Std. Error"" are the estimates and the standard deviation of the unknown parameters (beta1, beta2,...) of my model. However, there are some things I do not understand:</p>
+
+<p>1) How can I assess how good my fit is from the output of <code>summary()</code>? We could not use only the information of the standard deviation of the parameter estimators to assess the goodness-of-fit. I would expect to have access to the sampling distribution of a given parameter estimator to know the % of estimates within +- 1std, +-0.5std or any +-x*std, for example. Other option would be knowing the theoretical distribution of the parameter estimator, so as to try to calculate its Cramer Rao Lower Bound and compare with the calculated std.</p>
+
+<p>2) What does the t value (or Pr(>|t|) ) have to do with the goodness-of-fit? Since I am not familiar with regression models, I do not know the connection between the student t distribution and the estimation of the model parameters. What does it mean? Is the parameter estimator of the glm model distributed according to the student t pdf (like the sample estimator for small samples of an unknown population)? What conclusions should I take from Pr(>|t|)?</p>
+
+<p>3) Do we have a more general form of assessing the goodness-of-fit, like a measure of the variability of the data my model can capture, maybe a table of critical values for such a measure given a certain significance level?** </p>
+
+<p>4) When fitting a glm model, do we need to specify a significance level? If yes, why such an information is not provided by the summary function?</p>
+
+<p>5) The summary function outputs some measures based on information theory, like AIC: 22353. Can we define an optimal reference value for AIC? What is a good AIC value? My intuition is that we could not do so, like other information theory measures (mutual information, entropym,...)</p>
+
+<p>Thank you for your help!</p>
+"
+"0.129640744710433","0.123560412643043","187679","<p>I'd like to test two classifiers at the same time, that is logistic regression and classification trees. To find a classification threshold, which for example maximises F1-score, I split my data set into train, validation and test set. Because this is all pretty new to me, I wrote my own loop to understand the procedure behind it. I was wondering, how would you find manually (without just using cross-validation from the caret package) the optimal cp-value? Is the optimal cp the average of all the cp picked for each fold? But if so, what do I need the validation set for? In logistic regression, this is more clear to me since I need it to find the threshold which maximises my F1 score. I appreciate your help!</p>
+"
+"0.207887678602571","0.231160365339339","187963","<p>I have a fundamental question about cross-validation in logistic regression. I would really appreciate some help since something is still unclear to me. My situation is the following: I split my data set into training, validation and test set. When using for example rpart for classification trees on a training set, it automatically splits it into k-folds (basically creating a validation set) and suggests an optimal complexity parameter. I can then run the suggested tree on my test set. However, if I run a logistic regression. Let's say I run a stepwise regression model (although I know stepwise regression model have to be used with caution). How can I use cross-validation to improve my model? Since, by using different folds, I will get models with different numbers of features. How can I choose one to eventually run it on my test set? Thank you very much in advance!</p>
+"
+"0.0916698497028211","0.0873704056661038","189969","<p>am interested in determining the association between an outcome and several predictors using relative risk ratios. I would like to use Poisson regression. As outlined in this article (<a href=""http://www.cmaj.ca/content/184/8/895?related-urls=yes&amp;legid=cmaj;184/8/895"" rel=""nofollow"">http://www.cmaj.ca/content/184/8/895?related-urls=yes&amp;legid=cmaj;184/8/895</a>), I should be reporting coefficients with robust standard errors.</p>
+
+<p>I would like to perform variable selection in R. My plan was to do the following:</p>
+
+<p>1) glm with family =poisson(link = ""log"")
+2) run step on the full model
+3) run the optimal model, and report robust standard errors</p>
+
+<p>I am hoping someone could clarify whether the Log-Likelihood of the regular and robust model will be different? If it is, will my model selection procedure give the wrong answer? If wrong, are there any potential solutions?</p>
+
+<p>thank you</p>
+
+<p>mark</p>
+"
+"0.194461117065649","0.185340618964565","209243","<p>I am doing some regression analysis and in certain cases I'm getting errors I cannot understand.</p>
+
+<p>R environment image is shared here: <a href=""https://www.dropbox.com/s/n6opew73l7xgcbz/data.RData?dl=0"" rel=""nofollow"">https://www.dropbox.com/s/n6opew73l7xgcbz/data.RData?dl=0</a></p>
+
+<p>And what I am doing with errors I get:</p>
+
+<p>Something about infinite vector length:</p>
+
+<pre><code>regsubsets(data$UzaverRekonstrukce ~  data$PacientRocnik + data$PacientIchs + data$PacientDm + data$PacientHyperlipidemie + data$PacientAh + data$PacientKoureni + data$Koncetina + data$UmisteniOperace + data$Material + data$BercoveTepny + data$PedalniOblouk + data$Antikoagulace + data$Antiagregace + data$Vykon + data$ChirRevProxAnas + data$ChirPlastProxAnas + data$TrombectomieBypassu + data$Eni + data$PtaDistAnas + data$Infekce + data$TerapieInfekce , nvmax = 5, really.big = T , nbest = 3, data)
+
+Error in numeric(nbest * nvmax) : vector size cannot be infinite
+In addition: Warning messages:
+1: In cbind(1, xx) :
+  number of rows of result is not a multiple of vector length (arg 1)
+2: In leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in =     force.in,  :
+  31  linear dependencies found
+3: In max((1:np)[!rightorder]) :
+  no non-missing arguments to max; returning -Inf
+4: In leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in =     force.in,  :
+  nvmax reduced to  -Inf
+5: In leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in =     force.in,  :
+  NAs introduced by coercion to integer range
+</code></pre>
+
+<p>This one is OK:</p>
+
+<pre><code>regsubsets(data$UzaverRekonstrukce ~  data$PacientRocnik + data$PacientIchs + data$PacientDm + data$PacientHyperlipidemie + data$PacientAh + data$PacientKoureni + data$Koncetina + data$UmisteniOperace + data$Material + data$BercoveTepny + data$PedalniOblouk + data$Antikoagulace + data$Antiagregace + data$Vykon + data$ChirRevProxAnas + data$ChirPlastProxAnas + data$TrombectomieBypassu + data$Eni + data$PtaDistAnas + data$Infekce, nvmax = 5, really.big = T , nbest = 3, data)
+</code></pre>
+
+<p>And something about different input data length:</p>
+
+<pre><code>regsubsets(data$UzaverRekonstrukce ~  data$PacientRocnik + data$PacientIchs + data$PacientDm + data$PacientHyperlipidemie + data$PacientAh + data$PacientKoureni + data$Koncetina + data$UmisteniOperace + data$Material + data$BercoveTepny + data$PedalniOblouk + data$Antikoagulace + data$Antiagregace + data$Vykon + data$ChirRevProxAnas + data$ChirPlastProxAnas + data$TrombectomieBypassu + data$Eni + data$PtaDistAnas + data$Infekce + data$PuvodceInfekce , nvmax = 5, really.big = T , nbest = 3, data)
+
+Error in leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in = force.in,  : 
+  y and x different lengths
+</code></pre>
+
+<p>I am very confused of this messages. I understand there are many variables and only few observations (in this dataset). But I don't understand that in one case it is OK, add one predictor - infinite length error, remove one variable - different X and Y errors.</p>
+
+<p>I would be glad if someone could explain me the problem. Optimally how to detect problems leading to this errors before running the regsubsets.</p>
+"
+"0.0916698497028211","0.0873704056661038","213011","<p>In the <code>car</code> package, we have the function <code>powerTransform</code> which transforms variables in a regression equation to make the residuals in the transformed equation as normal as possible. I am confused about what this transformation is and further in the following example:</p>
+
+<pre><code># Box Cox Method, univariate
+summary(p1 &lt;- powerTransform(cycles ~ len + amp + load, Wool))
+
+# fit linear model with transformed response:
+coef(p1, round=TRUE)
+summary(m1 &lt;- lm(bcPower(cycles, p1$roundlam) ~ len + amp + load, Wool))
+</code></pre>
+
+<p>What I am confused about is what exactly the model <code>p1</code> is. Is it simply the linear model without a transformation, then it finds the optimal parameter, we then use that to specify <code>m1</code>? So what is the regression equation for <code>p1</code>, <code>m1</code>??</p>
+"
+"0.204980015422697","0.195366166291141","213571","<p>I am trying to do L2-regularized MLR on a data set using caret. Following is what I have done so far to achieve this:</p>
+
+<pre><code>r_squared &lt;-  function ( pred, actual){
+    mean_actual = mean (actual)
+    ss_e = sum ((pred - actual )^2)
+    ss_total = sum ((actual-mean_actual)^2 )
+    r_squared = 1 - (ss_e/ss_total)
+}
+
+df = as.data.frame(matrix(rnorm(10000, 10, 3), 1000))
+colnames(df)[1] = ""response""
+set.seed(753)
+inTraining &lt;- createDataPartition(df[[""response""]], p = .75, list = FALSE)
+training &lt;- df[inTraining,]
+testing  &lt;- df[-inTraining,]
+testing_response &lt;- base::subset(testing,
+                                 select = c(paste (""response"")))
+gridsearch_for_lambda =  data.frame (alpha = 0,
+                                      lambda = c (2^c(-15:15), 3^c(-15:15)))
+regression_formula = as.formula (paste (""response"", ""~ "", "" ."", sep = "" ""))
+train_control = trainControl (method=""cv"", number =10,
+                              savePredictions =TRUE , allowParallel = FALSE )
+model = train (regression_formula,
+                           data = training,
+                           trControl = train_control,       
+                           method = ""glmnet"",
+                           tuneGrid =gridsearch_for_lambda,
+                           preProcess = NULL
+            )
+prediction = predict (model, newdata = testing)
+testing_response[[""predicted""]] = prediction
+r_sq = round (r_squared(testing_response[[""predicted""]],
+              testing_response[[""response""]] ),3)
+</code></pre>
+
+<p>Here I am concerned about assurance that the model I am using for prediction is the best one (the optimal tuned lambda value).</p>
+
+<p>P.S.: The data is sampled from random normal distribution, which is not giving a good R^2 value, but I want to get the idea correctly</p>
+"
+"NaN","NaN","217417","<p>I have a logistic regression model. I'm looking for a non-graphical way to find the optimal cut-off where sensitivity is above a threshold(say 0.95) and maximizes sensitivity+specificity. I don't have a fitted model. Only two vectors of observations and predicted probabilities.</p>
+"
+"0.183339699405642","0.174740811332208","221011","<p>I have two monthly time series: </p>
+
+<ul>
+<li>one for house prices expressed in annual change growth rates: $\left( \text{ln}(X_t) - \text{ln}(X_{t-12})\right) - \left( \text{ln}(X_{t-1}) - \text{ln}(X_{t-1-12})\right)$;</li>
+<li>the other simply in growth rates: $\text{ln}(X_t) - \text{ln}(X_{t-1})$. </li>
+</ul>
+
+<p>Here is the data: </p>
+
+<pre><code>House Prices = [1]  0.009189829  0.022612618  0.003952796 -0.015179184  0.001903336 -0.028779902  0.025668239 -0.011237850
+  [9]  0.014782630 -0.018844480 -0.023547458  0.020613233  0.029281069 -0.010539781  0.006707366  0.023693144
+ [17] -0.002632498  0.148738752 -0.154539337  0.013908319 -0.002294980  0.013274177  0.010043605 -0.007862785
+ [25] -0.018297295 -0.003167249  0.022984841  0.001666694 -0.001310199 -0.131548705  0.114723242 -0.003431495
+ [33]  0.000953231 -0.010096108 -0.009434595 -0.037774255  0.030877947 -0.011245971 -0.018800312 -0.012805013
+ [41]  0.001326392 -0.012034079 -0.045279346 -0.017308170  0.002490863 -0.007340975  0.005052948 -0.024053201
+ [49] -0.004190424 -0.028607790  0.004678486  0.026626293 -0.015166864  0.006988983  0.038257855  0.020798177
+ [57]  0.008175391  0.021294030 -0.013331432  0.030969145  0.017065249 -0.002672683  0.019435476 -0.037047871
+ [65]  0.001844432  0.007663458  0.034406137 -0.049379845 -0.012527106 -0.012859680  0.012954488 -0.015463951
+ [73] -0.025509006  0.006318645  0.012977464  0.019940525 -0.025592828  0.020774198 -0.033613414  0.018338077
+ [81]  0.001765807  0.009236604 -0.041413104  0.030227358  0.017180849  0.012593360 -0.039001526 -0.004994992
+ [89]  0.037766071 -0.043167230 -0.016613786  0.023199890 -0.016214873 -0.012282560  0.065978520 -0.031465767
+ [97]  0.006355108 -0.000449523 -0.005810647  0.016823517 -0.021988463  0.026178014  0.007654339 -0.008356379
+[105]  0.013273736  0.031645473 -0.046408064  0.022334664  0.008517194 -0.014892335  0.019147342  0.007955040
+[113]  0.014122506 -0.035722162  0.018174284  0.021410306 -0.038943797 -0.014517888  0.032750195  0.022506553
+[121] -0.003870785  0.130924075 -0.057934974 -0.174228244  0.016937619  0.010647759  0.015691962 -0.033174094
+[129]  0.038263205  0.003456250 -0.013422897
+
+B = [1] -0.0223848461  0.0102749646  0.0913403867 -0.0758207770 -0.0053898407 -0.0204047336  0.0050358986
+  [8]  0.0195335195 -0.0200303353 -0.0045390828  0.0056380761 -0.0004492945  0.0040043649  0.0012918928
+ [15] -0.0104850394  0.0047110190  0.0049805985 -0.0046957178  0.0095002549  0.0202597343 -0.0183526932
+ [22]  0.0237185217 -0.0137022065  0.0133787918 -0.0212629487  0.0070512978  0.0959447868 -0.0801519036
+ [29] -0.0362526334 -0.0000278572  0.0269014993  0.0009862920 -0.0329868357  0.0283667004 -0.0135186142
+ [36] -0.0004975495  0.0053822189  0.0108219907 -0.0078419784  0.0418340658 -0.0316367599 -0.0092324801
+ [43] -0.0192830637  0.0336003682  0.0021479539 -0.0146426306  0.0003717930  0.0216259502 -0.0323127786
+ [50]  0.0033077606 -0.0123735085 -0.0014757035  0.0266339779 -0.0228959378  0.0002848944  0.0133572802
+ [57] -0.0093035312 -0.0034350607  0.0052349772  0.0115210916 -0.0122443122  0.0435497970 -0.0100099291
+ [64]  0.0267252321 -0.0654005679  0.0088385287 -0.0089122237  0.0155299273 -0.0027394997 -0.0126183268
+ [71]  0.0090999709  0.0017039487 -0.0144843611  0.0269128625  0.0042663583  0.0220574344 -0.0523831016
+ [78] -0.0059331639  0.0171559908  0.0125030653  0.0151902738  0.0471484001 -0.0477394702  0.0888317354
+ [85] -0.1044700154  0.0234134906 -0.0215966718  0.0157974035  0.0970094980 -0.1049559862 -0.0290578406
+ [92]  0.0617653831 -0.0132202439  0.0022117274  0.0091225692  0.0424813190 -0.0614889434  0.0163745828
+ [99] -0.0112793057  0.0666179349 -0.0352838073 -0.0259179501  0.0269557599  0.0127882202 -0.0430512536
+[106]  0.0862308560 -0.0633012329  0.0596481270  0.0900367605 -0.0303162498 -0.0153738373 -0.0442218848
+[113] -0.0116158350 -0.0531058308  0.2036373944  0.1598602057 -0.3837940703 -0.0069112146 -0.0192015196
+[120]  0.0110269191 -0.0351135484  0.0439917033  0.0522746614  0.0036354828 -0.0414276671 -0.0361649669
+[127]  0.0080753079  0.0352684982 -0.0282391428 -0.0141622744  0.0045799464
+</code></pre>
+
+<p>I am studying if <code>B</code> has an effect on <code>House prices</code>. For this reason first a take a simple liner regression between the two and I get a negative and significant estimate at the 95% confidence interval: (-0.0004189 *). </p>
+
+<p>Wanting to reach a step forward I undertake a Granger causality test as following:</p>
+
+<p>I) Determine the optimal number of lags using the AIC/BIC test using:</p>
+
+<pre><code>select.lags&lt;-function(x,y,max.lag=20) {
+  y&lt;-as.numeric(y)
+  y.lag&lt;-embed(y,max.lag+1)[,-1,drop=FALSE]
+  x.lag&lt;-embed(x,max.lag+1)[,-1,drop=FALSE]
+
+  t&lt;-tail(seq_along(y),nrow(y.lag))
+
+  ms=lapply(1:max.lag,function(i) lm(y[t]~y.lag[,1:i]+x.lag[,1:i]))
+
+  pvals&lt;-mapply(function(i) anova(ms[[i]],ms[[i-1]])[2,""Pr(&gt;F)""],max.lag:2)
+  ind&lt;-which(pvals&lt;0.05)[1]
+  ftest&lt;-ifelse(is.na(ind),1,max.lag-ind+1)
+
+  aic&lt;-as.numeric(lapply(ms,AIC))
+  bic&lt;-as.numeric(lapply(ms,BIC))
+  structure(list(ic=cbind(aic=aic,bic=bic),pvals=pvals,
+                 selection=list(aic=which.min(aic),bic=which.min(bic),ftest=ftest)))
+}
+
+s&lt;-select.lags(Topic.15,House.Prices,20)
+t(s$selection)
+plot.ts(s$ic)
+</code></pre>
+
+<p>As a result I get:     </p>
+
+<pre><code>aic bic ftest
+14  12  13   
+</code></pre>
+
+<p>Here is when it comes the first doubt: why are they giving me different results? Nevertheless, when I do the Granger causality test for both directions using these numbers as possible lags I get in all high significant results (***) only in the direction that <code>B</code> is causing <code>House prices</code> movements:</p>
+
+<pre><code>lmtest::grangertest(Topic.15,House.Prices,12)
+lmtest::grangertest(House.Prices,Topic.15,12)
+</code></pre>
+
+<p>I do not seem to see the direction of the cause, is it possitive or negative (an increase in <code>B</code> produces an increase or a drop in <code>House prices</code> at time $t+1$?).<br>
+Another question, is the conclusion valid that changes in <code>B</code> produce changes in <code>House prices</code>? What are the weakness in this line of argument?</p>
+"
+"0.343761936385579","0.349481622664415","221880","<p>To explore how the <code>LASSO</code> regression works, I wrote a small piece of code that should optimize <code>LASSO</code> regression by picking the best alpha parameter.</p>
+
+<p>I cannot figure out why the <code>LASSO</code> regression is giving me such unstable results for the alpha parameter after cross validation.</p>
+
+<p>Here is my Python code:</p>
+
+<pre><code>from sklearn.linear_model import Lasso
+from sklearn.cross_validation import KFold
+from matplotlib import pyplot as plt
+
+# generate some sparse data to play with
+import numpy as np
+import pandas as pd 
+from scipy.stats import norm
+from scipy.stats import uniform
+
+### generate your own data here
+
+n = 1000
+
+x1x2corr = 1.1
+x1x3corr = 1.0
+x1 = range(n) + norm.rvs(0, 1, n) + 50
+x2 =  map(lambda aval: aval*x1x2corr, x1) + norm.rvs(0, 2, n) + 500
+y = x1 + x2 #+ norm.rvs(0,10, n)
+
+Xdf = pd.DataFrame()
+Xdf['x1'] = x1
+Xdf['x2'] = x2
+
+X = Xdf.as_matrix()
+
+# Split data in train set and test set
+n_samples = X.shape[0]
+X_train, y_train = X[:n_samples / 2], y[:n_samples / 2]
+X_test, y_test = X[n_samples / 2:], y[n_samples / 2:]
+
+kf = KFold(X_train.shape[0], n_folds = 10, )
+alphas = np.logspace(-16, 8, num = 1000, base = 2)
+
+e_alphas = list()
+e_alphas_r = list()  # holds average r2 error
+for alpha in alphas:
+    lasso = Lasso(alpha=alpha, tol=0.004)
+    err = list()
+    err_2 = list()
+    for tr_idx, tt_idx in kf:
+        X_tr, X_tt = X_train[tr_idx], X_test[tt_idx]
+        y_tr, y_tt = y_train[tr_idx], y_test[tt_idx]
+        lasso.fit(X_tr, y_tr)
+        y_hat = lasso.predict(X_tt)
+
+        # returns the coefficient of determination (R^2 value)
+        err_2.append(lasso.score(X_tt, y_tt))
+
+        # returns MSE
+        err.append(np.average((y_hat - y_tt)**2))
+    e_alphas.append(np.average(err))
+    e_alphas_r.append(np.average(err_2))
+
+## print out the alpha that gives the minimum error
+print 'the minimum value of error is ', e_alphas[e_alphas.index(min(e_alphas))]
+print ' the minimizer is ',  alphas[e_alphas.index(min(e_alphas))]
+
+##  &lt;&lt;&lt; plotting alphas against error &gt;&gt;&gt;
+
+plt.figsize = (15, 15)
+fig = plt.figure()
+ax = fig.add_subplot(111)
+ax.plot(alphas, e_alphas, 'b-')
+ax.plot(alphas, e_alphas_r, 'g--')
+ax.set_ylim(min(e_alphas),max(e_alphas))
+ax.set_xlim(min(alphas),max(alphas))
+ax.set_xlabel(""alpha"")
+plt.show()
+</code></pre>
+
+<p>If you run this code repeatedly, it gives wildly different results for alpha:</p>
+
+<pre><code>&gt;&gt;&gt; 
+the minimum value of error is  3.99254192539
+ the minimizer is  1.52587890625e-05
+&gt;&gt;&gt; ================================ RESTART ================================
+&gt;&gt;&gt; 
+the minimum value of error is  4.07412455842
+ the minimizer is  6.45622425334
+&gt;&gt;&gt; ================================ RESTART ================================
+&gt;&gt;&gt; 
+the minimum value of error is  4.25898253597
+ the minimizer is  1.52587890625e-05
+&gt;&gt;&gt; ================================ RESTART ================================
+&gt;&gt;&gt; 
+the minimum value of error is  3.79392968781
+ the minimizer is  28.8971008254
+&gt;&gt;&gt; 
+</code></pre>
+
+<p>Why is the alpha value not converging properly?  I know that my data is synthetic, but the distribution is the same.  Also, the variation is very small in <code>x1</code> and <code>x2</code>.</p>
+
+<p>what could be causing this to be so unstable?  </p>
+
+<h2>The same thing written in R gives different results - it always returns the highest possible value for alpha as the ""optimal_alpha"".</h2>
+
+<p>I also wrote this in R, which gives me a slightly different answer, which I don't know why?</p>
+
+<pre><code>library(glmnet)
+library(lars)
+library(pracma)
+
+set.seed(1)
+k = 2 # number of features selected 
+
+n = 1000
+
+x1x2corr = 1.1
+x1 = seq(n) + rnorm(n, 0, 1) + 50
+x2 =  x1*x1x2corr + rnorm(n, 0, 2) + 500
+y = x1 + x2 
+
+filter_out_label &lt;- function(col) {col!=""y""}
+
+alphas = logspace(-5, 6, 100)
+
+for (alpha in alphas){
+  k = 10
+  optimal_alpha = NULL
+  folds &lt;- cut(seq(1, nrow(df)), breaks=k, labels=FALSE)
+  total_mse = 0
+  min_mse = 10000000
+  for(i in 1:k){
+    # Segement your data by fold using the which() function
+    testIndexes &lt;- which(folds==i, arr.ind=TRUE)
+    testData &lt;- df[testIndexes, ]
+    trainData &lt;- df[-testIndexes, ]
+
+    fit &lt;- lars(as.matrix(trainData[Filter(filter_out_label, names(df))]),
+                trainData$y,
+                type=""lasso"")
+    # predict
+    y_preds &lt;- predict(fit, as.matrix(testData[Filter(filter_out_label, names(df))]),
+                       s=alpha, type=""fit"", mode=""lambda"")$fit # default mode=""step""
+
+    y_true = testData$y
+    residuals = (y_true - y_preds)
+    mse=sum(residuals^2)
+    total_mse = total_mse + mse
+  }
+  if (total_mse &lt; min_mse){
+    min_mse = total_mse
+    optimal_alpha = alpha
+  }
+}
+
+print(paste(""the optimal alpha is "", optimal_alpha))
+</code></pre>
+
+<p>The output from the R code above is: </p>
+
+<pre><code>&gt; source('~.....')
+[1] ""the optimal alpha is  1e+06""
+</code></pre>
+
+<p>In fact, no matter what I set for the line ""<code>alphas = logspace(-5, 6, 100)</code>"", I always get back the highest value for alpha.</p>
+
+<p>I guess there are actually 2 different questions here :</p>
+
+<ol>
+<li><p>Why is the alpha value so unstable for the version written in Python? </p></li>
+<li><p>Why does the version written in R give me a different result?  (I realize that the <code>logspace</code> function is different from <code>R</code> to <code>python</code>, but the version written in <code>R</code> always gives me the largest value of <code>alpha</code> for the optimal alpha value, whereas the python version does not).</p></li>
+</ol>
+
+<p>It would be great to know these things...</p>
+"
+"0.158776837207489","0.151329981691595","223447","<p>Let's suppose I have <em>p</em> predictor variables. For those predictors, there exists a weight vector <em>w</em> of length <em>p</em> that, if multiplied by the predictors, will minimize an error function. This is not any different than what linear regression performs when the error metric is RMSE. The problem is that I am not using RMSE to determine performance. Instead, I must multiply my weights by my predictors, then plug them into a complex function that takes .5 seconds to compute, and only then do I know if my error improved or worsened. </p>
+
+<p>Pseudo R Code:</p>
+
+<pre><code>vec=rnorm(150,0,1)
+p=matrix(unlist(split(vec, ceiling(seq_along(vec)/15))),ncol=10)
+response=rnorm(15,0,1)
+w=rnorm(15,0,1)
+
+for(i in 1:500){
+  #multiply predictors by weights to get predictions
+  preds=colSums(t(p)*w)
+
+  #complex error function that takes .5 seconds, e.g.:
+  #this isn't the true error function, just an example:
+  preds=ifelse(preds&gt;1,preds,ifelse(preds&lt;=1&amp;preds&gt;0,0,-1)) 
+  error=mean(abs(response-preds))
+
+  #update weight vector w to move in the most optimal pattern to minimize error
+  w= ???
+}
+</code></pre>
+
+<p>How to update <em>w</em> in the most efficient manner?</p>
+"
+"0.137504774554232","0.131055608499156","228679","<p>I understand that ""glmnet"" package has alpha and lambda regularization parameters which can be optimized by ""caret"" package's train function. Optimal lambda value and lambda values of trained model are in the image. </p>
+
+<p><strong>Can some one please help me understand what these lambda values mean, do they mean while minimizing the criterion function of multinomial regression, the aforementioned lambda values represent values at each iteration?</strong></p>
+
+<pre><code>library(caret)
+library(nnet)
+ctrl &lt;- trainControl(method = ""repeatedcv"", number = 10, savePredictions = TRUE)
+model_train_glmnet &lt;- train(Class2 ~ ZCR + Energy + EntropyE + SpectralC + SpectralS + SpectralE + SpectralF + SpectralR + MFCC1 + MFCC2 + MFCC3 + MFCC4 + MFCC5 + MFCC6 + MFCC7 + MFCC8 + MFCC9 + MFCC10 + MFCC11 + MFCC12 + MFCC13, data = training, method=""glmnet"", trControl = ctrl, tuneLength = 5)
+
+print(model_train_glmnet$finalModel$lambdaOpt)
+[1] 0.007676627
+&gt; 
+&gt; print(model_train_glmnet$finalModel$lambda)
+[1] 3.838314e-01 3.497328e-01 3.186635e-01 2.903543e-01 2.645601e-01
+[6] 2.410573e-01 2.196424e-01 2.001300e-01 1.823510e-01 1.661514e-01
+[11] 1.513910e-01 1.379418e-01 1.256875e-01 1.145217e-01 1.043479e-01
+[16] 9.507796e-02 8.663150e-02 7.893539e-02 7.192299e-02 6.553355e-02
+[21] 5.971173e-02 5.440710e-02 4.957373e-02 4.516973e-02 4.115698e-02
+[26] 3.750071e-02 3.416925e-02 3.113375e-02 2.836791e-02 2.584778e-02
+[31] 2.355154e-02 2.145928e-02 1.955290e-02 1.781587e-02 1.623316e-02
+[36] 1.479105e-02 1.347706e-02 1.227979e-02 1.118889e-02 1.019490e-02
+[41] 9.289211e-03 8.463983e-03 7.712066e-03 7.026948e-03 6.402693e-03
+[46] 5.833895e-03 5.315628e-03 4.843402e-03 4.413128e-03 4.021078e-03
+[51] 3.663856e-03 3.338369e-03 3.041798e-03 2.771573e-03 2.525354e-03
+[56] 2.301009e-03 2.096593e-03 1.910338e-03 1.740629e-03 1.585996e-03
+[61] 1.445100e-03 1.316722e-03 1.199748e-03 1.093165e-03 9.960517e-04
+[66] 9.075652e-04 8.269396e-04 7.534766e-04 6.865398e-04 6.255495e-04
+[71] 5.699774e-04 5.193422e-04 4.732052e-04 4.311670e-04 3.928633e-04
+[76] 3.579624e-04 3.261620e-04 2.971867e-04 2.707854e-04 2.467296e-04
+[81] 2.248108e-04 2.048393e-04 1.866419e-04 1.700611e-04 1.549534e-04
+[86] 1.411878e-04 1.286450e-04 1.172166e-04 1.068034e-04 9.731524e-05
+[91] 8.867002e-05 8.079282e-05 7.361541e-05 6.707562e-05 6.111681e-05
+[96] 5.568736e-05 5.074025e-05 4.623262e-05 4.212544e-05 3.838314e-05
+</code></pre>
+"
+"0.204980015422697","0.195366166291141","233178","<p>I have a database with 1200 observations and 14 variables and I'am trying to do a classification tree for my dependent nominal variable who hase 4 modality</p>
+
+<pre><code>    &gt; table(testarbre2$Q99)
+
+  Autres       Nahdha Ne pas voter Nidaa Tounes 
+     248          351          303          298 
+</code></pre>
+
+<p>at firt i tried to do a multinom logistic regression but i got the mojority of my predictor variables non significant. it seems that Even with 1200 people I was trying to fit a model for which I don't have sufficient data. 
+so i tried to do a classification tree using the package rpart from R 
+but the problem is that the error is so high about 65% and more, and the missclassification is about 70% 
+this is the code R that i used </p>
+
+<pre><code>   #preparation of the data
+   set.seed(26)
+   train=sample(1:nrow(testarbre2),nrow(testarbre2)*7/10)
+   test=-train
+   training_data=testarbre2[train,]
+   testing_data=testarbre2[test,]
+   testing_vote=vote[test]
+
+   #fitting the model
+   library(rpart)
+   library(rpart.plot)
+   Tree &lt;- rpart(Q99~.,data=training_data)
+   rpart.plot(Tree)
+   printcp(Tree)
+   plotcp(Tree)
+
+    #Construction of the complete tree
+  Tree &lt;-rpart(Q99~.,data=training_data,control=rpart.control(minsplit=50,cp=0))
+
+     #Prune the tree
+    treeOptimal &lt;- prune(Tree,cp=Tree$cptable[which.min(Tree$cptable[,4]),1])
+    rpart.plot(treeOptimal)
+
+   #Prediction
+   a=predict(ptitanicOptimal,testing_data2,type = ""class"")
+   mc=table(a,testing_vote2)
+</code></pre>
+
+<p>I don't know if i missed a step or i used a wrong approach in the construction of my classification tree or the database is causing the problem</p>
+
+<p>Please someone help me to understand what's wrong with my model</p>
+"

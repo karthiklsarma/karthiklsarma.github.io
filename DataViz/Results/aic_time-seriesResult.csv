@@ -1,0 +1,1015 @@
+"V1","V2","V3","V4"
+"0.25","0.280975743474508"," 19549","<p>I have univariate time series data (windspeed at a particular place) measured at 1 hour interval for 5 years. </p>
+
+<p>I used <code>auto.arima()</code> to get the following parameters:</p>
+
+<pre><code>              ar1      ar2     ma1     ma2    intercept
+             1.5314  -0.55   -0.1261  0.032    10.1223
+     s.e.    0.0105  0.0103   0.011   0.006     0.1211
+
+     sigma^2 estimated as 0.4865 : log likelihood = -83546.65
+     AIC = 167105.3   AICc = 167105.3    BIC = 167161    
+</code></pre>
+
+<p>I am forecasting using the following equation:</p>
+
+<pre><code>e[t] &lt;- rnorm(1, 0, sqrt(sigma^2))
+x[t] &lt;- ar1*x[t-1] + ar2*x[t-2] + e[t] + ma1*e[t-1] + ma2*e[t-2]
+</code></pre>
+
+<p>When the result is compared with <code>forecast()</code> function, I get completely different answers. The freq spectrum of <code>forecast()</code> function's output resembles original time-series freq spectrum. While the manual forecast signal looks like noise in freq spectrum.</p>
+
+<p>I can't use <code>forecast()</code> function because the application is in C++. Are the equations correct? What's the right way of forecasting from coefficients?    </p>
+"
+"0.381881307912987","0.306569669742483"," 33405","<p>I'm working with a time-series of several years and to analyze it, Iâ€™m using GAM smoothers from the package <code>mgcv</code>. Iâ€™m constructing models where zooplankton biomass (<code>bm</code>) is the dependent variable and the continuous explanatory variables are: </p>
+
+<p>-time in Julian days (<code>t</code>), to creat a long-term linear trend</p>
+
+<p>-Julian days of the year (<code>t_year</code>) to create an annual cycle</p>
+
+<p>-Mean temperature of Winter (<code>temp_W</code>), Temperature of September (<code>temp_sept</code>) or Chla. </p>
+
+<p>Questions: </p>
+
+<p>1) To introduce a tensor product modifying the annual cycle in my model, I tried 2 different approaches: </p>
+
+<p>a) <code>gam( bm ~ t + te (t_year, temp_W, temp_sept, k = c( 5,30 ), d = ( 1,2), bs = c(  â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>b) <code>gam( bm ~ t + te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code></p>
+
+<p>Here is my problem: when Iâ€™m using just 2 variables (e.g., <code>t_year</code> and <code>temp_W</code>) for the tensor product, I can understand pretty well how the interpolation works and visualize it with <code>vis.gam()</code> as a 3d plot or a contour one. But with 3 variables it is difficult for me  to understand how it works. Besides, I donâ€™t know which one is the proper way to construct it, a) or b). Finally, when I plot a) or b) as <code>vis.gam (model_name , view= c(â€œt_yearâ€, â€œtemp_Wâ€))</code>, How should I interpret the plot? The effect of <code>temp_W</code> on the annual cycle after considering already the effect of <code>temp_sept</code> or just the individual effect of <code>temp_W</code> on the annual cycle?</p>
+
+<p>2) Iâ€™m trying to do a model selection using AIC criteria. I have several questions about it: </p>
+
+<p>Should I use always the same type of smoothing basis (<code>bs</code>), the same type of smoother ( e.g <code>te</code>) and the same dimension of the basis (<code>k</code>)? Example: </p>
+
+<p>Option 1: </p>
+
+<p>a) <code>mod1 &lt;- gam(bm ~ t, data = data )</code></p>
+
+<p>b)<code>mod2 &lt;- gam( bm ~ te ( t, k = 5, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ te ( t_year, k = 5, bs = â€œccâ€), data = data )</code></p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te ( t_year, temp_W, k = 5, bs = c( â€œccâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te ( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code>. </p>
+
+<p>Here the limitation for <code>k = 5</code>, is due to <code>mod5</code>, I donâ€™t use <code>s ()</code> because in <code>mod4</code> and <code>mod5</code> <code>te ()</code> is used and finally, I always use â€œ<code>cr</code>â€ and â€œ<code>cc</code>â€. </p>
+
+<p>Option 2: </p>
+
+<p>a) <code>mod1 &lt;- gam( bm ~ t, data = data )</code></p>
+
+<p>b) <code>mod2 &lt;- gam( bm ~ s ( t, k = 13, bs = â€œcrâ€ ), data = data )</code></p>
+
+<p>c) <code>mod3 &lt;- gam( bm ~ s( t_year, k = 13, bs = â€œccâ€ ), data = data )</code> </p>
+
+<p>d) <code>mod4 &lt;- gam( bm ~ te( t_year, temp_W, k = 11, bs = c( â€œccâ€,â€crâ€ ) ), data = data)</code> </p>
+
+<p>e) <code>mod5 &lt;- gam( bm ~ te( t_year, temp_W, temp_sept, k = 5, bs = c( â€œccâ€,â€crâ€,â€crâ€ ) ), data = data )</code> </p>
+
+<p>I can get lower AIC for each of the models with Option 2, but are they comparable when I use AIC criteria? Is it therefore the proper way to do it as in Option 1? </p>
+
+<p><code>AIC (mod1, mod2, mod3, mod4, mod5)</code>. </p>
+
+<p>As an example of how the data frame looks like:</p>
+
+<pre><code>&gt; time_series_data
+
+          bm      Chla year month       t t_year temp_W temp_sept
+1  2.1680335 54.718891 1993     1 2449009     20   12.1      19.3
+2  4.6180770 29.372938 1993     2 2449043     54   12.1      19.3
+3  4.6871990 99.198623 1993     3 2449064     75   12.1      19.3
+4  4.9862020 59.835987 1993     4 2449094    105   12.1      19.3
+5  3.4977156 79.990143 1993     5 2449120    131   12.1      19.3
+6  3.1030763 68.018739 1993     6 2449148    159   12.1      19.3
+7  2.0312841 70.850406 1993     7 2449181    192   12.1      19.3
+8  1.2477797 62.381780 1993     8 2449211    222   12.1      19.3
+9  2.1445538 99.094776 1993     9 2449254    265   12.1      19.3
+10 6.7026438 82.397907 1993    10 2449282    293   12.1      19.3
+11 1.6524655 44.977256 1993    11 2449303    314   12.1      19.3
+12 2.1627389 52.624779 1993    12 2449342    353   12.1      19.3
+13 3.0981200 58.274128 1994     1 2449374     20   11.3      18.6
+14 2.4342291 14.733698 1994     2 2449402     48   11.3      18.6
+15 4.8691345 51.508774 1994     3 2449431     77   11.3      18.6
+16 3.7366294 38.206928 1994     4 2449458    104   11.3      18.6
+17 3.3565706 72.763028 1994     5 2449500    146   11.3      18.6
+18 2.7869220 81.265662 1994     6 2449520    166   11.3      18.6
+19 2.6971469 50.692921 1994     7 2449540    186   11.3      18.6
+20 1.3758862 94.396013 1994     8 2449569    215   11.3      18.6
+21 5.7578197 59.357898 1994     9 2449620    266   11.3      18.6
+22 2.8941763 21.974925 1994    10 2449645    291   11.3      18.6
+23 0.9530070  7.781981 1994    11 2449673    319   11.3      18.6
+24 0.3713342 84.950835 1994    12 2449697    343   11.3      18.6  
+</code></pre>
+"
+"0.408248290463863","0.401477534273483"," 77285","<p>I have two groups of time-series, each group represents one type of data. However within each group, each time series may be fitted with a different ARIMA(p,d,q) from the other time series in the same group. </p>
+
+<p>I need to create a single model for each group (<code>Model_group1</code>, <code>Model_group2</code>). I tried the approach mentioned by Rob Hyndman in: 
+<a href=""http://stats.stackexchange.com/questions/23036/estimating-same-model-over-multiple-time-series"">Estimating same model over multiple time series</a>.</p>
+
+<p>I need to use these two models to classify any time series to one of these two groups. For each time series, I calculated the AIC of <code>Model_group1</code> and <code>Model_group2</code>, and the model with smaller AIC will mean that the time series belongs to its corresponding group. </p>
+
+<p>I have three problems: </p>
+
+<ol>
+<li><p>I received a warning message </p>
+
+<pre><code>Series: ts 
+ARIMA(3,0,2) with non-zero mean 
+
+Coefficients:
+         ar1     ar2     ar3     ma1      ma2  intercept
+      0.0714  0.1417  0.0000  0.0893  -0.0871     0.1169
+s.e.     NaN  0.1381  0.0127     NaN   0.1436     0.0026
+
+sigma^2 estimated as 0.2202:  log likelihood=-33822.63
+AIC=67659.26   AICc=67659.26   BIC=67725.99
+Warning message:
+In sqrt(diag(x$var.coef)) : NaNs produced
+</code></pre>
+
+<p>This message was returned by only one of the group models. Does that mean that the fitted model is not correct? </p></li>
+<li><p>I got two different results using </p>
+
+<pre><code>auto.arima(ts, allowdrift=FALSE, stepwise=FALSE)
+auto.arima(ts, allowdrift=FALSE, stepwise=TRUE)
+</code></pre></li>
+<li><p>When I tested the resulting models, the majority of the time-series were classified as <code>group_1</code>, even when I test one of the time series used to build the long time series of <code>group_2</code>. I need to mention here that the composed time series of <code>group_1</code> is quite shorter than the time series of <code>group_2</code>. Are there any expected reasons for that? </p></li>
+</ol>
+"
+"0.456435464587638","0.461690258438319"," 83868","<p>There are two simple questions at the end, but I think it is also useful to share the background that motivated them. It comes from <a href=""http://stats.stackexchange.com/questions/31073/flat-ets-forecast-of-clearly-increasing-time-series"">this question</a> on an unexpected forecast from the fully automatic methodology behind the forecast::ets function in R. The code, plot and forecast are given below for convenience:</p>
+
+<pre><code>library(forecast);options(scipen=999)
+usage &lt;- ts(scan('http://cl.ly/102L0j3o1p2m0m3p0t2o/usage'), frequency = 24)
+
+plot(f1&lt;-forecast(m1&lt;-HoltWinters(usage), h = 168))
+plot(f2&lt;-forecast(m2&lt;-ets(usage), h = 168));AIC(m2) #replication OK
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/CJ4N3.png"" alt=""enter image description here""></p>
+
+<pre><code>plot(f3&lt;-forecast(m3&lt;-ets(usage,additive.only=TRUE), h = 168))
+plot(f4&lt;-forecast(m4&lt;-ets(usage,additive.only=TRUE,damped=FALSE), h = 168))
+</code></pre>
+
+<p>Just by looking at the plot of the data it appears to me immediately that ARIMA(0,2,2) or 
+ETS(AAN) will be among the best non-seasonal models (and their point forecasts will not differ much). Following the usual advice that the AIC of only a small set of potentially useful models should be compared, I can see no reason to consider multiplicative models here, nor can I see how a damped forecast will be useful for me. With this information in, the ""best"" ets model m4 and its associated forecast f4 is what was expected, but the 
+process is not a fully automatic one.</p>
+
+<p>With many time series, which I would not have time or desire to look at, I would hardly have a better option than to blindly use ets(data). The ets documentation page assures me that <em>""The methodology is fully automatic. The only required argument for ets is the time series. The model is chosen automatically if not specified""</em>. The above example is not the first one to show that the methodology that works is at best semi-automatic and the fully automatic one may fail to work as expected even in simpler cases. </p>
+
+<p>One way to rectify the problem is to consider n $\ge$ 1 models with suitably low values of AIC as equally supported by the data. I agree with <a href=""http://stats.stackexchange.com/questions/31073/flat-ets-forecast-of-clearly-increasing-time-series"">RJH</a> (<em>""Although the model may not give the best AIC, it may give forecasts that are more useful to you.""</em>) that the most useful forecasts need not be those from the model with the smallest value of the AIC. But then we have the question of when the AIC is useful for selecting a model that forecasts best. It can be deduced from, for example, <a href=""http://stats.stackexchange.com/questions/78949/when-is-it-appropriate-to-select-models-by-minimising-the-aic"">quotes in this question</a> that if the AICs of all models considered differ by no more than some small number c, then the AIC loses its power to distinguish between these models and <a href=""http://stats.stackexchange.com/questions/81552/what-do-i-do-when-values-of-aic-are-low-but-approximately-equal"">other factors/ideas</a> must be considered.  But how small is c?</p>
+
+<p>Those working with Akaike (Y Sakamoto and M Ishiguro and G. Kitagawa) in the book entitled ""Akaike Information Criterion statistics"" (in the section entitled ""Some remarks on the use of the AIC"") mentioned c=1. The number c=2 is often mentioned (e.g. a quote from Brian Ripley can be added to those two linked to above). The number c=4 was mentioned by Chris Chatfield in one of his books. I have not seen anything explicit on the values of c greater than four, but this probably depends on the variability of data, sampling error of the deviance and related factors. </p>
+
+<p>In the above example, AIC(m3,m4) suggests that the AIC of the model with a more useful forecast is greater than the AIC of the other model by ""only"" 78348.75-78337.22=11.52. Are there any formulae, guidelines or rules of thumb for useful values of c given data? Have values of c greater than four been mentioned in the literature? </p>
+"
+"0.433012701892219","0.378516649305113"," 89851","<p>I've heard a bit about using neural networks to forecast time series. </p>
+
+<p>How can I compare, which method for forecasting my time-series (daily retail data) is better: auto.arima(x), ets(x) or nnetar(x).</p>
+
+<p>I can compare auto.arima with ets by AIC or BIC. But how I can compare them with neural networks?</p>
+
+<p>For example:</p>
+
+<pre><code>   &gt; dput(x)
+ c(1774, 1706, 1288, 1276, 2350, 1821, 1712, 1654, 1680, 1451, 
+ 1275, 2140, 1747, 1749, 1770, 1797, 1485, 1299, 2330, 1822, 1627, 
+ 1847, 1797, 1452, 1328, 2363, 1998, 1864, 2088, 2084, 594, 884, 
+ 1968, 1858, 1640, 1823, 1938, 1490, 1312, 2312, 1937, 1617, 1643, 
+ 1468, 1381, 1276, 2228, 1756, 1465, 1716, 1601, 1340, 1192, 2231, 
+ 1768, 1623, 1444, 1575, 1375, 1267, 2475, 1630, 1505, 1810, 1601, 
+ 1123, 1324, 2245, 1844, 1613, 1710, 1546, 1290, 1366, 2427, 1783, 
+ 1588, 1505, 1398, 1226, 1321, 2299, 1047, 1735, 1633, 1508, 1323, 
+ 1317, 2323, 1826, 1615, 1750, 1572, 1273, 1365, 2373, 2074, 1809, 
+ 1889, 1521, 1314, 1512, 2462, 1836, 1750, 1808, 1585, 1387, 1428, 
+ 2176, 1732, 1752, 1665, 1425, 1028, 1194, 2159, 1840, 1684, 1711, 
+ 1653, 1360, 1422, 2328, 1798, 1723, 1827, 1499, 1289, 1476, 2219, 
+ 1824, 1606, 1627, 1459, 1324, 1354, 2150, 1728, 1743, 1697, 1511, 
+ 1285, 1426, 2076, 1792, 1519, 1478, 1191, 1122, 1241, 2105, 1818, 
+ 1599, 1663, 1319, 1219, 1452, 2091, 1771, 1710, 2000, 1518, 1479, 
+ 1586, 1848, 2113, 1648, 1542, 1220, 1299, 1452, 2290, 1944, 1701, 
+ 1709, 1462, 1312, 1365, 2326, 1971, 1709, 1700, 1687, 1493, 1523, 
+ 2382, 1938, 1658, 1713, 1525, 1413, 1363, 2349, 1923, 1726, 1862, 
+ 1686, 1534, 1280, 2233, 1733, 1520, 1537, 1569, 1367, 1129, 2024, 
+ 1645, 1510, 1469, 1533, 1281, 1212, 2099, 1769, 1684, 1842, 1654, 
+ 1369, 1353, 2415, 1948, 1841, 1928, 1790, 1547, 1465, 2260, 1895, 
+ 1700, 1838, 1614, 1528, 1268, 2192, 1705, 1494, 1697, 1588, 1324, 
+ 1193, 2049, 1672, 1801, 1487, 1319, 1289, 1302, 2316, 1945, 1771, 
+ 2027, 2053, 1639, 1372, 2198, 1692, 1546, 1809, 1787, 1360, 1182, 
+ 2157, 1690, 1494, 1731, 1633, 1299, 1291, 2164, 1667, 1535, 1822, 
+ 1813, 1510, 1396, 2308, 2110, 2128, 2316, 2249, 1789, 1886, 2463, 
+ 2257, 2212, 2608, 2284, 2034, 1996, 2686, 2459, 2340, 2383, 2507, 
+ 2304, 2740, 1869, 654, 1068, 1720, 1904, 1666, 1877, 2100, 504, 
+ 1482, 1686, 1707, 1306, 1417, 2135, 1787, 1675, 1934, 1931, 1456)
+</code></pre>
+
+<p>Using auto.arima:</p>
+
+<pre><code>y=auto.arima(x)
+plot(forecast(y,h=30))
+points(1:length(x),fitted(y),type=""l"",col=""green"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/uwSqY.png"" alt=""enter image description here""></p>
+
+<pre><code>&gt; summary(y)
+Series: x 
+ARIMA(5,1,5)                    
+
+Coefficients:
+         ar1      ar2     ar3      ar4      ar5      ma1     ma2      ma3     ma4      ma5
+      0.2560  -1.0056  0.0716  -0.5516  -0.4822  -0.9584  1.2627  -1.0745  0.8545  -0.2819
+s.e.  0.1014   0.0778  0.1296   0.0859   0.0844   0.1184  0.1322   0.1289  0.1388   0.0903
+
+sigma^2 estimated as 58026:  log likelihood=-2191.97
+AIC=4405.95   AICc=4406.81   BIC=4447.3
+
+Training set error measures:
+                   ME     RMSE      MAE       MPE     MAPE      MASE
+Training set 1.457729 240.5059 173.9242 -2.312207 11.62531 0.6157512
+</code></pre>
+
+<p>Using ets:</p>
+
+<pre><code>fit &lt;- ets(x)
+plot(forecast(fit,h=30))
+points(1:length(x),fitted(fit),type=""l"",col=""red"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/9UngX.png"" alt=""enter image description here""></p>
+
+<pre><code> &gt; summary(fit)
+ ETS(M,N,N) 
+
+ Call:
+  ets(y = x) 
+
+   Smoothing parameters:
+     alpha = 0.0449 
+
+   Initial states:
+     l = 1689.128 
+
+   sigma:  0.2094
+
+      AIC     AICc      BIC 
+ 5570.373 5570.411 5577.897 
+
+ Training set error measures:
+                    ME     RMSE      MAE      MPE     MAPE      MASE
+ Training set 7.842061 359.3611 276.4327 -4.81967 17.98136 0.9786665
+</code></pre>
+
+<p>In this case auto.arima fits better then ets.</p>
+
+<p>Let's try sing neural network:</p>
+
+<pre><code> library(caret)
+ fit &lt;- nnetar(x)
+ plot(forecast(fit,h=60))
+ points(1:length(x),fitted(fit),type=""l"",col=""green"")
+</code></pre>
+
+<p><img src=""http://i.stack.imgur.com/M8HIT.png"" alt=""enter image description here""></p>
+
+<p>From the graph, I can see, that neural network model fits quite well, but how can I compare it with auto.arima/ets? How can I compute AIC?</p>
+
+<p>Another question is, how to add confidence interval for neural network,if it is possible, like it is added automatically for auto.arima/ets.?</p>
+
+<p>Any help and advises would be really appreciated.</p>
+"
+"0.381881307912987","0.367883603690979","144158","<p>I am trying to do time series analysis and am new to this field. I have daily count of an event from 2006-2009 and I want to fit a time series model to it. Here is the progress that I have made:</p>
+
+<pre><code>timeSeriesObj = ts(x,start=c(2006,1,1),frequency=365.25)
+plot.ts(timeSeriesObj)
+</code></pre>
+
+<p>The resulting plot I get is:</p>
+
+<p><img src=""http://i.stack.imgur.com/q2Gf5.jpg"" alt=""Time Series Plot""></p>
+
+<p>In order to verify whether there is seasonality and trend in the data or not, I follow the steps mentioned in this <a href=""http://stats.stackexchange.com/questions/57705/identify-seasonality-in-time-series-data"">post</a> :</p>
+
+<pre><code>ets(x)
+fit &lt;- tbats(x)
+seasonal &lt;- !is.null(fit$seasonal)
+seasonal
+</code></pre>
+
+<p>and in Rob J Hyndman's <a href=""http://robjhyndman.com/hyndsight/detecting-seasonality/"" rel=""nofollow"">blog</a>:</p>
+
+<pre><code>library(fma)
+fit1 &lt;- ets(x)
+fit2 &lt;- ets(x,model=""ANN"")
+
+deviance &lt;- 2*c(logLik(fit1) - logLik(fit2))
+df &lt;- attributes(logLik(fit1))$df - attributes(logLik(fit2))$df 
+#P value
+1-pchisq(deviance,df)
+</code></pre>
+
+<p>Both cases indicate that there is no seasonality.</p>
+
+<p>When I plot the ACF &amp; PACF of the series, here is what I get:</p>
+
+<p><img src=""http://i.stack.imgur.com/mgBav.jpg"" alt=""ACF"">
+<img src=""http://i.stack.imgur.com/p4DYo.jpg"" alt=""PACF""></p>
+
+<p>My questions are:</p>
+
+<ol>
+<li><p>Is this the way to handle daily time series data? This <a href=""http://www.r-bloggers.com/forecasting-with-daily-data/"" rel=""nofollow"">page</a> suggests that I should be looking at both weekly and annual patterns but the approach is not clear to me.</p></li>
+<li><p>I do not know how to proceed once I have the ACF and PACF plots.</p></li>
+<li><p>Can I simply use the auto.arima function?</p>
+
+<p>fit &lt;- arima(myts, order=c(p, d, q)</p></li>
+</ol>
+
+<p>*****Updated Auto.Arima results******</p>
+
+<p>When i change the frequency of the data to 7 according to Rob Hyndman's comments <a href=""http://stats.stackexchange.com/questions/14742/auto-arima-with-daily-data-how-to-capture-seasonality-periodicity"">here</a>, auto.arima selects a seasonal ARIMA model and outputs:</p>
+
+<pre><code>Series: timeSeriesObj 
+ARIMA(1,1,2)(1,0,1)[7]                    
+
+Coefficients:
+       ar1      ma1     ma2    sar1     sma1
+      0.89  -1.7877  0.7892  0.9870  -0.9278
+s.e.   NaN      NaN     NaN  0.0061   0.0162
+
+sigma^2 estimated as 21.72:  log likelihood=-4319.23
+AIC=8650.46   AICc=8650.52   BIC=8682.18 
+</code></pre>
+
+<p>******Updated Seasonality Check******</p>
+
+<p>When I test seasonality with frequency 7, it outputs True but with seasonality 365.25, it outputs false. <strong>Is this enough to conclude a lack of yearly seasonality?</strong></p>
+
+<pre><code>timeSeriesObj = ts(x,start=c(2006,1,1),frequency=7)
+fit &lt;- tbats(timeSeriesObj)
+seasonal &lt;- !is.null(fit$seasonal)
+seasonal
+</code></pre>
+
+<p>returns:</p>
+
+<pre><code>True
+</code></pre>
+
+<p>while </p>
+
+<pre><code>timeSeriesObj = ts(x,start=c(2006,1,1),frequency=365.25)
+fit &lt;- tbats(timeSeriesObj)
+seasonal &lt;- !is.null(fit$seasonal)
+seasonal
+</code></pre>
+
+<p>returns:</p>
+
+<pre><code>False
+</code></pre>
+"
+"0.5","0.468292905790847","154641","<p>This question is similar to the following <a href=""http://stats.stackexchange.com/questions/32634/difference-time-series-before-arima-or-within-arima"">question</a> in the sense I am currently doing the differencing and mean removal of the time series outside the <code>Arima</code> function in R. And I do not know how to do these steps within <code>Arima</code> function in R. The reason is that I am trying to perform the following procedure (data <code>dowj_ts</code> can be found at the bottom): </p>
+
+<pre><code>dowj_ts_d1 &lt;- diff(dowj_ts) # differencing at lag 1 (1-B)
+drift &lt;- mean(diff(dowj_ts))
+dowj_ts_d1_demeaned &lt;- dowj_ts_d1 - mean(dowj_ts_d1) # mean removal
+# Maximum Likelihood AR(1) for the mean-corrected differences X_t
+fit &lt;- Arima(dowj_ts_d1_demeaned, order=c(1,0,0),include.mean=F, transform.pars = T)
+</code></pre>
+
+<p>Note that the <code>drift</code> is actually <code>0.1336364</code>. And <code>summary(fit)</code> gives the table below:</p>
+
+<pre><code>Series: dowj_ts_d1_demeaned 
+ARIMA(1,0,0) with zero mean     
+
+Coefficients:
+         ar1
+      0.4471
+s.e.  0.1051
+
+sigma^2 estimated as 0.1455:  log likelihood=-35.16
+AIC=74.32   AICc=74.48   BIC=79.01
+
+Training set error measures:
+                       ME     RMSE       MAE       MPE     MAPE      MASE
+Training set -0.004721362 0.381457 0.2982851 -9.337089 209.6878 0.8477813
+                    ACF1
+Training set -0.04852626
+</code></pre>
+
+<p>Ultimately, I want to predict 2-step ahead forecast of <strong>the original series</strong>, and this starts to become ugly: </p>
+
+<pre><code> tail(c(dowj_ts[1], dowj_ts[1] + cumsum(c(dowj_ts_d1_demeaned,forecast.Arima(fit,h=2)$mean) + drift)),2)
+</code></pre>
+
+<p>And currently these are all done outside the <code>Arima</code> function from the <code>forecast</code> package. I know I can do differencing within Arima like this: </p>
+
+<pre><code> Arima(dowj_ts, order=c(1,1,0),include.drift=T,transform.pars = F)
+</code></pre>
+
+<p>This gives:</p>
+
+<pre><code>Series: dowj_ts 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+         ar1   drift
+      0.4478  0.1204
+s.e.  0.1059  0.0786
+
+sigma^2 estimated as 0.1474:  log likelihood=-34.69
+AIC=75.38   AICc=75.71   BIC=82.41
+</code></pre>
+
+<p>But the drift term computed by R is different from the <code>drift = 0.1336364</code> that I computed manually.</p>
+
+<p>So <strong>my question is: how can I differenced the series and then remove the mean of the differenced series within the Arima function ?</strong></p>
+
+<p><strong>Second question:</strong> Why is the drift term estimated by <code>Arima</code> different from the drift term I computed ? In fact, what does the <strong>mathematical model</strong> look like when <code>include.drift = T</code> ? This really confuses me. </p>
+
+<p>Data can be found below: </p>
+
+<pre><code>structure(c(110.94, 110.69, 110.43, 110.56, 110.75, 110.84, 110.46, 
+110.56, 110.46, 110.05, 109.6, 109.31, 109.31, 109.25, 109.02, 
+108.54, 108.77, 109.02, 109.44, 109.38, 109.53, 109.89, 110.56, 
+110.56, 110.72, 111.23, 111.48, 111.58, 111.9, 112.19, 112.06, 
+111.96, 111.68, 111.36, 111.42, 112, 112.22, 112.7, 113.15, 114.36, 
+114.65, 115.06, 115.86, 116.4, 116.44, 116.88, 118.07, 118.51, 
+119.28, 119.79, 119.7, 119.28, 119.66, 120.14, 120.97, 121.13, 
+121.55, 121.96, 122.26, 123.79, 124.11, 124.14, 123.37, 123.02, 
+122.86, 123.02, 123.11, 123.05, 123.05, 122.83, 123.18, 122.67, 
+122.73, 122.86, 122.67, 122.09, 122, 121.23), .Tsp = c(1, 78, 
+1), class = ""ts"")
+</code></pre>
+"
+"0.458333333333333","0.421463615211762","160675","<p>I'm interested in determining both the slope regression coefficient and plotting regression lines for autocorrelated time-series datasets of rainfall.  Specifically, I'd like to identify the best approach in R that would allow me to visualize the regression line on the original (undifferenced) time-series plot when I need to difference the data to remove stationarity (i.e, when d>0 in an arima model).</p>
+
+<p>As a start, I'm exploring the use of auto.arima (from the forecast package) and sarima (from the astsa package) which can output regression coefficients in the presence of autocorrelation.</p>
+
+<p>For example:</p>
+
+<ol>
+<li><p>Using auto.arima. The 'drift' of -5.009 represents the slope (see <a href=""http://robjhyndman.com/hyndsight/arima-trends/"" rel=""nofollow"">http://robjhyndman.com/hyndsight/arima-trends/</a>) </p>
+
+<pre><code>&gt; min.ar &lt;- auto.arima(dec.yr.mmin$min_prcp)
+&gt; summary(min.ar)
+
+Series: dec.yr.mmin$min_prcp 
+ARIMA(1,1,0) with drift         
+
+Coefficients:
+          ar1    drift
+      -0.5138  -5.0089
+s.e.   0.2465   5.7986
+
+sigma^2 estimated as 949:  log likelihood=-57.82
+AIC=121.64   AICc=124.31   BIC=123.34
+
+Training set error measures:
+                     ME     RMSE      MAE       MPE     MAPE      MASE       ACF1
+Training set -0.9479987 28.52129 23.83494 -2.484233 16.12547 0.7957998 -0.2617352
+</code></pre></li>
+<li><p>Using sarima to fit the model and output the slope</p>
+
+<pre><code>  &gt; fit.min &lt;- sarima(dec.yr.mmin$min_prcp, 1,1,0,                       reg=dec.yr.mmin$decade)
+initial  value 3.542448 
+  iter   2 value 3.488927
+  iter   3 value 3.386967
+  iter   4 value 3.383464
+  iter   5 value 3.382408
+  iter   6 value 3.382051
+  iter   7 value 3.382024
+  iter   8 value 3.382020
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  iter   9 value 3.381925
+  final  value 3.381925 
+  converged
+  initial  value 3.400729 
+  iter   2 value 3.399523
+  iter   3 value 3.399490
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  iter   4 value 3.399488
+  final  value 3.399488 
+  converged
+</code></pre></li>
+</ol>
+
+<p>3.Output coefficients</p>
+
+<pre><code>      &gt; fit.min$fit$coef
+             ar1       xreg 
+      -0.5137696 -0.5009045 
+</code></pre>
+
+<ol start=""4"">
+<li><p>For comparison, this is the output from an OLS regression which may give an incorrect slope due to autocorrelation.</p>
+
+<pre><code>  &gt; m3 &lt;- lm(dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+  &gt; summary(m3)
+
+  Call:
+  lm(formula = dec.yr.mmin$min_prcp ~ dec.yr.mmin$decade)
+
+  Residuals:
+      Min      1Q  Median      3Q     Max 
+  -45.504  -8.048   1.892  13.650  38.357 
+
+  Coefficients:
+                      Estimate Std. Error t value Pr(&gt;|t|)   
+  (Intercept)        1014.1570   319.9461   3.170  0.00807 **
+  dec.yr.mmin$decade   -0.4222     0.1580  -2.672  0.02032 * 
+  ---
+  Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+  Residual standard error: 23.83 on 12 degrees of freedom
+  Multiple R-squared:  0.3731,  Adjusted R-squared:  0.3209 
+  F-statistic: 7.142 on 1 and 12 DF,  p-value: 0.02032
+</code></pre>
+
+<p>`</p></li>
+</ol>
+
+<p>The output from sarima identifies the slope coefficient and also intercept when d=0. When differencing is required (e.g., ARIMA (1,1,0) as output above), sarima only outputs the slope. </p>
+
+<p>My question: when d = 1 or more, what approaches in R would allow me to add/visualize the regression line onto the original undifferenced time-series plot. Is it possible to derive the fitted values of the regression line, or derive intercept values from sarima/auto.arima or other package?</p>
+
+<p>Many thanks in advance for your suggestions.</p>
+"
+"0.559016994374947","0.586395471608374","172226","<p>Let's assume an analytical model predicts an epidemic trend over time, i.e. number of infections over time. We also have a computer simulation results over time to verify the performance of the model. The goal is to prove the simulation results and predicted values of the analytical model (which are both a time series) are statistically close or similar. By similarity I mean the model predicts the values close to what simulation is providing.</p>
+
+<p><strong>Background</strong>:
+Researching around this topic, I came across the following posts:</p>
+
+<ol>
+<li><p><a href=""http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis"">http://stackoverflow.com/questions/13835924/similarity-of-trends-in-time-series-analysis</a></p></li>
+<li><p><a href=""http://stats.stackexchange.com/questions/19103/how-to-statistically-compare-two-time-series"">How to statistically compare two time series?</a></p></li>
+</ol>
+
+<p>Both discussions suggest three approaches, where I am interested in two of them basically:</p>
+
+<p>(1). Use of ARIMA; 
+ (2). Use of Granger test</p>
+
+<p>For the first suggested solution, this is what has been written there in regards to ARIMA, in (1):</p>
+
+<blockquote>
+  <p>Run ARIMA on both data sets. (The basic idea here is to see if the same set of parameters (which make up the ARIMA model) can describe both your temp time series. If you run auto.arima() in forecast (R), then it will select the parameters p,d,q for your data, a great convenience.</p>
+</blockquote>
+
+<p>I ran auto.arima on the simulation values and then ran forecast, here are the results:</p>
+
+<pre><code>ARIMA(2,0,0) with zero mean     
+
+Coefficients:
+         ar1      ar2
+      1.4848  -0.5619
+s.e.  0.1876   0.1873
+
+sigma^2 estimated as 121434:  log likelihood=-110.64
+AIC=227.27   AICc=229.46   BIC=229.4
+</code></pre>
+
+<p>I ran auto.arima on predicted model values and then forecast. This is the result of the predicted model:</p>
+
+<pre><code>ARIMA(2,0,0) with non-zero mean 
+
+Coefficients:
+         ar1      ar2  intercept
+      1.5170  -0.7996  1478.8843
+s.e.  0.1329   0.1412   290.4144
+
+sigma^2 estimated as 85627:  log likelihood=-108.11
+AIC=224.21   AICc=228.21   BIC=227.05
+</code></pre>
+
+<p><strong>Question 1</strong> What are the values that need to be compared to prove that the two series are similar especially the trend over time?</p>
+
+<p>Regarding the second suggested option, I have read about it and found that Granger test is usually used to see if the values of series <em>A</em> at time <em>t</em> can predict the values of Series <em>B</em> at time <em>t+1</em>. </p>
+
+<p><strong>Question 2</strong> Basically, in my case I want to compare the values of time series A and B at the same time, how this one is relevant to my case then?</p>
+
+<p><strong>Question 3</strong> Is there any available method can be used to prove that the trend of two time-series over time is similar?</p>
+
+<p>FYI. I saw another method which is using Pearson Correlation Coefficient and I could follow the reasoning there. Moreover, verifying analytical models with simulations has been widely used in the literature. see:</p>
+
+<ol>
+<li><a href=""http://users.ece.gatech.edu/~jic/tnn05.pdf"" rel=""nofollow"">Spatial-Temporal Modeling of Malware Propagation in Networks Modeling</a></li>
+<li><a href=""http://cs.ucf.edu/~czou/research/emailWorm-TDSC.pdf"" rel=""nofollow"">Modeling and Simulation Study of the Propagation and Defense of Internet Email Worm</a></li>
+</ol>
+"
+"0.204124145231932","0.229415733870562","173629","<p>When applying the ""urca"" package function <code>ur.df</code>, like </p>
+
+<pre><code>summary(ur.df(data$col1, type = c(""none""), lags = 12, selectlags = c(""AIC"")))
+</code></pre>
+
+<p>I get following result:</p>
+
+<pre><code>############################################### 
+# Augmented Dickey-Fuller Test Unit Root Test # 
+############################################### 
+
+Test regression trend 
+
+
+Call:
+lm(formula = z.diff ~ z.lag.1 + 1 + tt + z.diff.lag)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-12928366  -2888728   1284718   4218373   7179531 
+
+Coefficients:
+                 Estimate    Std. Error  t value  Pr(&gt;|t|)   
+(Intercept)  5.391984e+07  1.638362e+07  3.29108 0.0043123 **
+z.lag.1     -2.438154e+00  7.557134e-01 -3.22629 0.0049588 **
+tt           6.579260e+05  2.730453e+05  2.40959 0.0275861 * 
+z.diff.lag1  1.712004e+00  6.595980e-01  2.59553 0.0188537 * 
+z.diff.lag2  1.402824e+00  6.379412e-01  2.19899 0.0420083 * 
+z.diff.lag3  1.321555e+00  5.294537e-01  2.49607 0.0231329 * 
+z.diff.lag4  1.099430e+00  4.720412e-01  2.32910 0.0324428 * 
+z.diff.lag5  8.132753e-01  4.181477e-01  1.94495 0.0685140 . 
+z.diff.lag6  1.797331e-01  3.654326e-01  0.49184 0.6291254   
+z.diff.lag7  5.890640e-01  2.939590e-01  2.00390 0.0612825 . 
+z.diff.lag8  3.919041e-01  2.794371e-01  1.40248 0.1787705   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 6708593 on 17 degrees of freedom
+Multiple R-squared:  0.7237276, Adjusted R-squared:  0.5613144 
+F-statistic: 4.253547 on 10 and 17 DF,  p-value: 0.003348755
+
+
+Value of test-statistic is: -3.2263 3.9622 5.2635 
+
+Critical values for test statistics: 
+      1pct  5pct 10pct
+tau3 -4.15 -3.50 -3.18
+phi2  7.02  5.13  4.31
+phi3  9.31  6.73  5.61
+</code></pre>
+
+<p>Now the question:</p>
+
+<ol>
+<li>I do understand that ""-3.2263"" is the critical value (t-value)</li>
+<li><strong>There is a unit root</strong> with trend since -3.2263 > -3.18 (tau3@10pct)
+This means the time-series is <strong>non-stationary</strong> at a 10% significance level.</li>
+<li>But, what is the meaning of ""p-value: 0.003348755""? Should I list this value in a table summarizing my unit root test results or rather mark the 0.1 significance level (*10%)?</li>
+</ol>
+
+<p>The <a href=""http://www.inside-r.org/packages/cran/urca/docs/ur.df"" rel=""nofollow"">documentation</a> says that critical values are based on Hamilton (1994) and Dickey and Fuller (1981)"". </p>
+"
+"0.408248290463863","0.458831467741123","186728","<p>I am using the great <code>{caret}</code> package to run a lot of models, however I would like to analyse the model as one usually does having run that model in its own right, i.e. not within caret.</p>
+
+<p>I am using the mboost package, starting with the <code>glmboost</code> function. If you run this model there are then functions within the mboost package that can be applied directly to the output of that function. however, these same functions do not work on the output of <code>train</code> from caret.
+<code>train</code> is essentially the wrapper function which allows you to optimise the parameters for the chosen model, glmboost in my case.</p>
+
+<p>Here is some dummy code if anybody wants to play with it. Its a boosted tree regression model, first using the <code>glmboost</code> function directly from the mboost package, then the same thing through the caret package (with some extra parameters to optimise over):</p>
+
+<pre><code>## ============================================================== ##
+##  Create a simple model using glmboost that runs through caret  ##
+## ============================================================== ##
+
+## install as necessary!
+library(mboost)
+library(caret)
+## Use multicore if you can!
+library(doMC)
+registerDoMC(4)
+
+## ============= ##
+##  Create data  ##
+## ============= ##
+
+## Let's say we are predicting a numeric value, based on the predictors
+## 70 observations of 10 variables, assuming they are chronologically order (a time-series)
+
+set.seed(666)                                                # the devil's seed
+myData &lt;- as.data.frame(matrix(rnorm(70*15, 2, .4), 70, 10)) #10 columns of random numbers
+names(myData) &lt;- c(""to.predict"", paste0(""var_"", seq(1, 9)))
+# Have a ganders
+str(myData)                             
+
+## Create model output using the mboost package directly
+glm_mboost &lt;- glmboost(to.predict ~ .,  # predict against all variables
+                       myData,          # supply our data
+                       control = boost_control(mstop = 200)
+                       )
+
+## This is what I'd like to do with the output from the caret package!
+plot(glm_mboost)
+cvr &lt;- cvrisk(glm_mboost)
+plot(cvr)
+
+## ========================================== ##
+##  Set parameters for train() - using caret  ##
+## ========================================== ##
+
+## glmboost takes 'mstop' and 'prune' as inputs
+myGrid &lt;- expand.grid(mstop = seq(20, 250, 50),
+                      prune = ""AIC""    #this isn't actually required by the mboost package!
+                      )
+myControl &lt;- trainControl(method = ""timeslice"", # take consequetive portions of the time-series
+                          fixedWindow = TRUE, # If this is TRUE, we get the error
+                          horizon = 1,
+                          initialWindow = 20) # ~1 months of trading days
+## fixedWindow = TRUE  --&gt; 
+
+## =============== ##
+##  Run the model  ##
+## =============== ##
+
+glm_caret &lt;- train(to.predict ~ ., data = myData,
+                method = ""glmboost"",
+                #metric = ""MyGauss"",
+                trControl = myControl,
+                tuneGrid = myGrid
+                ##verbose = FALSE)
+                )
+
+## Maybe this will give you some idea about how to extract it
+str(glm_caret)
+
+## This is the best I can do, but the first plot doesn't come out right
+x &lt;- glm_caret$finalModel
+plot(x)
+cvr1 &lt;- cvrisk(x)
+plot(cvr1)
+</code></pre>
+
+<p>An idea I have is to simply use the optimal output given by caret to run the <code>glmboost</code> function once, with the provided parameters, but as I am going through many models, I'd rather save the computing time!</p>
+"
+"0.458333333333333","0.374634324632678","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"
+"0.433012701892219","0.4325904563487","209790","<h2>Background</h2>
+
+<p>I'm working on a project which aims to use the history data about a water flux to detect whether there is a leakage happened. The data is hourly collected and among about 4 months.  </p>
+
+<p>I've already read the book which Professor Hyndman write about the forecast and some posts about outliers/anomaly detection on the site, but still I get confused how to realize this in R. In the meantime, I think I've got things mixed up and want to know the basic procedure to accomplish it.</p>
+
+<h2>What I've tried</h2>
+
+<p>At first, I think the basic idea is to fit a model on my train data and forecast it with the test part. Then use the model to check the residual in the whole data whether they are all normal distributed or at least has zero mean.  </p>
+
+<p>So according to <a href=""http://stats.stackexchange.com/questions/140163/timeseries-analysis-procedure-and-methods-using-r?lq=1"">Timeseries analysis procedure and methods using R</a>, I've tried ARIMA, Exponential Soomthing and TBATS, but the result isn't ideal. And I'm also afraid that this could lead to a flaw since I didn't consider the outliers and anomaly.<br>
+Here is my code</p>
+
+<pre><code>model &lt;- list(
+   mod_arima &lt;- auto.arima(train_h, ic = ""aic""),
+   mod_exp &lt;- ets(train_h, ic = ""aic""),
+   mod_tbats &lt;- tbats(train_h,ic = ""aic"")
+)
+forecasts &lt;- lapply(model, forecast, h = 24)
+par(mfrow = c(2,2));
+for (i in forecasts) {plot(i); lines(test_h,col = ""red"")}
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/a80fL.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/a80fL.jpg"" alt=""enter image description here""></a> </p>
+
+<p>Then according to <a href=""http://stats.stackexchange.com/questions/1142/simple-algorithm-for-online-outlier-detection-of-a-generic-time-series"">Simple algorithm for online outlier detection of a generic time series</a>, I find I could detect those single point that in my data through the answer by professor Hyndman, but I fail to change to detect the small level shift. (I've tried to create a 0.05*mean shift level, removing the outliers, then using the tso to detech the level shift, however it fail totally...)</p>
+
+<h2>My Problems</h2>
+
+<p>My problems mainly falls in the following two parts:  </p>
+
+<ol>
+<li><p>Even though it seems that there is a relativity between the flux and the flux an hour ago(Looking from the plot), could I use the hourly data directly to fit a model or should I first select the data at the same time each day to fit a model each?  </p>
+
+<p><a href=""http://i.stack.imgur.com/dhPFL.jpg"" rel=""nofollow""><img src=""http://i.stack.imgur.com/dhPFL.jpg"" alt=""The plot of the relation between the data &amp;the data an hour ago""></a>  </p></li>
+<li><p>Now I think my problem could be partly solved by directly detecting the level shift in the data, but I think that the leakage in the flux data should be relatively small if any(maybe just 5%,10% of the mean). While I've mannually create a shift in a try, when I use the tsoutliers::tso in R directly, the result isn't ideal. Is this idea right or should I fit a model still? And how could I detect such a small change in the level shift in a time series, particularly in R?   </p></li>
+</ol>
+
+<p>ps:Since I'm new to Cross Validated, I fail to find a way to upload the data may be easy for you solve my problem, is there any advice?</p>
+"
+"0.144337567297406","0.162221421130763","210885","<p>I can't seem to make sense of the following results. The time-series looks more non-stationary than stationary, and when I fit an ARMA(1, 0, 0) it estimates the AR(1) term to be very close to unity (0.99). From this I would expect a simple Dickey-Fuller test with no augmented autoregressive components to either fail or just marginally succeed to reject the null of a unit root. However, the test rejects the null with a p-value of less than 0.01.</p>
+
+<p>I've read all the other questions on the ADF test, but still fail to understand the intuition behind these results.</p>
+
+<p>(when the ADF test is run without specifying the k-order it picks an order of 6, if that helps).</p>
+
+<p><a href=""http://i.stack.imgur.com/TTqiE.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/TTqiE.png"" alt=""enter image description here""></a></p>
+
+<pre><code>df &lt;- structure(c(31.5, 29.2, 30.5, 30.5, 28.1, 27.7, 24.7, 24.3, 23, 
+            19.8, 16.6, 14.9, 15.4, 13.4, 10.7, 9.4, 9.7, 8.9, 10.1, 10.3, 
+            9.5, 9.4, 9.2, 8.5, 6.5, 6.3, 6.7, 6.9, 6.9, 6, 5.2, 4.5, 4.3, 
+            4.7, 3.5, 3.1, 3.1, 2.8, 2.2, 1.8, 1.1, 1.8, 0.8, 1, 1.9, 0.3, 
+            0.2, 0.4, 0.9, 0.9, 1, 0.9, 0.5, 1.3, 1.4, 1, 0.5, 1.3, 1.7, 
+            1.7, -0.1, 0.1, 0.8, 1, 2, 2, 1.4, 2.7, 2.3, 2.4, 2, 2, 3.2, 
+            2.8, 1.7, 1.4, 0.5, -0.4, 0.1, -1, -1.4, -1, -0.9, -0.9, -1.8, 
+            -1.9, -1.1, -0.9, -0.8, -0.3, -0.8, -1, -0.8, -1.3, -1, -1.3, 
+            -1.2, -1.2, -0.9, -0.6, 1, 1, 1.8, 2.2, 3.1, 3.1, 2.9, 2.8, 2.9, 
+            3.2, 3.3, 3.2, 1.9, 2, 1.8, 2.3, 2.6, 3, 2.9, 3, 3.5, 3.4, 3.1, 
+            3.4, 3.6, 3.7, 4.4, 4.2, 3.3, 3.7, 4.4, 4.6, 4, 4.4, 4.7, 4.9, 
+            5, 5, 5.1, 5.5, 7.1, 7.6, 7.9, 8.2, 10, 10.9, 11.4, 11.9, 12.3, 
+            12.7, 12.4, 12.2, 11.3, 10.7, 9.2, 8.5, 9.5, 8.5, 7.4, 5.9, 4.9, 
+            3.9, 2.6, 2.2, 2.3, 1, 1.3, 1.2, -0.3, -0.6, -0.4, 0.2, 0.5, 
+            0.9, 1.8, 1.8, 1.8, 2.6, 2.5, 3.6, 2.8, 3, 3.7, 4.4, 5, 4.8, 
+            4.6, 4.4, 4.7, 4.2, 4.4, 3.5, 3.4, 3.7, 3.7, 3.3, 2.6, 2.6, 2.9, 
+            3.4, 3.3, 3.2, 2.8, 2.9, 2.7, 2.3, 1.6, 1.4, 1.5, 1.3, 0.6, 0.5, 
+            0.5, 0.5, 0.6, 0.5, 0.2, 0.3, 0.4, 0.3, 0.1, 0.3, 0.5, 0.3, 0, 
+            0.3, 0.4, -0.1, -1.4, -1.5, -1.1, -0.6, 0, -0.2, -0.2, -1, -0.8, 
+            -0.4, -0.5, -0.2, 0.7, 0.5, 0.8), .Tsp = c(1996, 2016.16666666667, 
+                                                       12), class = ""ts"")
+
+arima(df, order = c(1, 0, 0))
+
+&gt; Call: arima(x = df, order = c(1, 0, 0))
+&gt; 
+&gt; Coefficients:
+&gt;          ar1  intercept
+&gt;       0.9986    14.2496 s.e.  0.0018    13.6263
+&gt; 
+&gt; sigma^2 estimated as 0.6027:  log likelihood = -286.21,  aic = 578.42
+
+tseries::adf.test(df, k = 0)
+
+&gt;   Augmented Dickey-Fuller Test
+&gt; 
+&gt; data:  df Dickey-Fuller = -5.6878, Lag order = 0, p-value = 0.01
+&gt; alternative hypothesis: stationary
+</code></pre>
+"
+"0.353553390593274","0.397359707119513","223379","<p>I'm fitting an <code>arima</code>(1,0,0) model using the <code>forecast</code> package in R on the <code>usconsumption</code> dataset. However, when I mimic the same fit using <code>lm</code>, I get different coefficients. My understanding is that they should be the same (in fact, they give the same coefficients if I model an <code>arima</code>(0,0,0) and <code>lm</code> with only the external regressor, which is related to this post: <a href=""http://stats.stackexchange.com/questions/28472/regression-with-arima0-0-0-errors-different-from-linear-regression"">Regression with ARIMA(0,0,0) errors different from linear regression</a>). </p>
+
+<p>Is this because <code>arima</code> and <code>lm</code> use different techniques to calculate coefficients? If so, can someone explain the difference?  </p>
+
+<p>Below is my code.</p>
+
+<pre><code>&gt; library(forecast)
+&gt; library(fpp)
+&gt; 
+&gt; #load data
+&gt; data(""usconsumption"")
+&gt; 
+&gt; #create equivalent data frame from time-series
+&gt; lagpad &lt;- function(x, k=1) {
++   c(rep(NA, k), x)[1 : length(x)] 
++ }
+&gt; usconsumpdf &lt;- as.data.frame(usconsumption)
+&gt; usconsumpdf$consumptionLag1 &lt;- lagpad(usconsumpdf$consumption)
+&gt; 
+&gt; #create arima model
+&gt; arima(usconsumption[,1], xreg=usconsumption[,2], order=c(1,0,0))
+
+Call:
+arima(x = usconsumption[, 1], order = c(1, 0, 0), xreg = usconsumption[, 2])
+
+Coefficients:
+         ar1  intercept  usconsumption[, 2]
+      0.2139     0.5867              0.2292
+s.e.  0.0928     0.0755              0.0605
+
+sigma^2 estimated as 0.3776:  log likelihood = -152.87,  aic = 313.74
+&gt; 
+&gt; #create lm model
+&gt; lm(consumption~consumptionLag1+income, data=usconsumpdf)
+
+Call:
+lm(formula = consumption ~ consumptionLag1 + income, data = usconsumpdf)
+
+Coefficients:
+    (Intercept)  consumptionLag1           income  
+         0.3779           0.2456           0.2614  
+</code></pre>
+"

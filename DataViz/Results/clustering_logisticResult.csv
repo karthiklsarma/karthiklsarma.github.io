@@ -1,0 +1,177 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 32239","<p>As described in Merlo et al (<a href=""http://www.ncbi.nlm.nih.gov/pubmed/16537344"" rel=""nofollow"">J Epidem Comm Health 2006</a>), the 95% credible interval for MOR is calculated using MCMC. MOR is defined as $\exp(\sqrt{2\sigma^2}\times 0.675)$, where $\sigma$ is the level-2 variance of the random intercept $u$ from a null model of a hierarchical logistic regression.  </p>
+
+<p>Does anyone have an idea of how to write a program for an Markov chain Monte Carlo to calculate the standard error of the  median odds ratio (MOR) using <a href=""http://cran.r-project.org/web/packages/rjags/index.html"" rel=""nofollow"">rjags</a>?<br>
+My dependent variable is outcome(alive/dead) and the clustering (level2)variable is Hospital. There are 140 hospitals and would like to see variations in outcome between hospitals. Other risk factors will be included later as independent level1 variables.</p>
+"
+"0.577350269189626","0.547722557505166"," 49549","<p>I am attempting some variable reduction before I perform a logistic regression.  I am quite interested in using <code>Hmisc::varclus</code> in R.  However, I am having some difficulty interpreting the output.  As far as I can tell, the (tree) plot produced using <code>varclus</code> is the only built-in way to get information on the groups created by the procedure.  </p>
+
+<p>My main question involves knowing at what level of the hierarchy to select the clusters to be used for variable reduction?  I read that of a rule-of-thumb to keep a cluster is if its rho (for Spearman's) is at least 0.30.  Would this be evaluated visually from the plot?  At what value of rho would the cut-off be made to separate the tree into <em>final</em> clusters? Again, is this to be done visually?   </p>
+
+<p>Perhaps my internet searching skills are lacking, but I am having difficulty finding information on this procedure in general and more specifically in R. Is there a good <em>beginner's</em> article on variable clustering that I am missing that spells out the fundamentals?  Are there additional commands for <code>varclus</code> in R to help with final cluster decisions besides examining the tree visually?</p>
+
+<pre><code># varclust example in R using mtcars data
+mtcn &lt;- data.matrix(mtcars)
+clust &lt;- varclus(mtcn)
+clust
+plot(clust)
+</code></pre>
+"
+"0.471404520791032","0.447213595499958"," 82981","<p>I am exploring hierarchical logistic regression, using glmer from the lme4 package. To my understanding, one of the first steps in multilevel modeling is to estimate the degree of clustering of level-1 units within level-2 units, given by the intraclass correlation (to ""justify"" the additional cost of estimating parameters to account for the clustering). When I run a fully unconditional model with glmer</p>
+
+<pre><code>fitMLnull &lt;- glmer(outcome ~ 1 + (1|level2.ID), family=binomial)
+</code></pre>
+
+<p>the glmer fit gives me the variance in the intercept for outcome at level-2, but the residual level-1 variance in outcome is nowhere to be found. I read somewhere (can't track it down now) that the residual level-1 variance is <em>not</em> estimated in HGLM (or at least in glmer). Is this true? If so, is there an alternative way to approximate the degree of clustering in the data? If not, how can I access this value to calculate the ICC?</p>
+"
+"0.333333333333333","0.316227766016838","114184","<p>Specifically, are there any binomial regression models that use a kernel with heavier tails and higher kurtosis than the standard kernels (logistic/probit/cloglog)?</p>
+
+<p>As a function of the linear predictor $\textbf{x}'\mathbf{\hat{\beta}}$, the logistic distribution</p>
+
+<ul>
+<li>Underestimates the probability of my data being in the tails of the distribution</li>
+<li>Underestimates the kurtosis, or clustering of data, in the middle of the distribution:</li>
+</ul>
+
+<p>This can be seen from a diagnostic plot of my fit:</p>
+
+<p><img src=""http://i.stack.imgur.com/ar6OW.png"" alt=""enter image description here""></p>
+
+<ul>
+<li>The red line is the logistic CDF, representing a perfect fit</li>
+<li>The black line represents the fitted probabilities from my dataset (calculated by binning observations into 0.1 intervals of $\textbf{x}'\mathbf{\hat{\beta}}$, where $\mathbf{\hat{\beta}}$ is obtained from my fit)</li>
+<li>The grey bars in the background represent number of observations on which the true probabilities are based upon</li>
+<li>The grey areas are where the tail 10% of the data lie (5% each side).</li>
+</ul>
+
+<p>Ideally, any solution would use R.</p>
+
+<h2>Edit</h2>
+
+<p>Why am I talking about CDFs? Our GLM equation is:</p>
+
+<p>$$\mathbb{P}(Y = 1) = \mathbb{E}[Y] = g^{-1}(\textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Where $g$ is the link function.</p>
+
+<p>Further, if $g^{-1}$ is a valid probability distribution (i.e. monotonically increasing from 0 to 1, indeed the case with probit, logit, cloglog), then consider a latent (not directly observed) continuous random variable $Y^{*}$ whose distribution (CDF) is given by $g^{-1}$. Then by definition</p>
+
+<p>$$\mathbb{P}(Y^{*} \leq \textbf{x}'\mathbf{\beta}) = g^{-1}(\textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Equating the two equations above, we see the probability of $Y=1$ is exactly equal to the CDF of $Y^{*}$</p>
+
+<p>$$\mathbb{P}(Y = 1) = \mathbb{P}(Y^{*} \leq \textbf{x}'\mathbf{\beta})$$</p>
+
+<p>Hence I talk interchangeably about the expected response $\mathbb{E}[Y]$ and CDF of $Y^{*}$ over linear-predictor ($\textbf{x}'\mathbf{\hat{\beta}}$) space.</p>
+"
+"0.5","0.632455532033676","117783","<p>Despite having only a single binary outcome for each ID, there are multiple correlated measurements for the same test for each ID at different timepoints. The individual IDÂ´s are obviously independent, but the measurements of the same test at different time-points are not independent. The aim is to see whether the test can discern if the patients is cured or not. </p>
+
+<p>-I cannot decide whether IÂ´d need to fit a mixed-level logistic regression model or if a regular logistic regression model would suffice. Is it possible somehow to fit a logistic regression model with time varying covariates like in cox models?</p>
+
+<p>-Is it possible to use a clustering or CART based model (allowing for the longitudinal independent variable) instead that would be easier to comprehend in a clinical setting?</p>
+
+<p>-I could turn the question around and do repeated measure Anova with <code>summary(aov(val~Long_term*time+Error(id),data=stat))</code>- however, 1)only time and the interaction term are significant, leaving me uncertain how to treat the other main effect of Long_term in face of only a significant interaction and 2)it feels contraintuitive to set an independent variable as a dependent variable when using anova.</p>
+
+<pre><code>&gt; dput(stat)
+structure(list(Long_term = structure(c(2L, 2L, 2L, 2L, 2L, 1L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L,  2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L,  2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L,  2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L,  1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L,  2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L,  2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L,  2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L,  2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L,  1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L,  2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L,  2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L,  1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L,  2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L,  2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L,  1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L, 2L, 2L, 2L,  2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 2L, 2L,  2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L,  1L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 1L, 2L), .Label = c(""No"",  ""Yes""), class = ""factor""), id = c(1L, 2L, 3L, 4L, 5L, 6L, 7L,  8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L,  2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L,  16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L,  11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L,  5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L,  19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L,  14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L,  9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L,  3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L,  17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L,  12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L,  7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L,  1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L,  15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L,  10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L,  4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L,  18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L,  13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L,  8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L,  2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L,  16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L,  11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L, 19L, 1L, 2L, 3L, 4L,  5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L, 14L, 15L, 16L, 17L, 18L,  19L), time = c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,  12, 12, 12, 12, 12, 12, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18,  18, 18, 18, 18, 18, 18, 18, 18, 18, 24, 24, 24, 24, 24, 24, 24,  24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 30, 30, 30, 30,  30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 36,  36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36, 36,  36, 36, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42, 42,  42, 42, 42, 42, 42, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48, 48,  48, 48, 48, 48, 48, 48, 48, 48, 54, 54, 54, 54, 54, 54, 54, 54,  54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 60, 60, 60, 60, 60,  60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 66, 66,  66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66, 66,  66, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72, 72,  72, 72, 72, 72, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78, 78,  78, 78, 78, 78, 78, 78, 78, 84, 84, 84, 84, 84, 84, 84, 84, 84,  84, 84, 84, 84, 84, 84, 84, 84, 84, 84, 90, 90, 90, 90, 90, 90,  90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 90, 96, 96, 96,  96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96, 96,  102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102, 102,  102, 102, 102, 102, 102, 102), val = c(273, 194, 618, 755, 802,  395, 2438, 482, 502, 692, 607, 618, 579, 864, 579, 453, 673,  572, 707, 57, 373, 1197, 1026, NA, 697, 712, NA, NA, 616, NA,  NA, NA, NA, NA, NA, NA, 76, 1128, 560, 76, 819, 982, 303, 1294,  267, 1117, 346, 996, 652, 95, 951, 3250, 1584, 948, 981, 465,  411, 57, 197, 535, 498, 87, 1382, 210, 1649, 96, 450, 252, 42,  1086, 2137, 1395, 464, 1388, 532, 67, 25, 230, 566, 545, 38,  691, 216, 1412, 33, 151, 113, 29, 663, 806, 528, 240, 1508, 421,  50, 39, NA, 182, 412, 32, 414, 232, 868, 791, 201, 86, 33, 250,  345, 224, 381, 1069, 536, NA, NA, NA, 500, 312, NA, 287, 97,  227, 653, 69, 69, NA, NA, 225, 308, 256, 963, 420, NA, NA, NA,  368, 605, NA, 399, 69, 77, 20, 39, 70, NA, 122, 306, 103, 175,  807, 530, NA, NA, NA, 246, 443, NA, 363, 87, 39, NA, 25, 63,  NA, 163, 289, 172, 128, 1019, 582, NA, NA, NA, 231, 820, NA,  284, NA, 40, NA, NA, NA, NA, 238, 288, 217, NA, 903, 471, NA,  NA, NA, 236, 577, NA, 461, NA, 691, NA, NA, NA, NA, 158, 170,  168, NA, 681, 434, NA, NA, NA, 399, 634, NA, 85, NA, 83, NA,  NA, NA, NA, 72, 419, NA, NA, 912, NA, NA, NA, NA, NA, 635, NA,  295, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  NA, NA, 138, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, 251, NA, NA, NA, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 37, NA, NA, NA,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, 132,  NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA)), row.names = c(NA,  -323L), .Names = c(""Long_term"", ""id"", ""time"", ""val""), class = ""data.frame"") 
+</code></pre>
+"
+"0.74535599249993","0.707106781186547","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.471404520791032","0.447213595499958","188661","<p>I have cross-sectional data with ~800 individuals nested within 6 countries, across 3 time points. Each individual is sampled only once, so time is cross-sectional here too. The number of individuals within each country ranges between ~75 to ~200. </p>
+
+<p>I would like to use fixed effects logistic regression to model the data (the outcome variable consists of the number of successes out of the total number of trials). I know I can use a conditional likelihood estimator to avoid incidental parameter bias, but this does not allow me to report the results as unconditional predicted probabilities (the best format for my audience). </p>
+
+<p>I'm therefore considering including dummy variables for countries in the model. With the small number of countries and large number of observations within each, is this a reasonable approach? </p>
+
+<p>The model (in <code>R</code> syntax) would look like this:</p>
+
+<pre><code>glm(cbind(success, total - success) ~ var1 * factor(time) + factor(country),
+    family = bimonial(link = ""logit""),
+    data = dat)
+</code></pre>
+
+<p>where <code>factor(country)</code> produces 5 dummy variables for the 6 countries and <code>factor(time)</code> produces 2 dummy variables for the 3 time periods. I'm interested in how the slope of <code>var1</code> changes across the 3 time periods, while controling for the clustering by country.</p>
+
+<p>(Note: I get very similar results to that obtained from the conditional likelihood approach, but I can report unconditional predicted probabilities.)</p>
+"

@@ -1,0 +1,351 @@
+"V1","V2","V3","V4"
+"0.717137165600636","0.797724035217466"," 79216","<p><strong>Problem</strong>: When trying to calculate the variance of timeseries sums I get a negative variance, mostly due to autocovariances at large lag steps. Does not seem realistic.</p>
+
+<p>I have a timeseries which is calculated from another timeseries using a regression equation.
+I would like to propagate the uncertainty in the regression to the final timeseries. Then I want to sum (or take mean values) different segments of the timeseries over different timeperiods, and get the uncertainty of the sums. The timeseries is originally in 1 hour frequency and I want to sum over periods of 1 day (resampling to daily frequency) up to several years. The timeseries is strongly autocorrelated at short lag times.</p>
+
+<p>For getting the variance of the sum (in the case of 3 elements being summed):
+$$Var(a+b+c)= \\ Var(a)+Var(b)+Var(c) + 2 \times (Cov(a,b) + Cov(a,c)+Cov(b,c))$$</p>
+
+<p>I use <code>r</code> for the calculations. I get the variances for each timeseries element as $SE^2$, where $SE$ is the standard error (<code>se.fit</code>) returned from r's <code>predict()</code> function using the regression model. The covariances I get from the autocovariance function <code>acf()</code>.</p>
+
+<p>Here is some code and a selection of the data (excuse clumsy R code, I'm very new to R):</p>
+
+<pre><code>#tsY is the predicted timeseries from the regression
+tsY=c(81.4,  79.0,  83.4,   81.7,   75.7,   68.3,   62.3,   57.2,   52.6,   48.8,   45.4,   42.6,   39.9,   37.6,   35.6,   33.8,   32.2,   30.8,   29.6,   28.4,   27.3,   26.2,   25.0,   23.9)
+#tsSE is the standard error from the prediction (se.fit)
+tsSE=c(1.55,  1.49, 1.60,   1.56,   1.41,   1.23,   1.09,   0.97,   0.87,   0.78,   0.71,   0.65,   0.60,   0.55,   0.51,   0.48,   0.45,   0.42,   0.40,   0.38,   0.36,   0.34,   0.32,   0.30)
+
+tsVar=tsSE^2
+
+#create a matrix of the autocovariances at different lag times, diagonal is lag=0
+#rows and columns are indicies in timeseries
+covmat&lt;-matrix(numeric(0), length(tsY),length(tsY)) 
+for ( i in (1:(length(tsY)) ) ) {
+  if (i == 1) {
+    autocov&lt;-acf(tsY, type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }  else {
+    autocov&lt;-acf(tsY[-(1:i-1)], type='covariance', lag.max= length(tsY))
+    autocovvec&lt;-autocov$acf[1:nrow(autocov$acf)]
+    covmat[i:length(tsY),i]=autocovvec
+  }
+
+}
+
+# sum the matrix columns, but not the diagonal
+sumofColumns &lt;- rep(NA, ncol(covmat))
+for (i in (1:ncol(covmat))) {
+  if (i == 1) {
+    sumofColumns[i]=sum(covmat[-(1),i])  
+  } else{ 
+    sumofColumns[i]=sum(covmat[-(1:i),i])  
+  }
+}
+
+sumofCov=sum(sumofColumns) # sum of the covariance (Cov(a,b) + Cov(a,c)+...)
+sumofVar=sum(tsVar) # sum of the variances of each timeseries element
+varofSum=sumofVar+2*sumofCov # variance of the sum of the timeseries
+
+# from the covmat the negative variance occurs at larger lag times.
+acf(tsY, type='covariance', lag.max= length(tsY))
+
+&gt; sumofCov
+[1] -1151.529
+&gt; varofSum
+[1] -2283.246
+</code></pre>
+
+<p><strong>So I have the following questions:</strong></p>
+
+<blockquote>
+  <ol>
+  <li><p>Did I completely misunderstand how to calculate variance of sums?</p></li>
+  <li><p>Is it better to use a cutoff from the max lags to be considered in the autocovariance? If so how would one determine this? This would especially be important with the complete data where the length is several thousand. </p></li>
+  </ol>
+  
+  <p><strike>3. Why is the covariance negative in this sample data at large? When plotting tsY  <code>plot(tsY)</code> it looks like the covariance/correlation should remain positive.</strike> Because it is the variation in direction from their means.</p>
+</blockquote>
+
+<p><strong>EDIT:</strong></p>
+
+<blockquote>
+  <p>Comment on <strong>question 2</strong> above:
+  I have realized that using n-1 lags, as above in the code, does not make a lot of sense. There appear to be few different ways to determine the maximum lags to consider.  Box &amp; Jenkins (1970) suggest n/4 and R by default 10*log10(n). This does not answer the question however, of how to determine an appropriate cutoff for summing the covariances.</p>
+  
+  <p>Does it make sense to look at the partial autocorrelation (function pacf()), in order not to overestimate the effect of the auto covariance in the summation term? The partial autocorrelation for my data is significantly different from zero only at 1 or 2 lags. Similarly, fitting an AR model using ar() function, I also get an order of 1 or 2.</p>
+</blockquote>
+
+<p>Cheers</p>
+
+<p>Related post <a href=""http://stats.stackexchange.com/questions/10943/variance-on-the-sum-of-predicted-values-from-a-mixed-effect-model-on-a-timeserie"">Variance on the sum of predicted values from a mixed effect model on a timeseries</a></p>
+"
+"0.547722557505166","0.522232967867094","115356","<p>I'm a beginner in statistics and I have to run multilevel logistic regressions. I am confused with the results as they differ from logistic regression with just one level. </p>
+
+<p>I don't know how to interpret the variance and correlation of the random variables. And I wonder how to compute the ICC.</p>
+
+<p>For example : I have a dependent variable about the protection friendship ties give to individuals (1 is for individuals who can rely a lot on their friends, 0 is for the others). There are 50 geographic clusters of respondant and one random variable which is a factor about the social situation of the neighborhood. Upper/middle class is the reference, the other modalities are working class and underprivileged neighborhoods. </p>
+
+<p>I get these results :</p>
+
+<pre><code>&gt; summary(RLM3)
+Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+ Family: binomial  ( logit )
+Formula: Arp ~ Densite2 + Sexe + Age + Etudes + pcs1 + Enfants + Origine3 +      Sante + Religion + LPO + Sexe * Enfants + Rev + (1 + Strate |  
+    Quartier)
+   Data: LPE
+Weights: PONDERATION
+Control: glmerControl(optimizer = ""bobyqa"")
+
+     AIC      BIC   logLik deviance df.resid 
+  3389.9   3538.3  -1669.9   3339.9     2778 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2216 -0.7573 -0.3601  0.8794  2.7833 
+
+Random effects:
+ Groups   Name           Variance Std.Dev. Corr       
+ Neighb. (Intercept)     0.2021   0.4495              
+          Working Cl.    0.2021   0.4495   -1.00      
+          Underpriv.     0.2021   0.4495   -1.00  1.00
+Number of obs: 2803, groups:  Neigh., 50
+
+Fixed effects:
+</code></pre>
+
+<p>The differences with the ""call"" part is due to the fact I translated some words.</p>
+
+<p>I think I understand the relation between the random intercept and the random slope for linear regressions but it is more difficult for logistics ones. I guess that when the correlation is positive, I can conclude that the type of neighborhood (social context) has a positive impact on the protectiveness of friendship ties, and conversely. But how do I quantify that ?</p>
+
+<p>Moreover, I find it odd to get correlation of 1 or -1 and nothing more intermediate.</p>
+
+<p>As for the ICC I am puzzled because I have seen a post about lmer regression that indicates that intraclass correlation can be computed by dividing the variance of the random intercept by the variance of the random intercept, plus the variance the random variables, plus the residuals. </p>
+
+<p>But there are no residuals in the results of a glmer. I have read in a book that ICC must be computed by dividing the random intercept variance by the random intercept variance plus 2.36 (piÂ²/3). But in another book, 2.36 was replaced by the inter-group variance (the first level variance I guess). 
+What is the good solution ?</p>
+
+<p>I hope these questions are not too confused.
+Thank you for your attention !</p>
+"
+"0.316227766016838","0.301511344577764","193502","<p>I have a matrix $G$ in which I would like to compute the correlation matrix of. The matrix in <code>R</code> looks like:</p>
+
+<pre><code>&gt; G
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,]   -1    0   -1   -1    0   -1
+[2,]   -1    0   -1    1    1    0
+[3,]   -1    0    1   -1    0    1
+[4,]   -1    0    1    1   -1    0
+[5,]    1   -1    0   -1    0    1
+[6,]    1   -1    0    1   -1    0
+[7,]    1    1    0   -1    0   -1
+[8,]    1    1    0    1    1    0
+</code></pre>
+
+<p>Now, I would like to find the correlation matrix. However, when I use the function <code>cor()</code>, I get the following:</p>
+
+<pre><code>&gt; cor(G)
+     [,1] [,2] [,3] [,4] [,5] [,6]
+[1,]    1  0.0  0.0    0  0.0  0.0
+[2,]    0  1.0  0.0    0  0.5 -0.5
+[3,]    0  0.0  1.0    0 -0.5  0.5
+[4,]    0  0.0  0.0    1  0.0  0.0
+[5,]    0  0.5 -0.5    0  1.0  0.0
+[6,]    0 -0.5  0.5    0  0.0  1.0
+</code></pre>
+
+<p>Why were two rows omitted here? Am I missing something?</p>
+"
+"0.447213595499958","0.426401432711221","211827","<p>I am trying to find if a particular pattern exists in a time series. I have found that I could try using Covariance or correlation for the task. I have used a sliding window technique for doing this. </p>
+
+<pre><code> xvector = as.vector(x$Mean.F3Amp)
+ xvectorarray = embed(xvector,40)
+ #n : is the point from where the time series is to be searched
+
+
+ for(r in 1:nrow(xvectorarray))
+   {
+    eachrow = xvectorarray[r,]
+    comparerow = xvectorarray[n,]
+    #testcossim = cos.sim(eachrow,comparerow)
+     # class(testcossim)
+     #if(cosSim(eachrow,comparerow)&gt;=0.96)
+     # if(cor.test(eachrow,comparerow,method=""pearson"")!=0)
+     #if(dcor.t(eachrow,comparerow,distance = FALSE)&gt;=20||is.infinite(dcor.t(eachrow,comparerow,distance = FALSE)))
+     if(sd(eachrow,na.rm = FALSE)!=0&amp;&amp;cov(eachrow,comparerow)&lt;=1&amp;&amp;cov(eachrow,comparerow)&gt;=0)
+     {
+         flush.console()
+       plot.ts(comparerow)
+      lines(eachrow,col=""red"")
+      Sys.sleep(0.1)
+
+      }
+
+
+}
+</code></pre>
+
+<p>The comments in the code shows the various parameters I have tried to find the similarity. But I am unable to find an optimum value for the condition check in the if conditions. For different time series and query patterns the optimum value range for covariance is different to get an accurate result. </p>
+
+<p>I am looking how can covariance be used as a measure of similarity in my case. </p>
+"
+"0.547722557505166","0.522232967867094"," 77355","<pre><code>a &lt;- c(10,11)
+b &lt;- c(2,3)
+</code></pre>
+
+<p>The covariance (<code>C</code>) between<code>a</code> and <code>b</code> = </p>
+
+<pre><code>sum ( (a-mean(a)) * (b-mean(b)) ) # equal to  cov(a,b) in this case as n=2
+</code></pre>
+
+<p>The sample covariance (<code>Csamp</code>) between<code>a</code> and <code>b</code> = </p>
+
+<pre><code>sum ( (a-mean(a)) * (b-mean(b)) ) / n-1 # equal to  cov(a,b)
+</code></pre>
+
+<p>Now lets say the sum of square differences for <code>a</code> = <code>SSa</code>. This means the Variance(<code>V</code>) for <code>a</code> = <code>SSa/n</code> and the sample variance(<code>Vsamp</code>) is <code>SSa/n-1</code>. The sample standard deviation (<code>SDsamp</code>) for <code>a</code> would be <code>sqrt(SSa/n-1)</code></p>
+
+<p>The correlation coeffictent equations as I have found it are: </p>
+
+<pre><code>(1) C  /  sqrt(SSa) * sqrt(SSb)
+
+# or
+
+(2)  C  /  SDsamp_a * SDsamp_b
+
+# (1) uses sqrt(SSa), not V or V samp and (2) uses SDsamp  not V and does not use Csamp
+</code></pre>
+
+<p>I am confused over how to calculate the correlation coefficient (<code>CF</code>) and the sample correlation coefficient (<code>CFsamp</code>). The two formulas above do not seem the same to me. can someone explain how to calculate <code>CF</code> and <code>CFsamp</code>?</p>
+"
+"NaN","NaN"," 71236","<p>I am aware that this question may be too broad and that answers are scattered in various posts, but i need concise and organized answer. </p>
+
+<p>My dataset consists of linear measurements of cranial dimensions on 600 individual roe deer (50 distinct measurements with a dial caliper). I divide this dataset to unequal groups (corresponding to population membership), and caluclate correlation or covariance matrix so that every population is represented by 50x50 matrix. </p>
+
+<p>My question is, what is the best way to compare those matrices, both for equality and pattern (excluding Mantel test)? Problematic part may be the fact that those matrices are rarely of full rank since many measured characters are significantly correlated. Also, that comparison should include some kind of confidence intervals.  </p>
+
+<p><strong>Edit:</strong></p>
+
+<p>In the meantime I have found one possible solution, I just need to implement it in R code. <a href=""http://projecteuclid.org/DPubS/Repository/1.0/Disseminate?view=body&amp;id=pdfview_1&amp;handle=euclid.aoas/1254773280"" rel=""nofollow"">This paper</a> suggests possible distances based comparisons that I really need. </p>
+
+<p>The <em>Euclidean distance</em> as a simple method like this (Si is a sample covariance matrix):</p>
+
+<p>$d_e(S_1,S_2) = \sqrt {tr((S_1-S_2)^t(S_1-S_2))}$</p>
+
+<p>which I implemented in R code like this (although unsure):</p>
+
+<pre><code>covDif &lt;- sqrt(t(cov(malesMab)-cov(malesMbm))*(cov(malesMab)-cov(malesMbm)))
+sqrt(sum(diag(cov(covDif))))
+</code></pre>
+
+<p>But this distance is not good for comparison and of all the distances suggested in the mentioned paper the Cholesky decomposition is the best but I don`t know how to program it in R. This is its form:</p>
+
+<p>$d_e(S_1,S_2) = chol(S_1)-chol(S_2)$</p>
+
+<p>which I tried like this (just substituting in the upper equation)</p>
+
+<pre><code>covDif &lt;- sqrt(t(chol(cov(malesMab))-chol(cov(malesMbm)))*(chol(cov(malesMab))-chol(cov(malesMbm))))
+sqrt(sum(diag(cov(covDif))))
+</code></pre>
+
+<p>which works, but encounters rank deficiency problems which I hoped to avoid by using Cholesky decomposition. </p>
+
+<p>Any suggestions?</p>
+"
+"NaN","NaN","214810","<p>The DCC model is defined through the proxy $Q_t$ as
+$$Q_t=(1-\alpha-\beta) \overline{Q} +\alpha\epsilon_{t-1}\epsilon_{t-1}' + \beta Q_{t-1}$$which is then normalized to find the correlation matrix $R_t$
+$$R_t=\frac{q_{ij,t}}{\sqrt{q_{ii,t}q_{jj,t}}}$$</p>
+
+<p>I've been using the <code>rmgarch</code> package and its copula-garch commands (<code>cgarchspec</code> and <code>cgarchfit</code>) to couple time series with either a normal or Student-t copula and a DCC dependence structure.</p>
+
+<p>All results are nice and everything, but my question is on a problem which is present also at the univariate GARCH level: how is $Q_0$ chosen for the first estimation of $Q_1$? I've been going through the <code>rmgarch</code> document and other references on the Internet but haven't found any relevant info. </p>
+"
+"NaN","NaN","223340","<p>Assume I have a mid-sized covariance/correlation matrix of, say 100x100.</p>
+
+<p>Obviously one way to deal with this amount of data is to, for example, output a heatmap.</p>
+
+<p>But a 100x100 heatmap is still a bit tricky to clearly interpret beyond looking at all the pretty colours !</p>
+
+<p>So that got me thinking, is there a way to print or display the highest or lowest range/subset of correlation/covariance pairs, or I guess, in other words, is there a way to ask R to output only a given quartile (or maybe quantile is what I'm really after !).</p>
+"
+"NaN","NaN"," 99626","<p>I'm trying to show a correlation between growth in a petri dish of some fungi and its effect on a plant. I have ten strains of fungi which I tested in the plant and in petri dishes. I can put data from both experiments into linear models (lm) to get estimated means and variances. If I run a regression on the estimated means for each strain I find a significant correlation, but this doesn't take uncertainty in the strain means into account.
+So far I've tried a parametric bootstrap, but I'm having a hard time figuring out the ultimate test statistic. I've included the parameter estimates and my R code. At the moment it generates simulated strain means from the estimated parameters. I need a p value for the covariance between growth and virulence. Any help would be greatly appreciated! My specific questions are:
+1) Is a parametric boostrap the right way to go about analyzing this?
+2) How would one go about doing this in R?</p>
+
+<pre><code>Strain  MeanVirulence MeanGrowth    VirulenceVarGrowthVar  
+1  -5.26064 0.066716    0.67834 0.053247  
+2   -4.05482    -0.055524   0.68385 0.047111  
+3   -5.47282    0.029047    0.68385 0.046739  
+4   -3.50632    -0.161811   0.68385 0.047083  
+5   -4.94051    -0.224949   0.68385 0.04727  
+6   -4.04982    -0.062938   0.68385 0.047647  
+7   -4.53178    -0.142985   0.68385 0.04788  
+8   -3.01697    -0.199349   0.68385 0.047255  
+9   -3.81093    -0.254793   0.68385 0.047255  
+10  -1.61882    -0.325289   0.68385 0.0469
+</code></pre>
+
+<p>And here is my R code:</p>
+
+<pre><code>gendata&lt;-function(par,npar=TRUE,print=TRUE){
+    n     = 10
+    k     = 2
+    x=matrix(data=NA, nrow=n, ncol=k)
+    for(i in 1:n){
+      x[i,1] = rnorm(1,mean=par[i,2],sd=par[i,4])
+      x[i,2] = rnorm(1,mean=par[i,3],sd=par[i,5])
+    }
+    return(x)
+}
+
+lmp &lt;- function (modelobject) {
+    f &lt;- summary(modelobject)$fstatistic
+    p &lt;- pf(f[1],f[2],f[3],lower.tail=F)
+    attributes(p) &lt;- NULL
+    return(p)
+}
+
+
+samp=20000
+rescor=matrix(data=NA, samp)
+resvar=matrix(data=NA, samp)
+pvals=matrix(data=NA, samp)
+numsig = 0
+numnotsig = 0
+for (i in 1:samp){
+    x&lt;-gendata(parameters)
+    rescor[i]&lt;-cor(x[,1],x[,2], method = ""pearson"")
+    resvar[i]&lt;-var(x[,1])
+    a&lt;-lm(x[,1]~x[,2])
+    pvals[i]&lt;-lmp(a)
+    if (pvals[i] &lt; 0.05){
+        numsig = numsig + 1
+    }
+    if (pvals[i] &gt; 0.05){
+        numnotsig = numnotsig + 1
+    }    
+}
+
+Strain Plate Growth  
+1      1     200   
+1      2     210  
+1      3     190  
+2      1     150   
+2      2     130  
+2      3     140  
+...  
+
+Strain Plant Growth  
+1      1     70  
+1      2     40  
+1      3     50  
+1      4     45  
+2      1     80  
+2      2     90  
+2      3     85  
+2      4     75  
+...
+</code></pre>
+"

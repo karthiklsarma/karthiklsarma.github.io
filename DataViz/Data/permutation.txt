@@ -1,0 +1,1 @@
+permutation=36random-forest=5logistic=5multivariate-analysis=4correlation=4regression=4repeated-measures=3pca=3time-series=2matrix=2arima=2statistical-significance=2probability=2microarray=2distance=1anova=1gam=1multicollinearity=1sequence-analysis=1genetics=1normalization=1spatial=1package=1forecasting=1distributions=1bonferroni=1variance=1data-visualization=1

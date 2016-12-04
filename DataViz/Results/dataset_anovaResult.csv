@@ -1,0 +1,101 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 11370","<p>I have data from an experiment that is testing how the order of two studying methods (visual or auditory) affects word recall. For analysis a multi-factor anova with a repeated measure is appropriate, but I am not sure if I am structuring my data correctly. </p>
+
+<p>This is the command I'm using:
+<code>aov(recalled_items~task*order)+Error(subject/task)+(order))</code></p>
+
+<p>Here is an example of the data structure:</p>
+
+<pre><code>Subject    Task    Order    Recalled Items
+A        Visual    First       13
+A       Auditory   Second      22
+B        Visual    First       14
+B       Auditory   Second      28
+C        Visual    Second      10
+C       Auditory   First       15
+D        Visual    Second      14
+D       Auditory   First       29
+</code></pre>
+
+<ul>
+<li>Does R know to compare Visual 1 and Visual 2 recall values and Auditory 1 and Auditory 2 recall values? </li>
+</ul>
+
+<p>I am worried that because of the way I structured my data R is just comparing Visual 1 and Auditory 1 and as a result I am getting no effect.</p>
+"
+"NaN","NaN","220803","<p>I have a datafile (below is Gdrive link) and I want to prepare it for Anova/Manova tests.</p>
+
+<p>About Data:</p>
+
+<pre><code>1. Cult - two categories Type 1 and Type 2 (i.e. two varieties)
+2. Treatment - Control, CE4, CE8, CE12, CE16 (total 5 groups)
+3. Duration_Hrs - observations were notes at 48, 72, 96 and 120 hrs, with 
+4. Replication - R1, R2 and R3
+5. SL, Rl and AMY are three variables (following above, readings were obtained) 
+</code></pre>
+
+<p><a href=""https://drive.google.com/file/d/0B6ae8x-PYS7rX1d1S1FxRlF0Q1U/view?usp=sharing"" rel=""nofollow"">https://drive.google.com/file/d/0B6ae8x-PYS7rX1d1S1FxRlF0Q1U/view?usp=sharing</a></p>
+
+<p><strong>Could you please help me in preparing the data and run ANOVA/MANOVA in R or SPSS?</strong></p>
+"
+"NaN","NaN"," 94078","<p>Here's the data:</p>
+
+<pre><code>&gt; tires &lt;- data.frame(Wear  = c(17, 14, 12, 13, 14, 14, 12, 11,
+                                13, 13, 10, 11, 13, 8, 9, 9),
+                      Brand = rep(LETTERS[1:4], 4),
+                      Car   = as.character(as.roman(rep(1:4, each = 4))))
+&gt; tires
+   Wear Brand Car
+1    17     A   I
+2    14     B   I
+3    12     C   I
+4    13     D   I
+5    14     A  II
+6    14     B  II
+7    12     C  II
+8    11     D  II
+9    13     A III
+10   13     B III
+11   10     C III
+12   11     D III
+13   13     A  IV
+14    8     B  IV
+15    9     C  IV
+16    9     D  IV
+</code></pre>
+
+<p>Now I fit a two-way ANOVA with interaction:</p>
+
+<pre><code>two.way &lt;- aov(Wear ~ Brand + Car + Brand:Car, data = tires)
+</code></pre>
+
+<p>Finally, no p-values: </p>
+
+<pre><code>&gt; summary(two.way)
+            Df Sum Sq Mean Sq
+Brand        3  30.69  10.229
+Car          3  38.69  12.896
+Brand:Car    9  11.56   1.285
+</code></pre>
+
+<p>A regular two-way ANOVA (i.e., <code>Wear ~ Brand + Car</code>) gives me p-values:</p>
+
+<pre><code>&gt; summary(aov(Wear ~ Brand + Car, data = tires))
+            Df Sum Sq Mean Sq F value  Pr(&gt;F)   
+Brand        3  30.69  10.229   7.962 0.00668 **
+Car          3  38.69  12.896  10.038 0.00313 **
+Residuals    9  11.56   1.285                   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>Is there a way to interpret this? The interaction plot shows me that there is definitely interaction between <code>Brand</code> and <code>Car</code> so I am hoping to incorporate this into my model.</p>
+"
+"NaN","NaN","179992","<p>I have part of the analysis of some data where there are 24 observations all together and I have been given the:</p>
+
+<p>Degrees of freedom, Deviance residuals, Degrees of freedom residuals and deviance</p>
+
+<p>How can I use these to form an ANOVA table ? </p>
+
+<p><a href=""http://i.stack.imgur.com/WZz90.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/WZz90.png"" alt=""enter image description here""></a></p>
+"

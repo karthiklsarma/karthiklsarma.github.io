@@ -1,0 +1,858 @@
+"V1","V2","V3","V4"
+"0.679366220486757","0.679366220486757","185449","<p>I've implemented a comparison between the performance of 80%-forecast intervals is in the forecast package - see 1st part of the code below providing a number of hits
+This number states, how many times the forcast interval was right for the left-out data entries. Btw regarding variable names: the German ""preis"" means ""price"" and ""absatz"" means ""sales"", i.e.
+""preise"" means ""prices"" and ""absaetze"" is the plural for ""sales"".</p>
+
+<p>So, I compared the formula-based prediction interval to what I think bootstrapping is - see 2nd part of the code. But the number of hits in the 2nd case by no means resembles the 80% of the first case.
+The following actions did not help to reproduce the 80% : using less data in the given data frame, using median formulas for bootstrapping instead of the upper/lower computation in the loop,
+more samples resampling in the resampling.</p>
+
+<p>I cannot imagine the bootstrapping approach performing so bad - what did I do wrong?  </p>
+
+<pre><code>#given
+
+# data frame
+
+preis&lt;-c(1:100)
+absatz&lt;-(-2*preis)+1000+rnorm(100)
+
+
+jeansData&lt;-data.frame(absaetze=absatz,preise=preis)
+
+#### implementation ###
+
+
+#leave-one-out cross-validation for formula, i.e. with the borders         given     above  
+###### (1ST PART) ########
+
+numberOfHits&lt;-0
+
+for(i in (1:100)){
+
+preisCandidateToBeChecked&lt;-preis[i]
+absatzCandidateToBeChecked&lt;-absatz[i]
+
+absatzWithoutCandidate&lt;-absatz[-i]
+preisWithoutCandidate&lt;-preis[-i]
+
+jeansData&lt;-data.frame            (absaetze=absatzWithoutCandidate,preise=preisWithoutCandidate)
+fit&lt;-lm((absaetze~preise), data=jeansData)
+
+#check, if in interval and count as hit, if value is in interval
+
+if(absatzCandidateToBeChecked &lt;= (forecast(fit,     newdata=preisCandidateToBeChecked)$upper[1]) &amp; (absatzCandidateToBeChecked &gt;= (forecast(fit, newdata=preisCandidateToBeChecked)$lower[1])) )
+{numberOfHits&lt;-numberOfHits+1}
+
+}
+
+#execute code until here and inspect numberOfHits; the hit rate pretty much resembles the 80% assumed
+
+#then execute the rest
+
+#leave-one-ot cross-validation for bootstrapping (not using the bootstrap function)  ###### (2ND PART) ########
+
+
+numberOfHits&lt;-0
+
+for(i in (1:100)){
+
+preisCandidateToBeChecked&lt;-preis[i]
+absatzCandidateToBeChecked&lt;-absatz[i]
+
+absatzWithoutCandidate&lt;-absatz[-i]
+preisWithoutCandidate&lt;-preis[-i]
+
+jeansData&lt;-data.frame(absaetze=absatzWithoutCandidate,preise=preisWithoutCandidate)
+
+#ten or hundred or thousand regressions by bootstrapping
+
+allPredictions&lt;-c()
+
+for(j in (1:10)){
+
+fit&lt;-lm((absaetze~preise), data=jeansData[sample(nrow(jeansData),10,replace=TRUE),])
+
+allPredictions&lt;-c(allPredictions,forecast(fit,     newdata=preisCandidateToBeChecked)$mean)
+
+}
+
+#build and name bootstrapped forecast interval from regressions
+
+upper&lt;-sort(allPredictions)[9]
+lower&lt;-sort(allPredictions)[2]
+
+if((absatzCandidateToBeChecked &lt;= upper) &amp; (absatzCandidateToBeChecked &gt;= lower) )
+{numberOfHits&lt;-numberOfHits+1}
+
+} #inspect numberOfHitsAgain - it's around 40%. What is foul here?!
+</code></pre>
+"
+"0.277350098112615","0.277350098112615","186190","<p>I am trying to make a prediction of imbalance prices in the elctricity market. My dataset consists of data for every 15 minutes (this is the time period in which a price is determined) during 11 months. I have several exogenous factors (like the spot market price) included mentioned here as x1 etc.</p>
+
+<p>In forecasting the price I am using the following code: </p>
+
+<pre><code>lag &lt;- function(x, k){c(rep(NA, k), x)[1 : length(x)]}
+mydata$y_lag1 &lt;- lag(mydata$y, 1)
+mydata$y_lag2 &lt;- lag(mydata$y, 2)
+mydata$x1_lag1 &lt;- lag(mydata$x1, 1)
+mydata$x2_lag1 &lt;- lag(mydata$x2, 1)
+mydata$x3_lag1 &lt;- lag(mydata$x3, 1
+
+f&lt;- y ~ y_lag1 + y_lag2 + x1_lag1 + x2_lag1 + x3_lag1
+fit &lt;- lm(formula = f, data = mydata)
+mydata$P_imb_pred &lt;- predict(fit, newdata = mydata)
+
+pred &lt;- data.frame(time=mydata$time, price=mydata$P_imb_pred)
+</code></pre>
+
+<p>My code works, but I am unsure if it does wat I want it to. I am trying to predict the price only 1 time unit (so 15 minutes) ahead. That's why I have lagged variables in the function. Can someone help me out? Should I additionally specify how much time ahead I want to forecast? If so, can you tell me how?</p>
+
+<p>Thanks for your help! </p>
+"
+"0.277350098112615","0.277350098112615","151739","<p>I am not even sure how to even phrase this question so if anyone could help that would be great.</p>
+
+<p>I am analyzing facebook activity and I wish to predict a particular activity (comments, for instance). Doing this with R, and using the package 'forecast' my prediction for the future periods with 80 and 95% yield lower boundaries of negative numbers - this can't be. The minimum possible comments that any activity could have is 0. What can I do to restrict this with a valid statistical background instead of running some code to limit these values?</p>
+
+<p>EDIT:</p>
+
+<p>Here is a MRE, with data that very closely resembles the parameters of the data I am working with (which unfortunately I can't share), but in reality, anything that has a sd larger than a mean would yield similar results:</p>
+
+<pre><code> library(forecast)
+ TEST &lt;- rnorm(150,mean=87,sd=140)
+ # change negatives to 0
+ TEST[TEST &lt; 0] &lt;- 0
+ #It's crucial that the sd is larger than the mean, if not, repeat first commands
+ mean(TEST)
+ sd(TEST)
+ arima.TEST &lt;- arima(TEST, order = c(1,0,0))
+ forecast.Arima(arima.TEST, h =12)
+ #Lo 80 and Lo 95 are predicted in the negatives
+</code></pre>
+"
+"NaN","NaN","169184","<p>I use a Tobit model to predict censored data. I use the <code>AER</code> package in R.</p>
+
+<p>A toy example looks as follows:</p>
+
+<pre><code>library(AER)
+N = 10
+f = rep(c(""s1"",""s2"",""s3"",""s4"",""s5"",""s6"",""s7"",""s8""),N)
+fcoeff = rep(c(-1,-2,-3,-4,-3,-5,-10,-5),N)
+set.seed(100) 
+x = rnorm(8*N)+1
+beta = 5
+epsilon = rnorm(8*N,sd = sqrt(1/5))
+y.star = x*beta+fcoeff+epsilon ## latent response
+y = y.star 
+y[y&lt;0]&lt;-0 ## censored response
+
+my.data = data.frame(x,f)
+fit &lt;- tobit(y~0+x+f,data=my.data)
+
+my.range = range(y,y.star,predict(fit))
+plot(y,ylim = my.range)
+lines( ifelse(predict(fit)&gt;0,predict(fit),0),col=""red"")
+</code></pre>
+
+<p>The values returned by <code>predict(fit)</code> give me the expected value under the model. How can I derive a e.g. 90% confidence interval around this expected value?</p>
+"
+"0.392232270276368","0.392232270276368","230269","<p>I am sitting with a couple of time-series that I am analysing using ARIMA models. I have a question regarding prediction intervals. When predicting using a model that takes a first difference (a SARIMA(1,1,0)x(1,0,0) model), I get an increasing size of the prediction interval. Without I get a very constant and narrow band (see below):</p>
+
+<p><a href=""http://i.stack.imgur.com/UaHX6.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/UaHX6.png"" alt=""Graphs""></a></p>
+
+<p>The corresponding results are as follows:</p>
+
+<p><a href=""http://i.stack.imgur.com/Fu2nU.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Fu2nU.png"" alt=""Results""></a></p>
+
+<p>Can anyone explain why the band is so constant? First I thought it was because of a large significant MA coefficient. This, however, I removed and the ""problem"" persisted. Then I though it was because the ARIMA without differencing automatically included an intercept. However, again, when I specified <code>include.mean = FALSE</code>, nothing changed.</p>
+
+<p>Any help would be appreciated.</p>
+"
+"0.392232270276368","0.392232270276368","171837","<p>Could somebody explain to me the theory behind how R calculates the 95% prediction intervals for my 12 step ahead forecasts in (1) a seasonal naive model and (2) a Holt-Winters forecast.</p>
+
+<p>My code is as follows: </p>
+
+<pre><code>library(forecast)
+frcA &lt;- snaive(ts.tr, h=12, level=c(95)) 
+frcA
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>         Point Forecast    Lo 95    Hi 95
+Jul 2014         6480.5 6029.462 6931.538
+Aug 2014         6675.2 6224.162 7126.238
+Sep 2014         6604.1 6153.062 7055.138
+Oct 2014         7026.9 6575.862 7477.938
+Nov 2014         7391.1 6940.062 7842.138
+Dec 2014         9185.3 8734.262 9636.338
+Jan 2015         7232.0 6780.962 7683.038
+Feb 2015         6348.3 5897.262 6799.338
+Mar 2015         7037.1 6586.062 7488.138
+Apr 2015         6905.5 6454.462 7356.538
+May 2015         7067.9 6616.862 7518.938
+Jun 2015         6920.2 6469.162 7371.238
+
+frcC &lt;- hw(ts.tr, seasonal=""multiplicative"", h=12, level=c(95)) 
+frcC
+
+         Point Forecast    Lo 95     Hi 95
+Jul 2014       7062.795 6716.461  7409.129
+Aug 2014       7129.991 6744.176  7515.805
+Sep 2014       7103.689 6686.079  7521.299
+Oct 2014       7449.304 6978.850  7919.758
+Nov 2014       7777.210 7254.032  8300.387
+Dec 2014       9713.066 9021.682 10404.451
+Jan 2015       7423.212 6867.086  7979.338
+Feb 2015       6563.966 6048.667  7079.266
+Mar 2015       7214.877 6623.531  7806.222
+Apr 2015       7055.886 6453.977  7657.795
+May 2015       7249.189 6607.280  7891.099
+Jun 2015       7142.304 6487.339  7797.269
+</code></pre>
+
+<p>The process I've been trying to follow is on <a href=""https://www.otexts.org/fpp/2/7"" rel=""nofollow"">https://www.otexts.org/fpp/2/7</a>, but after obtaining the standard deviation of the residuals, the equation just doesn't check out with what R gives. (139.8464 for Model A, 0.02 for Model B.)</p>
+"
+"0.277350098112615","0.277350098112615","194733","<p>In the <code>R</code> package <code>gamlss</code> there is a function <code>centiles</code> that according to the documentation is desgined to be used with models featuring a single explanatory variable.</p>
+
+<p>I would very much like to use this function, but my model has several variables. Let me denote my model as $\ Y=a+bx_1+cx_2$. I can set $\ d=a+bx_1+cx_2$ and then the model becomes simply $\ Y=d$. This is now in the form permissible by the <code>centiles</code> function. My question: is this transformation a valid one? Or is there some statistical/mathematical reason why this is not possible?</p>
+
+<p><strong>Background:</strong> I have a time series of forecasted points from a GAMLSS model for which I would like to plot prediction intervals. In the <code>gamlss</code> package the <code>predict</code> function does not support <code>se.fit=TRUE</code> and so prediction intervals cannot be computed in the way you would for, say, a GAM.</p>
+"
+"0.277350098112615","0.277350098112615","212182","<p>I'm currently working with random walks with drift in R, I use the rwf formula from the forecast package and I wonder how the prediction intervals are computed. As I understand it, for the random walk with drift $$\gamma_t=\gamma_{t-1}+a+\epsilon_t$$ where $\epsilon\sim \mathcal{N}(0,\sigma^2)$, </p>
+
+<p>the rwf function takes both uncertainty from the parameter estimate $\hat{a}$ and from the error term into account, but how exactly are they calculated?</p>
+
+<p>I would say that the variance of the $m$th ahead forecast is equal to $$\mathbb{V}\gamma_{n+m}=m^2\frac{\hat{\sigma}^2}{n-1}+m\hat{\sigma}^2$$Then to compute the lower and uppper limits of the prediction band we would write $$\gamma_n+m\hat{a}\pm 1.96 \sqrt{m^2\frac{\hat{\sigma}^2}{n-1}+m\hat{\sigma}^2}$$ but this does not correspond to what the forecast package gives.</p>
+"
+"0.277350098112615","0.277350098112615"," 83433","<p>I would like to ask how the long-term (multiple step ahead) prediction intervals are calculated by function <code>predict.Arima</code> in R. I am particularly interested in ARIMA models, SARIMA models and in ARIMA models with external regressors (include argument xreg => regression with ARIMA errors) </p>
+"
+"0.554700196225229","0.554700196225229","139164","<p>I'm trying to find out how to do forecasting with a mixture model (averaging the forecasts of an <code>ets</code>, an <code>arima</code> and an <code>stlf</code> model). I do not have a huge amount of statistics experience and so I'm struggling with finding out how to do it.</p>
+
+<p>The point forecasts will just be the average of the point forecasts of the three methods, no problem.</p>
+
+<p>The problem is how to calculate the prediction intervals. </p>
+
+<p>I have found an R script with an attempt to do it, but the mixture prediction intervals are just calculated as an average of the prediction intervals of the models, and I am pretty sceptical about this approach - is it really that easy?</p>
+
+<p>If not, how do I go about calculating them?</p>
+"
+"0.554700196225229","0.554700196225229","222832","<p>We have data values pertaining to BPS (bits per second) traffic on a networking device. We have data from for a particular month (October) from the past 4 years. The data points are available in a 1 minute interval.</p>
+
+<p>So we have 31 days * 24 hours * 60 minutes = 44640 values for each year. Multiply that by 4 and we get ~180,000 data points in our CSV file. We have tried several model including TBATS, ARIMA etc. to make future predictions. For example, we need to predict 44640 values for the october of next year. Problem is that so many data values means that fitting a model takes forever and it's not worth waiting an entire day of processing just to find that model is predicting a straight line trend around the average of previous values.</p>
+
+<p>We are looking for possibly reducing this data using something like exponential smoothing but we do not know how. The past data values are as follows:</p>
+
+<pre><code>8839
+29191985
+3825997
+439694949
+5186727
+5747251
+4814919
+489752985
+481456366
+53712118
+51364413
+57449919
+48123322
+473151317
+529185483
+51284866
+528115232
+597333333
+535883672
+594275668
+549679615
+589267353
+54916916
+756419719
+65492594
+587599734
+616325563
+68434481
+63351749
+624134894
+61665387
+697646113
+61722678
+689499647
+6884953
+618223888
+67283625
+7451432
+773956231
+72682555
+748525567
+682498934
+71892441
+8527712
+752342356
+68912676
+746693391
+7241629
+712685465
+748971655
+74339677
+773571787
+81173992
+9369364
+885665416
+969439265
+99578482
+13281261
+127297176
+1577597
+129853832
+13882798
+1184388675
+115559261
+118735937
+121685158
+1128946618
+1157798227
+1143165165
+11632918
+122479785
+11341628
+116385628
+12621439
+1172845976
+1214564385
+1795176
+12957522
+1183316274
+12619916
+12519533
+135765784
+1399453354
+1399224864
+1372868436
+1331569834
+137852813
+128497677
+1297789678
+135918171
+1294935824
+1384582825
+1362893276
+145228865
+142459451
+1523728929
+1553973554
+155186563
+149211641
+159253766
+141712263
+14764913
+148991924
+1562214535
+164371933
+1546871
+163188462
+168156746
+168938876
+16835799
+171595761
+1663196329
+1692558573
+17636281
+18258581
+177213887
+1652531676
+19852331
+1789876462
+1789629233
+1748867173
+181994385
+176165681
+1969791999
+19861387
+1947295162
+287128848
+235583965
+1968433253
+217279852
+2212697598
+1953822855
+2212983294
+2166245238
+29418584
+28276258
+22111712
+21361513
+2114169137
+2314153846
+216195463
+1948538537
+2131395686
+22873135
+2121744212
+2261766416
+1952463426
+231837712
+211836243
+21321957
+231673786
+23586221
+237934824
+23857991
+226835959
+22527878
+229163528
+223611724
+242565252
+2451523242
+242146954
+22592296
+2524295439
+24288788
+239426786
+2488167389
+23614618
+2387528327
+224687321
+2352352153
+219349398
+211514732
+223242859
+2114838493
+2275546998
+224398369
+2271632485
+2237118326
+231972341
+223867472
+232943687
+2616184865
+2264386319
+241637212
+2577586277
+2473823845
+247444156
+261553512
+264819946
+2643896421
+274781277
+26189985
+272488724
+2727773421
+269784662
+2923184161
+2835866726
+29476972
+313529872
+3899199
+2979386981
+37853218
+38881954
+297738289
+3113766229
+32723531
+2773715317
+3137525998
+367757942
+36456197
+297769411
+2882461831
+342295362
+344496963
+39439679
+3136141447
+3324496997
+3253434742
+338259
+2895698259
+31183592
+374252594
+38459536
+312441788
+3239434239
+3161928
+3166617496
+31916915
+3162371549
+319837457
+3141362857
+32638795
+3157587728
+3281771348
+3142241484
+3368347612
+327583987
+3241925869
+33183412
+32491351
+3383213
+3573783926
+3299445212
+3268651
+33138667
+329333539
+329314786
+343676884
+342544137
+3286497278
+34854846
+31553839
+3553121791
+3295782535
+333871824
+3357511167
+364861848
+3412626294
+33294747
+348641163
+327124157
+3392738132
+325626931
+33883856
+334594742
+32942374
+31897973
+3834926556
+365132813
+35475637
+336384187
+366552233
+36141892
+34887985
+34695147
+3576451651
+3335458644
+3326826563
+3341539
+339894997
+337912327
+336649223
+3555534642
+329266359
+356461957
+3439773899
+328435177
+3758339514
+346635125
+361774558
+335482465
+3486783351
+349275
+341392357
+37215
+3497621877
+364242974
+3624311875
+377361582
+367461755
+363526377
+34877241
+47832182
+371281677
+376216515
+3741615717
+3695335388
+3628351931
+372717255
+3792287845
+36549945
+372238998
+3869247316
+3822289851
+386173797
+372368834
+345429379
+417153116
+38749739
+395119594
+3746367111
+383839372
+391378292
+367872746
+372373178
+3625754
+379946415
+37778181
+3746261571
+3918932444
+386892529
+3695653853
+3959862748
+415346593
+42977194
+412162553
+41582129
+41732773
+471311973
+4415543
+3838746827
+43135679
+41259122
+416451147
+382524677
+3829914759
+396922256
+392669399
+383285533
+3915829759
+497197157
+471337265
+494296438
+395495
+41562899
+3973355519
+398198495
+376359951
+397532419
+438115941
+383579951
+39116435
+425944659
+3961366459
+3997619677
+4575215
+415522986
+3947337112
+394636114
+392714147
+385221299
+47237153
+...and so on
+</code></pre>
+
+<p>Keeping in mind that we have 
+~180,000 such past data values, and we wish to predict the next 44640 future values, how do we go about making such a prediction in R?</p>
+
+<p>We are new at R so actual code rather than abstract concepts would help a lot!</p>
+
+<p><strong>EDIT to show how out ARIMA model got stuck in computations:</strong></p>
+
+<p>This is the code we used for auto-arima fitting that got stuck for hours until we had to abort:</p>
+
+<pre><code>mydata &lt;- load.csv(""2.csv"")
+mydata &lt;- ts(mydata, start = c(2012,1), frequency = 44640)
+require(forecast)
+arimafit &lt;- auto.arima(mydata)
+</code></pre>
+
+<p>What are we doing wrong in the ARIMA model that's taking so long? </p>
+"
+"NaN","NaN","166725","<p>I am trying to model an ARIMAX model on my time series.</p>
+
+<pre><code>&gt; dput(tsOenb)
+structure(c(1.0227039, -5.0683144, 0.6657713, 3.3161374, -2.1586704, 
+-0.7833623, -0.2203209, 2.416144, -1.7625406, -0.1565037, -7.9803936, 
+9.4594715, -4.8104584, 8.4827107, -6.1895262, 1.4288595, 1.4896459, 
+-0.4198522, -5.1583964, 5.2502294, 1.0567102, -1.0923342, -1.5852298, 
+0.6061936, -0.3752335, 2.5008664, -1.3999729, 2.2802166, -2.1468756, 
+-1.4890328, -0.79254376, 3.21804705, -0.94407886, -0.27802316, 
+-0.20753079, -1.12610048, 2.0883735, -0.7424854, 0.44203729, 
+-1.48905938, 1.39644424, -3.8917377, 11.25665848, -9.22884035, 
+3.26856762, -0.00179541, -2.39664325, 4.00455574, -5.60891295, 
+4.6556348, -4.40536951, 6.64234497, -7.34787319, 7.56303006, 
+-8.23083674, 4.43247855, 1.31090412, 1.0227039, -5.0683144), .Tsp = c(2000.25, 
+2014.75, 4), class = ""ts"")
+&gt; quaterlyDummies &lt;-  seq(ISOdate(2000,4,1), ISOdate(2014,12,31), by = ""quarter"") # or ""3 months""
+&gt; month &lt;- month(quaterlyDummies)
+&gt; xreg &lt;- model.matrix(~as.factor(month))[1:59]
+&gt; fit &lt;- auto.arima(tsOenb, xreg=xreg) 
+&gt; accuracy(fit)
+                       ME     RMSE      MAE      MPE     MAPE      MASE       ACF1
+Training set 7.215274e-17 4.216134 3.144967 45.39733 146.9616 0.8467543 -0.7332704
+&gt; plot(tsOenb)
+&gt; lines(fitted(fit),col=2)
+&gt; 
+&gt; fit1 &lt;- auto.arima(tsOenb) 
+&gt; accuracy(fit1)
+                    ME     RMSE      MAE       MPE     MAPE      MASE        ACF1
+Training set 0.0707266 2.306156 1.739384 -3468.434 3627.246 0.4683134 0.003527999
+&gt; plot(tsOenb)
+&gt; lines(fitted(fit1),col=2)
+</code></pre>
+
+<p>Here is the output of my <code>arima model</code>:</p>
+
+<p><a href=""http://i.stack.imgur.com/Aybe9.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Aybe9.png"" alt=""enter image description here""></a></p>
+
+<p>Here is a plot of my <code>ARIMAX model</code>:</p>
+
+<p><a href=""http://i.stack.imgur.com/NLcAm.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/NLcAm.png"" alt=""enter image description here""></a></p>
+
+<p>Any suggestions why my <code>Arimax model</code> is so bad? Were my dummy variables created wrongly?</p>
+
+<p>I appreciate your replies!</p>
+"
+"0.277350098112615","0.277350098112615","233312","<p>am new to data science.i have used forecast package in R and got some accuracy measurements like RMSE,ME,MAPE etc.</p>
+
+<p>can anyone explain me this measurements in a practical approach?</p>
+
+<p>Please see my example code.</p>
+
+<pre><code>&gt; library(forecast)
+
+&gt; data=read.csv(""experiment.csv"")
+&gt; head(data)
+  BATCH value value1 value2
+1     I     5.77  21.32   34.82
+2    II     4.46  20.36   46.89
+3   III     4.57  22.64   42.95
+4    IV     3.54  23.63   48.45
+5     V     6.34  19.33   36.43
+6    VI     4.56  25.36   39.58
+
+&gt; dataset=data.frame(value=data$value,value1=data$value1,value2=data$value2)
+&gt; fit.nn=nnetar(dataset$value)
+&gt; modelaccuracy.nn=accuracy(fit.nn)
+&gt; modelaccuracy.nn
+                         ME             RMSE            MAE             MPE             MAPE        MASE        ACF1   
+Training set 0.001978004     0.4052840794   0.3743702393    -0.9462031738   9.191369199 0.3249114902    -0.2064674413
+</code></pre>
+
+<p>here some measurements has negative values.what it actually means?whether it's a bad dataset or forecasting accuracy would be not good?</p>
+
+<p>many thanks in advance.</p>
+"
+"NaN","NaN","209173","<p>I am working on a project, and I am absolutely new to forecasting and not so strong in statistics. I have an employee data for the last 7 years, along with the other variables like economic growth, employee turnover, vacancies, and some other economical factors. 
+I have to do forecasting for the next 5 years. I have some questions: </p>
+
+<ul>
+<li>Is it possible to do a time series analysis with more than one explanatory variable? Can this be done in R? </li>
+</ul>
+
+<p>I would appreciate any kind of help. Thanks in advance!! </p>
+"
+"0.480384461415261","0.480384461415261","155305","<p>I have a large dataset with different factors that I want to forecast to the future. These forecasts I will then later on use as inputs for a Monte Carlo simulation. My idea would be to use arima forecasting on the different variables. Subsequently, I would use the resulting prediction interval as inputs for the Monte Carlo simulation.</p>
+
+<p>Using R, (I think) I get what I want by using the following.</p>
+
+<p>First, I set some parameters FC_years &lt;- 4 FC_boundaries &lt;- 68 # This would be 1 sd</p>
+
+<p>Next, the forecasting is done by: <code>fit &lt;- auto.arima(POP) forecast &lt;- data.frame(forecast(fit,FC_years,level=FC_boundaries))</code></p>
+
+<p>What is now very important for me in order to use these results for a MC simulation, is to know how R calculates the prediction interval (I have been searching for quite a while now, but I can't get a clear answer), and how this interval is distributed (I assume it is normal, but again, I can't get a clear answer).</p>
+
+<p>Just as an example, the following dataset could be used:</p>
+
+<pre><code>1992 1993 1994 1995 1996 1997 1998 1999 2000 2001 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 68235 72498 76700 80326 83195 85447 87276 89004 90858 92894 94995 97015 98742 100031 100830 101219 101344 101418 101597 101932 102384 102911
+</code></pre>
+
+<p>Can anybody give me any hints?</p>
+"
+"0.277350098112615","0.277350098112615","114975","<p>I want to come up with predictions of final energy demand per capita (fe) for a panel of countries. Explanatory variables are GDP per capita (gdp) and population density (pop) -- all variables are expressed in natural logarithms. I use <em>R</em> and the <em>plm</em> package for estimation.</p>
+
+<p>My model is based on the following equation and I use the <em>pgmm</em> function of <em>plm</em>, which does an Arellano-Bond estimation:</p>
+
+<p>$\text{log(fe)}_{it} = \delta \, \text{log(fe)}_{i,t-1} + \beta_1 \,\text{log(gdp)}_{it} + \beta_2 \,\text{log(gdp)}_{it}^2 + \beta_3 \,\text{log(pop)}_{it} + \beta_5 \, \text{log(year)}$</p>
+
+<p>Now I want to forecast future values of final energy demand using scenarios for GDP per capita and population density and a logarithmic (sic!) time trend. If I understand the procedure correctly, this should work like this:</p>
+
+<p>$\text{fe}_{it} = exp(\delta \, \text{log(fe)}_{i,t-1} + \beta_1 \,\text{log(gdp)}_{it} + \beta_2 \,\text{log(gdp)}_{it}^2 + \beta_3 \,\text{log(pop)}_{it} + \beta_5 \, \text{log(year)}) + exp(s^2/2)$ (where $s^2$ is the mean squared error of the residuals.).</p>
+
+<p>I know simply plug in my scenario values and the final energy demand of the previous year, the numbers that I get are not even close to what I expected but rather off by several (dozens) orders of magnitude. For convenience, I leave out the term $exp(s^2/2)$, but since this is positive, it would only make my problem even larger.</p>
+
+<p>What am I doing wrong?</p>
+"
+"NaN","NaN","174591","<p>Given a VAR model for the second differences of a vector time series, $\Delta^2 y$, how to obtain the one-step-ahead (and possibly $h$-step-ahead) prediction intervals for the series in levels, $y$? </p>
+
+<p>Any suggestion or resources regarding how to implement this, e.g. in R, would also be appreciated.</p>
+"
+"0.277350098112615","0.277350098112615","167944","<p>I have the following time series of <em>count data</em>:</p>
+
+<pre><code>x &lt;- ts(c(21337, 56994, 95497, 138829, 146346, 157182, 128136,
+          104615, 103659, 102082, 109968, 113945, 118067, 93867, 54930))
+</code></pre>
+
+<p>To which I have associated the following model</p>
+
+<pre><code>&gt; library(forecast)
+...
+&gt; ets(x)
+ETS(A,N,N) 
+
+Call:
+ ets(y = x) 
+
+  Smoothing parameters:
+    alpha = 0.9999 
+
+  Initial states:
+    l = 105466.6663 
+
+  sigma:  32125.45
+
+     AIC     AICc      BIC 
+355.9429 356.9429 357.3590 
+</code></pre>
+
+<p>Which gives me negative prediction boundaries at 95% confidence:</p>
+
+<pre><code>&gt; forecast(ets(x), level = .95)
+   Point Forecast       Lo 95    Hi 95
+16       54933.94   -8030.795 117898.7
+17       54933.94  -34107.138 143975.0
+18       54933.94  -54116.824 163984.7
+...
+</code></pre>
+
+<p>Since we're dealing with count data, I've decided to hide the negative values from my final plot:</p>
+
+<pre><code>plot(forecast(ets(x), level = .95), ylim = c(0, 260e3))
+</code></pre>
+
+<p><a href=""http://i.stack.imgur.com/Vp2wN.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Vp2wN.png"" alt=""plot""></a></p>
+
+<p><strong>My questions are:</strong></p>
+
+<ol>
+<li><strong>How many Statistics professors have I just aggravated with that procedure?</strong></li>
+<li><strong>How could I get away with such a model without having to resort to transforming my data (I'm trying to avoid the back-and-forth of log-transformation)?</strong></li>
+</ol>
+
+<p>Related questions:</p>
+
+<ul>
+<li><a href=""http://stats.stackexchange.com/q/92443/27433"">Can a mathematically sound prediction interval have a negative lower bound?</a></li>
+<li><a href=""http://stats.stackexchange.com/q/143129/27433"">Getting Negative Forecasting Values</a></li>
+</ul>
+"
+"0.554700196225229","0.554700196225229"," 95609","<p>I am trying to do a basic forecast of call volumes using the forecast library for R. I am not having too much trouble forecasting on a daily or monthly interval, however when I try to forecast on an hourly or or quarter hourly basis I am having problems. The variation between points is so small as to be non existent.</p>
+
+<p>The data given are made up of aggregates for each period going back up to 24 months (I've tried shorter periods with no success). The points are only between 8am and 8pm, meaning that there are 12 points per day for hourly data and 48 points per day for quarter hourly.</p>
+
+<p>I believe the issue lies either with cycle_length or possibly needing to try a different smoothing algorithm, unfortunately my experience with statistics is so small as to be negligible.</p>
+
+<p>My code is as follows:</p>
+
+<pre><code>data &lt;- read.csv(input_csv, header=FALSE)
+
+ts_data &lt;- ts(data, frequency = cycle_length)
+
+ts_forecast &lt;- forecast(ts_data, h = forecast_periods)
+
+write.csv(ts_forecast, output_csv, row.names=FALSE)
+</code></pre>
+
+<p>Edit: As requested, a chart of some of the data. The full data set is 24 months long (I've experimented with using all or part of it). Obviously this is impractical to put up, so here is a randomly selected 7 day snapshot. Quarter hourly intervals 12 hours per day, meaning 48 points per day.</p>
+
+<p><img src=""http://i.stack.imgur.com/WFqZo.png"" alt=""Chart of call data""></p>
+"
+"0.277350098112615","0.277350098112615","196783","<p>I have a data set <code>x</code></p>
+
+<pre><code>x &lt;- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7) 
+</code></pre>
+
+<p>As my entries with a period of 4. And now if I call </p>
+
+<pre><code>library(forecast)
+forecast(nnetar(x))
+</code></pre>
+
+<p>Then neural networks should predict</p>
+
+<pre><code># 8 8 8 8 9 9 9 9
+</code></pre>
+
+<p>Knowing there is a periodicity. But the result observed is something like</p>
+
+<pre><code># 7 8 9 6 7 5 4 9 
+</code></pre>
+
+<p>So, any answer on how neural networks' prediction works for periodic data?</p>
+"

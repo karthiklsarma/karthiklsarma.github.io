@@ -1,0 +1,499 @@
+"V1","V2","V3","V4"
+"0.516397779494322","0.447213595499958","124388","<p>I have a code which tests each possible order of ARIMA and selects the best model by choosing the one with the absolute minimum sum of lags from the PACF graph. The code then proceeds to add weight to recent errors and runs an optimization on the parameters to get the minimum mean absolute error.</p>
+
+<p>The code runs fine and gives excellent results (e.g 0.2% MAPE etc) however once the parameters have been optimized the ACF and PACf graphs show lags outside the threshold.</p>
+
+<p>I would like to add into my code a loop which does the following:</p>
+
+<p>if any of the first 4 lags of the ACF or PACF graphs of the residuals found from the optimized ARIMA model are outside the threshold (2/sqrt(n)) then the optimization is re-run but doesn't allow those parameters to be selected/those parameters are skipped in the optimization process.</p>
+
+<p>Here is my code:</p>
+
+<pre><code>suppressMessages(library(lmtest))
+suppressMessages(library(car))
+suppressMessages(library(tseries))
+suppressMessages(library(forecast))
+suppressMessages(library(TTR))
+suppressMessages(library(geoR))
+suppressMessages(library(MASS))
+suppressMessages(gtools))
+#-------------------------------------------------------------------------------
+Data.col&lt;-c(5403.676,6773.505, 7231.117, 7835.552, 5236.710, 5526.619, 6555.782,11464.727, 7210.069, 7501.610, 8670.903,10872.935, 8209.023, 8153.393,10196.448,13244.502, 8356.733,10188.442,10601.322,12617.821, 11786.526,10044.987,11006.005,15101.946,10992.273,11421.189,10731.312)
+#-------------------------------------------------------------------------------
+# Turns the Data.col into a time-series
+
+Data.col.ts &lt;- ts(Data.col, deltat=(1/4), start = c(8,1))
+
+#-------------------------------------------------------------------------------
+# Starts the testing to see if the data should be logged
+
+trans&lt;- BoxCox.lambda(Data.col, method = ""loglik"")
+categ&lt;-as.character( c(cut(trans,c(0,0.25,0.75,Inf),right=FALSE)) )
+Data.new&lt;-switch(categ,
+                 ""1""=log(Data.col.ts),
+                 ""2""=sqrt(Data.col.ts),
+                 ""3""=Data.col.ts
+)
+
+#----- Weighting ---------------------------------------------------------------
+fweight &lt;- function(x){
+  PatX &lt;- 0.5+x 
+  return(PatX)
+}
+
+#Split the integral to several intervals, and pick the weights accordingly
+
+integvals &lt;- rep(0, length.out = length(Data.new))
+for (i in 1:length(Data.new)){
+  integi &lt;- integrate(fweight, lower = (i-1)/length(Data.new), upper= i/length(Data.new))
+  integvals[i] &lt;- 2*integi$value
+}
+
+#----- Find best ARIMA model ---------------------------------------------------
+
+a &lt;- permutations(n = 3, r = 6, v = c(0:2), repeats.allowed = TRUE)
+a &lt;- a[ifelse((a[, 1] + a[, 4] &gt; 2 | a[, 2] + a[, 5] &gt; 2 | a[, 3] + a[, 6] &gt; 2),
+              FALSE, TRUE), ]
+
+Arimafit &lt;- matrix(0,
+                   ncol  = length(Data.new),
+                   nrow  = length(a[, 1]),
+                   byrow = TRUE)
+
+totb &lt;- matrix(0, ncol = 1, nrow = length(a[, 1]))
+arimaerror &lt;- matrix(0, ncol = length(Data.new), nrow = 1)
+
+for (i in 1:length(a[, 1])){
+  ArimaData.new &lt;- try(Arima(Data.new,
+                             order    = a[i, c(1:3)],
+                             seasonal = list(order = a[i, c(4:6)]),
+                             method   = ""ML""),
+                       silent = TRUE)
+
+  if (is(ArimaData.new, ""try-error"")){
+    ArimaData.new &lt;- arimaerror
+  } else {
+    ArimaData.new &lt;- ArimaData.new
+  }
+
+  arimafitted &lt;- try(fitted(ArimaData.new), silent = TRUE)
+
+  if (is(arimafitted, ""try-error"")){
+    fitarima &lt;- arimaerror
+  } else {
+    fitarima &lt;- arimafitted
+  }
+
+  if (categ==""1""){
+    Arimafit[i, ] &lt;- c(exp(fitarima))
+    Datanew &lt;- c(exp(Data.new))
+  } else {
+    if (categ==""2""){
+      Arimafit[i, ] &lt;- c((fitarima)^2)
+      Datanew &lt;- c((Data.new)^2)
+    } else {
+      Arimafit[i, ] &lt;- c(fitarima)
+      Datanew &lt;- c(Data.new)
+    }
+  }
+
+  data &lt;- c(Datanew)
+
+  arima.fits &lt;- c(Arimafit[i, ])
+
+  fullres &lt;- data - arima.fits
+
+  v &lt;- acf(fullres, plot = FALSE)
+
+  w &lt;- pacf(fullres, plot = FALSE)
+
+  if (v$acf[2]&gt;(2/sqrt(length(Data.col)))|v$acf[2]&lt;(-(2/sqrt(length(Data.col))))|v$acf[3]&gt;(2/sqrt(length(Data.col)))|v$acf[3]&lt;(-(2/sqrt(length(Data.col))))|v$acf[4]&gt;(2/sqrt(length(Data.col)))|v$acf[4]&lt;(-(2/sqrt(length(Data.col))))|v$acf[5]&gt;(2/sqrt(length(Data.col)))|v$acf[5]&lt;(-(2/sqrt(length(Data.col))))|v$acf[6]&gt;(2/sqrt(length(Data.col)))|v$acf[6]&lt;(-(2/sqrt(length(Data.col))))|v$acf[7]&gt;(2/sqrt(length(Data.col)))|v$acf[7]&lt;(-(2/sqrt(length(Data.col))))|w$acf[1]&gt;(2/sqrt(length(Data.col)))|w$acf[1]&lt;(-(2/sqrt(length(Data.col))))|w$acf[2]&gt;(2/sqrt(length(Data.col)))|w$acf[2]&lt;(-(2/sqrt(length(Data.col))))|w$acf[3]&gt;(2/sqrt(length(Data.col)))|w$acf[3]&lt;(-(2/sqrt(length(Data.col))))|w$acf[4]&gt;(2/sqrt(length(Data.col)))|w$acf[4]&lt;(-(2/sqrt(length(Data.col))))|w$acf[5]&gt;(2/sqrt(length(Data.col)))|w$acf[5]&lt;(-(2/sqrt(length(Data.col))))|w$acf[6]&gt;(2/sqrt(length(Data.col)))|w$acf[6]&lt;(-(2/sqrt(length(Data.col))))){
+    totb[i] &lt;- ""n""
+  } else {
+    totb[i] &lt;- sum(abs(w$acf[1:4]))
+  }
+
+  j &lt;- match(min(totb), totb)
+
+  order.arima &lt;- a[j, c(1:3)]
+
+  order.seasonal.arima &lt;- a[j, c(4:6)]
+}
+
+#----- ARIMA -------------------------------------------------------------------
+# Fits an ARIMA model with the orders set
+stAW &lt;- Arima(Data.new, order= order.arima, seasonal=list(order=order.seasonal.arima), method=""ML"")
+parSW &lt;- stAW$coef
+    WMAEOPT &lt;- function(parSW)
+    {
+      ArimaW &lt;- Arima(Data.new, order = order.arima, seasonal=list(order=order.seasonal.arima), 
+                      include.drift=FALSE, method = ""ML"", fixed = c(parSW))
+      errAR &lt;- c(abs(resid(ArimaW)))
+      WMAE &lt;- t(errAR) %*% integvals 
+      return(WMAE)
+    }
+    OPTWMAE &lt;- optim(parSW, WMAEOPT, method=""SANN"", set.seed(2), control = list(fnscale= 1, maxit = 5000))
+    # Alternatively, set  method=""Nelder-Mead"" or method=""L-BFGS-B"" 
+    parS3 &lt;- OPTWMAE$par
+Arima.Data.new &lt;- Arima(Data.new, order = order.arima, seasonal=list(order=order.seasonal.arima), 
+                        include.drift=FALSE, method = ""ML"", fixed = c(parS3))
+</code></pre>
+
+<p>Before the parameters are optimized it gives a graph like this:
+<img src=""http://i.stack.imgur.com/cjY1x.png"" alt=""enter image description here""></p>
+
+<p>After the parameters are optimized it gives a graph like this:
+<img src=""http://i.stack.imgur.com/6HKXl.png"" alt=""enter image description here""></p>
+
+<p>I want to stop this happening in the second picture. Is this possible to do using <code>optim</code>?</p>
+"
+"0.730296743340221","0.632455532033676","124707","<p>Sorry for the rather long introduction, but since I was (legitimately) critizised for not explaining my cause and questions enough, I will do so now. </p>
+
+<p>I would like to conduct a <strong><em>(price)-forecast</em></strong> based on a multiple time series VAR-Model (vector autoregressive Model) with multiple endogeneous variables and two exogeneous. Since I am not that skillfull with regards to neither statistics nor R I want to keep is as simple as possible (Trend forecast for 3 months is sufficient).</p>
+
+<p>I am using the ""vars"" - Package, <a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a> and all in all those four functions: decompose(), VARselect(), VAR(), and predict()</p>
+
+<p>I have 1 dependent time series (y, in my model referred to as ""RH"", or ""raRH""), 4-5 endogeneous predictors and 2 exogeneous predictors.
+All timeseries have a length of 1-91 observations and are monthly data without any gaps.</p>
+
+<p><strong><em>Data description:</em></strong>
+My y (dependent var) are sawlog prices, sawlogs are raw material for plenty of follow up products.<br> My endogeneous (since they all kind of correlate with each other and y) are follow up product-prices or further elaborated sawlogs. <br>My 2 exogeneous predictors are economic indicators similar to BIP etc.</p>
+
+<p>All the time series are <em>non-stationary</em>, since I have read that you should use stationary data in order to gain a valid VAR-Model, I used the decompose() - function in R to split each variable into trend, season and the randwom walk. </p>
+
+<pre><code> raKVH&lt;-decompose(KVH)$random
+raKVH&lt;-na.omit(raKVH)
+raSNS&lt;-decompose(SNP_S)$random
+raSNS&lt;-na.omit(raSNS)
+</code></pre>
+
+<p>... and so on for every variable.<br><br>
+What I'm interested now in order to do some forecasting are predictions of the randwom walk (right?!). Anyways, I found out that all my data is first-order-integrated, since taking the logarithm makes them all stationary timeseries (ts), tested via Dickey-Fuller-Test. </p>
+
+<p>The picture also provides data example, first picture shows the raw-data, <img src=""http://i.stack.imgur.com/BcMOT.png"" alt=""enter image description here""></p>
+
+<p>second picture the random walks gained by decomposing$random the raw-data. 
+<img src=""http://i.stack.imgur.com/96yii.png"" alt=""enter image description here""></p>
+
+<p>I used the command VARselect that automatically computes the optimal lag for my model, whereas tsall is my time-series matrix containing all the timeseries mentioned above.</p>
+
+<pre><code>VARselect(tsall)
+</code></pre>
+
+<p>proceeding now with the estimation of the model VAR(p=number of lags given by VARselect), <strong><em>I encountered the following problem</em></strong>: how should I use the attribute ""type"" within the VAR-function? What does ""trend"",""none"", ""const"", ""both"" exactly mean? Since I have stationary data, there won't be any trend right? How can I check if there is a constant? Since the default value is ""const"", I chose to go with that.
+<br><br>
+<strong><em>The main question I have is the following:</em></strong><br>
+How do I get ""real"" forecasts out of the prediction of the randwom walks anyways? If I want to predict the price of yt+3, I need more than the prediction of the random walks here, I need ""real figures"" like in graphic 1. How can I ""add back"" trend and season?</p>
+
+<p>Third picture shows the Forecast of the random walk of my ""target Variable"" Y, but what's the next step here? 
+<img src=""http://i.stack.imgur.com/ZtInk.png"" alt=""enter image description here""></p>
+
+<p>Thank you for any help, if my questions/introduction are insufficient, please let me know. I'll try to explain myself better then.</p>
+"
+"0.258198889747161","0.447213595499958","126001","<p>I have two time series. After calculating the ACF, they are like the plot below. </p>
+
+<p>Does anyone know the meaning of this ACF plot? </p>
+
+<p>I know it's non-stationary time series, but I don't know how the lags can help me to build the model. </p>
+
+<p>My data are as below: </p>
+
+<p>Year,Parea,Uarea</p>
+
+<p>1950,3435829.43 ,144179.7476</p>
+
+<p>1955,3619503.16 ,168028.4699</p>
+
+<p>1960,3881482.63 ,196839.0495</p>
+
+<p>1965,4310040.34 ,229032.161</p>
+
+<p>1970,4950230.51 ,262543.7928</p>
+
+<p>1975,6216028.19 ,297502.4439</p>
+
+<p>1980,7062749.74 ,337481.6276</p>
+
+<p>1985,8187770.34 ,381059.4338</p>
+
+<p>1990,9893501.67 ,432255.4666</p>
+
+<p>1995,12011196.93 ,487330.1703</p>
+
+<p>2000,13327189.88 ,546829.7056</p>
+
+<p>2005,15231484.09 ,612606.1358</p>
+
+<p>2010,16986859.05 ,683200.605</p>
+
+<p>2014,18097951.40 ,743693</p>
+
+<p>And I have doubts about my sample size and time-series data analysis~
+My purpose for these data analysis are:</p>
+
+<p>1) do the Granger Causal Relation Test between PArea and UArea. </p>
+
+<p>2) build ARIMAs for PArea and UArea, respectively. </p>
+
+<p>But my data points are only 14, may be insufficient for purpose of my data analysis~
+I wander if I can interpolate the values between the middle years to extend sample range?</p>
+
+<p><img src=""http://i.stack.imgur.com/gieSt.jpg"" alt=""ACF of a time-series data with 14 points""></p>
+"
+"0.632455532033676","0.365148371670111","147619","<p>I'm trying to build a model that can predict streamflow for an alpine (snowmelt-fed) watershed using snow albedo (roughly, the energy reflectance of the snow) data. Albedo controls the melt of the snowpack, and higher albedo means slower melt, and vice versa. I have daily time-series data for both the snow albedo and streamflow, for 12 years from 2002-2013. The albedo time-series was obtained by spatially-averaging albedo data (raster files) from NASA's MODIS satellite.</p>
+
+<p>I have tried various methods (simple regression, GLMs, GAMs, decision trees and random forests) to build the flow prediction model, but all of them fail because of the autocorrelated relationship between albedo and flow. Since the albedo is a snowpack property, there is a lag between it and the flow (related to snowmelt).</p>
+
+<p>The Cross correlation function (CCF) between albedo and flow is shown below:</p>
+
+<p><a href=""http://imgur.com/PpW1Kpy"" rel=""nofollow""><img src=""http://i.imgur.com/PpW1Kpy.png"" title=""source: imgur.com"" /></a></p>
+
+<p>I have tried to include albedo lags of various days into the models, but I'm not able to mimic the distributed lag relationship between albedo and flow. I have tried to add precipitation, temperature and other climatic data to the predictors, but they don't seem to help. There are similar lagged and cross-correlation problems between these other predictors and flow.</p>
+
+<p>The albedo, flow, precipitation and air temperature time-series are shown below:</p>
+
+<p><a href=""http://imgur.com/Kb8Ta6q"" rel=""nofollow""><img src=""http://i.imgur.com/Kb8Ta6q.png"" title=""source: imgur.com"" /></a></p>
+
+<p>Is there a statistical or machine learning technique in R that I can explore to build the albedo-streamflow model?</p>
+
+<p>Thank you.</p>
+"
+"0.365148371670111","0","148920","<p>I'm trying to build an artificial neural network (ANN) using the R ""neuralnet"" package, to predict streamflow from snow albedo (reflectance of the snow; controls the amount of heat absorbed by the snow, and therefore controls its melt), precipitation, air temperature, and a temporal variable, 'day of the year'. All the above variables are time-series with 4383 values each between the years 2002 and 2013, with daily temporal frequency. Simpler statistical models have not worked because of the complex autocorrelated and lagged relationship between the predictor and predictors.</p>
+
+<p>I have the following questions about building the ANN:</p>
+
+<ol>
+<li>What number of hidden layers should I use when building the model? How does this choice affect the model?</li>
+<li>Should I change the 'threshold' parameter from the default (0.01)? My flow values fluctuate between 0.5 and 134.82 cubic-foot per second (cfs), with a mean of 8.5 cfs. Ideally, my flow prediction errors should not be greater than 1-2 cfs.</li>
+<li>Will the choice of algorithm affect the prediction accuracy?</li>
+<li>Should I change any of the other parameters in neuralnet?</li>
+<li>Should I include any other variables (lags, temporal variables etc) in my model?</li>
+</ol>
+
+<p>Also, would any other machine learning or statistical method be more suitable for this task? My data is highly non-linear, with some seasonality every year, and PACF and CCF plots indicate lags at all lag periods between -30 and +30 days.</p>
+
+<p>I would be happy to answer any questions about the data, or about what I've already tried (GAMs, GLMs, Decision Trees and Random Forests).
+Thank you. </p>
+"
+"0.258198889747161","0.447213595499958","173629","<p>When applying the ""urca"" package function <code>ur.df</code>, like </p>
+
+<pre><code>summary(ur.df(data$col1, type = c(""none""), lags = 12, selectlags = c(""AIC"")))
+</code></pre>
+
+<p>I get following result:</p>
+
+<pre><code>############################################### 
+# Augmented Dickey-Fuller Test Unit Root Test # 
+############################################### 
+
+Test regression trend 
+
+
+Call:
+lm(formula = z.diff ~ z.lag.1 + 1 + tt + z.diff.lag)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-12928366  -2888728   1284718   4218373   7179531 
+
+Coefficients:
+                 Estimate    Std. Error  t value  Pr(&gt;|t|)   
+(Intercept)  5.391984e+07  1.638362e+07  3.29108 0.0043123 **
+z.lag.1     -2.438154e+00  7.557134e-01 -3.22629 0.0049588 **
+tt           6.579260e+05  2.730453e+05  2.40959 0.0275861 * 
+z.diff.lag1  1.712004e+00  6.595980e-01  2.59553 0.0188537 * 
+z.diff.lag2  1.402824e+00  6.379412e-01  2.19899 0.0420083 * 
+z.diff.lag3  1.321555e+00  5.294537e-01  2.49607 0.0231329 * 
+z.diff.lag4  1.099430e+00  4.720412e-01  2.32910 0.0324428 * 
+z.diff.lag5  8.132753e-01  4.181477e-01  1.94495 0.0685140 . 
+z.diff.lag6  1.797331e-01  3.654326e-01  0.49184 0.6291254   
+z.diff.lag7  5.890640e-01  2.939590e-01  2.00390 0.0612825 . 
+z.diff.lag8  3.919041e-01  2.794371e-01  1.40248 0.1787705   
+---
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+
+Residual standard error: 6708593 on 17 degrees of freedom
+Multiple R-squared:  0.7237276, Adjusted R-squared:  0.5613144 
+F-statistic: 4.253547 on 10 and 17 DF,  p-value: 0.003348755
+
+
+Value of test-statistic is: -3.2263 3.9622 5.2635 
+
+Critical values for test statistics: 
+      1pct  5pct 10pct
+tau3 -4.15 -3.50 -3.18
+phi2  7.02  5.13  4.31
+phi3  9.31  6.73  5.61
+</code></pre>
+
+<p>Now the question:</p>
+
+<ol>
+<li>I do understand that ""-3.2263"" is the critical value (t-value)</li>
+<li><strong>There is a unit root</strong> with trend since -3.2263 > -3.18 (tau3@10pct)
+This means the time-series is <strong>non-stationary</strong> at a 10% significance level.</li>
+<li>But, what is the meaning of ""p-value: 0.003348755""? Should I list this value in a table summarizing my unit root test results or rather mark the 0.1 significance level (*10%)?</li>
+</ol>
+
+<p>The <a href=""http://www.inside-r.org/packages/cran/urca/docs/ur.df"" rel=""nofollow"">documentation</a> says that critical values are based on Hamilton (1994) and Dickey and Fuller (1981)"". </p>
+"
+"0.258198889747161","0.447213595499958","186265","<p>I am currently working on some research and we are trying to do some Time-Series prediction using neural networks. To get started, I was using the paper published by G. Peter Zhang (<a href=""http://cs.uni-muenster.de/Professoren/Lippe/diplomarbeiten/html/eisenbach/Untersuchte%20Artikel/Zhan03.pdf"" rel=""nofollow"">Time Series forcasting using a hybrid ARIMA and NN model</a>) since I am no expert in either R or statistics, I could really do with some help. </p>
+
+<p>I got R and the neuralnet lib setup and then took the Lynx dataset, then created a data-frame with the data long with the lags to set as input. My data now looks something like this (this is only for t, t-1, and t-2 lags) </p>
+
+<pre><code>     x     x1    x2
+1   269    NA    NA
+2   321   269    NA
+3   585   321    269
+</code></pre>
+
+<p>Now I want to train a NN with input x1 and x2 and get output at x.</p>
+
+<p>I do the training with the following code </p>
+
+<pre><code>nn &lt;- neuralnet(x~x1+x2, data=dat, hidden = 2, linear.output = T) # I am using t-1 ... t-4 so using hidden layer of 2
+</code></pre>
+
+<p>This does train the model, but the error is really high, and when I use it to do any computation the results of the second layer neuron is alway 1. I was discussing with some freinds and they said that its because I am maybe using the wrong activation function. I looked in the help for the act.fct and tried with both <code>logistic</code> and <code>tanh</code> but the results remain the same. </p>
+
+<p>I have been stuck on this for a few days now, so could really use some help. May I am doing something wrong? Or missing something? </p>
+
+<p>Thanks</p>
+"
+"0.730296743340221","0.790569415042095","198181","<p><strong>Scientific question:</strong>
+I want to know if temperature is changing across time (specifically, if it is increasing or decreasing). </p>
+
+<p><strong>Data:</strong> My data consists of monthly temp averages across 90 years from a single weather station. I have no NA values. The temp data clearly oscillates annually due to monthly/seasonal trends. The temp data also appears to have approx 20-30-yr cycles when graphically viewing annual trends (by plotting annual avg temps across year):</p>
+
+<p><a href=""http://i.stack.imgur.com/MapTs.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/MapTs.png"" alt=""NC Temp deviation""></a> </p>
+
+<p><strong>Analyses done in R using nlme() package</strong></p>
+
+<p><strong>Models:</strong> I tried a number of <code>gls</code> models and selected models that had lower AICs to move forward with. I also checked the significance of adding predictors based on ANOVA. It turns out that including time (centered around 1950), month (as a factor), and PDO (Pacific Decadal Oscillation) trend data create the 'best' model (i.e., the one with the lowest AIC and in which each predictor improves the model significantly). Interestingly, using season (as a factor) performed worse than using month; additionally, no interactions were significant or improved the model. The best model is shown below:</p>
+
+<pre><code>mod1 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo, data = df)
+
+&gt; anova(mod1)
+Denom. DF: 1102 
+               numDF  F-value p-value
+(Intercept)        1 87333.28  &lt;.0001
+I(year - 1950)     1    21.71  &lt;.0001
+pdo                1   236.39  &lt;.0001
+factor(month)     11  2036.10  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod1    15 4393.008
+</code></pre>
+
+<p>I decided to check the residuals for temporal autocorrelation (using Bonferroni adjusted CI's), and found there to be significant lags in both the ACF and pACF. I ran numerous updates of the otherwise best model (mod1) using various corARMA parameter values. The best corARMA gls model removed any lingering autocorrelation and resulted in an improved AIC. But time (centered around 1950) becomes non-significant. This corARMA model is shown below:</p>
+
+<pre><code>mod2 &lt;- gls(temp.avg ~ I(year-1950) + factor(month) + pdo , data = df, correlation = corARMA(p = 2, q = 1)
+
+&gt;   anova(mod2)
+Denom. DF: 1102 
+               numDF   F-value p-value
+(Intercept)        1 2813.3151  &lt;.0001
+I(year - 1950)     1    2.8226  0.0932
+factor(month)     11 1714.1792  &lt;.0001
+pdo                1   17.2564  &lt;.0001
+
+&gt; AIC(mpdo7,mod.2.1)
+        df      AIC
+mod2    18 4300.847
+
+______________________________________________________________________
+
+&gt;   summary(mod2)
+Generalized least squares fit by REML
+  Model: temp.avg ~ I(year - 1950) + factor(month) + pdo 
+  Data: df 
+       AIC      BIC    logLik
+  4300.847 4390.935 -2132.423
+
+Correlation Structure: ARMA(2,1)
+ Formula: ~1 
+ Parameter estimate(s):
+      Phi1       Phi2     Theta1 
+ 1.1547490 -0.1617395 -0.9562998 
+
+Coefficients:
+                    Value Std.Error  t-value p-value
+(Intercept)      4.259341 0.3611524 11.79375  0.0000
+I(year - 1950)  -0.005929 0.0089268 -0.66423  0.5067
+factor(month)2   1.274701 0.2169314  5.87606  0.0000
+factor(month)3   5.289981 0.2341412 22.59313  0.0000
+factor(month)4  10.488766 0.2369501 44.26571  0.0000
+factor(month)5  15.107012 0.2373788 63.64094  0.0000
+factor(month)6  19.442830 0.2373898 81.90256  0.0000
+factor(month)7  21.183097 0.2378432 89.06329  0.0000
+factor(month)8  20.459759 0.2383149 85.85178  0.0000
+factor(month)9  17.116882 0.2380955 71.89083  0.0000
+factor(month)10 10.994331 0.2371708 46.35618  0.0000
+factor(month)11  5.516954 0.2342594 23.55062  0.0000
+factor(month)12  1.127587 0.2172498  5.19028  0.0000
+pdo             -0.237958 0.0572830 -4.15408  0.0000
+
+ Correlation: 
+                (Intr) I(-195 fct()2 fct()3 fct()4 fct()5 fct()6 fct()7 fct()8  fct()9 fc()10 fc()11 fc()12
+I(year - 1950)  -0.454                                                        
+factor(month)2  -0.301  0.004                                                 
+factor(month)3  -0.325  0.006  0.540                                          
+factor(month)4  -0.330  0.009  0.471  0.576                                   
+factor(month)5  -0.332  0.011  0.460  0.507  0.582                            
+factor(month)6  -0.334  0.013  0.457  0.495  0.512  0.582                     
+factor(month)7  -0.333  0.017  0.457  0.494  0.502  0.515  0.582              
+factor(month)8  -0.333  0.019  0.456  0.494  0.500  0.503  0.512  0.585       
+factor(month)9  -0.334  0.022  0.456  0.493  0.500  0.501  0.501  0.516  0.585
+factor(month)10 -0.336  0.024  0.456  0.492  0.498  0.499  0.499  0.503  0.515  0.583  
+factor(month)11 -0.334  0.026  0.451  0.486  0.492  0.493  0.493  0.494  0.496  0.508  0.576  
+factor(month)12 -0.315  0.031  0.418  0.450  0.455  0.457  0.457  0.456  0.456  0.458  0.470  0.540
+pdo              0.022  0.020  0.018  0.033  0.039  0.030  0.002  0.059  0.087  0.080  0.052  0.030 -0.009
+
+
+Standardized residuals:
+        Min          Q1         Med          Q3         Max 
+-3.58980730 -0.58818160  0.04577038  0.65586932  3.87365176 
+
+Residual standard error: 1.739869 
+Degrees of freedom: 1116 total; 1102 residual
+</code></pre>
+
+<p><strong>My Questions:</strong></p>
+
+<ol>
+<li><p>Is it even appropriate to use an ARMA correlation here?</p>
+
+<ul>
+<li>I assume that any inferences from a simple linear model (e.g., <code>lm(temp ~ year)</code>) are inappropriate b/c of other underlying correlation structure (even though this simple linear trend <em>is</em> what I'm most interested in.</li>
+<li><p>I assume by removing affects of time lags (i.e. autocorrelation), I can better 'see' if there is in fact a long term temporal trend (incline/decline)?</p>
+
+<ul>
+<li>Is this the correct way to think about this?</li>
+</ul></li>
+</ul></li>
+<li><p>Concerning year becoming non-significant in the model...</p>
+
+<ul>
+<li>Would this have occurred because <em>all</em> of the temporal trend turned out to be due to autocorrealtion and therefore is now otherwise being accounted for in the model?</li>
+<li><p>Do I remove time from my model now (since it's no longer a significant predictor)??</p>
+
+<ul>
+<li><p><strong>UPDATE:</strong> I did do this, and the resulting model had a lower AIC (4291 vs 4300 of mod2 above). </p></li>
+<li><p>Though this isn't really a useful step for me, because I'm actually concerned about a trend in temp due to <em>time</em> (i.e., year) itself. </p></li>
+</ul></li>
+</ul></li>
+<li><p>Interpretation -- Am I interpreting the results correctly??:</p>
+
+<ul>
+<li>So based on the <code>summary</code> output above for mod2, is it correct to assume the answer to my original scientific question is: ""temperature has declined at a rate of -0.005929, but this decline is not significant (p = 0.5067)."" ??</li>
+</ul></li>
+<li><p>Next steps...</p>
+
+<ul>
+<li>I ultimately want to see if temperature will have an impact on tree-community time-series data. My motivation behind the procedure mentioned here was to determine if there was a trend in temperature before bothering to start including it in subsequent analyses.</li>
+<li>So as performed, I assume I can now say that there is not a significant linear change (increase/decline) in temp. This would suggest that perhaps temp is not important to include in subsequent analyses?</li>
+<li>However...perhaps the cyclic nature of the temp <em>is</em> important and drives cyclic patterns in the plant data. How would I approach this? (i.e., how do I 'correlate' the cyclic trend in temp with potential cyclic trend in plants' -- vs. simply <em>removing</em> cyclic (seasonal) trends based on the ACF results)? </li>
+</ul></li>
+</ol>
+"

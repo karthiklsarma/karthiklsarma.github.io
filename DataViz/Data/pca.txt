@@ -1,0 +1,1 @@
+pca=60caret=5factor-analysis=4regression=4clustering=3time-series=2distributions=2multivariate-analysis=2data-visualization=2distance=1nlme=1simulation=1quantiles=1logistic=1ggplot2=1normalization=1normal-distribution=1k-means=1glmnet=1

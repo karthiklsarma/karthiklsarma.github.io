@@ -1,0 +1,183 @@
+"V1","V2","V3","V4"
+"NaN","NaN"," 46434","<p>The <code>summary.rq</code> function from the <a href=""http://cran.r-project.org/web/packages/quantreg/quantreg.pdf"">quantreg vignette</a> provides a multitude of choices for standard error estimates of quantile regression coefficients. What are the special scenarios where each of these becomes optimal/desirable?</p>
+
+<ul>
+<li><p>""rank"" which produces confidence intervals for the estimated parameters by inverting a rank test as described in Koenker (1994). The default option assumes that the errors are iid, while the option iid = FALSE implements the proposal of Koenker Machado (1999). See the documentation for rq.fit.br for additional arguments.</p></li>
+<li><p>""iid"" which presumes that the errors are iid and computes an estimate of the asymptotic covariance matrix as in KB(1978).</p></li>
+<li><p>""nid"" which presumes local (in tau) linearity (in x) of the the conditional quantile functions and computes a Huber sandwich estimate using a local estimate of the sparsity.</p></li>
+<li><p>""ker"" which uses a kernel estimate of the sandwich as proposed by Powell(1990).</p></li>
+<li><p>""boot"" which implements one of several possible bootstrapping alternatives for estimating standard errors.</p></li>
+</ul>
+
+<p>I have read at least 20 empirical papers where this is applied either in the time-series or the cross-sectional dimension and haven't seen a mention of standard error choice. </p>
+"
+"0.816496580927726","0.816496580927726","124707","<p>Sorry for the rather long introduction, but since I was (legitimately) critizised for not explaining my cause and questions enough, I will do so now. </p>
+
+<p>I would like to conduct a <strong><em>(price)-forecast</em></strong> based on a multiple time series VAR-Model (vector autoregressive Model) with multiple endogeneous variables and two exogeneous. Since I am not that skillfull with regards to neither statistics nor R I want to keep is as simple as possible (Trend forecast for 3 months is sufficient).</p>
+
+<p>I am using the ""vars"" - Package, <a href=""http://cran.r-project.org/web/packages/vars/vars.pdf"" rel=""nofollow"">http://cran.r-project.org/web/packages/vars/vars.pdf</a> and all in all those four functions: decompose(), VARselect(), VAR(), and predict()</p>
+
+<p>I have 1 dependent time series (y, in my model referred to as ""RH"", or ""raRH""), 4-5 endogeneous predictors and 2 exogeneous predictors.
+All timeseries have a length of 1-91 observations and are monthly data without any gaps.</p>
+
+<p><strong><em>Data description:</em></strong>
+My y (dependent var) are sawlog prices, sawlogs are raw material for plenty of follow up products.<br> My endogeneous (since they all kind of correlate with each other and y) are follow up product-prices or further elaborated sawlogs. <br>My 2 exogeneous predictors are economic indicators similar to BIP etc.</p>
+
+<p>All the time series are <em>non-stationary</em>, since I have read that you should use stationary data in order to gain a valid VAR-Model, I used the decompose() - function in R to split each variable into trend, season and the randwom walk. </p>
+
+<pre><code> raKVH&lt;-decompose(KVH)$random
+raKVH&lt;-na.omit(raKVH)
+raSNS&lt;-decompose(SNP_S)$random
+raSNS&lt;-na.omit(raSNS)
+</code></pre>
+
+<p>... and so on for every variable.<br><br>
+What I'm interested now in order to do some forecasting are predictions of the randwom walk (right?!). Anyways, I found out that all my data is first-order-integrated, since taking the logarithm makes them all stationary timeseries (ts), tested via Dickey-Fuller-Test. </p>
+
+<p>The picture also provides data example, first picture shows the raw-data, <img src=""http://i.stack.imgur.com/BcMOT.png"" alt=""enter image description here""></p>
+
+<p>second picture the random walks gained by decomposing$random the raw-data. 
+<img src=""http://i.stack.imgur.com/96yii.png"" alt=""enter image description here""></p>
+
+<p>I used the command VARselect that automatically computes the optimal lag for my model, whereas tsall is my time-series matrix containing all the timeseries mentioned above.</p>
+
+<pre><code>VARselect(tsall)
+</code></pre>
+
+<p>proceeding now with the estimation of the model VAR(p=number of lags given by VARselect), <strong><em>I encountered the following problem</em></strong>: how should I use the attribute ""type"" within the VAR-function? What does ""trend"",""none"", ""const"", ""both"" exactly mean? Since I have stationary data, there won't be any trend right? How can I check if there is a constant? Since the default value is ""const"", I chose to go with that.
+<br><br>
+<strong><em>The main question I have is the following:</em></strong><br>
+How do I get ""real"" forecasts out of the prediction of the randwom walks anyways? If I want to predict the price of yt+3, I need more than the prediction of the random walks here, I need ""real figures"" like in graphic 1. How can I ""add back"" trend and season?</p>
+
+<p>Third picture shows the Forecast of the random walk of my ""target Variable"" Y, but what's the next step here? 
+<img src=""http://i.stack.imgur.com/ZtInk.png"" alt=""enter image description here""></p>
+
+<p>Thank you for any help, if my questions/introduction are insufficient, please let me know. I'll try to explain myself better then.</p>
+"
+"0.74535599249993","0.74535599249993","126196","<p>I'm developing an app in C# (WPF) that amongst other things, it makes a time-series based forecast of sales (4-5 months into the future). I'm an industrial engineer so I'm not pro in statistics nor in programming (basic knowledge of both).</p>
+
+<p>What I'm doing right now is to aggregate my daily data into monthly data, then I test for monthly seasonality, and then either go for a <strong>Holt</strong>'s exponential smoothing or for a <strong>Holt-Winters</strong>'s one depending on the result. </p>
+
+<p>For determining the <strong>smoothing parameters</strong> I'm using <strong>brute force</strong> (i.e. testing a lot of possible combinations) and keeping the one that would have predict the past year (backtesting) with minimum <a href=""http://en.wikipedia.org/wiki/Mean_absolute_error"" rel=""nofollow"">MAE</a>.</p>
+
+<p>A <strong>problem</strong> arises: this method is SLOW (obviously, as always with brute force). It takes about 0,5s only trying the smoothing parameters in 0.05 intervals which doesn't give much accuracy. I need to do this with 1000+ items so it goes over 8 minutes (too much).</p>
+
+<p>So I have a few <strong>questions</strong>:</p>
+
+<ul>
+<li>Is there any method to determine optimal smoothing parameters without testing all of them?</li>
+<li>Using <em>R.NET</em> to use the forecast package of R will be faster?</li>
+<li><p>If so, should I:</p>
+
+<ul>
+<li>Use daily or monthly data?</li>
+<li>Make also an auto.arima? How to determine which model is better?</li>
+</ul></li>
+<li><p>Is my method of backtesting (make a model only with data previous to that point) valid to determine if a model is better than another?</p></li>
+</ul>
+
+<p><strong><em>EDIT:</em></strong> I have tried implementing R.NET. Time for <code>ets</code> is about 0,1s if I set which model to use and use only mae as <code>opt.crit</code> (if not, it goes up to 5s). </p>
+
+<p>This is good enough <strong>IF</strong> I could get the same out-of-sample predictions I mention in the comment. If it's not possible then I would have to run it 12 times, adding up to 1,2s which is not fast enough.</p>
+
+<ul>
+<li>How can I do that (get predictions over the last 12 data without considering them in the model) in R?</li>
+</ul>
+"
+"0.74535599249993","0.74535599249993","186728","<p>I am using the great <code>{caret}</code> package to run a lot of models, however I would like to analyse the model as one usually does having run that model in its own right, i.e. not within caret.</p>
+
+<p>I am using the mboost package, starting with the <code>glmboost</code> function. If you run this model there are then functions within the mboost package that can be applied directly to the output of that function. however, these same functions do not work on the output of <code>train</code> from caret.
+<code>train</code> is essentially the wrapper function which allows you to optimise the parameters for the chosen model, glmboost in my case.</p>
+
+<p>Here is some dummy code if anybody wants to play with it. Its a boosted tree regression model, first using the <code>glmboost</code> function directly from the mboost package, then the same thing through the caret package (with some extra parameters to optimise over):</p>
+
+<pre><code>## ============================================================== ##
+##  Create a simple model using glmboost that runs through caret  ##
+## ============================================================== ##
+
+## install as necessary!
+library(mboost)
+library(caret)
+## Use multicore if you can!
+library(doMC)
+registerDoMC(4)
+
+## ============= ##
+##  Create data  ##
+## ============= ##
+
+## Let's say we are predicting a numeric value, based on the predictors
+## 70 observations of 10 variables, assuming they are chronologically order (a time-series)
+
+set.seed(666)                                                # the devil's seed
+myData &lt;- as.data.frame(matrix(rnorm(70*15, 2, .4), 70, 10)) #10 columns of random numbers
+names(myData) &lt;- c(""to.predict"", paste0(""var_"", seq(1, 9)))
+# Have a ganders
+str(myData)                             
+
+## Create model output using the mboost package directly
+glm_mboost &lt;- glmboost(to.predict ~ .,  # predict against all variables
+                       myData,          # supply our data
+                       control = boost_control(mstop = 200)
+                       )
+
+## This is what I'd like to do with the output from the caret package!
+plot(glm_mboost)
+cvr &lt;- cvrisk(glm_mboost)
+plot(cvr)
+
+## ========================================== ##
+##  Set parameters for train() - using caret  ##
+## ========================================== ##
+
+## glmboost takes 'mstop' and 'prune' as inputs
+myGrid &lt;- expand.grid(mstop = seq(20, 250, 50),
+                      prune = ""AIC""    #this isn't actually required by the mboost package!
+                      )
+myControl &lt;- trainControl(method = ""timeslice"", # take consequetive portions of the time-series
+                          fixedWindow = TRUE, # If this is TRUE, we get the error
+                          horizon = 1,
+                          initialWindow = 20) # ~1 months of trading days
+## fixedWindow = TRUE  --&gt; 
+
+## =============== ##
+##  Run the model  ##
+## =============== ##
+
+glm_caret &lt;- train(to.predict ~ ., data = myData,
+                method = ""glmboost"",
+                #metric = ""MyGauss"",
+                trControl = myControl,
+                tuneGrid = myGrid
+                ##verbose = FALSE)
+                )
+
+## Maybe this will give you some idea about how to extract it
+str(glm_caret)
+
+## This is the best I can do, but the first plot doesn't come out right
+x &lt;- glm_caret$finalModel
+plot(x)
+cvr1 &lt;- cvrisk(x)
+plot(cvr1)
+</code></pre>
+
+<p>An idea I have is to simply use the optimal output given by caret to run the <code>glmboost</code> function once, with the provided parameters, but as I am going through many models, I'd rather save the computing time!</p>
+"
+"0.74535599249993","0.74535599249993","218525","<p>Let say that one wants to fit a model to a daily financial time series for prediction (e.g. ARIMA, SVM). If data are stationary, ideally the longer the time series, the better. In practice, I don't feel comfortable in blindly trusting stationarity tests (e.g. KPSS, ADF). For example, a 90% KPSS and ADF confirm that the following time series is stationary when it qualitatively doesn't seem to be homoscedastic.
+<a href=""http://i.stack.imgur.com/Qv8x2.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Qv8x2.png"" alt=""enter image description here""></a>
+Which quantitative methods exist to identify a reasonable starting date of the time series in terms of quality of the prediction (i.e. minimum test error, low variance of the prediction)? Please refer to R packages when possible.</p>
+
+<p>My attempts:</p>
+
+<p>(i) A brute force approach could consist in repeating the fitting for any length of the time series of interest (e.g. 1y, 1y+1d, ..., 5y). Anyway, this approach is too expensive.</p>
+
+<p>(ii) Perform stationarity tests (ADF, KPSS) to the time series of minimum allowed length and extend the length until the tests reject the stationarity. The problem of this approach are multiple:
+  (a) extremely dependent to the confidence of the test (e.g. 95% or 80%).
+  (b) stationarity tests are not able to identify change of regime that may occurs for long financial time series. </p>
+
+<p>Strictly related topic, but it doesn't provides automatic/quantitative procedures:
+<a href=""http://stats.stackexchange.com/questions/188868/length-of-time-series-for-forecasting-modeling"">Length of Time-Series for Forecasting Modeling</a></p>
+
+<p>EDIT (2/Jul/2016): After further thoughts, I think that an optimal approach could be to follow the principle ""the larger the dataset, the better"". After all, a model that is highly dependent on the length of the time series I guess that it could be considered a ""bad"" model. Rather than focusing on the selection of an optimal length, one could focus on the identification of features that are able to work well under different regimes of the time series.</p>
+"

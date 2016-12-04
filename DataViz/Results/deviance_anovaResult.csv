@@ -1,0 +1,42 @@
+"V1","V2","V3","V4"
+"1","1","232825","<p>I have three regression binomial models in R (GLMM) for which I have the following anova table.</p>
+
+<p><a href=""http://i.stack.imgur.com/iA3qR.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/iA3qR.png"" alt=""anovaII""></a></p>
+
+<p>Now, which is the model of the best fit based on the metrics in the table? Is it model 2 since it has the lowest BIC value? </p>
+
+<p>I read somewhere that the best fitting model should have a lower residual deviance, AIC and BIC values than other models. The p-value threshold here is p&lt;0.5.  </p>
+
+<p>In addition, how can I calculate the Chisq,Chi Df and p-value of model2 in R since these are not provided in the first row? </p>
+"
+"1","1","218180","<p>0
+down vote
+favorite</p>
+
+<p>I have a large multivariate abundance data and I am interested in comparing multiple models that fit different combinations of three categorical predictor variables to my species matrix response variable. I have been using anova() to compare my different models, but I am having difficulty interpreting the output. Below, I have given my code as well as the corresponding R output.</p>
+
+<pre><code>invert.mvabund &lt;- mvabund(mva.dat)
+null&lt;-manyglm(mva.dat~1, family='negative.binomial')
+m1 &lt;- manyglm(mva.dat~Habitat+Detritus, family='negative.binomial')
+m2 &lt;- manyglm(mva.dat~Habitat*Detritus, family='negative.binomial')
+m3 &lt;- manyglm(mva.dat~Habitat*Detritus+Block, family='negative.binomial')
+anova(null,m1,m2,m3)
+
+Analysis of Deviance Table
+
+null: mva.dat ~ 1
+m1: mva.dat ~ Habitat + Detritus
+m2: mva.dat ~ Habitat * Detritus 
+m3: mva.dat ~ Habitat * Detritus + Block
+
+Multivariate test:
+     Res.Df Df.diff   Dev Pr(&gt;Dev)       
+null     99                           
+m1       94       5 257.2    0.001 ***
+m2       90       4  87.7    0.003 ** 
+m3       81       9 173.5    0.003 ** 
+Signif. codes:  0 â€˜***â€™ 0.001 â€˜**â€™ 0.01 â€˜*â€™ 0.05 â€˜.â€™ 0.1 â€˜ â€™ 1
+</code></pre>
+
+<p>How do I interpret these results? Is m2 the best-fitting model because it has the lowest deviance, even though it has a higher p-value than m1? Is this because the p-value is suggesting that there is a significant level of deviance, so the optimal model will have a higher p-value? Any suggestions on how to interpret these results would be much appreciated- I haven't been able to find a clear answer in my Google searches. Thanks!</p>
+"

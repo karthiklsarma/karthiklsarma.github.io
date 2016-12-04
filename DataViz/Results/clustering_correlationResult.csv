@@ -1,0 +1,1046 @@
+"V1","V2","V3","V4"
+"0.382359556450936","0.406571699025015","  5087","<p>There are numerous procedures for functional data clustering based on orthonormal basis functions. I have a series of models built with the GAMM models, using the <code>gamm()</code> from the mgcv package in R. For fitting a long-term trend, I use a thin plate regression spline. Next to that, I introduce a CAR1 model in the random component to correct for autocorrelation. For more info, see eg the paper of Simon Wood on <a href=""http://r.789695.n4.nabble.com/attachment/2063352/0/tprs.pdf"">thin plate regression splines</a> or his <a href=""http://rads.stackoverflow.com/amzn/click/1584884746"">book on GAM models</a>.</p>
+
+<p>Now I'm a bit puzzled in how I get the correct coefficients out of the models. And I'm even less confident that the coefficients I can extract, are the ones I should use to cluster different models. </p>
+
+<p>A simple example, using:</p>
+
+<pre><code>#runnable code
+require(mgcv)
+require(nlme)
+library(RLRsim)
+library(RColorBrewer)
+
+x1 &lt;- 1:1000
+x2 &lt;- runif(1000,10,500)
+
+fx1 &lt;- -4*sin(x1/50)
+fx2 &lt;- -10*(x2)^(1/4)
+y &lt;- 60+ fx1 + fx2 + rnorm(1000,0,5)
+
+test &lt;- gamm(y~s(x1)+s(x2))
+# end runnable code
+</code></pre>
+
+<p>Then I can construct the original basis using smoothCon :</p>
+
+<pre><code>#runnable code
+um &lt;- smoothCon(s(x1),data=data.frame(x1=x1),
+         knots=NULL,absorb.cons=FALSE)
+#end runnable code
+</code></pre>
+
+<p>Now,when I look at the basis functions I can extract using </p>
+
+<pre><code># runnable code
+X &lt;- extract.lmeDesign(test$lme)$X
+Z &lt;- extract.lmeDesign(test$lme)$Z
+
+op &lt;- par(mfrow=c(2,5),mar=c(4,4,1,1))
+plot(x1,X[,1],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,X[,2],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,8],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,7],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,6],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,5],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,4],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,3],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,2],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+plot(x1,Z[,1],ylab=""Basis function"",xlab=""X"",type=""l"",lwd=2)
+par(op)
+# end runnable code
+</code></pre>
+
+<p>they look already quite different. I can get the final coefficients used to build the smoother by</p>
+
+<pre><code>#runnable code
+Fcoef &lt;- test$lme$coef$fixed
+Rcoef &lt;- unlist(test$lme$coef$random)
+#end runnable code
+</code></pre>
+
+<p>but I'm far from sure these are the coefficients I look for. I fear I can't just use those coefficients as data in a clustering procedure. I would really like to know which coefficients are used to transform the basis functions from the ones I get with <code>smoothCon()</code> to the ones I extract from the lme-part of the gamm-object. And if possible, where I can find them. I've read the related articles, but somehow I fail to figure it out myself. All help is appreciated.</p>
+"
+"0.486189700370211","0.528726145901442","  7903","<p>QUESTION:</p>
+
+<p>I have binary data on exam questions (correct/incorrect). Some individuals might have had prior access to a subset of questions and their correct answers. I donâ€™t know who, how many, or which. If there were no cheating, suppose I would model the probability of a correct response for item $i$ as $logit((p_i = 1 | z)) = \beta_i + z$, where $\beta_i$ represents question difficulty and $z$ is the individualâ€™s latent ability. This is a very simple item response model that can be estimated with functions like ltmâ€™s rasch() in R. In addition to the estimates $\hat{z}_j$ (where $j$ indexes individuals) of the latent variable, I have access to separate estimates $\hat{q}_j$ of the same latent variable which were derived from another dataset in which cheating was not possible. </p>
+
+<p>The goal is to identify individuals who likely cheated and the items they cheated on. What are some approaches you might take? In addition to the raw data, $\hat{\beta}_i$, $\hat{z}_j$, and $\hat{q}_j$ are all available, although the first two will have some bias due to cheating. Ideally, the solution would come in the form of probabilistic clustering/classification, although this is not necessary. Practical ideas are highly welcomed as are formal approaches. </p>
+
+<p>So far, I have compared the correlation of question scores for pairs of individuals with higher vs. lower $\hat{q}_j -\hat{z}_j $ scores (where $\hat{q}_j - \hat{z}_j $ is a rough index of the probability that they cheated). For example, I sorted individuals by $\hat{q}_j - \hat{z}_j $ and then plotted the correlation of successive pairs of individualsâ€™ question scores. I also tried plotting the mean correlation of scores for individuals whose $\hat{q}_j - \hat{z}_j $ values were greater than the $n^{th}$ quantile of $\hat{q}_j - \hat{z}_j $, as a function of $n$. No obvious patterns for either approach.</p>
+
+<hr>
+
+<p>UPDATE:</p>
+
+<p>I ended up combining ideas from @SheldonCooper and the helpful <a href=""http://pricetheory.uchicago.edu/levitt/Papers/JacobLevitt2003.pdf"">Freakonomics paper</a> that @whuber pointed me toward. <em>Other ideas/comments/criticisms welcome.</em></p>
+
+<p>Let $X_{ij}$ be person $j$â€™s binary score on question $i$. Estimate the item response model $$logit(Pr(X_{ij} = 1 | z_j) = \beta_i + z_j,$$ where $\beta_i$ is the itemâ€™s easiness parameter and $z_j$ is a latent ability variable. (A more complicated model can be substituted; Iâ€™m using a 2PL in my application). As I mentioned in my original post, I have estimates $\hat{q_j } $ of the ability variable from a separate dataset $\{y_{ij}\}$ (different items, same persons) on which cheating was not possible. Specifically, $\hat{q_j} $ are empirical Bayes estimates from the same item response model as above. </p>
+
+<p>The probability of the observed score $x_{ij}$, conditional on item easiness and person ability, can be written $$p_{ij} = Pr(X_{ij} = x_{ij} | \hat{\beta_i }, \hat{q_j }) = P_{ij}(\hat{\beta_i }, \hat{q_j })^{x_{ij}} (1 - P_{ij}(\hat{\beta_i }, \hat{q_j }))^{1-x_{ij}},$$ where $P_{ij}(\hat{\beta_i }, \hat{q_j }) = ilogit(\hat{\beta_i} + \hat{q_j})$ is the predicted probability of a correct response, and $ilogit$ is the inverse logit. Then, conditional on item and person characteristics, the joint probability that person $j$ has the observations $x_j$ is $$p_j = \prod_i p_{ij},$$ and similarly, the joint probability that item $i$ has the observations $x_i$ is $$p_i = \prod_j p_{ij}.$$ Persons with the lowest $p_j$ values are those whose observed scores are conditionally least likely -- they are possibly cheaters. Items with the lowest $p_j$ values are those which are conditionally least likely -- they are the possible leaked/shared items. This approach relies on the assumptions that the models are correct and that person $j$â€™s scores are uncorrelated conditional on person and item characteristics. A violation of the second assumption isnâ€™t problematic though, as long as the degree of correlation does not vary across persons, and the model for $p_{ij}$ could easily be improved (e.g., by adding additional person or item characteristics).</p>
+
+<p>An additional step I tried is to take r% of the least likely persons (i.e. persons with the lowest r% of sorted p_j values), compute the mean distance between their observed scores x_j (which should be correlated for persons with low r, who are possible cheaters), and plot it for r = 0.001, 0.002, ..., 1.000. The mean distance increases for r = 0.001 to r = 0.025, reaches a maximum, and then declines slowly to a minimum at r = 1. Not exactly what I was hoping for. </p>
+"
+"NaN","NaN","  8729","<p>I'm trying to gain a better understanding of kmeans clustering and am still unclear about colinearity and scaling of data. To explore colinearity, I made a plot of all five variables that I am considering shown in the figure below, along with a correlation calculation.
+<img src=""http://i.stack.imgur.com/W5MZJ.jpg"" alt=""colinearity""></p>
+
+<p>I started off with a larger number of parameters, and excluded any that had a correlation higher than 0.6 (an assumption I made). The five I choose to include are shown in this diagram.</p>
+
+<p>Then, I scaled the date using the <code>R</code> function <code>scale(x)</code> before applying the <code>kmeans()</code> function. However, I'm not sure whether <code>center = TRUE</code> and <code>scale = TRUE</code> should also be included as I don't understand the differences that these arguments make. (The <code>scale()</code> description is given as <code>scale(x, center = TRUE, scale = TRUE)</code>).</p>
+
+<p>Is the process that I describe an appropriate way of identifying clusters?</p>
+"
+"0.296174438879546","0.286299167156934"," 13857","<p>I have a huge matrix (individuals X features with row.names as individuals numbers) and the corresponding segment in another vector of 1D (row.names are the same as in my huge matrix and the vector represent the segments associated).
+I.E. :</p>
+
+<pre><code>row.names VAR1 VAR2 VAR3 VAR4 â€¦ VAR3000
+    12     4    12    5   18      8
+    58     6    13    19   3     10
+</code></pre>
+
+<p>for the huge matrix.
+and:</p>
+
+<pre><code>row.names  x
+    12     4
+    58     2
+</code></pre>
+
+<p>for the segment representation (where x represent the individual' segment).</p>
+
+<p>I have no a priori model and I want to select a subset of variables (variable/feature selection) in order to predict the segment using a minimal subset of variables. I didn't use biclustering technique to detect my classes but a simple-way one. Which technique would you recommend to :</p>
+
+<ol>
+<li>select the most discriminative variables (lasso, elastic net) and why?</li>
+<li>predict the segment from these variables.</li>
+<li>predict multiple values in another similar matrix (same individuals, few predictors that have been selected). Is it possible in this case to use correlation matrix (or cov) to infer directly the values of predictors that are not known in the other matrix (not using the following method: predict the class, then fill the missing values with medoid values or cluster-mean values)?</li>
+</ol>
+
+<p>Thanks in advance.</p>
+"
+"0.264906471413009","0.256073759865792"," 18969","<p>I want to use model-based clustering to classify 1,225 time series (24 periods each). I have decomposed these time series using the fast Fourier transform and selected the harmonics that explain at least a threshold percentage of time series variance for all time series in the sample. I want to do model-based clustering on the real and imaginary parts for each transform element of a give time series because it would potentially save me from having to account for temporal autocorrelation in model based clustering across periods of a time series. I know that each complex element of the fast Fourier transform is independent from other elements, but I do not know if the imaginary and real parts of the output for a given output element are independent. I would like to know because if they were, it would allow me to maintain the default assumption of the Mclust package in R for model-based clustering that the variables analyzed have a multivariate Gaussian distribution.</p>
+
+<p>NOTE: The input is real-valued, and I have converted from a two-sided to a one-sided spectrum by removing redundant frequency elements and multiplying the positive frequencies (other than the mean component) by two per the advice I got from another StackOverflow answer here: <a href=""http://stackoverflow.com/questions/8264530/how-do-i-calculate-amplitude-and-phase-angle-of-fft-output-from-real-valued-in"">http://stackoverflow.com/questions/8264530/how-do-i-calculate-amplitude-and-phase-angle-of-fft-output-from-real-valued-in</a></p>
+"
+"0.296174438879546","0.286299167156934"," 27132","<p>I have social network data in which an ""ego"" names a friend ""alter"". I am running a regression in R in which attributes of alter are predictors of outcomes for ego. So each observation is dyadic with variable measures for both ego and alter. </p>
+
+<p>There are multiple observations for each ego which are accounted for by using a gee model, clustering on ego. The problem is that i have been asked to also account for multiple observations of alter, or least to demonstrate that interdependence among the multiple alters is not impacting the final results. There are multiples of the same alter in the dataset as well as multiples of the same ego. </p>
+
+<p>The two options seem to be some kind of cross clustering and I am not sure if that is possible in R. Another option which was suggested was to run a within-group correlation of some sort on the pearson's residuals, with the groups being the alters for each observation.  I had considered some sort of ICC but the number of times any individual alter shows up in the dataset ranges from 1-7. As far as I can tell, ICCs expect that the number of measures for each group in the dataset be the same. </p>
+
+<p>Does anyone know how to do a within group correlation which can handle groups within which there are differing numbers of measures? I have looked online and have not come across anything that seems to address this. </p>
+
+<p>Thanks in advance for any suggestions!</p>
+"
+"0.0936585811581694","0.181071492085037"," 54522","<p>I am working for a big company with a restrictive internet policy and Excel-addicted colleagues. I am currently working on evolution of market correlations which implies some statistics, data analysis, clustering, data visualization ... From what I have seen on the internet it's not a good idea to do it in Excel. (see here a general study: <a href=""http://stats.stackexchange.com/questions/3392/excel-as-a-statistics-workbench/3398#3398"">Excel as a statistics workbench</a>)</p>
+
+<p>After a struggle of 2 weeks, I have finally got from IT a working version of R and some interesting packages. My market data are stocked in a .txt file, I work on it with R and create a results.txt file, then I load the results.txt file in Excel and I plot what my boss wants. </p>
+
+<p>I admit that Excel is useful for manipulating a lot of data sets and graphs at the same place. It's the only good point compared to R for what I want to do. I think my cheap .txt solution to do calculations in R is correct and simple ... (for the anecdote things like Rexcel to connect R and Excel are forbidden where I work - don't ask why - so I have tried a macro which create a .bat to launch R and do the calculation; too complex for my colleagues)</p>
+
+<p>But for data visualization Excel is very poor; I really miss some graphs I have in R.
+Dendograms, boxplots, histograms, correlation circles, summarized correlations, and heatmaps are very interesting for me, but not available. So my question is how to get them in Excel ? (Remember the strict internet policy; I can't download any add-ins). Is there a (easy) way to plot complex things with macro or workbooks ? Do you have some sources?</p>
+"
+"0.264906471413009","0.256073759865792"," 59554","<p>I'm running an analysis on a few data sets that each typically have 100-200 cases measured across 120-160 variables - something similar to looking at gene expressions. Each variable is a non-centered score for expression of a particular attribute frequency for each case. In many cases though, any given attribute is likely to be 0 (i.e. very sparse for most). </p>
+
+<p>The cases typically fall into 2-4 natural groups, and I'm trying to figure out how to find out which high-expression attributes are most representative for each group and/or which ones are driving the distinctions between group memberships. </p>
+
+<p>I've been experimenting with using correlation clustering and the resulting groups <em>do</em> appear to match the natural groups assigned by other means, so now I'm just looking for a way to ""unpack"" those clusters in terms of their attribute expressions to find out which attributes/variables are the most influential ones in each of my samples. </p>
+
+<p>Given the number of variables involved, it seems like the usual approaches like PCA or discriminate or factor analysis would be very cumbersome. So far, I haven't really found much information on how to deal with variable influence that would fit situations when there are scores or hundreds of variables.</p>
+
+<p>Any suggestions?</p>
+"
+"0.324442842261525","0.31362502409359"," 66728","<p>I'm trying to write my own code for cluster-robust (AKA panel-robust, AKA heteroskedasticity and serial-correlation-consistent) standard errors, so that I can make a couple of small extensions.  But I can't get my results to match Stata's (in which this procedure is routine), so I am probably missing some detail.  Would appreciate pointers on the code, below.</p>
+
+<p>The model is 
+$$
+y_{ig} = \alpha_g + X'_{ig}\beta + \epsilon_{ig}
+$$
+The groupwise mean is the subtracted from every term above, getting rid of the $\alpha$, and leaving de-meaned group-varying variables:
+$$
+ydm_{ig} = Xdm'_{ig}\beta + \epsilon dm_{ig}
+$$</p>
+
+<p>The variance of $\beta$ is estimated as </p>
+
+<p>$$
+\left(\displaystyle\sum_G Xdm_g'Xdm_g\right)^{-1} \displaystyle\sum_G Xdm_g' \epsilon dm_g \epsilon dm_g' Xdm_g \left(\displaystyle\sum_G Xdm_g'Xdm_g\right)^{-1}
+$$</p>
+
+<p>Standard errors are the square root of the diagonal of this matrix, inflated by $G/(G-1) \times (N-1)/(N-K)$.</p>
+
+<p>This is all textbook econometrics.  Standard in stata, and code exists to do it in R.  (<a href=""http://people.su.se/~ma/clustering.pdf%E2%80%8E"" rel=""nofollow"">this</a>, for example)</p>
+
+<p>I want my code to not rely on <code>plm</code>, <code>lmtest</code> or <code>sandwich</code>.</p>
+
+<p>The following script is supposed to implement the math above, simulating a panel dataset in which outcomes are autocorrelated and groups have different forms of heteroskedasticity.  It gives the right point estimates but the standard errors are bigger than those given by stata:</p>
+
+<pre><code>rm(list=ls()) 
+set.seed(999)
+N = 1000
+G = 200
+x = rnorm(N)
+z = rexp(N)
+obs = N/G
+fe = data.frame(ID=1:G,fe = rnorm(G)+5)
+fe = data.frame(ID = rep(fe$ID,obs),fe = rep(fe$fe,obs))
+t = rep(1,G); for (i in 2:obs) {t = c(t,rep(i,G))}
+data = data.frame(y=x+z+fe$fe+x*rnorm(N,mean=0,sd=fe$fe*runif(N)), ID=fe$ID,x,z,t)
+write.csv(data,""testdata.csv"")
+
+demean = function(var,ID){
+    dat = data.frame(var,ID)
+    library(doBy)
+    means = summaryBy(var~ID,data=dat,fun=mean)
+    d = data.frame(var,ID)
+    a = merge(d,means,by=""ID"")
+    adm = a[,2]-a[,3]
+    adm
+    }
+xdm = demean(data$x,data$ID)
+ydm = demean(data$y,data$ID)
+zdm = demean(data$z,data$ID)
+
+mdm = lm(ydm~xdm+zdm-1)
+summary(mdm)
+
+e = mdm$resid
+
+lpm = cbind(xdm,zdm)
+
+bread = matrix(0,ncol(lpm),ncol(lpm))
+tofu = matrix(0,ncol(lpm),ncol(lpm))
+K = mdm$rank
+    for (i in 1:G){
+    	X = lpm[data$ID==unique(data$ID)[i],]
+    bread = t(X)%*%X +bread
+
+    r = e[data$ID==unique(data$ID)[i]]
+    tofu = t(X) %*% r %*% t(r) %*% X + tofu
+    }
+bread = solve(bread)
+vcv = bread%*%tofu%*%bread
+se = G/(G-1)*(N-1)/(N-K)*sqrt(diag(vcv))
+summary(mdm)
+se
+</code></pre>
+
+<p>Using that <code>testdata.csv</code> file, I can compare to Stata:</p>
+
+<pre><code>clear all
+insheet using ""testdata.csv""
+xtset id t
+xtreg y x z,fe cluster(id)
+</code></pre>
+
+<p>My R-code:</p>
+
+<pre><code>1&gt; se
+       xdm        zdm 
+0.16946120 0.08793485 
+</code></pre>
+
+<p>Stata's output:</p>
+
+<pre><code>             |               Robust
+           y |      Coef.   Std. Err.      t    P&gt;|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+           x |   1.223739   .1992449     6.14   0.000     .8308371    1.616642
+           z |    .876592   .0960943     9.12   0.000     .6870981    1.066086
+</code></pre>
+
+<p>Mine are consistently more optimistic than Stata's.  Anybody help me figure out why?  I feel like it is probably some small bug, but I can't pinpoint where.</p>
+
+<p><strong>EDIT</strong>:  The answer to the question is <a href=""http://www.stata.com/support/faqs/statistics/intercept-in-fixed-effects-model/"" rel=""nofollow"">here</a> and <a href=""http://www.stata.com/manuals13/xtxtreg.pdf"" rel=""nofollow"">here</a>.  Stata doesn't run a textbook ``within'' estimator, rather it adds the averages back into each variable, which is what allows for the estimation of a constant term (which has the interpretation of the mean of the fixed effects, and which allows for prediction.  When I alter my code to copy those procedures, my SE's are equivalent up to the 3rd or 4th decimal point.</p>
+"
+"0.229415733870562","0.221766381286372"," 69740","<p>Background - I want to cluster analyze a mixed dataset, clustering the variables on the basis of correlational similarity. SPSS gives me this option, but doesn't allow me to evaluate the clustering solutions by providing statistical measures of heterogeneity change (e.g. pseudo F statistic) or direct measures of heterogeneity (e.g. CCC).</p>
+
+<p>As such, I'm learning R. I've managed to cluster my variables using both the varclus and hclustvar procedures, both of which generate nice dendrograms that I can interpret visually. However I'm struggling to get R to provide me with some actual numbers, such as the statistics mentioned above, which might indicate what constitutes the ""best"" clustering solution. How can I do this? I've been through the documentation for both the Hmisc and ClustOfVar packages and can't find any way to do this.</p>
+
+<p>I've read <a href=""http://stats.stackexchange.com/questions/49549/how-to-choose-clusters-from-variable-clustering-varclus-procedure"">elsewhere</a> that clustering criteria can be applied using the NBClust package, but as far as I can see the NBClust function only works on dissimilarity matrices / distance measures, which aren't an option for me as I'm interested in correlational similarity.</p>
+
+<p>Any suggestions? </p>
+"
+"0","0.128036879932896"," 70041","<p>Is it possible to filter only positive correlations on R?</p>
+
+<p>The point is to make clusters of time series using the correlation as a distance measure, but without clustering the series that have negative correlations.
+Thanks!</p>
+"
+"0.187317162316339","0.181071492085037"," 82981","<p>I am exploring hierarchical logistic regression, using glmer from the lme4 package. To my understanding, one of the first steps in multilevel modeling is to estimate the degree of clustering of level-1 units within level-2 units, given by the intraclass correlation (to ""justify"" the additional cost of estimating parameters to account for the clustering). When I run a fully unconditional model with glmer</p>
+
+<pre><code>fitMLnull &lt;- glmer(outcome ~ 1 + (1|level2.ID), family=binomial)
+</code></pre>
+
+<p>the glmer fit gives me the variance in the intercept for outcome at level-2, but the residual level-1 variance in outcome is nowhere to be found. I read somewhere (can't track it down now) that the residual level-1 variance is <em>not</em> estimated in HGLM (or at least in glmer). Is this true? If so, is there an alternative way to approximate the degree of clustering in the data? If not, how can I access this value to calculate the ICC?</p>
+"
+"NaN","NaN"," 85757","<p>I have used <code>hclust</code> function from R for the hierarchical clustering of vectors which are already labeled. </p>
+
+<pre><code>dissimilarity &lt;- 1 - cor(data)
+distance &lt;- as.dist(dissimilarity)
+plot(hclust(distance),  main=""Dissimilarity = 1 - Correlation"", xlab="""")
+</code></pre>
+
+<p>Now I want to evaluate if the vectors with the same label are clustered in the same group. However, I don't know how to find the optimal cutting points in the deprogram. Is there a package for it?</p>
+
+<p>Thanks for your help.</p>
+"
+"0.353208628550678","0.341431679821056"," 91348","<p>I am working on data analysis.</p>
+
+<p>Given a group of data vectors, each of them has the same dimension. Each element in a vector is a floating point number. </p>
+
+<pre><code>V1 [  ,   ,   , â€¦ ] 
+V2[  ,   ,   , â€¦ ] 
+...
+Vn [  ,   ,   , â€¦ ] 
+</code></pre>
+
+<p>Suppose that each vector has M numbers. M can be 10000.</p>
+
+<p>n can be 200. </p>
+
+<p>I need to find out how to partition the n vectors into sub-groups such that each vector in one subgroup can be represented by a basic vector in the subgroup. </p>
+
+<p>For example, </p>
+
+<p>W = union of V1, V2, V3 â€¦ Vn</p>
+
+<p>Find subgroup i, j, â€¦ t :</p>
+
+<pre><code>Gi = [  V1, V6, V3, V5, â€¦ , Vx ]
+Gj = [V22, V11, V56, V45, â€¦ , Vy]
+â€¦
+Gt = [V78, V90, V9, V12, â€¦ , Vz]
+</code></pre>
+
+<p>Such that :</p>
+
+<p>Union of Gi , Gj, â€¦ , Gt is equal to W and there is no overlap among  all Gi , Gj, â€¦ , Gt. </p>
+
+<p>Also , each subgroup has a basic vector that has strong correlation with all other element vector in the subgroup. For example, in Gi, we may have vector Vx as the basic vector such that all other vectors have <strong>strong (linear) correlation</strong>  with Vx. <strong>Here, we measure the linear correlation betwwen two vectors not two data points.</strong> </p>
+
+<p>Moreover, we need to minimize the number of the subgroups, here, it is  "" t "" . It means that given 200 vectors ( n = 200), we prefer a subgroup G1, G2, â€¦, Gt, and t is minimized. For example, we prefer t = 5 over t = 6. if t is more than 10, it may not be useful. </p>
+
+<p>My questions:
+What kind of knowledge domain this problem belongs to ? </p>
+
+<p>Is it a clustering analysis ? But, in cluster analysis, one data point is a number, but, here one data point  is a vector.</p>
+
+<p>Are there some statistics models or algorithm can be used to do this kind of analysis ?  Are there some software tools or packages that solve this problem ? </p>
+
+<p>If my questions are not a good fit for this forum, please tell me where I should post it. </p>
+
+<p>R packages do the clustering for data points not for data vector by correlation.</p>
+
+<p>Any help would be appreciated. </p>
+"
+"0.350438322025231","0.338753742947079"," 95844","<p>Given the following data frame:</p>
+
+<pre><code>df &lt;- data.frame(x1 = c(26, 28, 19, 27, 23, 31, 22, 1, 2, 1, 1, 1),
+                 x2 = c(5, 5, 7, 5, 7, 4, 2, 0, 0, 0, 0, 1),
+                 x3 = c(8, 6, 5, 7, 5, 9, 5, 1, 0, 1, 0, 1),
+                 x4 = c(8, 5, 3, 8, 1, 3, 4, 0, 0, 1, 0, 0),
+                 x5 = c(1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0),
+                 x6 = c(2, 3, 1, 0, 1, 1, 3, 37, 49, 39, 28, 30))
+</code></pre>
+
+<p>Such that</p>
+
+<pre><code>&gt; df
+   x1 x2 x3 x4 x5 x6
+1  26  5  8  8  1  2
+2  28  5  6  5  1  3
+3  19  7  5  3  1  1
+4  27  5  7  8  1  0
+5  23  7  5  1  1  1
+6  31  4  9  3  0  1
+7  22  2  5  4  1  3
+8   1  0  1  0  0 37
+9   2  0  0  0  0 49
+10  1  0  1  1  0 39
+11  1  0  0  0  0 28
+12  1  1  1  0  0 30
+</code></pre>
+
+<p>I would like to group these 12 individuals using hierarchical clusters, and using the correlation as the distance measure. So this is what I did:</p>
+
+<pre><code>clus &lt;- hcluster(df, method = 'corr')
+</code></pre>
+
+<p>And this is the plot of <code>clus</code>:</p>
+
+<p><img src=""http://i.stack.imgur.com/ALfbr.png"" alt=""dendogram""></p>
+
+<p>This <code>df</code> is actually one of 69 cases I'm doing cluster analysis on. To come up with a cutoff point, I have looked at several dendograms and played around with the <code>h</code> parameter in <code>cutree</code> until I was satisfied with a result that made sense for most cases. That number was <code>k = .5</code>. So this is the grouping we've ended up with afterwards:</p>
+
+<pre><code>&gt; data.frame(df, cluster = cutree(clus, h = .5))
+   x1 x2 x3 x4 x5 x6 cluster
+1  26  5  8  8  1  2       1
+2  28  5  6  5  1  3       1
+3  19  7  5  3  1  1       1
+4  27  5  7  8  1  0       1
+5  23  7  5  1  1  1       1
+6  31  4  9  3  0  1       1
+7  22  2  5  4  1  3       1
+8   1  0  1  0  0 37       2
+9   2  0  0  0  0 49       2
+10  1  0  1  1  0 39       2
+11  1  0  0  0  0 28       2
+12  1  1  1  0  0 30       2
+</code></pre>
+
+<p>However, I am having trouble interpreting the .5 cutoff in this case. I've taken a look around the Internet, including the help pages <code>?hcluster</code>, <code>?hclust</code> and <code>?cutree</code>, but with no success. The farthest I've become to understanding the process is by doing this:</p>
+
+<p>First, I take a look at how the merging was made:</p>
+
+<pre><code>&gt; clus$merge
+      [,1] [,2]
+ [1,]   -9  -11
+ [2,]   -8  -10
+ [3,]    1    2
+ [4,]  -12    3
+ [5,]   -1   -4
+ [6,]   -3   -5
+ [7,]   -2   -7
+ [8,]   -6    7
+ [9,]    5    8
+[10,]    6    9
+[11,]    4   10
+</code></pre>
+
+<p>Which means everything started by joining observations 9 and 11, then observations 8 and 10, then steps 1 and 2 (i.e., joining 9, 11, 8 and 10), etc. Reading about the <code>merge</code> value of <code>hcluster</code> helps understand the matrix above.</p>
+
+<p>Now I take a look at each step's height:</p>
+
+<pre><code>&gt; clus$height
+[1] 1.284794e-05 3.423587e-04 7.856873e-04 1.107160e-03 3.186764e-03 6.463286e-03 
+    6.746793e-03 1.539053e-02 3.060367e-02 6.125852e-02 1.381041e+00
+&gt; clus$height &gt; .5
+[1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE
+</code></pre>
+
+<p>Which means that clustering stopped only in the final step, when the height finally goes above .5 (as the Dendogram had already pointed, BTW).</p>
+
+<p>Now, here is my question: <strong>how do I interpret the heights?</strong> Is it the ""remainder of the correlation coefficient"" (please don't have a heart attack)? I can reproduce the height of the first step (joining of observations 9 and 11) like so:</p>
+
+<pre><code>&gt; 1 - cor(as.numeric(df[9, ]), as.numeric(df[11, ]))
+[1] 1.284794e-05
+</code></pre>
+
+<p>And also for the following step, that joins observations 8 and 10:</p>
+
+<pre><code>&gt; 1 - cor(as.numeric(df[8, ]), as.numeric(df[10, ]))
+[1] 0.0003423587
+</code></pre>
+
+<p>But the next step involves joining those 4 observations, and I don't know:</p>
+
+<ol>
+<li>The correct way of calculating this step's height</li>
+<li>What each of those heights actually means.</li>
+</ol>
+"
+"0.264906471413009","0.256073759865792"," 96946","<p>I am reading a code for a Bayesian clustering method. Both prior and the likelihood are normally distributed. If I understood correctly, such cases are called ""conjugate priors""</p>
+
+<p>My question is about calculating the posterior mean and variance. So it is implemented in the code as following</p>
+
+<pre><code>d = nrow (data.i)##number of attributes
+n = ncol (data.i)##number of replication for each attribute
+Smatrix = matrix (1, nrow=d, ncol=d)##correlation of attributes
+Imatrix = Smatrix - 1
+diag (Imatrix) = 1
+
+prior.precision = solve (sdWICluster^2 * Smatrix + sdTSampling^2 * Imatrix) #inverting the prior correlation matrix (prior.precision)
+prior.mean = cluster.mean # mean of each clusters
+
+sample.precision = sdResidual^(-2) * Imatrix
+sample.mean = apply (data.i, 1, mean)#mean for each cluster
+
+post.cov = solve (as.matrix(prior.precision + n*sample.precision)) # posterior covariance matrix
+post.mean = as.vector (post.cov %*% (prior.precision %*% prior.mean + n*sample.precision %*% sample.mean)) # posterior of the mean
+</code></pre>
+
+<p>it seems the code has take the following formula, </p>
+
+<p>$\mu_{po} = C_{po}\times((\mu_{pr} \times \tau_{pr})+(n\times\tau_{li}\times\mu_{li}))$</p>
+
+<p>$C_{po} = \tau_{pr} + n\times\tau_{li}$</p>
+
+<p>As I said, this is the case of conjugates of normal distributions with unknown mean but variance known; however, it does not fit to the formula I have from <a href=""http://www.people.fas.harvard.edu/~plam/teaching/methods/conjugacy/conjugacy_print.pdf"" rel=""nofollow"">here</a>. (or may be it does by my eye is not able to catch). I appreciate if someone make some comments about the code and the formula</p>
+"
+"0.132453235706504","0.128036879932896","109352","<p>I have a situation where we have a number of quantitative features / variables (p) than the number of samples (n). My objective is to classify these samples into groups (may be hierarchical). I can see a good discussion about this in this <a href=""http://stats.stackexchange.com/questions/15564/clustering-of-10s-of-millions-of-high-dimensional-data"">Q/A</a> post, here at CV. I am aware of discussion about clustering based on high-dimensional data in <a href=""http://en.wikipedia.org/wiki/Clustering_high-dimensional_data"" rel=""nofollow"">wiki</a> and its needs.</p>
+
+<p>Here is data example for workout:</p>
+
+<pre><code>set.seed(123)
+# matrix of X variable 
+xmat &lt;- matrix(sample(-1:1, 2000000, replace = TRUE), ncol = 10000)
+colnames(xmat) &lt;- paste (""M"", 1:10000, sep ="""")
+rownames(xmat) &lt;- paste(""sample"", 1:200, sep = """")
+</code></pre>
+
+<p>Here are my questions:</p>
+
+<ol>
+<li><p>What would be best approach ? </p></li>
+<li><p>I am interested to find implementation codes for a suitable method (may be Subspace clustering or Projected clustering or Correlation clustering or Hybrid approaches) for my case.  </p></li>
+</ol>
+"
+"0.264906471413009","0.256073759865792","113462","<p>I am performing the hierarchical clustering analysis on a dataset of 25 viral populations using 3 viral components (variables) to construct a dendrogram with average method and correlation distance calculation. We firstly used the <code>hclust()</code> method generate a plot, but we still need to support the dendrogram by statistical analysis. So after transposing the data, we choose <code>pvclust()</code> to generate the dendrogramm. However, the plots constructed by <code>pvclust</code> and the one generated by <code>hclust</code> are totally different. We used the same data and same parameters (average method and correlation distance), but the results are so different. Why might this be?
+Here is the dataset <a href=""https://github.com/yingfengisu/RSHOP/blob/master/TVA1.csv"" rel=""nofollow"">https://github.com/yingfengisu/RSHOP/blob/master/TVA1.csv</a></p>
+
+<h1>hclust</h1>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/PaHfr.png"" alt=""enter image description here""></p>
+</blockquote>
+
+<pre><code>######### hclust method #############
+sd.data=scale(tav.data)
+dd=as.dist(1-cor(t(sd.data)))  # correlation-based distance
+plot(hclust(dd, method=""average""), main=""Average Linkage with Correlation-Based Distance"",xlab="""", sub="""", labels=tav.labs)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/i02XB.png"" alt=""enter image description here""></p>
+</blockquote>
+
+<hr>
+
+<h1>pvclust</h1>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/EDRjX.png"" alt=""enter image description here""> </p>
+</blockquote>
+
+<pre><code>######### pvclust method ################
+tav.data0 = tav.data[,c(1,2,3)]
+rownames(tav.data0)&lt;-tav.labs
+tav.data0 = as.data.frame(t(tav.data0))
+sd.data0 = scale(tav.data0)
+library(pvclust)
+result=pvclust(sd.data0,method.hclust=""average"", method.dist=""correlation"",nboot=100,r=seq(0.7,1.4,by=.1))
+plot(result)
+</code></pre>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/CH3Fl.png"" alt=""enter image description here""></p>
+</blockquote>
+"
+"0.132453235706504","0.128036879932896","124182","<p>I am fitting a geeglm model and it is not recognizing the clustering.</p>
+
+<p>my model is</p>
+
+<pre><code>geeglm(formula = Consumption~Price + Income + Embargod + Observation, 
+   id=Id, 
+   waves=Observation,
+   corstr=""ar1"")
+</code></pre>
+
+<p>and the (partial) output is</p>
+
+<pre><code>Estimated Correlation Parameters:
+  Estimate Std.err
+  alpha        0       0
+Number of clusters:   342   Maximum cluster size: 1 
+</code></pre>
+
+<p>Why is it saying that I have 342 clusters and the max cluster size is 1?</p>
+
+<p>Id is a factor variable with 18 levels and 19 observations in each, so there should be 18 clusters with a max size of 19.</p>
+"
+"0","0.128036879932896","149852","<p>I want to calculate the cophenetic correlation coefficient.
+reading previous posts  </p>
+
+<p><a href=""http://stats.stackexchange.com/questions/92546/comparison-of-cophenetic-correlation-coefficients-on-different-data-sets"">Comparison of cophenetic correlation coefficients on different data sets</a></p>
+
+<p><a href=""http://stats.stackexchange.com/questions/33066/on-cophenetic-correlation-for-dendrogram-clustering"">On cophenetic correlation for dendrogram clustering</a></p>
+
+<p><a href=""http://stackoverflow.com/questions/5639794/in-r-how-can-i-plot-a-similarity-matrix-like-a-block-graph-after-clustering-d"">http://stackoverflow.com/questions/5639794/in-r-how-can-i-plot-a-similarity-matrix-like-a-block-graph-after-clustering-d</a></p>
+
+<p>I used the <code>cophenetic</code> function in the package <code>stats</code>. 
+As far as I understand the results are cophenetic distances for the hierarchical clusteringis, in a new object of class <code>dis</code>. </p>
+
+<pre><code>coph&lt;-cophenetic(hclsut_result)
+</code></pre>
+
+<p>To have an overview I clustered the cophenetic matrix, and I obtained the same clustering  as the one performed on my dataset.</p>
+
+<p>However, I wanted to have an unique value that indicate the fidelity with wich my clsutering represent my distance matrix. Therefore, I correlated the <code>dis_matrix_for_my_dataset</code> with the <code>coph</code>.</p>
+
+<pre><code>cor(euclidian_dist, coph)
+</code></pre>
+
+<p>Am I understanding right that the value I obtain indicates the <strong>cophenetic correlation coefficient</strong>?</p>
+"
+"0.376968517462526","0.404888165089458","152359","<p>I am trying to construct (undirected) <strong>social network based on co-occurence of individuals</strong>. Clustering algorithm will be later applied on this network to find some distinct subgroups. Issue is that studied animal species has <strong>very short longevity</strong> (or rather very high mortality due to predators). <strong>It causes that not all of the relationships in my network may have existed at the same time.</strong> If you look on the diagram below, the <em>""red""</em> individuals are almost extincted after 3-4 years*, but they have the <em>""longest""</em> time to <em>""meet""</em> other individuals, whereas <em>""blue""</em> individuals have only two years to <em>""meet""</em> others.</p>
+
+<p><img src=""http://i.stack.imgur.com/J9nhk.png"" alt=""enter image description here""></p>
+
+<p><em>Theoretically I can assume that each individual has expected longevity less than 10 years. Therefore not catching of ""red"" individual 5 or 6 years after tagging does not necessarily means that is dead.</em></p>
+
+<p><strong>How to include this time effect into social network?</strong></p>
+
+<p><strong>Specific questions I want to answer:</strong>
+<strong>First question: Are observed social connections distinct from a connections explained solely by shared space use? i.e., How to test if associations are random or preferred?</strong></p>
+
+<p>If answer to first question will be that associations between individuals are <strong>NOT</strong> random, then I have a second qeustion...</p>
+
+<p><strong>Does social structure correlates with genetic relatedness? i.e., are closely related individuals more often together?</strong> (DNA profiles of all inividuals are bolow)</p>
+
+<p>Here I created some data structurally similar to my database:</p>
+
+<pre><code>data &lt;- data.frame(obs_date = c(""C1"",""C2"",""C3"",""C4"",""C5"",""C6"",""C1"",""C2"",
+                                ""C3"",""C4"",""C1"",""C2"",""C3"",""C1"",""C2"",""C3"",
+                                ""C4"",""C5"",""C6"",""C7"",""C1"",""C3"",""C4"",""C5"",
+                                ""C6"",""C7"",""C8"",""C3"",""C4"",""C5"",""C6"",""C7"",
+                                ""C3"",""C4"",""C5"",""C6"",""C3"",""C4"",""C5"",""C3"",
+                                ""C4"",""C5"",""C6"",""C5"",""C6"",""C7"",""C8"",""C5"",
+                                ""C5"",""C6"",""C7"",""C8"",""C5"",""C6"",""C7"",""C7"",
+                                ""C7"",""C8"",""C7"",""C8"",""C7"",""C8"",""C7"",""C8""),
+                   ind_id = rep(LETTERS[1:20], times = c(6,4,3,7,1,6,5,4,
+                                               3,2,2,4,1,4,3,1,2,2,2,2)),
+                   obs = rep(c(""seen"",""not_seen"",""seen"",""not_seen"",""seen"",
+                               ""not_seen"",""seen"",""not_seen"",""seen""),
+                               times = c(3,1,4,1,9,1,9,3,33)))
+</code></pre>
+
+<p>Here I added genetic structure. Data are completely fabricated, but they should reflect close genetic relatedness between same collor individuals. Aditionally <em>""violet""</em> individuals are offsprings of <em>""blue""</em>, <em>""blue""</em> are offsprings of <em>""green""</em>, <em>""green""</em> are offsprings of <em>""red""</em>. </p>
+
+<pre><code>gen.raw &lt;- matrix(c(""a"",""g"",""g"",""g"",""c"",""g"",""a"",""a"",""g"",""g"",""g"",""g"",""t"",""c"",""t"",""c"",""t"",""t"",""a"",""a"",""t"",""t"",""a"",""a"",
+                    ""a"",""g"",""g"",""g"",""c"",""g"",""a"",""a"",""g"",""g"",""g"",""g"",""c"",""c"",""t"",""c"",""t"",""t"",""a"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""g"",""g"",""c"",""g"",""g"",""a"",""g"",""g"",""g"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""a"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""g"",""a"",""g"",""g"",""g"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""a"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""g"",""a"",""g"",""g"",""g"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""g"",""a"",""g"",""g"",""g"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""g"",""g"",""g"",""g"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""a"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""t"",""t"",""g"",""a"",""c"",""g"",""t"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""c"",""t"",""g"",""a"",""c"",""g"",""g"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""c"",""t"",""g"",""a"",""c"",""g"",""g"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""c"",""t"",""g"",""a"",""c"",""g"",""g"",""c"",""g"",""c"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a"",
+                    ""a"",""g"",""t"",""c"",""t"",""g"",""a"",""c"",""g"",""c"",""c"",""g"",""t"",""c"",""t"",""t"",""c"",""t"",""t"",""a"",""t"",""c"",""a"",""a""),
+                    byrow = TRUE, ncol = 24)
+rownames(gen.raw) &lt;- LETTERS[1:20]
+</code></pre>
+
+<p>Ok, source data are given above. Now I will create <strong>two distance matrices</strong>. First is <strong>association matrix</strong> derived from co-occurence data represented by <strong>OR-SP index</strong>. Observed  Roost-Sharing Proportion is calculated for each pair of individuals by <strong>dividing the number of days two individuals were found together by the number of all possible days they could be together</strong> (overlap bewteen first and last recordngs of both individuals).</p>
+
+<pre><code># matrix of days roosting together
+EG &lt;- expand.grid(unique(data$ind_id), unique(data$ind_id))
+
+data_seen &lt;- subset(data, obs == ""seen"")
+
+my.length.dt &lt;- numeric(nrow(EG))
+for (i in 1:nrow(EG)) {
+my.length.dt[i] &lt;- length(intersect(as.vector(data_seen$obs_date[data_seen$ind_id == EG[i, 1]]),
+                                    as.vector(data_seen$obs_date[data_seen$ind_id == EG[i, 2]])))
+days.together &lt;- matrix(my.length.dt, byrow = TRUE, ncol = length(unique(data$ind_id)))
+    colnames(days.together) &lt;- rownames(days.together) &lt;- unique(data$ind_id)
+}
+days.together
+
+# matrix of all possible potentional roosting days
+EG &lt;- expand.grid(unique(data$ind_id), unique(data$ind_id))
+my.length.rdp &lt;- numeric(nrow(EG))
+for (i in 1:nrow(EG)) {
+my.length.rdp[i] &lt;- length(intersect(as.vector(data$obs_date[data$ind_id == EG[i, 1]]),
+                                     as.vector(data$obs_date[data$ind_id == EG[i, 2]])))
+roosting_days_possible &lt;- matrix(my.length.rdp, byrow = TRUE, ncol = length(unique(data$ind_id)))
+    colnames(roosting_days_possible) &lt;- rownames(roosting_days_possible) &lt;- unique(data$ind_id)
+}
+roosting_days_possible
+
+# OBSERVED ROOST-SHARING PROPORTION
+OSP &lt;- days.together/roosting_days_possible
+OSP[ is.nan(OSP) ] &lt;- 0
+diag(OSP) &lt;- 0
+
+# So here is association matrix derived from co-occurence data
+round(OSP,2)
+# social distance matrix
+soc_dist &lt;- as.dist(OSP)
+</code></pre>
+
+<p>Next step is to take DNA sequences and make genetic relatedness matrix</p>
+
+<pre><code># creating matrix of relatedness
+library(ape)
+gen.str &lt;- as.DNAbin(gen.raw)
+my.gen.dist &lt;- dist.dna(gen.str)
+fit &lt;- hclust(my.gen.dist, method=""ward"")
+plot(fit) # display dendogram 
+</code></pre>
+
+<p>Finally, here I <strong>compare social distance with genetic distance by Mantel test</strong>.</p>
+
+<pre><code>library(ade4)
+mantel.rtest(soc_dist, my.gen.dist, nrepet = 9999)
+</code></pre>
+
+<p><strong>Does its result (p > 0.05) mean that there is no correlation between social and genetic structure?</strong></p>
+
+<p><strong>Is this appropriate solution to answer my question? Any ideas?</strong></p>
+
+<p>I also found that for social structure might be better this type of graph instead of dendrogram. Good for finding distinct social group.</p>
+
+<pre><code># Show social structure
+library(igraph)
+g &lt;- graph.adjacency(OSP, weighted=TRUE, mode =""undirected"")
+g &lt;- simplify(g)
+# set labels and degrees of vertices
+V(g)$label &lt;- V(g)$name
+V(g)$degree &lt;- degree(g)
+wc &lt;- walktrap.community(g)
+plot(wc, g)
+</code></pre>
+"
+"0.132453235706504","0.128036879932896","153895","<p>I've with me 50 MB data from a machine consisting of event logs such as device status, warning and error. I wish to perform text mining on the same to find correlation between errors i.e. one error could trigger another in future and take a prescriptive action on it. I've used hierarchical clustering in R to generate a dendrogram but the result couldn't yeild expected insight. Hence, I've planned to perform Apriori Algorithm on the same. My queries are:</p>
+
+<p>Is Hierarchical Clustering suggested to find such correlations?
+Is Apriori an apt algorithm in such situation and why? Or, is there any other approach to solve this problem?</p>
+
+<p>Any help would be appreciated. 
+Thanks</p>
+"
+"0.187317162316339","0.181071492085037","153946","<p>I've with me 50 MB data from a machine consisting of event logs such as device status, warning and error. I wish to perform text mining on the same to find correlation between errors i.e. one error could trigger another in future and take a prescriptive action on it.
+I've used hierarchical clustering in R to generate a dendrogram but the result couldn't yeild expected insight. Hence, I've planned to perform Apriori Algorithm on the same. 
+My queries are:</p>
+
+<ol>
+<li>Is Hierarchical Clustering suggested to find such correlations?</li>
+<li>Is Apriori an apt algorithm in such situation and why? Or, is there any other approach to solve this problem?</li>
+</ol>
+
+<p>The logs that I've looks like this :</p>
+
+<p><img src=""http://i.stack.imgur.com/nKdSM.png"" alt=""enter image description here""></p>
+"
+"0.0764719112901873","0.221766381286372","168784","<p>I am trying choose best $k$ from the consensus clustering using the Cophenetic Correlation Coefficient (CCC). I tried as follows. The correlation coefficients values are poor, i.e., <code>k=2 (0.2110048)</code>, <code>k=3 (0.1934558)</code>, <code>k=4 (0.175295)</code>. Please suggest whether am following correct method. </p>
+
+<pre><code># consensus clustering
+library(Biobase)
+data(geneData)
+d = geneData
+# median center genes
+dc = sweep(d, 1, apply(d,1,median))
+
+rcc = ConsensusClusterPlus(dc, maxK=4, reps=100, pItem=0.8, pFeature=1, title=""example"", 
+                           distance=""pearson"", innerLinkage=""ward.D"", 
+                           finalLinkage=""ward.D"", clusterAlg=""hc"")
+
+# Cophenetic Correlation Coefficient
+k2 &lt;- rcc[[2]]$consensusMatrix
+d1 &lt;- as.dist(t(k2))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.2110048
+
+k3 &lt;- rcc[[3]]$consensusMatrix
+d1 &lt;- as.dist(t(k3))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.1934558
+
+k4 &lt;- rcc[[4]]$consensusMatrix
+d1 &lt;- as.dist(t(k4))
+hc &lt;- hclust(d1, ""ward.D"")
+d2 &lt;- cophenetic(hc)
+cor(d1, d2)
+# 0.175295
+</code></pre>
+"
+"0.132453235706504","0.128036879932896","174570","<p>I have some data that should be randomly assigned to treatment $T$, and am running some tests on observables to give evidence that this is indeed the case.</p>
+
+<p>Let's focus on an outcome I'll call $X$, which is discrete, so the most natural test of if $X \perp T$ is Pearson's $\chi^2$. The Pearson test (via <code>chisq.test</code> in R) gives a $p$-value of .008, which at first glance indicates a fair amount of correlation between $X$ and $T$. Code was specifically:</p>
+
+<pre><code>library(data.table)
+analysis_data[ , chisq.test(x, treatment)$p.value]
+</code></pre>
+
+<p>However, there is a fair amount of meaningful clustering in the data, which is correlated with $X$ (e.g., as cluster size increases, average $X$ decreases).</p>
+
+<p>To deal with this, I tried to implement a blocked bootstrap as follows:</p>
+
+<ol>
+<li><p>Assign cluster ID number</p></li>
+<li><p>For each iteration $b=1,\ldots,B$:</p>
+
+<p>a. draw $n$ cluster IDs at random (with replacement, where $n$ is the total number of clusters and create a sample consisting of those $n$ clusters of observations.</p>
+
+<p>b. Calculate the Pearson's $\chi^2$ statistic (via <a href=""https://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test#Test_of_independence"" rel=""nofollow"">Wikipedia</a>) within each sample via <code>chisq.test(x, treatment)$statistic</code></p></li>
+<li><p>Calculate $\tau_0$, the $\chi^2$ value in the original sample.</p></li>
+<li><p>Calculate the $p$-value as the proportion of $\tau_b$ which exceed $\tau_0$, i.e.</p></li>
+</ol>
+
+<p>$$p = \frac{1}{B}\sum_{b=1}^B \mathbb{1}[\tau_b &gt; \tau_0]$$</p>
+
+<p>(in code:</p>
+
+<pre><code>analysis_data[ , cluster_id := .GRP, by = cluster_vars]
+setkey(analysis_data, cluster_id)
+test_dist &lt;- replicate(BB, analysis_data[
+  .(sample(unique(cluster_id), rep = TRUE)),
+  chisq.test(x, treatment)$statistic])
+    t0 &lt;- analysis_data[, chisq.test(x, treatment)$statistic]
+mean(test_dist &gt; t0)
+</code></pre>
+
+<p>)</p>
+
+<p>When I do this, the $p$ value I get out (with <code>BB</code> = 10000) is .81. That strikes me as an almost unbelievably large change.</p>
+
+<p>What's more, when I restrict attention to the subsample of size-1 clusters, I am met again with a large (though partially mediated) difference between the bootstrapped and the parametric result-- .28 from <code>chisq.test</code> vs. .88 from my bootstrap procedure.</p>
+
+<p>Am I doing something wrong? What might be causing such large-magnitude changes in $p$-value between the procedures?</p>
+"
+"NaN","NaN","175547","<p>I have 200 15x15 matrices containing correlation values between 15 nodes at 200 different time points. I want to cluster the 200 matrices using k-means clustering. Is there a way to do this, probably in Matlab or R?</p>
+
+<p>Update: I was able to solve it in matlab by unwraping each 15x15 matrix into vectors and apply kmeans().</p>
+"
+"0.229415733870562","0.221766381286372","190168","<p>i'm not really experienced in spatial stats yet, but i'm growing into it. </p>
+
+<p>I basically want to ascertain if certain values in a raster are a) autocorrelated and b) are more likely to exist in a certain spatial area (k-means? i'm unsure)</p>
+
+<p>the data is a single raster showing land use change from 1 year to another (sorry I can't post the data) and there are about 50 possible changes (some far more prevalent than others). Quickly viewing the raster, it is clear that some changes are more prevalent in northern extremes, some in areas of upland farming etc etc, patterns do exist. But I want to prove this with stats. </p>
+
+<p>For a) Local Moran's I (using a simple binary queen's spatial-weights matrix) gives us indication of spatial autocorrelation - this is useful for finding 'clumps' of similar data, correct?</p>
+
+<p>For b) I'd like to explore whether each change combination is more likely to exist in a certain part of the UK (in Scotland, in western extremes etc). Would this be some sort of k-means clustering?</p>
+
+<p>I'm doing all this in R,</p>
+
+<p>thanks for any help 
+(<a href=""http://gis.stackexchange.com/questions/90691/r-raster-package-morans-i-interpretation/108558#108558"">this question</a> had some good info re Moran's I),
+(this <a href=""http://stats.stackexchange.com/questions/9739/clustering-spatial-data-in-r"">question</a> seems to start out with a similar goal, finding regional patterns in surface sea temps but fizzled out).</p>
+"
+"0.264906471413009","0.256073759865792","194768","<p>I am trying to understand how to interpret the results I get from LDA.</p>
+
+<p>Running from the iris dataset in R, I can see the discriminant coefficients are in the model and then I can plot the model to see the clustering.  However none of this appears interpretable to me.</p>
+
+<pre><code>library(MASS)
+mdl&lt;-lda(Species~.,data=iris)
+mdl
+</code></pre>
+
+<p>Mdl Output Below</p>
+
+<pre><code>    Call:
+lda(Species ~ ., data = iris)
+
+Prior probabilities of groups:
+    setosa versicolor  virginica 
+ 0.3333333  0.3333333  0.3333333 
+
+Group means:
+           Sepal.Length Sepal.Width Petal.Length Petal.Width
+setosa            5.006       3.428        1.462       0.246
+versicolor        5.936       2.770        4.260       1.326
+virginica         6.588       2.974        5.552       2.026
+
+Coefficients of linear discriminants:
+                    LD1         LD2
+Sepal.Length  0.8293776  0.02410215
+Sepal.Width   1.5344731  2.16452123
+Petal.Length -2.2012117 -0.93192121
+Petal.Width  -2.8104603  2.83918785
+
+Proportion of trace:
+   LD1    LD2  
+0.9912 0.0088 
+</code></pre>
+
+<p><strong>What I would like to be able to say is if sepal.length is y and petal.width is x then this flower will be z.</strong>  Clearly I wish to apply this to other datasets.  Alternatively I could get that from a tree structure.</p>
+
+<p><strong>As a secondary question, how do you know how well the model fits?</strong> Looking at the correlations in this dataset, it appears to me that Petal.Length &amp; Petal.Width are strongly correlated so I would think the appropriate thing to do would be to drop one of them.  I know I can look at the accuracy on a test dataset, but is there anything here that tells me in the model how good this model is, an equivalent R^2?</p>
+
+<p><strong>Finally, why are their only 2 discriminant variables given that there are 3 variables?</strong></p>
+
+<p>I've seen some questions on this but never giving a full answer as to if and how this is possible to interpret.  To me the value in these models is being able to say, if you do x then you get y, you can then take that knowledge and apply it to the appropriate business context.  If this is not possible then where is the value in it?</p>
+"
+"0.0936585811581694","0.181071492085037","200285","<p>I am hoping someone could offer me some wisdom and a few R tricks.</p>
+
+<p>I was lucky enough to get a pretty interesting data set for a study that I am doing. There is approximately 5000+ rows of data spanning 5 years for 100 different sales people. The data is structured per below.</p>
+
+<blockquote>
+  <p>User || Month || NumberOfClientsSeen || AverageSatisfactionScore ||
+  Sales || Leads</p>
+</blockquote>
+
+<p>I want to see if there are correlations between the NumberOfClientsSeen, AverageSatisfactionScore, Sales and/or Leads. My first inclination would be to load up a Matrix into R, and run RCORR from the Hmisc libary. </p>
+
+<pre><code>&gt; library(Hmisc)
+&gt; cordata &lt;- data[NumberOfClientsSeen, AverageSatisfactionScore, Sales, Leads]
+&gt; results &lt;- rcorr(as.matrix(cordata), type=""pearson"")
+## hourray for R, N and P-values! ##
+</code></pre>
+
+<p>I realize that this probably isn't correct. I know my users have a ton of variability and that there is seasonality in my data from month to month. The correlation values I'm seeing could be representations of my months or my weird users, since these groupings / clusterings aren't being taken into consideration in my correlation analysis; the way I am analyzing my data right now, I am effectively saying that all months are equal (which they aren't) and that all users are pretty much the same (which they aren't). I need to take users and months into consideration in my analysis. </p>
+
+<p>My hypothesis / goals still relates to investigating interactions / correlations between the NumberOfClientsSeen, AverageScore, Sales and/or Leads. </p>
+
+<p>Is there an way to do a correlation for my measures that take the clustering/variances of users / months into consideration? </p>
+
+<p>Should I be adjusting my data before running rcorr, and removing monthly / user variances? </p>
+
+<p>Perhaps I should be averaging my data somehow to group my data points?</p>
+
+<p>Any insights are welcome, and appreciated.</p>
+
+<p>Thanks!</p>
+
+<ul>
+<li>JSM</li>
+</ul>
+"
+"0.296174438879546","0.286299167156934","206867","<p>I want to do cluster analysis of a product monthly sales during 5 years in 30 stores (my data are time series). I want to cluster the stores according to its seasonality.
+This is an example of my data:</p>
+
+<blockquote>
+  <p>Month    Year   Shop1   Shop2   Shop3  ...</p>
+  
+  <p>12       2008   3000    5000     700 ...</p>
+  
+  <p>1        2009   2000    4000     500 ...</p>
+  
+  <p>2        2009   6000    5000     300 ...</p>
+  
+  <p>3        2009   7000    7000     600 ...</p>
+  
+  <p>4        2009   5000    4000     900 ...</p>
+  
+  <p>5        2009    5000    8000     1000 ...
+  ...</p>
+</blockquote>
+
+<p>I have read several questions about this topic but I still do not understand the procedure or how to deal with this problem.</p>
+
+<ol>
+<li><p>I have found the package TSclust and I am considering using the dissimilarity index CORT. It covers both conventional measures for the proximity on observations and temporal correlation for the behavior proximity estimation. Do you think that is a good approach to use this measure?</p></li>
+<li><p>I have also found the following procedure in: (<a href=""http://stats.stackexchange.com/questions/9475/time-series-clustering/19042#19042"">Time series clustering</a>), that consists in:</p></li>
+</ol>
+
+<p>Step 1</p>
+
+<p>Perform a fast Fourier transform on the time series data. This decomposes your time series data into mean and frequency components and allows you to use variables for clustering that do not show heavy autocorrelation like many raw time series.</p>
+
+<p>Step 2</p>
+
+<p>If time series is real-valued, discard the second half of the fast Fourier transform elements because they are redundant.</p>
+
+<p>Step 3</p>
+
+<p>Separate the real and imaginary parts of each fast Fourier transform element.</p>
+
+<p>Step 4</p>
+
+<p>Perform model-based clustering on the real and imaginary parts of each frequency element.</p>
+
+<p>Step 5</p>
+
+<p>Plot the percentiles of the time series by cluster to examine their shape.</p>
+
+<p>Have you ever done something like that? If so, could you provide an example code to carry out these steps?
+Or do you know other steps?</p>
+
+<ol start=""3"">
+<li>I have also read the paper of Kumar, Patel and Woo: ""Clustering seasonality patterns in the presence of errors"", but i do not know how to reproduce their procedure in R.</li>
+</ol>
+
+<p>Any help would be helpful!</p>
+"
+"NaN","NaN","208621","<p>I am trying to perform a clustering analysis in R according to Spearman correlation coefficient.</p>
+
+<p>Could it happen that the analysis identifies only one big cluster as in the figure attached (the code is below the figure)? How would you interpret that? Please not that the same code generates a more meaningful dendogram if I change the matrix I use (in this case <code>mat_settings_old</code>).</p>
+
+<p><a href=""http://i.stack.imgur.com/XIisq.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/XIisq.png"" alt=""enter image description here""></a></p>
+"
+"0.187317162316339","0.181071492085037","209364","<p>I'm working on segmentation/clustering and trying to use Gaussian Mixture Modelling for Model-Based Clustering. I'm using the R package Mclust in order to come up with the best fit for my data.</p>
+
+<p>All data is transformed to a uniform distribution with mean zero, standard deviation one (I know, not Gaussian) and the variables included are chosen based on earlier attempts using k-means, where the given variables seemed to be discriminating. Of course, k-means comes with some drawbacks (lack of statistical foundation, no control of cross-correlation etc,), and that's the reason I want to use Model-Based Clustering (or latent class analysis, with the package poLCA).</p>
+
+<p>When using mclustBIC, many of the possible BICs are actually NA. I tried to reduce the dimension of the data, but this didn't improve the output. For example the VEV is only calculated for nr clusters 1:3, while it looks like it could improve for more clusters (see plot below).</p>
+
+<p>Someone who experienced similar problems? And can someone help me into the right direction for finding the best model, using mclust? I would like to calculate other BICs with a higher number of clusters.</p>
+
+<p>Help would be appreciated!</p>
+
+<p><a href=""http://i.stack.imgur.com/YboGv.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/YboGv.png"" alt=""enter image description here""></a></p>
+"
+"0.236939551103637","0.286299167156934","211661","<p>I have a matrix of pearson correlations that I would like to cluster on similarity and identify correlated networks. However the variables are part of groups and I'm not interested correlations within groups; but between groups. </p>
+
+<p>I hypothesize that there shouldn't be any correlation within groups (or at least random) and that there is a cluster of variables among the groups  (hope I'm clear). Specifically I would like to identify a cluster of correlated variables that consists of  one variable from group1, one of group2, one of group3, etc. </p>
+
+<p>Are there clustering methods that can take into account leveled data (preferably in R or Python), would it be possible?</p>
+
+<pre><code>Group   Var A   B   C   D   E   F   â€¦
+1   A   1.00    -0.85   -0.85   -0.78   0.68    -0.87   
+1   B   0.20    1.00    -0.10   0.20    -0.40   0.78    
+1   C   0.10    0.30    1.00    0.40    -0.71   0.89    
+2   D   0.30    0.10    0.79    1.00    -0.45   0.66    
+2   E   0.90    -0.70   -0.71   -0.45   1.00    -0.71   
+2   F   0.40    0.78    0.89    0.66    -0.71   1.00    
+4   G   0.20    -0.59   -0.43   -0.71   0.09    -0.17   
+4   H   0.40    -0.81   -0.71   -0.72   0.44    -0.55   
+4   I   0.90    -0.52   -0.59   -0.24   0.71    -0.69   
+5   J   0.48    -0.49   -0.56   -0.13   0.80    -0.58   
+</code></pre>
+"
+"0.132453235706504","0.128036879932896","213093","<p>I'm interested in generating correlation network maps, and have come across qgraph in R. While the program is straightforward to use with cross-sectional data (and no clustering), I was wondering if there is a way to implement in a multilevel context to derive a network map for the sample as a whole, while controlling for non-independence? Alternatively, is it possible to extract key stats (e.g., closeness, betweenness, strength, and expected force) on an individual-by-individual (or cluster by cluster) basis, weight these values, and then produce a network map from this?</p>
+
+<p>I should also point out that I am a novice with respect to R.</p>
+
+<p>Thanks in advance.</p>
+"
+"0.264906471413009","0.256073759865792","232631","<p>I was searching for appliction of unsupervised learning in trading and came across this <a href=""https://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/"" rel=""nofollow"">site</a>. I have understood most part of the code but some I have no idea whats happening.</p>
+
+<p>This code is used for optimizing cluster number</p>
+
+<pre><code>#optimal number of clusters
+wss = (nrow(nasa)-1)*sum(apply(nasa,2,var))
+for (i in 2:15) wss[i] = sum(kmeans(nasa, centers=i)$withinss)
+wss=(data.frame(number=1:15,value=as.numeric(wss)))
+</code></pre>
+
+<p>what is the principle behind this optimization code?</p>
+
+<p>The second code which I didnt undertand is of autocorrelation code?</p>
+
+<pre><code>autocorrelation=head(cbind(kmeanObject$cluster,lag(as.xts(kmeanObject$cluster),-1)),-1)
+xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+
+y=apply(xtabs(~autocorrelation[,1]+(autocorrelation[,2])),1,sum)
+x=xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+</code></pre>
+
+<p><code>autocorrelation</code> variable is the columns binded of cluster and one day lagged cluster value. From this why they used <code>xtabs</code> instead of <code>cov</code> function to calculate correlation.</p>
+
+<p>The last doubt is how to get and read percentage table?</p>
+
+<pre><code>    1         2     3         4     5
+1   0.11    0.25    0.30    0.22    0.12
+2   0.01    0.59    0.17    0.21    0.02
+3   0.02    0.49    0.21    0.24    0.04
+4   0.03    0.40    0.26    0.27    0.04
+5   0.19    0.18    0.24    0.23    0.17
+</code></pre>
+
+<p>here 2x2 is 0.59 and 3x2 is 0.49 what this means?</p>
+
+<p>lets say i did a kmeans clustering using new data</p>
+
+<pre><code>newkmeanObject=kmeans(new_nasa,5,iter.max=10)
+newkmeanObject$cluster
+</code></pre>
+
+<p>and obtained last cluster values as 2 so what is this means?</p>
+"

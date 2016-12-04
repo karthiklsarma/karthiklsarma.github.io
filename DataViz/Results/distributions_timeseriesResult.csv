@@ -1,0 +1,165 @@
+"V1","V2","V3","V4"
+"0.707106781186547","0.707106781186547"," 19103","<p>I have two time series, shown in the plot below:</p>
+
+<p><img src=""http://i.stack.imgur.com/w398k.png"" alt=""Time Series Plot""></p>
+
+<p>The plot is showing the full detail of both time series, but I can easily reduce it to just the coincident observations if needed.</p>
+
+<p>My question is: <strong>What statistical methods can I use to assess the differences between the time series?</strong></p>
+
+<p>I know this is a fairly broad and vague question, but I can't seem to find much introductory material on this anywhere. As I can see it, there are two distinct things to assess:</p>
+
+<p><strong>1. Are the values the same?</strong></p>
+
+<p><strong>2. Are the trends the same?</strong></p>
+
+<p>What sort of statistical tests would you suggest looking at to assess these questions? For question 1 I can obviously assess the means of the different datasets and look for significant differences in distributions, but is there a way of doing this that takes into account the time-series nature of the data?</p>
+
+<p>For question 2 - is there something like the Mann-Kendall tests that looks for the similarity between two trends? I could do the Mann-Kendall test for both datasets and compare, but I don't know if that is a valid way to do things, or whether there is a better way?</p>
+
+<p>I'm doing all of this in R, so if tests you suggest have a R package then please let me know.</p>
+"
+"0.707106781186547","0.707106781186547"," 47816","<p>I'm trying to look for difference in timing (ie. earlier/later) in a variable measured at regular intervals between two groups.</p>
+
+<p>This seems like a simple experimental design, and working in R, I'm able to visualize the data in a way that makes sense to me, but somehow I'm getting confused when it comes to testing for  significance.</p>
+
+<p>The data consist of weekly measurements of number of flowers for each individual, within and outside of the greenhouse. To take a small example:</p>
+
+<pre><code>expand.grid(week=(1:6),treatment=c(""greenhouse"",""outside""),individual=1:2)-&gt;df
+c(0,3,10,2,0,0,0,0,0,2,18,0,0,1,19,0,0,0,0,0,1,2,15,1)-&gt;flowers
+data.frame(cbind(df,flowers))-&gt;df
+</code></pre>
+
+<p>Visually,</p>
+
+<pre><code>qplot(week,flowers,data=df,facets=treatment~.)
+</code></pre>
+
+<p>If my interest is simply to determine whether there's a significant difference in the time of flowering between the treatments; should I be doing a repeated measures ANOVA and looking at the interaction?</p>
+
+<p>Simplifying (?) the problem even further, what if I remove the quantity of flowers, and just consider how many individuals are flowering? So the summarized data would be</p>
+
+<pre><code>ddply(df, .(treatment,week), function(d) length(d[d$flowers&gt;0,""flowers""]))-&gt;indiv
+</code></pre>
+
+<p>Which looks like this:</p>
+
+<pre><code> qplot(week,V1,data=indiv,facets=treatment~.)
+</code></pre>
+
+<p>Here, my first thought was that I can just think of these as two distributions, and compare with a t-test; however, only individuals and not individualsxweek are independent, so perhaps this should also be a repeated measures ANOVA? Or do I need to venture into the world of more complex time-series math?</p>
+
+<p>Thanks for your help!</p>
+
+<p><strong>Edit</strong>
+As an update, I'm now also considering failure-time / survival analysis as a possible appropriate method.</p>
+"
+"NaN","NaN","114979","<p>I want to generate random monthly <em>(m)</em> temperature (<em>T</em>) and Precipitation (<em>P</em>) data considering that both variables are intercorrelated (<em>rTP[m]</em>)
+The tricky thing is that my random variables that have specific quantitative properties: temperatures are normally distributed, while precipitations follow a log-normal distribution and should be log-transformed</p>
+
+<p><strong>mvrnorm</strong> of the package MASS could be used.</p>
+
+<pre><code>mT=c(1,2,4,7,10,15,17,18,17,10,5,1)
+mP=c(3.9,3.7,3.9,4.1,4.5,4.7,4.8,4.8,4.4,4.1,4.2,3.9) #log-transformed
+sdT=c(1,1,1,1,1,1,1,1,1,1,1,1)
+sdP=c(0.7,0.8,0.7,0.6,0.4,0.4,0.4,0.5,0.6,1,0.8,0.6)  #log-transformed
+rTP=c(0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4,0.4)
+covTP=rTP*(sdT*sdP)
+
+simP=NULL
+for (m in 1:12)
+{
+out=mvrnorm(500, mu = c(mT[m],mP[m]), Sigma = matrix(c(sdT[m]*sdT[m],covTP[m],covTP[m],sdP[m]*sdP[m]), ncol = 2), empirical = TRUE)
+simP[m]=mean(exp(out[,2])-1)
+}
+</code></pre>
+
+<p>In this case I generate two random time-series that are inter-correlated which is great.</p>
+
+<p>However, simulated precipitations (<em>simP</em>) are on average higher than the observed one (<em>mP</em>)</p>
+
+<pre><code>plot(exp(mP)-1, type=""l"", lwd=2, ylim=c(0,250)); points(simP, type=""l"", lwd=2, lty=2)
+</code></pre>
+
+<p>I could use <strong>rlnorm</strong> or <strong>rlnorm.rplus</strong> to consider than precipitations are log-transformed, but then I have troubles with temperatures that are normally distributed. </p>
+
+<p>My question is: How can I create random sampling for variables that have specific quantitative properties (log-normal and normal distributions)?</p>
+
+<p>Thanks !</p>
+"
+"1","1","187888","<p>I am taking measurements of a computer system performance over time and I'd like to understand if the performance is degrading or improving as time passes..</p>
+
+<p>After doing some research, I picked the KS test for this comparison, and I'd like to confirm whether my understanding and application of the two-sample KS test to this problem is in fact correct or if I am doing it completely wrong.</p>
+
+<p>Anyway, I have some time-series data, measuring my system response time (in milliseconds) for the months of November and December. Here are the sample results, summarised for brevity:</p>
+
+<pre><code>Label: ""December 2015""
+Samples: 3082
+Percentiles:
+   0%     10%     50%     25%     50%     75%    90%     99%    100%
+   25.0   275.0   550.0   400.0   550.0   825.0  1425.0  9242.5 12500.0
+
+Label: ""November 2015""
+Samples: 3717
+Percentiles:
+   0%   10%   50%   25%   50%   75%   90%   99%  100%
+   25   275   550   375   550   775  1425 10346 11225
+</code></pre>
+
+<p>I generate ECDFs from the histograms and plot using <code>R</code>:</p>
+
+<pre><code>ggplot(data.frame, aes(x=value)) + stat_ecdf(aes(colour=label)) ...
+</code></pre>
+
+<p>The resulted plot looks like this:</p>
+
+<p><a href=""http://i.stack.imgur.com/Nua3Q.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/Nua3Q.png"" alt=""enter image description here""></a></p>
+
+<p>From visual inspection, it is evident, that December results are generally better than November's, especially in the top quartile.</p>
+
+<p>I run a two-sample KS test on the data as follows, using different alternative hypothesis:</p>
+
+<pre><code>ks.ts &lt;- ks.test(cdf_November, cdf_December, alternative = ""two.sided"")
+ks.lt &lt;- ks.test(cdf_November, cdf_December, alternative = ""less"")
+ks.gt &lt;- ks.test(cdf_November, cdf_December, alternative = ""greater"")
+</code></pre>
+
+<p>This results in the following:</p>
+
+<pre><code>Two-sample Kolmogorov-Smirnov test
+[1] ""CDF(x) =  November 2015""
+[1] ""CDF(y) =  December 2015""
+
+Hypothesis:  two-sided (equal)
+KS-statistic (D-value) =  0.0369063
+p-value =  0.02030601
+
+Hypothesis:  the CDF of x lies below that of y
+KS-statistic (D-value) =  0.01177649
+p-value =  0.6266612
+
+Hypothesis:  the CDF of x lies above that of y
+KS-statistic (D-value) =  0.0369063
+p-value =  0.01015301
+</code></pre>
+
+<p>If I understood the KS test and interpreted the results correctly, this is what the test is telling me about my data:</p>
+
+<p><strong>Hypothesis #1: two-sided (equal)</strong></p>
+
+<p>The probability that both distributions are the same is 2.03% (p-value = 0.02030601).</p>
+
+<p><strong>Hypothesis #2: the CDF of x lies below that of y</strong></p>
+
+<p>The probability that CDF(November) is worse that CDF(December) is 62.6% (p-value = 0.6266612).</p>
+
+<p><strong>Hypothesis #3: the CDF of x lies above that of y</strong></p>
+
+<p>The probability that CDF(November) is better that CDF(December) is 1.01% (p-value = 0.01015301).</p>
+
+<p>So from this I can say with some certainty, that November is worse that December.</p>
+
+<p>Have I interpreted the results correctly or have I completely miss-understood the test (and possibly the purpose/application of the test)?</p>
+
+<p>-- ab1</p>
+"

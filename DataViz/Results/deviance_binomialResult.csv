@@ -1,0 +1,15 @@
+"V1","V2","V3","V4"
+"NaN","NaN","122044","<p>I'm struggeling to understand the topic of deviance. Let's have two models as follows:</p>
+
+<pre><code>Model 1: glm.nb(Resp ~ Parm1 + Parm2 + Parm3)
+
+Model 2: glm.nb(Resp ~ Parm1 + Parm2)
+</code></pre>
+
+<p>The only difference between the two models is that the Parm3 was removed for model 2. Why do I get different null deviances? In case of gaussian glm, the null deviance is always equal to:</p>
+
+<pre><code>deviance(glm(Resp~1))
+</code></pre>
+
+<p>This doesn't seem to apply for glm.nb. But why?</p>
+"

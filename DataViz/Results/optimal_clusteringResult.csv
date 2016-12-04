@@ -1,0 +1,551 @@
+"V1","V2","V3","V4"
+"0.152498570332605","0.156173761888606"," 15047","<p>IÂ´m using the <code>pam()</code> R function to perform clustering. As far as I know, the <code>pamk()</code> function serves as a wrapper to <code>pam()</code>, and evaluates the optimal number of clusters. However, using the same data and parameters I get different results.</p>
+
+<p>For example, calling <code>pamk()</code> and <code>pam()</code> as follows returns 2 clusters with different medoids values:</p>
+
+<pre><code>pk &lt;- pamk(dist, krange=2:10, criterion=""ch"", usepam=TRUE, diss=TRUE)
+
+pk.2 &lt;- pam(dist,2,diss=TRUE)
+</code></pre>
+
+<p>How can it be?</p>
+
+<p>Thank you,
+Anat</p>
+"
+"0.304997140665209","0.312347523777212"," 15839","<p>I am interested in determining the optimal number of clusters calculated by the PAM clustering algorithm using the Calinski-Harabasz (CH) index. To that end, I found 2 different R functions calculating CH values for a given clustering, but which returned different results: <a href=""http://rss.acs.unt.edu/Rdoc/library/fpc/html/cluster.stats.html"" rel=""nofollow"">?cluster.stats</a> (in the <a href=""http://cran.r-project.org/web/packages/fpc/index.html"" rel=""nofollow"">fpc package</a>), and <a href=""http://rss.acs.unt.edu/Rdoc/library/clusterSim/html/index.G1.html"" rel=""nofollow"">?index.G1</a> (in the <a href=""http://cran.r-project.org/web/packages/clusterSim/index.html"" rel=""nofollow"">clusterSim package</a>).</p>
+
+<p>First one is called via:</p>
+
+<pre><code>pam.res &lt;- pam(dist.matrix, 2, diss=TRUE)
+ch1     &lt;- cluster.stats(dist.matrix, pam.res$clustering, silhouette=TRUE)$ch
+</code></pre>
+
+<p>Second one is called via:</p>
+
+<pre><code>ch2 &lt;- index.G1(t(dataframe), pam.res$clustering, d=dist.matrix)
+</code></pre>
+
+<p>Data may be found here: <a href=""http://www.megafileupload.com/en/file/327255/dataframe-RData.html"" rel=""nofollow"">dataframe.RData</a>, or here: <a href=""http://www.megafileupload.com/en/file/327262/dist-matrix-RData.html"" rel=""nofollow"">dist.matrix.RData</a> [dead links].</p>
+
+<ul>
+<li><p><strong>Can anybody explain the difference between these two CH index calculations to me?</strong></p>
+
+<p>Using <code>cluster.stats()</code>, the highest CH index is obtained for 2 clusters ($\approx32$); while using <code>index.G1()</code>, the highest CH index is obtained for 3 clusters ($\approx60$, and the value for 2 clusters is totally different from the previous, $\approx54$).</p></li>
+<li><p><strong>Which function is normally used to calculate the CH index?</strong></p></li>
+</ul>
+"
+"NaN","NaN"," 29114","<p>Does anybody know if any package calculates the cubic clustering criterion (CCC) index in R to aid the selection of optimal number of clusters? </p>
+"
+"0.152498570332605","0.156173761888606"," 31906","<p>I'm trying to do fuzzy k-means clustering on a dataset using the cmeans function (R) . The problem Im facing is that the sizes of clusters are not as I would like them to be. This is done by calculating the cluster to which the observations are ""closest"". </p>
+
+<pre><code>cl$size
+ [1]   108    31   192    51   722 18460    67  1584   419 17270
+</code></pre>
+
+<p>Here we see that for 10 clusters we have two huge clusters and a lot of very small ones. Does this imply that two clusters are optimal in any way? If I do regular K-means 10 segments look very well, with good sizes and their intepretation makes a lot of sense but I would like to try fuzzy correctly. I just started exploring this fuzzy clustering so any help and pointers are overly welcome. </p>
+"
+"0.152498570332605","0.156173761888606"," 56210","<p>I'm using TraMineR to determine a certain clustering based on Optimal Matching distances:</p>
+
+<pre><code># Define a sequence object
+sequences.seq &lt;- seqdef(sequences, left=""DEL"", right=""DEL"", gaps=""DEL"", missing="""")
+
+# Compute OM costs
+costs &lt;- seqsubm(sequences.seq, method=""TRATE"")
+
+# Create OM object
+sequences.om &lt;- seqdist(sequences.seq, method=""OM"", indel=1, sm=costs, with.missing=FALSE, norm=""maxdist"")
+
+# Use OM object to create a dendrogram
+clusterward &lt;- agnes(sequences.om, diss = TRUE, method = ""ward"")
+plot(clusterward, labels=colnames(sequences))
+</code></pre>
+
+<p>This gives me a plot of a dendrogram. Now I want to dummycode the cases in my dataset dependent on which cluster they fall in. How can I accomplish this?</p>
+"
+"0.264135271897687","0.27050089040023"," 64723","<p>I have run a sequence analaysis using the Optimal Matching algorithm. Afterwards, I have clustered the resulting distance matrice using the Ward algorithm and calculated silhouettes as measures of cluster quality and to identify representative sequences. </p>
+
+<p>Now, I am curious whether it is possible to estimate the sequences of the cluster centroids which, to my knowledege, must not be an original data point. How can I estimate the sequence of a centroid?</p>
+
+<p>To get an idea of the different steps of the analysis, consider this manual example[1]:</p>
+
+<pre><code>library(TraMineR) 
+library(WeightedCluster) 
+data(mvad) 
+mvad.alphabet &lt;- c(""employment"", ""FE"", ""HE"", ""joblessness"", ""school"", ""training"") 
+mvad.labels &lt;- c(""Employment"", ""Further Education"", ""Higher Education"", ""Joblessness"", ""School"", ""Training"") 
+mvad.scodes &lt;- c(""EM"", ""FE"", ""HE"", ""JL"", ""SC"", ""TR"") 
+
+## Define sequence objects
+mvad.seq &lt;- seqdef(mvad[, 17:86], alphabet = mvad.alphabet, states = mvad.scodes, labels = mvad.labels, weights = mvad$weight, xtstep = 6)
+
+## Computing OM dissimilarities
+mvad.dist &lt;- seqdist(mvad.seq, method=""HAM"", sm=""CONSTANT"")
+
+## Clustering
+wardCluster &lt;- hclust(as.dist(mvad.dist), method = ""ward"", members = mvad$weight)
+clust4 &lt;- cutree(wardCluster, k = 4)
+
+## Silhouettes
+sil &lt;- wcSilhouetteObs(mvad.dist, clust4, weights = mvad$weight, measure = ""ASWw"")
+
+## Sequence index plots ordered by representativeness
+seqIplot(mvad.seq, group = clust4, sortv = sil)
+</code></pre>
+
+<p>In this example, it would be for example interesting to see whether the sequence of third cluster's centroid differes from the most representative, original sequences in the cluster which are printed at the very top of the sequence index plot. In other cases, the centroid sequence may even have a more idealtype character which does not exist in the original dataset but reflects certain typical structures.</p>
+
+<p><sub>[1] See for the example Studer, Matthias (2013). WeightedCluster Library Manual: A practical guide to creating typologies of trajectories in the social sciences with R. LIVES Working Papers, 24.</sub></p>
+"
+"0.590624423218618","0.564534486981858"," 65411","<p>I have carried out a clustering of coordinate points (longitude, latitude) and found surprising, adverse results from clustering criteria for the optimal number of clusters. The criteria are taken from the <code>clusterCrit()</code> package. The points which I am trying to cluster on a plot (the geographic characteristics of the data set is clearly visible) :</p>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/EAgVj.jpg"" alt=""Plot of all observations""></p>
+</blockquote>
+
+<p>The full procedure was the following :</p>
+
+<ol>
+<li>Carried out hierarchical clustering on 10k points and saved
+medoids for 2 : 150 clusters.</li>
+<li>Took the medoids from (1) as seeds for kmeans clustering of 163k observations. </li>
+<li>Checked 6 different clustering criteria for the optimal number of clusters.</li>
+</ol>
+
+<p>Only 2 clustering criteria gave results that make sense for me â€“ the Silhouette and Davies-Bouldin criteria. For both of them one should look for the maximum on the plot. It seems both give the answer â€œ22 Clusters is a good numberâ€. For the graphs below: on the x axis is the number of clusters and on the y axis the value of the criterion, sorry for the wrong descriptions on the image. Silhouette and Davies-Bouldin respectively :</p>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/9tlDB.jpg"" alt=""Silhoette Criterion Plot"">
+  <img src=""http://i.stack.imgur.com/USELa.jpg"" alt=""Davies-Bouldin Criterion Plot""></p>
+</blockquote>
+
+<p>Now letâ€™s look at Calinski-Harabasz and Log_SS values. The maximum is to be found on the plot. The graph indicates that the higher the value the better the clustering. Such a steady growth is quite surprising, I think 150 clusters is already a quite high number. Below the plots for Calinski-Harabasz and Log_SS values respectively.</p>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/toHAM.jpg"" alt=""Calinski-Harabasz Criterion Plot"">
+  <img src=""http://i.stack.imgur.com/yJiG0.jpg"" alt=""Log_SS Criterion Plot""></p>
+</blockquote>
+
+<p>Now for the most surprising part the last two criteria. For the Ball-Hall the biggest difference between two clusterings is desired and for Ratkowsky-Lance the maximum. Ball-Hall and Ratkowsky-Lance plots respectively :</p>
+
+<blockquote>
+  <p><img src=""http://i.stack.imgur.com/09zWT.jpg"" alt=""Ball-Hall Criterion Plot"">
+  <img src=""http://i.stack.imgur.com/UpE3b.jpg"" alt=""Ratkowsky-Lance Criterion Plot""></p>
+</blockquote>
+
+<p>The last two criteria give completely adverse answers (the smaller the number of clusters the better) than the 3rd and 4th criteria. How is that possible? For me it seems like only the first two criteria were able to make any sense of the clustering. A Silhouette width of around 0.6 is not that bad. Should I just skip the indicators that give strange answers and believe in those that give reasonable answers? </p>
+
+<p><em>Edit: Plot for 22 clusters<img src=""http://i.stack.imgur.com/gNbON.jpg"" alt=""22 cluster solution""></em></p>
+
+<hr>
+
+<p><strong>Edit</strong></p>
+
+<p>You can see that the data is quite nicely clustered in 22 groups so criteria indicating that you should choose 2 clusters seem to have weaknesses, the heuristic isn't working properly. It is ok when I can plot the data or when the data can be packed in less than 4 principal components and then plotted. But if not? How should I choose the number of clusters other than by using a criterion? I have seen tests which indicated Calinski and Ratkowsky as very good criteria and still they give adverse results for an seemingly easy data set. So maybe the question shouldn't be ""why are the results differing"" but ""how much can we trust those criteria?"".</p>
+
+<p>Why is an euclidian metric not good? I am not really interested in the actual, exact distance between them. I understand the true distance is spheric but for all points A,B,C,D if Spheric(A,B) > Spheric(C,D) than also Euclidian(A,B) > Euclidian(C,D) which should be sufficient for for a clustering metric. </p>
+
+<p>Why I want to cluster those points? I want to build a predictive model and there is a lot of information contained in the location of each observation. For each observation I also have cities and regions. But there are too many different cities and I don't want to make for example 5000 factor variables; therefore I thought about clustering them by coordinates. It worked pretty well as the densities in different regions are different and the algorithm found it, 22 factor variables would be all right. I could also judge the goodness of the clustering by the results of the predictive model but I am not sure if this would be wise computationally. Thanks for the new algorithms, I will definitely try them if they work fast on huge data sets.</p>
+"
+"0.215665546406877","0.220863052149693"," 76316","<p>Currently I am working on some subspace clustering issues. I found one useful package in R called orclus, which implemented one subspace clustering algorithm called orclus.</p>
+
+<p>As stated in the package description, there are two key parameters to be determined. One is the subspace dimensionality and the other one is the cluster number. It is stated that to determine the optimal value of subspace dimensionality, one statistic, the cluster sparsity coefficient can be used. The closer the statistic to zero, the better the performance. However, when actually trying this implementation, I found that the statistic is minimal when subspace dimensionality is 1; and the larger the subspace dimensionality, the larger the statistic. Does it make sense? I was not expecting such monotonic trend. </p>
+"
+"0.304997140665209","0.312347523777212"," 77660","<p>I have 11 scale parameters for each of 218 observations belonging to subjects, I did standardized PCA to reduce dimensionality of the data and found two meaningful components. Using Euclidean distances this was followed by cluster analysis of these two components (explaining about 75% of the variance) with bottom-up approach using the hierarchical agglomerative clustering (HAC) by <code>FactoMineR</code> R package and Ward's linkage method.
+The optimal number of clusters was 4 as suggested by the package based on minimizing the ratio of two successive partition inter-clusters inertia gains.<br>
+This is just the number of observations per cluster:  </p>
+
+<pre><code>&gt; table(df$clust)
+
+  1   2   3   4 
+  6  21  46 145
+</code></pre>
+
+<p>These 4 clusters turned out to be clinically important and subjects with cluster 1 were severely affected by disease. Cluster 4 were non-reactive subjects, Cluster 3 showed some reaction, and finally cluster 2 was like a special entity protected from disease. I don't know if these clusters can assume some kind of ordinal ranking or not. It is difficult to judge from the theoretical point of view related to the field, but I can say that cluster 4->3->1 is somehow showing some direction, and hence could be regarded as ordinal, on the other hand, cluster 2 is a little bit different but very important as subjects with this clusters were protected from disease. So, I am really confused as whether to consider these 4 clusters ordinal or not.  </p>
+
+<p>Suppose that I have another set of 11 new readings of the scale parameters for one subject as new data, what statistical analysis would be useful to predict the membership of this subject to those 4 clusters? Could you please refer to a similar example with R code if possible? that would be greatly appreciated.  </p>
+
+<p>Providing a professional answer would be highly esteemed, but also recommending some books using R code would also be encouraged, as I am searching for such a book that covers this topic thoroughly, many books are out there but it is difficult to judge which one would do the job. May be someone, has more experience with this kind of problems and can give a word of advise here.  </p>
+"
+"0.650256088762355","0.665927158212027"," 81727","<p>I have 4 clusters (see plot below) extracted from data of medical samples <code>N=218</code> measured for 11 genes/predictors <code>P=11</code> by this method: first PCA analysis validated to have 2 important PCs that explained 75% of the data, then different clustering algorithms, distances, linkages (in hierarchical approach only) were compared: the majority support the presence of 4 distinct clusters. Taking the scientific hypothesis into consideration, clusters out of $K$-means algorithm were found the most plausible and were the most balanced clusters too: class #1 <code>n=12</code>, class #2 <code>n=21</code>, class #3 <code>n=79</code>, and class #4 <code>n=106</code>.  </p>
+
+<p>Projecting the observations on plane 1-2 component scores, revealed the below scatter plot with each cluster color coded.
+<img src=""http://i.stack.imgur.com/09sTF.png"" alt=""enter image description here""></p>
+
+<p><strong>The aim is to find a global optimum classifier using R after doing PLS to the data.</strong>  </p>
+
+<p>Knowing that these 4 clusters were actually the product of latent PCA components, it was natural to think of PCR as a next step to predict classes, but that approach turned out to be sub-optimal for two reasons: first, results do not related to probibilities (0-1), second, it does not relate well with the classes as the outcome variable. As many know, this would be better solved with PLS-DA method + softmax to find probabilities of class (0-1).  </p>
+
+<p>However, many reports confirm the superiority of using LDA as a second step using the <em>scores</em> of PLS, given that same standardization parameters (mean, sd) be used of the training set on the holdout-test set, even using the PLS projections out of the training set on the test set in order to get the <em>scores</em> which would be the <em>actual</em> holdout-test set to validate the classifier in question.  </p>
+
+<p>From the methodology point of view, this path is potentially encompassed with many dangers and subtle errors when one is un/misinformed about the tools used in context.  </p>
+
+<p>The <code>caret</code> package which is unique of its kind given the consistent infrastructure it provides to train and validate an array of different models making use of <em>de facto</em> standard respective R-packages, and hence <code>caret</code> promotes itself as a road map to a validated modeling leveraging off R rich libraries. As heart to blood vessels, so <code>caret</code> to other packages in my opinion. That being said, unwatchful playing with the heart could cost you dearly, and might lead also to a stand-still or a <em>model-arrest</em> of your data. R is free, many free books out there, but buying <code>caret</code> only book paid off, i.e. <code>Applied Predictive Modeling</code>. The help files, companion website (very appealing btw), are great resources but they won't substitute the text inside the book IMHO. However, in the book, I couldn't find a direct answer to the PLS-Classifier two step method amid others. The potential with <code>caret</code> is immense, thanks to Max Kuhn and his colleagues, that primarily encouraged me to post this question.  </p>
+
+<p>Back to the example above and the methodology of wish:<br>
+<strong>Data splitting:</strong>  </p>
+
+<p>Training set (77% <code>n=168</code>) for 10K-cross-validation: tuning (model-specific parameters, feature selection <code>P=11</code>, and cost to deal with imbalanced clusters). For CV this would be roughly <code>n=150</code> for fitting the model using differnt parameters of wish and 'n=17<code>for evaluation of parameters (I would call the</code>n=17' the CV-test to avoid confusion later on). Repetition = 5, so this will make 10 folds x 5 times = 50 training folds (<code>n=150</code> each) and 50 CV-test folds (<code>n=17</code> each). Holdout-test set (23% <code>n=50</code>).  </p>
+
+<p><strong>Q1</strong> I know that one can do parameters' tuning along with feature selection at the same time (i.e., parallel), but how to evaluate the cost/weights if one would like to evaluate cost-sensitive models (SVM, CART, C5.0) using the PLS scores to counteract class imbalance?    </p>
+
+<p><strong>Q2</strong> What is the alternative approach when reserving a separate data set for cost evaluation (i.e., <code>evaluation set</code>), as recommended, is not possible given the small sample size in this case? can one do tuning of model parameter, feature selection, and cost for imbalance all three at the same time? if not what is the best practice in this case?  </p>
+
+<p><strong>Q3</strong> Given the small sample size, is bootstrapping preferred to CV? if yes how would it be implemented to do exhaustive tuning like above for the PLS scores?    </p>
+
+<p><strong>Q4</strong> Given the imbalance above, is there a way to ensure that each CV training fold would include the minimum number of <code>hard</code> class(es) in order to have good estimation on the CV-test fold? is there any argument to pass to ensure presence of the small classes each time fold would be generated?  </p>
+
+<p><strong>PLS special notes</strong>  </p>
+
+<p>This is the approach in my mind (please correct me if I am missing something somewhere during the course):  </p>
+
+<p>In each CV iteration on the many CV-traning folds, there should be a unique PLS projection matrix for each iteration that would be used in the next second step of getting PLS scores for the the respective CV-test set inheriting the same standardization parameters (<code>mean</code>, <code>sd</code>), this means that two things would be inherited; the PLS projection and the standardization parameters (mean and sd) in order to apply them to the CV-test folds, this way, given the example here, 50 values would be returned hoping to reach the best parameter in question. One complication though, there should be an argument to specify the desired number of PLS components to retain and to be used in calculation of scores out of each CV-test fold (better to be pre-defined in a previous tuning step may be). My expectation, is that after deciding on the best model, there should be a way to get the PLS projection matrix for the whole training set (i.e.<code>n=168</code>) along with (<code>mean</code>, <code>sd</code>) to apply them on the holdout-test to validate the best model. So in total, there would be 50 different PLS projection matrices, means, sds from CV step and 1 extra frothe whole training set, am I right?<br>
+Feature selection in this method would entail two things: predictors space and the PLS components space.</p>
+
+<p><strong>Q5</strong> How to perform these two selections (predictor and PLS component) in <code>caret</code>? this is because feature selection here is different than otherwise since here we deal with scores rather than the observations themselves to determine best predictors that to construct the PLS components.</p>
+
+<p><strong>Note:</strong> When one is happy with the best final model, it would be recommended to fit the model on the whole data set <code>n=218</code> to get the correct estimates withe the least uncertainty.  </p>
+
+<p>A similar procedure is implemented in <code>caret::train()</code> function that can be fed with <code>preProc</code> argument to specify the type of desired pre-processing of data (most are mentioned in the help system but I couldn't find <strong>PLS</strong> among them, better if with an argument to specify the desired components similar to PCA pre-processing). I am aware of the fact, that inheriting pre-processing parameters to holdout test set and to CV-test, can only be performed using the <code>predict.train()</code> function, as opposed to calling the generic <code>predict()</code> function to the <code>$finalModel</code> that won't inherit pre-processing parameters.     </p>
+
+<p><strong>Q6</strong> How to implement this strategy (if correctly described) to train and validate the two-step PLS-[classifier] methodology using PLS scores subspace instead of observations making use of <code>caret</code> infrastructure?  </p>
+
+<p>Thanks in advance.</p>
+"
+"NaN","NaN"," 85757","<p>I have used <code>hclust</code> function from R for the hierarchical clustering of vectors which are already labeled. </p>
+
+<pre><code>dissimilarity &lt;- 1 - cor(data)
+distance &lt;- as.dist(dissimilarity)
+plot(hclust(distance),  main=""Dissimilarity = 1 - Correlation"", xlab="""")
+</code></pre>
+
+<p>Now I want to evaluate if the vectors with the same label are clustered in the same group. However, I don't know how to find the optimal cutting points in the deprogram. Is there a package for it?</p>
+
+<p>Thanks for your help.</p>
+"
+"0.304997140665209","0.312347523777212","111145","<p>I have two variables - X and Y and I need to make cluster maximum (and optimal) = 5. Let's ideal plot of variables is like following:</p>
+
+<p><img src=""http://i.stack.imgur.com/WW2Ya.jpg"" alt=""enter image description here""></p>
+
+<p>I would like to make 5 clusters of this. Something like this:</p>
+
+<p><img src=""http://i.stack.imgur.com/ImEqZ.jpg"" alt=""enter image description here""></p>
+
+<p>Thus I think this is mixture model with 5 clusters. Each clusters have center point and a confidence circle around it.</p>
+
+<p>The clusters are not always pretty like this, they look like the following, where sometime two clusters are close together or one or two clusters are completely missing.</p>
+
+<p><img src=""http://i.stack.imgur.com/ingLA.jpg"" alt=""enter image description here""></p>
+
+<p><img src=""http://i.stack.imgur.com/LJDmZ.jpg"" alt=""enter image description here""></p>
+
+<p>How can fit mixture model and perform classification (clustering) in this situation effectively?</p>
+
+<p>Example:</p>
+
+<pre><code>set.seed(1234)
+X &lt;- c(rnorm(200, 10, 3), rnorm(200, 25,3),
+        rnorm(200,35,3), rnorm(200,65, 3), rnorm(200,80,5))
+Y &lt;- c(rnorm(1000, 30, 2))
+plot(X,Y, ylim = c(10, 60), pch = 19, col = ""gray40"")
+</code></pre>
+"
+"0.304997140665209","0.312347523777212","151961","<p>*Please note this question is about the Platt probabilistic output and SVM class assignment, not about the code or the package itself. It just happens to be the code where I stumbled on the issue.</p>
+
+<p>In <a href=""http://stats.stackexchange.com/questions/147260/including-class-probabilities-might-skew-a-model-in-caret"">another question</a> I asked about bad models coming from <code>caret</code> and associated <code>kernlab</code> when <code>prob.model=TRUE</code>. I found the answer myself, in both <a href=""http://stackoverflow.com/questions/29766951/different-results-with-caret-when-classprobs-true"">stackoverflow</a> and <a href=""http://r.789695.n4.nabble.com/Inconsistent-results-between-caret-kernlab-versions-td4680500.html"" rel=""nofollow"">from Max Kuhn himself</a>:</p>
+
+<blockquote>
+<pre><code>&gt; predict(newSVM, df[43,-1]) [1] O32078 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+&gt; predict(newSVM, df[43,-1], type = ""probabilities"")
+     O27479     O31403     O32057    O32059    O32060     O32078
+[1,] 0.08791826 0.05911645 0.2424997 0.1036943 0.06968587 0.1648394
+     O32089     O32663     O32668     O32676
+[1,] 0.04890477 0.05210836 0.09838892 0.07284396
+</code></pre>
+  
+  <p>Note that, based on the probability model, the class with the largest
+  probability is O32057 (p = 0.24) while the basic SVM model predicts
+  O32078 (p = 0.16).</p>
+  
+  <p><strong>Somebody (maybe me) saw this discrepancy and that led to me to follow
+  this rule:</strong></p>
+
+<pre><code>if(prob.model = TRUE) use the class with the maximum probability   
+  else use the class prediction from ksvm().
+</code></pre>
+  
+  <p>Therefore:</p>
+
+<pre><code>predict(svm.m1, df[43,-1])
+ [1] O32057
+ 10 Levels: O27479 O31403 O32057 O32059 O32060 O32078 ... O32676
+</code></pre>
+</blockquote>
+
+<p>Isn't that innacurate? <code>kernlab</code> searches for the optimal probability cutoff that minimizes error, that's why the assigned class and the maximum probability don't match: they don't have to.</p>
+
+<p>Check this reproducible example. I excluded two cherrypicked <code>virginica</code> samples.</p>
+
+<pre><code>require(kernlab);require(caret);
+#kernel=polynomial; degree=3; scale=0.1; C=0.31
+set.seed(101);SVM&lt;-ksvm(Species~., data=iris[-c(135,150),], kernel='polydot',C=.31, kpar=list( scale=.1, degree=3), prob.model=T)
+</code></pre>
+
+<p>Here's the resulting model </p>
+
+<pre><code>&gt; SVM
+Support Vector Machine object of class ""ksvm"" 
+
+SV type: C-svc  (classification) 
+ parameter : cost C = 0.31 
+
+Polynomial kernel function. 
+ Hyperparameters : degree =  3  scale =  0.1  offset =  1 
+
+Number of Support Vectors : 58 
+
+Objective Function Value : -1.4591 -0.7955 -10.2392 
+Training error : 0.033784 
+Probability model included. 
+</code></pre>
+
+<p>Now let's check the predicted class probabilities in those two samples</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5], type=""probabilities"")
+          setosa versicolor virginica
+[1,] 0.008286638  0.4414114  0.550302
+[2,] 0.013824451  0.3035556  0.682620
+</code></pre>
+
+<p>And the class predictions</p>
+
+<pre><code>&gt; predict(SVM, iris[c(135,150),-5])
+[1] versicolor virginica 
+Levels: setosa versicolor virginica
+</code></pre>
+
+<p>Sample 150 was assigned to <code>virginica</code>, with a class probability of around 0.68. Sample 135 was assigned to <code>versicolor</code> with a probability of around 0.44, yet <code>virginica</code> probability nicely sits around 0.55.
+Looking at several CV folds, we perceive that kernlab only assigns <code>virginica</code> when its probability is over a given value (way higher than 0.5). That's the cutoff I mentioned, and it happens thanks to the well known bad clustering in <code>iris</code> between <code>virginica</code> and <code>versicolor</code>.</p>
+
+<p>So, am I right on these suppositions and therefore is <code>caret</code> class assignment model (maximum probability) wrong?</p>
+
+<p>EDIT:
+I've been experimenting with pairwise probability coupling of Platt scaling (logistic regression fit), isotononic regression and a model I'm working on. A weakness (?) I perceived in Platt's model is the probability isn't bound to be 0.5 when the binary SVM decision output is 0, which is the expected result as the instance would lie exactly on the separating hyperplane.</p>
+"
+"0.403473292392964","0.413196935270669","172617","<p><strong>Problem:</strong></p>
+
+<p>I am figuring out the best way to find clusters for a dataset with observations that are densely packed together. The dataset is retail stores with three numeric variables based on operations metrics.</p>
+
+<p>I do not know how to create a simulated dataset for an example like this. I have densely clustered data and outliers, but under 4k observations. </p>
+
+<p><strong>Business objective:</strong></p>
+
+<p>We need to separate the dataset into groups based on several variables.</p>
+
+<p>The goal is to narrow down the stores with greater priority. Later on, we will use inference statistics for determining the cause of the operation metrics stated. Segmenting the stores based on priority makes sense through the three operations variables included.</p>
+
+<p>I tried two different types of partitioning clustering methods, k-values, and different variables, but all yeilded poor validation results. Hereâ€™s the steps I took:</p>
+
+<p><strong>Clustering with 2/3 variables:</strong></p>
+
+<ol>
+<li><p>Standardize in daisy dissimilarity matrix with euclidean distance <code>daisy()</code> function from <code>cluster</code> package in CRAN.</p></li>
+<li><p>Chose k for k-means by looking at SSE chart <code>kmeans()</code> function.</p></li>
+<li><p>Chose k for k-medoid by <code>pamk()</code> function in <code>fpc</code> package in CRAN for highest average silhouette width among clusters - resulted in a 0.23 average silhouette width. K-medoid was used with the <code>pam()</code> function from <code>cluster</code> package in CRAN.</p></li>
+<li><p>Choose clustering algorithm by dunn-index - highest clustering result was k-medoids with 0.002. I used the <code>cluster-stats()</code> function in <code>fpc</code>.</p></li>
+</ol>
+
+<p><strong>Clustering with all three variables:</strong>
+-same procedure as above.</p>
+
+<p><strong>Result:</strong>
+K-medoids with 2 clusters using two variables represented the algorithm with the highest dunn-indes. </p>
+
+<p><strong>Overview:</strong>
+After selecting the optimal number of clusters for each clustering method and comparing the best one using dunn-index, the results have overlap. </p>
+
+<p>What is the recommended method for performing cluster analysis on densely clustered datasets? Do I need to perform clustering multiple times in order to segment the data further? </p>
+
+<p><strong>EDIT: Added scatterplot showing clustering with 3 variables</strong></p>
+
+<p><a href=""http://i.stack.imgur.com/ZoVyj.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/ZoVyj.png"" alt=""Scatterplot with cluster labels color-coded""></a></p>
+"
+"0.264135271897687","0.27050089040023","176578","<p>I have multiple images from a 3D-Scanner in point cloud form. Part of the image is a fixture to hold the object to be scanned. I want to extract the object itself by classifying the fixture and the object in two separate classes = estimating a discriminant hyperplane, that cuts the cloud exactly at the points where the fixture touches the object. </p>
+
+<p>2D Image of an SVM estimation (via the excellent klaR package) as an example:
+<a href=""http://i.stack.imgur.com/vsohB.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/vsohB.png"" alt=""enter image description here""></a> 
+Some bullet points about the external conditions:</p>
+
+<ul>
+<li>The objects vary in shape and size. </li>
+<li>The position of the fixture varies a bit between images, since it is flexible</li>
+<li>The origin of the images varies, since the calibration is sometimes off (due to temparature changes etc.)</li>
+</ul>
+
+<p><strong>The problem resulting from this</strong>: </p>
+
+<p>The absolute position of an estimated hyperplane is the same, independent of the data. The point, where the point cloud of the object ends and the point cloud of the fixture begins, varies,  but this is the point where the hyperplane is needed in every picture. Optimally, they would change position dependent on the data. </p>
+
+<p>Some bullet points about what i have tried so far:</p>
+
+<ul>
+<li>Despite knowing I exclude myself from excellent libraries such as PCL, I use R</li>
+<li>Clustering works rather badly, since the point where the fixture touches the object is too large so it separates them not very well.</li>
+<li>LDA, QDA, RPart, KNN and SVMLight give me between 70-90% accuracy when comparing to a manual classification, when centering and standardizing the images by themselves</li>
+</ul>
+
+<p><strong>My Question(s):</strong></p>
+
+<p>What would you propose could be done about the fix hyperplanes? Do you think one could derive some sort of parameter from the image so the planes will be moved accordingly? </p>
+
+<p>Is there maybe another Discriminant analysis method, that would be better suited here, preferrably with an R implementation? </p>
+
+<p>Is there a feature that i should calculate, that could help me in the separation when added as a discriminating variable?</p>
+"
+"0.403473292392964","0.413196935270669","207404","<p>First of all, I know that this question has been addressed a certain number of times, but I didn't find an answer concerning the <strong>clustering of variables</strong>, instead of observations.</p>
+
+<p>Concretely, I am using the function <code>varclus</code> from the package <code>Hmisc</code> to perform variables clustering.</p>
+
+<p>As an example, I want to perform a cluster analysis on the variables of the dataset <code>ionosphere</code> (available in the package <code>dprep</code>).</p>
+
+<p>My code is as follow :</p>
+
+<pre><code>&gt; library(Hmisc) 
+&gt; library(dprep) 
+&gt; data(ionosphere) 
+&gt; iono_min_l_col &lt;- ionosphere[-length(ionosphere)] 
+&gt; iono_mx_min_l_col &lt;- data.matrix(iono_min_l_col) 
+&gt; iono_clus &lt;- varclus(iono_mx_min_l_col)
+&gt; plot(iono_clus)
+</code></pre>
+
+<p>When using <code>plot()</code> I get the following dendrogram :</p>
+
+<p><a href=""http://i.stack.imgur.com/LSDiI.png"" rel=""nofollow""><img src=""http://i.stack.imgur.com/LSDiI.png"" alt=""enter image description here""></a></p>
+
+<p>However, I don't know in how many clusters I should group my variables.
+I can used the following code to know in which cluster are my variables (e.g. V1 Cluster 1, V2 Cluster 3, etc...), but I don't know <strong>how to get the optimal number of clusters</strong> ? (i.e. <strong><em>k</em></strong> in the following code)</p>
+
+<pre><code>&gt; groups &lt;- cutree(varclus(iono_mx_min_l_col)$hclust, k= ***???***)
+</code></pre>
+
+<p>Does someone know how to get this optimal number, <strong><em>k</em></strong> ?</p>
+
+<p>Thanks a lot !</p>
+"
+"0.215665546406877","0.220863052149693","216046","<p>I am trying to find a clustering solution with the help of <code>flexclust</code> package in R. The following code has been adapted from the vignette for the <code>flexclust</code> package:</p>
+
+<pre><code>library(flexclust)
+library(ISLR)
+
+Auto &lt;- read.table(Auto)
+AutoMinus &lt;- Auto[ -c(8:9)]
+AutoMinus.mat &lt;- as.matrix(AutoMinus)
+
+# Setting the parameters
+
+fc_cont &lt;- new(""flexclustControl"")  
+fc_cont@tolerance &lt;- 0.01   
+fc_cont@iter.max &lt;- 25
+fc_cont@verbose &lt;- 1
+fc_family &lt;- ""kmeans""             
+
+seed1 &lt;- 12345
+fc_seed &lt;- seed1
+num_clusters &lt;- 3
+set.seed(fc_seed)
+
+AutoMinus.cl &lt;- kcca(AutoMinus.mat, k = num_clusters, save.data = TRUE, control = fc_cont, family = kccaFamily(fc_family))
+summary(AutoMinus.cl)
+
+cluster info:
+  size  av_dist max_dist separation
+1  122 263.0698 525.3528   480.3347
+2  180 217.1523 610.9503   478.7658
+3   90 290.9777 905.5731   551.2422
+</code></pre>
+
+<p>Every time I change the seed, the output changes. I am evaluating different outputs based on lowest <code>av_dist</code>, lowest <code>max_dist</code> and minimum <code>separation</code>. My understanding is <code>separation</code> is within a given cluster. I tried to find the definition of <code>separation</code> in the documentation, but couldn't find it. My questions are:</p>
+
+<ol>
+<li>How do I set the seed that will give me the best/optimal(?) solution?</li>
+<li>Are there any general good practices for initializing a seed value?</li>
+<li>Is my understanding of <code>separation</code> correct?</li>
+</ol>
+
+<p>Thank you!</p>
+"
+"0.304997140665209","0.312347523777212","218253","<p>I am working on a project where I am given a large table of numbers, in which we are hoping to see certain patterns. For example (using <code>R</code>):</p>
+
+<pre><code>set.seed(77)
+mat &lt;- matrix(rnorm(100), 10, 10)
+colnames(mat) &lt;- letters[1:10]
+rownames(mat) &lt;- 1:10
+round(mat, 3)
+
+        a      b      c      d      e      f      g      h      i      j
+1  -0.550 -2.941 -0.254 -2.362  0.003 -1.305  0.399 -1.638  0.751  0.877
+2   1.091 -0.243  1.519 -0.551 -0.531  0.887  0.027 -0.332 -0.067  0.835
+3   0.640 -0.141  1.781 -0.305 -0.710  2.336 -1.001  0.448 -0.504 -0.048
+4   1.043 -0.033 -0.879 -0.750 -0.291  0.503  0.009  0.272 -0.160 -3.410
+5   0.170  0.280 -1.529  0.144  0.885 -2.268 -0.164 -0.254 -0.093 -1.513
+6   1.138  0.590  0.136 -0.549 -0.154 -2.032  0.423  2.348  0.474  0.252
+7  -0.971  1.024 -0.709  0.160 -0.954 -0.138 -0.424 -0.213  0.131 -0.473
+8  -0.132  2.107 -1.410 -0.088  0.667 -0.953 -0.470  0.051  0.717  0.977
+9   0.146  0.155  1.831  0.081  0.388  1.578  0.172 -2.246 -0.003  2.435
+10  1.441  0.913  1.290  0.899  0.549 -1.248  1.847  0.920 -2.177 -0.082
+</code></pre>
+
+<p>My goal is to be able to sort arbitrary sized matrices (not necessarily square) by switching rows and columns to minimize cell-wise differences. For example, all the values on line 1 should stay on line 1, but perhaps it makes more sense distance-wise for line 1 to appear on line 8, and vice versa regarding the columns.  This problem reminds me of finding the inverse of a matrix using linear algebra.</p>
+
+<p>Note: I realize there is not a unique solution to this problem, so resampling is OK (ideally, rerunning the function will produce different clusterings). As a starting point, optimally larger values would float to the top while smaller values would tend toward the bottom.  </p>
+
+<p>In the above example, perhaps the largest numbers are all in row 9 and so one move might be to bring it to the top. Similarly, perhaps the largest numbers are found in column c and that is moved to the left. Basically, I want to reorder the rows and columns of the table so that the magnitude of the difference between each entry (e.g. a1 vs a2/b1; c2 vs. the four surrounding entries) is minimized - but with the restriction that the operations happen row- and column-wise.</p>
+
+<p>I am primarily interested in a theoretical approach that will show me how to accomplish this, but will eventually be implementing the solution in <code>R</code>, so assistance on that front would also be appreciated.</p>
+
+<p>To make this more concrete: this idea is to be applied to the results from large-scale simulation studies, where the entries might be Type I error or power rates, the rows might pertain to a design condition (like sample size) and the columns might pertain to different multiple comparison procedures or something like that. The goal is to rearrange the entries of this table so that we might be able to glance at the table and see where clusters of ""good"" procedures are and where the ""bad"" ones are.</p>
+"
+"0.304997140665209","0.312347523777212","232631","<p>I was searching for appliction of unsupervised learning in trading and came across this <a href=""https://www.r-bloggers.com/artificial-intelligence-in-trading-k-means-clustering/"" rel=""nofollow"">site</a>. I have understood most part of the code but some I have no idea whats happening.</p>
+
+<p>This code is used for optimizing cluster number</p>
+
+<pre><code>#optimal number of clusters
+wss = (nrow(nasa)-1)*sum(apply(nasa,2,var))
+for (i in 2:15) wss[i] = sum(kmeans(nasa, centers=i)$withinss)
+wss=(data.frame(number=1:15,value=as.numeric(wss)))
+</code></pre>
+
+<p>what is the principle behind this optimization code?</p>
+
+<p>The second code which I didnt undertand is of autocorrelation code?</p>
+
+<pre><code>autocorrelation=head(cbind(kmeanObject$cluster,lag(as.xts(kmeanObject$cluster),-1)),-1)
+xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+
+y=apply(xtabs(~autocorrelation[,1]+(autocorrelation[,2])),1,sum)
+x=xtabs(~autocorrelation[,1]+(autocorrelation[,2]))
+</code></pre>
+
+<p><code>autocorrelation</code> variable is the columns binded of cluster and one day lagged cluster value. From this why they used <code>xtabs</code> instead of <code>cov</code> function to calculate correlation.</p>
+
+<p>The last doubt is how to get and read percentage table?</p>
+
+<pre><code>    1         2     3         4     5
+1   0.11    0.25    0.30    0.22    0.12
+2   0.01    0.59    0.17    0.21    0.02
+3   0.02    0.49    0.21    0.24    0.04
+4   0.03    0.40    0.26    0.27    0.04
+5   0.19    0.18    0.24    0.23    0.17
+</code></pre>
+
+<p>here 2x2 is 0.59 and 3x2 is 0.49 what this means?</p>
+
+<p>lets say i did a kmeans clustering using new data</p>
+
+<pre><code>newkmeanObject=kmeans(new_nasa,5,iter.max=10)
+newkmeanObject$cluster
+</code></pre>
+
+<p>and obtained last cluster values as 2 so what is this means?</p>
+"
