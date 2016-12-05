@@ -5,6 +5,7 @@ var showUsers = function(ids, mytopic){
 	d3.selectAll(".Posts").remove();
   d3.select("#second").remove();
   d3.select("#mainback").remove();
+  d3.selectAll("svg").attr("width","0px").attr("height","0px");
   d3.select("body")
   .insert("div",":first-child")
   .attr("id","first")
@@ -19,10 +20,6 @@ var showUsers = function(ids, mytopic){
   .attr("href", "./index.html")
   .attr("class","w3-btn")
   .html("Home");
-
-  d3.select("#first")
-    .append("p")
-    .text("Chrome users: Please scroll down if you can't see the radar chart");
 
 	var maxReputation = function(dat){ return d3.max(dat, function(d){return +d.Reputation})};
 	var maxViews = function(dat){ return d3.max(dat, function(d){return +d.Views})};
