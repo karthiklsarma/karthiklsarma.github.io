@@ -3,6 +3,7 @@ var drawWeb = function(data, maxReputation, maxViews, maxUpVotes, maxDownVotes){
 		var w = 150,
 		h = 150;
  
+ 	d3.selectAll("svg").attr("width","0px").attr("height","0px");
 	var colorscale = d3.scaleOrdinal(d3.schemeCategory10);
     //var colorscale = d3.scale.category20b();
 	//Legend titles
@@ -55,60 +56,7 @@ for(i=0;i<dispName.length;i++){
 	myId += dispName[i];
 }
 var id = "#"+myId;
-d3.select("#body").append("div").attr("id",myId);
-d3.select("#body").append("div").attr("id",myId+"2").style("position","relative").style("left","215px");
+d3.select("#body").append("div").attr("id",myId).append("p").text(c.DisplayName+":");
 RadarChart.draw(id, d, mycfg);
-////////////////////////////////////////////
-/////////// Initiate legend ////////////////
-////////////////////////////////////////////
-/*
-var svg = d3.select('#body')
-	.selectAll('svg')
-	.append('svg')
-	.attr("id",c.DisplayName+"svg")
-	.attr("width", w+300)
-	.attr("height", h+300)
-*/ 
-//Create the title for the legend
-
-var text = d3.select(id+"2").append("text")
-	.attr("x", w+(w/2))
-	.attr("y", h+80)
-	.attr("text-anchor", "start")
-	//.attr("font-size", "18px")
-	.attr("font-weight", 500)
-	.text(c.DisplayName);
-
 })
 };
-	
-	
-// //Initiate Legend	
-// var legend = svg.append("g")
-// 	.attr("class", "legend")
-// 	.attr("height", 100)
-// 	.attr("width", 200)
-// 	.attr('transform', 'translate(90,20)') 
-// 	;
-// 	//Create colour squares
-// 	legend.selectAll('rect')
-// 	  .data(LegendOptions)
-// 	  .enter()
-// 	  .append("rect")
-// 	  .attr("x", w - 65)
-// 	  .attr("y", function(d, i){ return i * 20;})
-// 	  .attr("width", 10)
-// 	  .attr("height", 10)
-// 	  .style("fill", function(d, i){ return colorscale(i);})
-// 	  ;
-// 	//Create text next to squares
-// 	legend.selectAll('text')
-// 	  .data(LegendOptions)
-// 	  .enter()
-// 	  .append("text")
-// 	  .attr("x", w - 52)
-// 	  .attr("y", function(d, i){ return i * 20 + 9;})
-// 	  .attr("font-size", "11px")
-// 	  .attr("fill", "#737373")
-// 	  .text(function(d) { return d; })
-// 	  ;	

@@ -66,6 +66,7 @@ div .Posts{
 }
 
 </style>
+<link rel="stylesheet" href="http://www.w3schools.com/lib/w3.css">
 <link rel="stylesheet" property="stylesheet" href="./Vornoi/css/opentip.css">
 <link rel="stylesheet" property="stylesheet" href="./Vornoi/css/opentip-custom.css">
 <link rel="stylesheet" property="stylesheet" href="./Vornoi/css/volcano.css">
@@ -77,6 +78,7 @@ div .Posts{
 <script src="./Vornoi/js/graph.js"></script>
 <script src="./users/js/RadarChart.js"></script>
 <script src="./users/data.js"></script>
+<script src="./mainback.js"></script>
 </head>
 <body>
 <svg width="960" height="1000"></svg>
@@ -144,6 +146,14 @@ d3.csv("./Data/tags_id/tags_id.csv", function(d) {
 });
 
 function fade(c) {
+  d3.select("body")
+    .insert("div",":first-child")
+    .attr("id","mainback")
+    .append("a")
+    .attr("href", "./index.html")
+    .attr("class","w3-btn")
+    .html("Home");
+
     svg.selectAll("circle")
     .filter(function (d) {
           return d.id != c;
@@ -158,23 +168,23 @@ function fade(c) {
     .transition()
     .style("opacity", 0.1);
 
-    //console.log(c)
 	var count =0;
     d3.csv("./Data/"+c+".csv", function(d){
+
 		d.forEach(
 					
 			function(k){
 				
 				if(count<=5)
 				{
-					
 				svg.selectAll("circle")
     				.filter(function (b) {
 							if(b.id == k.id)
-							{count = count+1;
-						}
-							
-          	     			return k.id == b.id;
+							{
+                count = count+1;
+						  }
+							 
+          	   return k.id == b.id;
     				})
     				.transition()
     				.style("opacity", 1);
@@ -189,8 +199,8 @@ function fade(c) {
 				svg.selectAll(".node")
 				.on("click", function(d){
 					topics=topics+d.id;
-					d3.selectAll("svg > *").remove();
-					viewGraph(topics.substr(0,topics.lastIndexOf("_")));
+          twoTopic = topics.substr(0,topics.lastIndexOf("_"));
+					viewGraph(twoTopic);
 				});
 			}
 		);

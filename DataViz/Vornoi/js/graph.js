@@ -1,4 +1,30 @@
-var viewGraph = function(topics){
+var viewGraph = function(received_topic){
+
+        d3.selectAll("svg > *").remove();
+
+        d3.selectAll(".Posts").remove();
+        d3.selectAll(".w3-btn").remove();
+        d3.selectAll("p").remove();
+        d3.select("#body").html("");
+        d3.select("#first").remove();
+        d3.select("#mainback").remove();
+
+        d3.select("body")
+        .insert("div",":first-child")
+        .attr("id","mainback")
+        .append("input")
+        .attr("type", "button")
+        .attr("class","w3-btn")
+        .attr("value", "Back")
+        .attr("onclick", "mainBack(twoTopic)");
+
+        d3.select("#mainback")
+        .append("a")
+        .attr("href", "./index.html")
+        .attr("class","w3-btn")
+        .html("Home")
+
+
 		var getId = function(d) {
     				return d.V3;
 		};
@@ -17,11 +43,17 @@ var viewGraph = function(topics){
     		    return y;
 		};
 
-        var dest = "./Results/"+topics+"Result.csv";
+        var dest = "./Results/"+received_topic+"Result.csv";
+
 
 		d3.csv(dest, function (error, root) {
-    					if (error) throw error;
+			if (error){
+                        d3.select("#mainback")
+                          .append("p")
+                          .text("No post found for these two topics");
 
+                        window.scrollTo(0, 0);
+            }else{
  
 			var margin = {top: 20, right: 20, bottom: 40, left: 40},
 			// This margin makes sure the two axes will not overlap,
@@ -39,7 +71,7 @@ var viewGraph = function(topics){
     				.style("width", width + margin.left + margin.right)
     				.style("height", height + margin.top + margin.bottom);
 
-			topicArray = topics.split("_");
+			topicArray = received_topic.split("_");
 
         		svg.append("text")
             		.attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
@@ -122,7 +154,7 @@ var viewGraph = function(topics){
         				.attr("r", radius)
         				.classed("significant", isSignificant)
 					.on("click", function(d){
-						showAnswer(getId(d));
+						showAnswer(getId(d),received_topic);
 					 })
 					.on("mouseover", function(d){
 							d3.selectAll(".Posts").remove();
@@ -161,5 +193,6 @@ var viewGraph = function(topics){
 				
 				});
 
-		});
+		}});
+        window.scrollTo(0, 0);
 };

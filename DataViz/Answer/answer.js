@@ -1,22 +1,46 @@
-var showUsers = function(ids){
-	d3.selectAll("svg").remove();
+var showUsers = function(ids, mytopic){
+
+	d3.selectAll("svg > *").remove();
+  d3.selectAll(".w3-btn").remove();
 	d3.selectAll(".Posts").remove();
+  d3.select("#second").remove();
+  d3.select("#mainback").remove();
+  d3.select("body")
+  .insert("div",":first-child")
+  .attr("id","first")
+  .append("input")
+  .attr("type", "button")
+  .attr("class","w3-btn")
+  .attr("value", "Back")
+  .attr("onclick", "showAnswer("+ids[0]+",mytopic)");
+
+  d3.select("#first")
+  .append("a")
+  .attr("href", "./index.html")
+  .attr("class","w3-btn")
+  .html("Home");
+
 	var maxReputation = function(dat){ return d3.max(dat, function(d){return +d.Reputation})};
 	var maxViews = function(dat){ return d3.max(dat, function(d){return +d.Views})};
 	var maxUpvotes = function(dat){ return d3.max(dat, function(d){return +d.UpVotes})};
 	var maxDownvotes = function(dat){ return d3.max(dat, function(d){return +d.DownVotes})};
 	d3.csv("./users/answers_users.csv", function(data){
-		data = data.filter(function(d){ for(i=0;i<ids.length;i++){ if(d.Id == ids[i]){return true;}} return false;});
+		data = data.filter(function(d){ for(i=1;i<ids.length;i++){ if(d.Id == ids[i]){return true;}} return false;});
     drawWeb(data,maxReputation(data),maxViews(data),maxUpvotes(data),maxDownvotes(data));
 	});
 }
 
-var showAnswer = function(questionId){
-
+var showAnswer = function(questionId, recv_topics){
   d3.selectAll("svg > *").remove();
   d3.selectAll(".Posts").remove();
+  d3.selectAll(".w3-btn").remove();
+  d3.selectAll("p").remove();
+  d3.selectAll("svg").attr("width","0px").attr("height","0px");
+  d3.select("#body").html("");
+  d3.select("#first").remove();
+  d3.select("#mainback").remove();
 	userids = [];
-
+  userids[0]=questionId;
 	var margin = {top: 40, right: 20, bottom: 30, left: 40},
     	width = 960 - margin.left - margin.right,
     	height = 500 - margin.top - margin.bottom;
@@ -39,6 +63,7 @@ var showAnswer = function(questionId){
     	.scale(y)
     	.tickFormat(formatPercent);
 
+      
 	var tip = d3.tip()
   	.attr('class', 'd3-tip')
   	.offset([-10, 0])
@@ -53,23 +78,58 @@ var showAnswer = function(questionId){
     	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 	svg.call(tip);
-
 	d3.csv("./Answer/answers.csv", type, function(error, data) {
 
+           mytopic = recv_topics;
 	         data = data.filter(function(d){ return d.ParentId==questionId;});
 	
            if(data.length==0){
-                 d3.select("body").html("<h1>No answers for this post</h1>");
+                        d3.select("body")
+                        .insert("div",":first-child")
+                        .attr("id","second")
+                        .append("input")
+                        .attr("type", "button")
+                        .attr("class","w3-btn")
+                        .attr("value", "Back")
+                        .attr("onclick", "viewGraph(mytopic)");
+
+                        d3.select("#second")
+                        .append("a")
+                        .attr("href", "./index.html")
+                        .attr("class","w3-btn")
+                        .html("Home");
+
+                        d3.select("#second")
+                          .append("p")
+                          .text("No answers for this post");
+
+                        window.scrollTo(0, 0);
            }else{
 
 	         data.forEach(function(d){userids.push(d.OwnerUserId);});
+
             d3.select("body")
             .insert("div",":first-child")
+            .attr("id","second")
             .append("input")
             .attr("type", "button")
+            .attr("class","w3-btn")
             .attr("value", "Show User Stat")
-            .attr("onclick", "showUsers(userids)");
-	
+            .attr("onclick", "showUsers(userids,mytopic)");
+
+            d3.select("#second")
+            .append("input")
+            .attr("type", "button")
+            .attr("class","w3-btn")
+            .attr("value", "Back")
+            .attr("onclick", "viewGraph(mytopic)");
+
+            d3.select("#second")
+            .append("a")
+            .attr("href", "./index.html")
+            .attr("class","w3-btn")
+            .html("Home");
+            
   	       x.domain(data.map(function(d) { return d.Id; }));
   	       y.domain([0, d3.max(data, function(d) { return d.Score; })]);
 
