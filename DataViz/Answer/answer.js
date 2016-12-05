@@ -20,6 +20,10 @@ var showUsers = function(ids, mytopic){
   .attr("class","w3-btn")
   .html("Home");
 
+  d3.select("#first")
+    .append("p")
+    .text("Chrome users: Please scroll down if you can't see the radar chart");
+
 	var maxReputation = function(dat){ return d3.max(dat, function(d){return +d.Reputation})};
 	var maxViews = function(dat){ return d3.max(dat, function(d){return +d.Views})};
 	var maxUpvotes = function(dat){ return d3.max(dat, function(d){return +d.UpVotes})};
