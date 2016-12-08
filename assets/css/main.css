@@ -357,8 +357,8 @@ sm {
 	font-size:11px;
 	height:35px;
 	line-height:35px;
-	color:#ffffff;
-	color:rgba(0, 0, 0, 0.4);
+	color:#000000;
+	color:rgba(0, 0, 0, 1);
 }
 
 .card {
