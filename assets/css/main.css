@@ -386,3 +386,9 @@ sm {
 .card a{
 	background: rgba(200,200,200,0.5);
 }
+
+.img-seal {
+  display: block;
+  height: auto;
+  max-width: 50%;
+}
