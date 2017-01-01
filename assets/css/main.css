@@ -405,7 +405,12 @@ sm {
 }
 
 .screen-adjust-mobile{
-	font-size: 4vw;
+	font-size: 6vw;
 	font-family: Copperplate, "Copperplate Gothic Light", fantasy;
 	padding-top: 60px;
+}
+
+.sub-screen-adjust-mobile{
+	font-size: 4vw;
+	font-family: "Brush Script MT", cursive;
 }
