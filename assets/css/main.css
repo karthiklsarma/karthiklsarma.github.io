@@ -392,3 +392,14 @@ sm {
   height: auto;
   max-width: 50%;
 }
+
+.screen-adjust{
+	font-size: 4vw;
+	font-family: Papyrus, fantasy;
+	padding-top: 20%;
+}
+
+.sub-screen-adjust{
+	font-size: 2vw;
+	font-family: "Brush Script MT", cursive;
+}
