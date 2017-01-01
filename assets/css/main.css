@@ -405,12 +405,12 @@ sm {
 }
 
 .screen-adjust-mobile{
-	font-size: 6vw;
+	font-size: 120%;
 	font-family: "Times New Roman", Times, serif
 	padding-top: 60px;
 }
 
 .sub-screen-adjust-mobile{
-	font-size: 4vw;
+	font-size: 2vw;
 	font-family: "Comic Sans MS", cursive, sans-serif
 }
