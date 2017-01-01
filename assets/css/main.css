@@ -406,9 +406,9 @@ sm {
 
 .screen-adjust-mobile{
 	font-size: 6vw;
-	font-family: "Times New Roman", Times, serif
-	font-weight:bold;
-	padding-top: 60px;
+	font-family: "Raleway";
+	font-weight: 300;
+	padding-top: 20px;
 }
 
 .sub-screen-adjust-mobile{
