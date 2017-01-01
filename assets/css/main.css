@@ -395,11 +395,17 @@ sm {
 
 .screen-adjust{
 	font-size: 4vw;
-	font-family: Copperplate, "Copperplate Gothic Light", fantasy;
+	font-family: Papyrus, fantasy;
 	padding-top: 250px;
 }
 
 .sub-screen-adjust{
 	font-size: 2vw;
 	font-family: "Brush Script MT", cursive;
+}
+
+.screen-adjust-mobile{
+	font-size: 4vw;
+	font-family: Copperplate, "Copperplate Gothic Light", fantasy;
+	padding-top: 60px;
 }
