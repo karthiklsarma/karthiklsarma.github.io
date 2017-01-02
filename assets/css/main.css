@@ -406,13 +406,12 @@ sm {
 
 .screen-adjust-mobile{
 	font-size: 6vw;
-	font-family: "Raleway";
-	font-weight: 300;
+	font-family: "Haettenschweiler";
 	padding-top: 20px;
 }
 
 .sub-screen-adjust-mobile{
 	font-size: 2vw;
-	font-family: "Comic Sans MS", cursive, sans-serif
+	font-family: Georgia, serif;
 	font-style:italic;
 }
