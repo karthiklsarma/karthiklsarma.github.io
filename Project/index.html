@@ -31,8 +31,17 @@
     <script src="brush.js"></script>
     <script src="histogram.js"></script>
     <script>
-	var display = d3.select("#display");
-var scatter = d3.chart.scatter()
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-101662462-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <script>
+	    var display = d3.select("#display");
+      var scatter = d3.chart.scatter()
       d3.json("pics.json", function(err, pics) {
         var data = pics;
         data.forEach(function(d) {
@@ -76,7 +85,7 @@ var scatter = d3.chart.scatter()
 		  //.length(2500)
         brush(bgroup)
 		
-		var radioHtml = '<label>Malellllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll</label>';
+		var radioHtml = '<label>Male</label>';
 		//var radioHtml = '<input type="radio" name="yaxis"/><label>Male</label>';
 var radioFragment = document.createElement('div');
     radioFragment.innerHTML = radioHtml;

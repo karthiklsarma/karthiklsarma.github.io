@@ -18,6 +18,15 @@
 			"to":"2016-08-16",
 			"description":" Developed REST’ful services in Go lang for an application in the IoT domain.\n Managed distributed cluster and helped production release via Docker image.\n Developed skills in Linux virtualization using QEMU, KVM, libvirt.\n Used Amazon Web Services (AWS) / Elastic Cloud Compute (EC2).\n Proficient in application production and deployment using Apache Mesosphere, Apache Marathon and Docker machine.",
 			"default_item":false
+		},
+		{
+			"type":"Work",
+			"institution":"Orion Health",
+			"title":"Graduate Software Engineer",
+			"from":"2017-01-09",
+			"to": "2017-06-25",
+			"description":" Developing Restful services in Java 8.\n Front end development using React, Redux, Webpack, Js ES7.\n Analytics using elastic search, D3 visualization",
+			"default_item":false
 		}
 	],
 	"study":[
