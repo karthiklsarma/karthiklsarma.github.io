@@ -24,8 +24,17 @@
 			"institution":"Orion Health",
 			"title":"Graduate Software Engineer",
 			"from":"2017-01-09",
-			"to": "2017-10-09",
-			"description":" Developing Restful services in Java 8.\n Front end development using React, Redux, Webpack, Js ES7.\n Analytics using elastic search, D3 visualization",
+			"to": "2017-12-12",
+			"description":" Developing Restful services in Java 8.\n Front end development using React, Redux, Webpack, Js ES7.\n Analytics using elastic search, D3 visualization.",
+			"default_item":false
+		},
+		{
+			"type":"Work",
+			"institution":"Orion Health",
+			"title":"Junior Software Engineer",
+			"from":"2017-12-13",
+			"to": "2018-03-11",
+			"description":" Enhanced medical analytics platform developed using Apache Spark Streaming, Scala, Java 8 and elasticsearch.\n Real time streaming for healthcare analytics.\n Proficient in functional programming using scala.\n Programming in Apache Spark using Dataframes, RDD, and DStream.",
 			"default_item":false
 		}
 	],
