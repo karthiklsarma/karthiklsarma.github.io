@@ -69,8 +69,6 @@ var width = $(window).width();
 var svgHeight = 700;
 var container = $('#experience');
 
-if (width < 900) width = 900;
-
 container
 .css('left', function(e){
 return (-1 * (width - container.parent().width()) / 2) + 'px';
