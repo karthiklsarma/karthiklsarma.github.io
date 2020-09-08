@@ -7,7 +7,7 @@
 			"title":"Software Engineer",
 			"from":"2013-10-11",
 			"to":"2014-11-11",
-			"description":" Contributed software engineering expertise in the development of PIMS (Patient Information Management System) through all phases of software lifecycle, from requirements definition through successful deployment.\n Provided user requirements analysis, design and programming support for enhancement of PIMS application.\n Assisted many senior developers in creating quick fixes to bugs for the software workflow process.\n Developed troubleshooting skills through log analysis and built hands-on experience in implementing design patterns.\nProgramming Language - C++",
+			"description":" Contributed software engineering expertise in the development of PIMS (Patient Information Management System) through all phases of software lifecycle.\n Provided user requirements analysis, design and programming support for enhancement of PIMS application.\n Assisted many senior developers in creating quick fixes to bugs for the software workflow process.\n Developed troubleshooting skills through log analysis and built hands-on experience in implementing design patterns.\nProgramming Language - C++",
 			"default_item":false
 		},
 		{
@@ -49,10 +49,10 @@
 		{
 			"type":"Work",
 			"institution":"Microsoft",
-			"title":"Software Engineer",
+			"title":"Software Engineer 2",
 			"from":"2020-04-13",
 			"to": null,
-			"description":"one drive and sharepoint team",
+			"description":"One Drive and Sharepoint",
 			"default_item":true
 		}
 	],
