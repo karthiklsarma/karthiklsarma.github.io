@@ -445,7 +445,7 @@ function Contact() {
         <h2>Have a hard problem?<br /><em>Bring it over.</em></h2>
         <a className="contact-email" href="mailto:karthikl_sarma@yahoo.com">karthikl_sarma@yahoo.com <ArrowUpRight /></a>
         <div className="footer-row">
-          <div><MapPin size={17} /> Seattle, Washington</div>
+          <div><MapPin size={17} /> Mountain View, California</div>
           <div className="socials">
             <a href="https://github.com/karthiklsarma" aria-label="GitHub"><Code2 /></a>
             <a href="https://www.linkedin.com/in/karthik-sarma-6713b416" aria-label="LinkedIn"><ArrowUpRight /></a>
