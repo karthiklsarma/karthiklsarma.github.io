@@ -11,7 +11,7 @@
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "vite": "2.9.18"
+    "vite": "6.4.3"
   },
   "devDependencies": {}
 }
