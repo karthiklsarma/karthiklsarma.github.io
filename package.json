@@ -1,0 +1,17 @@
+{
+  "name": "karthik-sarma-portfolio",
+  "version": "2.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && node scripts/copy-static.mjs",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "lucide-react": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "vite": "2.9.18"
+  },
+  "devDependencies": {}
+}
