@@ -8,10 +8,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "lucide-react": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "vite": "2.9.18"
+    "lucide-react": "^1.45.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vite": "^8.3.4"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
 }

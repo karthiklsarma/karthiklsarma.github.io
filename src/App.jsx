@@ -210,30 +210,56 @@ const GLYPHS = '!<>-_\\/[]{}—=+*^?#01ΛΣΞ';
 const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pad = (value) => String(value).padStart(2, '0');
 
-// Scrolls to an in-page section with JS instead of native anchor jumps. Mobile Safari
-// lands short when the toolbar collapses or layout shifts mid-scroll, so re-measure
-// after the scroll settles and correct any drift.
+let cancelActiveScroll = () => {};
+
+// Scrolls to an in-page section with our own animation instead of native smooth
+// scrolling, which overshoots on mobile when the toolbar collapses or layout shifts
+// mid-scroll. The destination is re-measured every frame, so the scroll always ends
+// exactly on the section.
 function scrollToSection(id) {
   const target = document.getElementById(id);
   if (!target) return;
   const offset = () => (document.querySelector('.site-header')?.offsetHeight ?? 0) + 12;
-  const destination = () => Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset());
-  const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
+  const destination = () => {
+    const max = document.documentElement.scrollHeight - window.innerHeight;
+    return Math.min(max, Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset()));
+  };
 
-  window.scrollTo({ top: destination(), behavior });
+  cancelActiveScroll();
   history.replaceState(null, '', `#${id}`);
 
-  let settleTimer;
-  const correct = () => {
-    window.removeEventListener('scroll', onScroll);
-    if (Math.abs(destination() - window.scrollY) > 2) window.scrollTo({ top: destination(), behavior: 'auto' });
+  if (prefersReducedMotion()) {
+    window.scrollTo(0, destination());
+    return;
+  }
+
+  const start = window.scrollY;
+  const duration = Math.min(1100, Math.max(450, Math.abs(destination() - start) / 6));
+  const began = performance.now();
+  let raf;
+  let fallback;
+  const stop = () => {
+    cancelAnimationFrame(raf);
+    clearTimeout(fallback);
+    ['wheel', 'touchstart', 'keydown'].forEach((type) => window.removeEventListener(type, stop));
   };
-  const onScroll = () => {
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(correct, 140);
+  const step = (now) => {
+    const t = Math.min(1, (now - began) / duration);
+    const eased = t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2;
+    window.scrollTo(0, start + (destination() - start) * eased);
+    if (t < 1) raf = requestAnimationFrame(step);
+    else stop();
   };
-  window.addEventListener('scroll', onScroll, { passive: true });
-  settleTimer = setTimeout(correct, 1200);
+  // If animation frames stall (throttled or backgrounded page), still arrive.
+  fallback = setTimeout(() => {
+    stop();
+    window.scrollTo(0, destination());
+  }, duration + 400);
+
+  // Let the user take over by scrolling or touching mid-animation.
+  ['wheel', 'touchstart', 'keydown'].forEach((type) => window.addEventListener(type, stop, { passive: true }));
+  cancelActiveScroll = stop;
+  raf = requestAnimationFrame(step);
 }
 
 function useAnchorScrolling() {
@@ -270,7 +296,10 @@ function useActiveSection() {
   return active;
 }
 
-function useInView(threshold = 0.12) {
+// Threshold is a fraction of the element's own height, so tall elements (the stacked
+// project grid on phones) should use 0 and rely on rootMargin instead — otherwise they
+// can never be "12% visible" and stay hidden.
+function useInView(threshold = 0, rootMargin = '0px 0px -8% 0px') {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
@@ -278,14 +307,15 @@ function useInView(threshold = 0.12) {
     const element = ref.current;
     if (!element) return undefined;
     const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
+      // Also reveal anything a jump-scroll skipped past, so scrolling back up isn't blank.
+      if (entry.isIntersecting || entry.boundingClientRect.bottom < 0) {
         setVisible(true);
         observer.disconnect();
       }
-    }, { threshold });
+    }, { threshold, rootMargin });
     observer.observe(element);
     return () => observer.disconnect();
-  }, [threshold]);
+  }, [threshold, rootMargin]);
 
   return [ref, visible];
 }
