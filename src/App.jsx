@@ -574,7 +574,7 @@ function Hero() {
           at serious scale.
         </p>
         <div className="hero-actions">
-          <a className="button primary" href="#projects">Explore projects <ArrowDown size={17} /></a>
+          <a className="button primary" href="#experience">Experience <ArrowDown size={17} /></a>
           <a className="button ghost" href="mailto:karthikl_sarma@yahoo.com">Start a conversation <ArrowUpRight size={17} /></a>
         </div>
       </div>
