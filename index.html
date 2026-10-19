@@ -7,9 +7,17 @@
       name="description"
       content="Karthik Sarma is a senior software engineer building AI platforms, distributed systems, and cloud infrastructure."
     />
-    <meta name="theme-color" content="#f3f0e8" />
+    <meta name="theme-color" content="#05070d" />
     <link rel="icon" type="image/png" href="/assets/img/icons/favicon.ico" />
     <title>Karthik Sarma | Software Engineer</title>
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("theme-v2") === "light" ? "light" : "dark";
+      } catch (e) {
+        document.documentElement.dataset.theme = "dark";
+      }
+    </script>
     <script
       async
       src="https://www.googletagmanager.com/gtag/js?id=G-VWH49Q9DP1"

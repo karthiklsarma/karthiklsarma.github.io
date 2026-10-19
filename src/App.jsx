@@ -8,6 +8,7 @@ import {
   Menu,
   Moon,
   Sun,
+  Terminal,
   X,
 } from 'lucide-react';
 
@@ -203,6 +204,54 @@ const activities = [
   'Lifeguard — Sun Devil Fitness Center',
 ];
 
+
+const roles = ['AI platforms', 'agentic harnesses', 'distributed systems', 'cloud infrastructure'];
+const GLYPHS = '!<>-_\\/[]{}—=+*^?#01ΛΣΞ';
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pad = (value) => String(value).padStart(2, '0');
+
+// Scrolls to an in-page section with JS instead of native anchor jumps. Mobile Safari
+// lands short when the toolbar collapses or layout shifts mid-scroll, so re-measure
+// after the scroll settles and correct any drift.
+function scrollToSection(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const offset = () => (document.querySelector('.site-header')?.offsetHeight ?? 0) + 12;
+  const destination = () => Math.max(0, target.getBoundingClientRect().top + window.scrollY - offset());
+  const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
+
+  window.scrollTo({ top: destination(), behavior });
+  history.replaceState(null, '', `#${id}`);
+
+  let settleTimer;
+  const correct = () => {
+    window.removeEventListener('scroll', onScroll);
+    if (Math.abs(destination() - window.scrollY) > 2) window.scrollTo({ top: destination(), behavior: 'auto' });
+  };
+  const onScroll = () => {
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(correct, 140);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  settleTimer = setTimeout(correct, 1200);
+}
+
+function useAnchorScrolling() {
+  useEffect(() => {
+    const onClick = (event) => {
+      const link = event.target.closest('a[href^="#"]');
+      if (!link || event.defaultPrevented || event.metaKey || event.ctrlKey) return;
+      const id = link.getAttribute('href').slice(1);
+      if (!document.getElementById(id)) return;
+      event.preventDefault();
+      scrollToSection(id);
+    };
+    document.addEventListener('click', onClick);
+    if (location.hash) setTimeout(() => scrollToSection(location.hash.slice(1)), 300);
+    return () => document.removeEventListener('click', onClick);
+  }, []);
+}
+
 function useActiveSection() {
   const [active, setActive] = useState('about');
 
@@ -221,63 +270,255 @@ function useActiveSection() {
   return active;
 }
 
-function useReveal() {
+function useInView(threshold = 0.12) {
   const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return undefined;
-    const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && element.classList.add('is-visible'),
-      { threshold: 0.12 },
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold });
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [threshold]);
 
-  return ref;
+  return [ref, visible];
 }
 
 function Reveal({ children, className = '' }) {
-  const ref = useReveal();
-  return <div ref={ref} className={`reveal ${className}`}>{children}</div>;
+  const [ref, visible] = useInView();
+  return <div ref={ref} className={`reveal ${visible ? 'is-visible' : ''} ${className}`}>{children}</div>;
 }
 
-function SectionHeading({ eyebrow, title, copy }) {
+// Text that "decrypts" from random glyphs into its final value.
+function Scramble({ text, delay = 0 }) {
+  const [output, setOutput] = useState(text);
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return undefined;
+    let frame = 0;
+    let raf;
+    const total = 38;
+    const start = setTimeout(function tick() {
+      const progress = frame / total;
+      setOutput(text.split('').map((char, index) => {
+        if (char === ' ' || index / text.length < progress) return char;
+        return GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      }).join(''));
+      frame += 1;
+      if (frame <= total) raf = requestAnimationFrame(tick);
+    }, delay);
+    return () => { clearTimeout(start); cancelAnimationFrame(raf); };
+  }, [text, delay]);
+
+  return <span aria-label={text}>{output}</span>;
+}
+
+function TypedRoles() {
+  const [state, setState] = useState({ index: 0, length: 0, deleting: false });
+
+  useEffect(() => {
+    if (prefersReducedMotion()) return undefined;
+    const word = roles[state.index];
+    const done = !state.deleting && state.length === word.length;
+    const empty = state.deleting && state.length === 0;
+    const timer = setTimeout(() => {
+      if (done) setState({ ...state, deleting: true });
+      else if (empty) setState({ index: (state.index + 1) % roles.length, length: 0, deleting: false });
+      else setState({ ...state, length: state.length + (state.deleting ? -1 : 1) });
+    }, done ? 1700 : state.deleting ? 35 : 70);
+    return () => clearTimeout(timer);
+  }, [state]);
+
+  const word = prefersReducedMotion() ? roles[0] : roles[state.index].slice(0, state.length);
+  return <span className="typed">{word}<i aria-hidden="true" /></span>;
+}
+
+function CountUp({ value, suffix = '' }) {
+  const [ref, visible] = useInView(0.4);
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!visible) return undefined;
+    if (prefersReducedMotion()) { setCurrent(value); return undefined; }
+    let raf;
+    const started = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - started) / 1400);
+      setCurrent(Math.round(value * (1 - (1 - t) ** 3)));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [visible, value]);
+
+  return <strong ref={ref}>{current.toLocaleString()}{suffix}</strong>;
+}
+
+// Drifting node mesh — a nod to distributed systems — drawn behind the whole page.
+function NetworkField() {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+    const pointer = { x: -9999, y: -9999 };
+    let nodes = [];
+    let width = 0;
+    let height = 0;
+    let raf;
+
+    const resize = () => {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width * ratio;
+      canvas.height = height * ratio;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const count = Math.min(90, Math.round((width * height) / 16000));
+      nodes = Array.from({ length: count }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28,
+        r: Math.random() * 1.4 + 0.6,
+      }));
+    };
+
+    const draw = () => {
+      const styles = getComputedStyle(document.documentElement);
+      const node = styles.getPropertyValue('--mesh-node').trim();
+      const link = styles.getPropertyValue('--mesh-link').trim();
+      context.clearRect(0, 0, width, height);
+
+      for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < 0 || n.x > width) n.vx *= -1;
+        if (n.y < 0 || n.y > height) n.vy *= -1;
+      }
+
+      for (let i = 0; i < nodes.length; i += 1) {
+        for (let j = i + 1; j < nodes.length; j += 1) {
+          const a = nodes[i];
+          const b = nodes[j];
+          const distance = Math.hypot(a.x - b.x, a.y - b.y);
+          if (distance < 140) {
+            context.strokeStyle = `rgba(${link}, ${(1 - distance / 140) * 0.35})`;
+            context.lineWidth = 0.6;
+            context.beginPath();
+            context.moveTo(a.x, a.y);
+            context.lineTo(b.x, b.y);
+            context.stroke();
+          }
+        }
+        const n = nodes[i];
+        const near = Math.hypot(n.x - pointer.x, n.y - pointer.y);
+        if (near < 190) {
+          context.strokeStyle = `rgba(${node}, ${(1 - near / 190) * 0.55})`;
+          context.beginPath();
+          context.moveTo(n.x, n.y);
+          context.lineTo(pointer.x, pointer.y);
+          context.stroke();
+        }
+        context.fillStyle = `rgba(${node}, 0.85)`;
+        context.beginPath();
+        context.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+        context.fill();
+      }
+    };
+
+    const loop = () => {
+      draw();
+      raf = requestAnimationFrame(loop);
+    };
+    const onPointer = (event) => { pointer.x = event.clientX; pointer.y = event.clientY; };
+    const onVisibility = () => {
+      cancelAnimationFrame(raf);
+      if (!document.hidden) loop();
+    };
+
+    resize();
+    if (prefersReducedMotion()) draw();
+    else loop();
+    window.addEventListener('resize', resize);
+    window.addEventListener('pointermove', onPointer, { passive: true });
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('pointermove', onPointer);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="network-field" aria-hidden="true" />;
+}
+
+function SectionHeading({ index, eyebrow, title, copy }) {
   return (
     <div className="section-heading">
-      <p className="eyebrow">{eyebrow}</p>
+      <p className="eyebrow"><span>[{pad(index)}]</span> // {eyebrow}</p>
       <h2>{title}</h2>
       {copy && <p className="section-copy">{copy}</p>}
     </div>
   );
 }
 
+function Clock() {
+  const [time, setTime] = useState('');
+
+  useEffect(() => {
+    const format = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+    });
+    const update = () => setTime(format.format(new Date()));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return <span className="clock">MTV {time}</span>;
+}
+
 function Header() {
   const active = useActiveSection();
   const [open, setOpen] = useState(false);
-  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [dark, setDark] = useState(() => {
+    try { return localStorage.getItem('theme-v2') !== 'light'; } catch { return true; }
+  });
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#05070d' : '#eef1f7');
+    try { localStorage.setItem('theme-v2', dark ? 'dark' : 'light'); } catch { /* storage unavailable */ }
   }, [dark]);
 
   return (
-    <header className="site-header">
-      <a className="monogram" href="#about" aria-label="Karthik Sarma, home">KS<span>.</span></a>
+    <header className={open ? 'site-header menu-open' : 'site-header'}>
+      <a className="monogram" href="#about" aria-label="Karthik Sarma, home" onClick={() => setOpen(false)}>
+        <span className="monogram-mark">KS</span>
+        <Clock />
+      </a>
       <nav className={open ? 'nav-links is-open' : 'nav-links'} aria-label="Main navigation">
-        {navItems.map(([id, label]) => (
-          <a key={id} className={active === id ? 'active' : ''} href={`#${id}`} onClick={() => setOpen(false)}>{label}</a>
+        {navItems.map(([id, label], index) => (
+          <a key={id} className={active === id ? 'active' : ''} href={`#${id}`} onClick={() => setOpen(false)}>
+            <sup>{pad(index + 1)}</sup>{label}
+          </a>
         ))}
         <a className="resume-link" href="/assets/resume/Karthik-Resume-web.pdf">Résumé <ArrowUpRight size={14} /></a>
       </nav>
       <div className="header-actions">
         <button className="icon-button" onClick={() => setDark((value) => !value)} aria-label="Toggle color theme">
-          {dark ? <Sun size={19} /> : <Moon size={19} />}
+          {dark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <button className="icon-button menu-button" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu">
-          {open ? <X size={20} /> : <Menu size={20} />}
+        <button className="icon-button menu-button" onClick={() => setOpen((value) => !value)} aria-label="Toggle menu" aria-expanded={open}>
+          {open ? <X size={19} /> : <Menu size={19} />}
         </button>
       </div>
     </header>
@@ -287,19 +528,36 @@ function Header() {
 function Hero() {
   return (
     <section className="hero" id="about">
-      <div className="hero-image" aria-hidden="true" />
-      <div className="hero-shade" aria-hidden="true" />
+      <div className="hero-grid" aria-hidden="true" />
+      <div className="hero-orb" aria-hidden="true" />
       <div className="hero-content">
-        <div className="hero-status"><span /> AI platform engineering at Microsoft</div>
-        <p className="hero-kicker">Senior Software Engineer · Mountain View, CA</p>
-        <h1>Karthik<br />Sarma<span>.</span></h1>
-        <p className="hero-intro">I build AI-powered developer tools, distributed systems, and cloud infrastructure at serious scale.</p>
+        <div className="hero-status"><span /> Online · AI platforms @ Microsoft</div>
+        <h1>
+          <Scramble text="KARTHIK" delay={150} />
+          <span className="outline"><Scramble text="SARMA" delay={450} /></span>
+        </h1>
+        <p className="hero-intro">
+          Senior software engineer building
+          <TypedRoles />
+          at serious scale.
+        </p>
         <div className="hero-actions">
-          <a className="button primary" href="#projects">Explore my work <ArrowDown size={17} /></a>
+          <a className="button primary" href="#projects">Explore projects <ArrowDown size={17} /></a>
           <a className="button ghost" href="mailto:karthikl_sarma@yahoo.com">Start a conversation <ArrowUpRight size={17} /></a>
         </div>
       </div>
-      <div className="hero-index" aria-hidden="true">01 / 05</div>
+      <aside className="hud" aria-label="Career highlights">
+        <div className="hud-title"><Terminal size={14} /> sys.status</div>
+        <dl>
+          <div><dt>uptime</dt><dd>12+ yrs</dd></div>
+          <div><dt>databases.monitored</dt><dd>180,000</dd></div>
+          <div><dt>mitigation.time</dt><dd className="good">−38%</dd></div>
+          <div><dt>oncall.load</dt><dd className="good">−30%</dd></div>
+          <div><dt>location</dt><dd>Mountain View, CA</dd></div>
+        </dl>
+        <div className="hud-bar"><span /></div>
+      </aside>
+      <a className="scroll-cue" href="#experience" aria-label="Scroll to experience"><span /></a>
     </section>
   );
 }
@@ -309,7 +567,7 @@ function About() {
     <section className="about-section page-section">
       <Reveal className="about-grid">
         <div>
-          <p className="eyebrow">Profile / 2026</p>
+          <p className="eyebrow"><span>[01]</span> // Profile</p>
           <h2 className="statement">Platform engineer.<br /><em>AI systems builder.</em></h2>
         </div>
         <div className="about-copy">
@@ -319,10 +577,10 @@ function About() {
         </div>
       </Reveal>
       <Reveal className="metric-strip">
-        <div><strong>12+</strong><span>Years building software</span></div>
-        <div><strong>4</strong><span>Industries explored</span></div>
-        <div><strong>3</strong><span>Cloud platforms</span></div>
-        <div><strong>∞</strong><span>Curiosity remaining</span></div>
+        <div className="glass"><CountUp value={12} suffix="+" /><span>Years building software</span></div>
+        <div className="glass"><CountUp value={180000} /><span>Databases monitored</span></div>
+        <div className="glass"><CountUp value={38} suffix="%" /><span>Faster mitigation</span></div>
+        <div className="glass"><strong>∞</strong><span>Curiosity remaining</span></div>
       </Reveal>
     </section>
   );
@@ -332,20 +590,20 @@ function Education() {
   return (
     <section className="education-section page-section">
       <Reveal>
-        <SectionHeading eyebrow="Education" title="Built on strong foundations." />
+        <SectionHeading index={2} eyebrow="Education" title="Built on strong foundations." />
         <div className="education-grid">
-          <article className="education-item">
+          <article className="education-item glass">
             <img src="/assets/img/asu_seal.jpg" alt="Arizona State University seal" />
             <div><span>Jan 2015 — Dec 2016</span><h3>Master of Computer Science</h3><p>Arizona State University · Tempe, Arizona · GPA 3.5</p></div>
           </article>
-          <article className="education-item">
+          <article className="education-item glass">
             <img src="/assets/img/uok_seal.jpg" alt="University of Kerala seal" />
             <div><span>Jun 2009 — Jul 2013</span><h3>Bachelor of Technology</h3><p>University of Kerala · Trivandrum, India · GPA 3.8</p></div>
           </article>
         </div>
         <div className="course-list">
           <p className="eyebrow">Selected coursework</p>
-          {courses.map((course, index) => <span key={course}>{String(index + 1).padStart(2, '0')} · {course}</span>)}
+          {courses.map((course, index) => <span key={course}><b>{pad(index + 1)}</b>{course}</span>)}
         </div>
       </Reveal>
     </section>
@@ -359,16 +617,18 @@ function Experience() {
   return (
     <section className="experience-section page-section" id="experience">
       <Reveal>
-        <SectionHeading eyebrow="Experience" title="A decade of shipping at scale." copy="From healthcare analytics to AI-powered developer tooling and global database infrastructure, the through-line is dependable engineering for consequential systems." />
+        <SectionHeading index={3} eyebrow="Experience" title="A decade of shipping at scale." copy="From healthcare analytics to AI-powered developer tooling and global database infrastructure, the through-line is dependable engineering for consequential systems." />
         <div className="timeline">
           {visible.map((job, index) => (
-            <article className="job" key={`${job.company}-${job.role}`}>
-              <div className="job-number">{String(index + 1).padStart(2, '0')}</div>
-              <div className="job-logo"><img src={job.logo} alt="" /></div>
-              <div className="job-main">
-                <p className="job-period">{job.period}</p>
-                <h3>{job.role}</h3>
-                <p className="job-company">{job.company} · {job.team}</p>
+            <article className="job glass" key={`${job.company}-${job.role}`}>
+              <div className="job-node" aria-hidden="true">{pad(index + 1)}</div>
+              <div className="job-head">
+                <div className="job-logo"><img src={job.logo} alt="" /></div>
+                <div>
+                  <p className="job-period">{job.period}</p>
+                  <h3>{job.role}</h3>
+                  <p className="job-company">{job.company} · {job.team}</p>
+                </div>
               </div>
               <ul>{job.points.map((point) => <li key={point}>{point}</li>)}</ul>
             </article>
@@ -384,19 +644,26 @@ function Experience() {
 
 function Skills() {
   const [activeGroup, setActiveGroup] = useState('Languages');
+  const allSkills = Object.values(skillGroups).flat();
 
   return (
     <section className="skills-section page-section" id="skills">
+      <div className="marquee" aria-hidden="true">
+        <div>{[...allSkills, ...allSkills].map((skill, index) => <span key={index}>{skill}</span>)}</div>
+      </div>
       <Reveal className="skills-layout">
-        <SectionHeading eyebrow="Capabilities" title="Deep systems knowledge. Broad technical range." />
-        <div className="skills-panel">
+        <SectionHeading index={4} eyebrow="Capabilities" title="Deep systems knowledge. Broad technical range." />
+        <div className="skills-panel glass">
+          <div className="terminal-bar" aria-hidden="true"><i /><i /><i /><span>~/karthik/skills --list</span></div>
           <div className="skill-tabs" role="tablist" aria-label="Skill categories">
             {Object.keys(skillGroups).map((group) => (
               <button key={group} className={activeGroup === group ? 'active' : ''} onClick={() => setActiveGroup(group)} role="tab" aria-selected={activeGroup === group}>{group}</button>
             ))}
           </div>
-          <div className="skill-cloud" role="tabpanel">
-            {skillGroups[activeGroup].map((skill, index) => <span key={skill}><sup>{String(index + 1).padStart(2, '0')}</sup>{skill}</span>)}
+          <div className="skill-cloud" role="tabpanel" key={activeGroup}>
+            {skillGroups[activeGroup].map((skill, index) => (
+              <span key={skill} style={{ '--i': index }}><sup>{pad(index + 1)}</sup>{skill}</span>
+            ))}
           </div>
         </div>
         <div className="activity-block">
@@ -408,29 +675,39 @@ function Skills() {
   );
 }
 
+function ProjectCard({ project, index }) {
+  const onPointerMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.style.setProperty('--mx', `${event.clientX - rect.left}px`);
+    event.currentTarget.style.setProperty('--my', `${event.clientY - rect.top}px`);
+  };
+
+  return (
+    <article className="project-card" onPointerMove={onPointerMove}>
+      <div className="project-image">
+        <img src={project.image} alt="" loading="lazy" />
+        <span>{pad(index + 1)}</span>
+      </div>
+      <div className="project-content">
+        <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+        <h3>{project.title}</h3>
+        <p>{project.description}</p>
+        <div className="project-links">
+          {project.source && <a href={project.source} target="_blank" rel="noreferrer"><Code2 size={16} /> Source</a>}
+          {project.demo && <a href={project.demo}>Live project <ArrowUpRight size={16} /></a>}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 function Projects() {
   return (
     <section className="projects-section page-section" id="projects">
       <Reveal>
-        <SectionHeading eyebrow="Selected projects" title="Experiments with purpose." copy="A working archive spanning distributed computing, security, analytics, and data visualization." />
+        <SectionHeading index={5} eyebrow="Selected projects" title="Experiments with purpose." copy="A working archive spanning distributed computing, security, analytics, and data visualization." />
         <div className="projects-grid">
-          {projects.map((project, index) => (
-            <article className="project-card" key={project.title}>
-              <div className="project-image">
-                <img src={project.image} alt="" />
-                <span>{String(index + 1).padStart(2, '0')}</span>
-              </div>
-              <div className="project-content">
-                <div className="project-tags">{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
-                <h3>{project.title}</h3>
-                <p>{project.description}</p>
-                <div className="project-links">
-                  {project.source && <a href={project.source} target="_blank" rel="noreferrer"><Code2 size={16} /> Source</a>}
-                  {project.demo && <a href={project.demo}>Live project <ArrowUpRight size={16} /></a>}
-                </div>
-              </div>
-            </article>
-          ))}
+          {projects.map((project, index) => <ProjectCard key={project.title} project={project} index={index} />)}
         </div>
       </Reveal>
     </section>
@@ -441,17 +718,19 @@ function Contact() {
   return (
     <footer className="contact-section" id="contact">
       <Reveal>
-        <p className="eyebrow">Contact / Let’s build</p>
+        <p className="eyebrow"><span>[06]</span> // Contact</p>
         <h2>Have a hard problem?<br /><em>Bring it over.</em></h2>
-        <a className="contact-email" href="mailto:karthikl_sarma@yahoo.com">karthikl_sarma@yahoo.com <ArrowUpRight /></a>
+        <a className="contact-email" href="mailto:karthikl_sarma@yahoo.com">
+          <span className="prompt">$ mail</span> karthikl_sarma@yahoo.com <ArrowUpRight />
+        </a>
         <div className="footer-row">
-          <div><MapPin size={17} /> Mountain View, California</div>
+          <div><MapPin size={16} /> Mountain View, California</div>
           <div className="socials">
             <a href="https://github.com/karthiklsarma" aria-label="GitHub"><Code2 /></a>
             <a href="https://www.linkedin.com/in/karthik-sarma-6713b416" aria-label="LinkedIn"><ArrowUpRight /></a>
             <a href="mailto:karthikl_sarma@yahoo.com" aria-label="Email"><Mail /></a>
           </div>
-          <p>© {new Date().getFullYear()} Karthik Sarma</p>
+          <p>© {new Date().getFullYear()} Karthik Sarma · End of transmission</p>
         </div>
       </Reveal>
     </footer>
@@ -459,8 +738,12 @@ function Contact() {
 }
 
 export default function App() {
+  useAnchorScrolling();
+
   return (
     <>
+      <NetworkField />
+      <div className="noise" aria-hidden="true" />
       <Header />
       <main>
         <Hero />
